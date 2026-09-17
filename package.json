@@ -1,5 +1,5 @@
 {
-  "name": "pedigochos",
+  "name": "pedigochos2",
   "version": "1.0.0",
   "description": "Marketplace de delivery multi-comercio con pedidos en tiempo real para mesa o delivery",
   "main": "server.js",

@@ -1,6 +1,6 @@
 {
   "appId": "com.pedigochos.app",
-  "appName": "PediGochos",
+  "appName": "PediGochos2",
   "webDir": "dist_client",
   "bundledWebRuntime": false,
   "server": {
