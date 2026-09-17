@@ -1,6 +1,6 @@
 {
   "appId": "com.pedigochos.kitchen",
-  "appName": "PediGochos2 Cocina",
+  "appName": "PediGochos Cocina",
   "webDir": "dist_kitchen",
   "bundledWebRuntime": false,
   "server": {

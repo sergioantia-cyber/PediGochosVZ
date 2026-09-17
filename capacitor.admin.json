@@ -1,6 +1,6 @@
 {
   "appId": "com.pedigochos.admin",
-  "appName": "PediGochos2 Dueño",
+  "appName": "PediGochos Dueño",
   "webDir": "dist_admin",
   "bundledWebRuntime": false,
   "server": {
