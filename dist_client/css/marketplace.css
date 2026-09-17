@@ -442,21 +442,24 @@
 }
 
 .category-card-content h4 {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 900;
   margin: 0;
   line-height: 1.2;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  letter-spacing: -0.2px;
 }
 
 .card-restaurantes .category-card-content h4 {
-  font-size: 20px;
+  font-size: 21px;
 }
 
 .category-card-content p {
-  font-size: 11px;
-  color: #E2E8F0;
-  margin-top: 2px;
-  font-weight: 500;
+  font-size: 12px;
+  color: #F1F5F9;
+  margin-top: 3px;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 
 .card-restaurantes {

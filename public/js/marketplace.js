@@ -759,17 +759,49 @@ class MarketplaceController {
     });
     const list = this.shuffleWithSeed(rawList, this.getSessionSeed());
 
+    // Update the "Todos los Comercios" header dynamically with category name and count
+    const allRestHeader = document.getElementById('all-restaurants-header');
+    const allRestTitle = document.getElementById('all-restaurants-title-text');
+    if (allRestHeader && allRestTitle) {
+      if (list.length === 0) {
+        allRestHeader.style.display = 'none';
+      } else {
+        allRestHeader.style.display = 'block';
+        if (window.activeFoodTypeFilter && window.activeFoodTypeFilter !== 'all') {
+          const catLabel = categoryNames[window.activeFoodTypeFilter] || this.capitalize(window.activeFoodTypeFilter);
+          allRestTitle.textContent = `Comercios: ${catLabel} (${list.length})`;
+        } else if (this.currentCategory && this.currentCategory !== 'comidas') {
+          allRestTitle.textContent = `Comercios: ${this.capitalize(this.currentCategory)} (${list.length})`;
+        } else {
+          allRestTitle.textContent = 'Todos los Comercios';
+        }
+      }
+    }
+
+    // Hide daily promo section when filtering specific food type to avoid distraction
+    const promoSection = document.getElementById('daily-promotions-section');
+    if (promoSection) {
+      if (this.currentCategory !== 'comidas' || (window.activeFoodTypeFilter && window.activeFoodTypeFilter !== 'all')) {
+        promoSection.style.display = 'none';
+        promoSection.classList.add('hidden');
+      }
+    }
+
     // Render Featured Horizontal Carousel
     this.renderFeaturedCarousel();
 
     grid.innerHTML = '';
 
     if (list.length === 0) {
+      const activeName = (window.activeFoodTypeFilter && categoryNames[window.activeFoodTypeFilter]) ? categoryNames[window.activeFoodTypeFilter] : (this.capitalize(this.currentCategory) || 'esta categoría');
       grid.innerHTML = `
-        <div class="cart-empty-state" style="grid-column: 1 / -1;">
-          <span>🏪</span>
-          <p>No hay comercios registrados en esta categoría aún.</p>
-          <button class="btn-secondary" style="margin-top: 12px;" onclick="MarketplaceApp.openRegisterModal()">¡Sé el primero!</button>
+        <div class="cart-empty-state" style="grid-column: 1 / -1; padding: 32px 18px; text-align: center; background: #FFFFFF; border-radius: 18px; border: 1.5px dashed #CBD5E1; margin: 12px 0; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+          <span style="font-size: 42px; display: block; margin-bottom: 8px;">🍽️</span>
+          <h3 style="font-size: 16.5px; font-weight: 900; color: #0F172A; margin: 0 0 6px 0;">No hay comercios con ${activeName}</h3>
+          <p style="font-size: 13.5px; color: #64748B; margin: 0 0 16px 0; font-weight: 500;">Actualmente ningún comercio tiene productos registrados en esta especialidad.</p>
+          <button type="button" class="btn-primary" style="padding: 9px 20px; font-size: 13.5px; font-weight: 800; border-radius: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">
+            <span>⭐</span> Ver Todos los Restaurantes
+          </button>
         </div>
       `;
       return;
@@ -890,21 +922,34 @@ class MarketplaceController {
       return;
     }
 
-    section.style.display = 'block';
-    section.classList.remove('hidden');
-    container.innerHTML = '';
-
-    // Shuffle featured items with session seed (strictly excluding disabled stores)
+    // Filter active establishments, respecting location and current food category filter
     const activeEsts = (this.establishments || []).filter(e => {
       if (e.disabled === true) return false;
       const estCat = (e.category || '').toLowerCase();
       if (estCat !== 'comidas' && estCat !== 'pizzas' && estCat !== 'pizza' && estCat !== 'hamburguesas' && estCat !== 'arepas' && estCat !== 'restaurantes') return false;
+
+      // Filter by active food category so Destacados never shows unrelated stores!
+      if (window.activeFoodTypeFilter && window.activeFoodTypeFilter !== 'all') {
+        if (!this.doesEstMatchFoodType(e, window.activeFoodTypeFilter)) return false;
+      }
+
       if (!this.currentLocation || this.currentLocation === 'all') return true;
       if (!e.location) return true;
       const normEstLoc = (e.location || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const normUserLoc = (this.currentLocation || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       return normEstLoc.includes(normUserLoc) || normUserLoc.includes(normEstLoc);
     });
+
+    if (activeEsts.length === 0) {
+      section.style.display = 'none';
+      section.classList.add('hidden');
+      return;
+    }
+
+    section.style.display = 'block';
+    section.classList.remove('hidden');
+    container.innerHTML = '';
+
     const featuredShuffled = this.shuffleWithSeed(activeEsts, this.getSessionSeed()).slice(0, 6);
 
     featuredShuffled.forEach(est => {
@@ -1055,47 +1100,86 @@ class MarketplaceController {
     const estName = normalize(est.name);
     const products = Array.isArray(est.products) ? est.products : [];
 
-    const hasProductMatching = (regex) => {
+    const isPizzaProduct = (p) => {
+      const pCat = normalize(p.category || p.category_id || '');
+      const pName = normalize(p.name);
+      return pCat.includes('pizza') || /^pizza\b/i.test(pName);
+    };
+
+    const hasProductMatching = (checkFn) => {
       return products.some(p => {
         const pName = normalize(p.name);
         const pCat = normalize(p.category || p.category_id || '');
-        return regex.test(pName) || regex.test(pCat);
+        return checkFn(pName, pCat, p);
       });
     };
 
     switch (tid) {
       case 'hamburguesas':
-        return /hamburguesa|burger|burguer/i.test(estName) || hasProductMatching(/hamburguesa|burger|burguer/i);
+        return /hamburguesa|burger|burguer/i.test(estName) ||
+          hasProductMatching((name, cat, p) => {
+            if (isPizzaProduct(p)) return false;
+            return /hamburguesa|burger|burguer/i.test(cat) || /hamburguesa|burger|burguer/i.test(name);
+          });
       case 'perros':
-        return /perro|hotdog|hot dog/i.test(estName) || hasProductMatching(/perro|hotdog|hot dog|salchicha frankfurt/i);
+        return /perro|hotdog|hot\s*dog/i.test(estName) ||
+          hasProductMatching((name, cat, p) => {
+            if (isPizzaProduct(p)) return false;
+            return /perro|hot\s*dog|hotdog|salchicha/i.test(cat) || /\bperro\b|perro caliente|hot\s*dog|hotdog|salchicha frankfurt|choripan|choripán/i.test(name);
+          });
       case 'pizzas':
-        return /pizza|pizzeria|pizzería/i.test(estName) || hasProductMatching(/pizza|calzone/i);
+        return /pizza|pizzer/i.test(estName) ||
+          hasProductMatching((name, cat, p) => /pizza/i.test(cat) || /\bpizza\b|\bpizzas\b|calzone/i.test(name));
       case 'patacones':
-        return /patacon|patacón/i.test(estName) || hasProductMatching(/patacon|patacón/i);
+        return /patacon/i.test(estName) ||
+          hasProductMatching((name, cat, p) => /patacon/i.test(cat) || /\bpatacon\b|\bpatacones\b/i.test(name));
       case 'arepas':
-        return /arepera|arepa/i.test(estName) || hasProductMatching(/^arepa|\barepas\b|arepa rellena|reina pepiada|pelua/i);
+        return /arep/i.test(estName) ||
+          hasProductMatching((name, cat, p) => /arepa/i.test(cat) || /\barepa\b|\barepas\b|reina pepiada|pelua/i.test(name));
       case 'cachapas':
-        return /cachapa/i.test(estName) || hasProductMatching(/cachapa/i);
+        return /cachapa/i.test(estName) ||
+          hasProductMatching((name, cat, p) => /cachapa/i.test(cat) || /\bcachapa\b|\bcachapas\b/i.test(name));
       case 'sushi':
-        return /sushi|roll|maki|niguiri|tempura|asiatica/i.test(estName) || hasProductMatching(/sushi|roll|maki|niguiri/i);
+        return /sushi|asiatic/i.test(estName) ||
+          hasProductMatching((name, cat, p) => {
+            if (/enrrollado|enrollado/i.test(name)) return false;
+            return /sushi/i.test(cat) || /\bsushi\b|\bmaki\b|\bnigiri\b|\bniguiri\b|\btempura\b|\buramaki\b|\bcalifornia roll\b|\bsashimi\b/i.test(name);
+          });
       case 'mariscos':
-        return /marisco|pescado|ceviche/i.test(estName) || hasProductMatching(/marisco|camaron|calamar|pescado|paella/i);
+        return /marisco|pescad|ceviche/i.test(estName) ||
+          hasProductMatching((name, cat, p) => {
+            if (/chicharron/i.test(name)) return false;
+            return /pescado|marisco|mar y tierra/i.test(cat) || /marisco|camaron|calamar|pescado|paella|langostin/i.test(name);
+          });
       case 'sandwiches':
-        return /sandwich|sanducheria/i.test(estName) || hasProductMatching(/sandwich|sándwich|sanduche|club house/i);
+        return /sandwich|sanduch/i.test(estName) ||
+          hasProductMatching((name, cat, p) => /sandwich|sanduch|club house|club hause/i.test(cat) || /\bsandwich\b|\bsandwichs\b|\bsandwiches\b|\bsanduche\b|\bclub house\b|\bclub hause\b|\btostado\b/i.test(name));
       case 'pepitos':
-        return /pepito/i.test(estName) || hasProductMatching(/pepito/i);
+        return /pepito/i.test(estName) ||
+          hasProductMatching((name, cat, p) => /pepito/i.test(cat) || /\bpepito\b|\bpepitos\b/i.test(name));
       case 'alitas':
-        return /alita|wings/i.test(estName) || hasProductMatching(/alita|wings|boneless/i);
+        return /alita|wings/i.test(estName) ||
+          hasProductMatching((name, cat, p) => /alita|wings/i.test(cat) || /\balita\b|\balitas\b|\bwings\b|\bboneless\b/i.test(name));
       case 'salchipapas':
-        return /salchipapa/i.test(estName) || hasProductMatching(/salchipapa/i);
+        return /salchipapa/i.test(estName) ||
+          hasProductMatching((name, cat, p) => /salchipapa|sachipapa/i.test(cat) || /\bsalchipapa\b|\bsalchipapas\b|\bsachipapa\b|\bsalchipollo\b/i.test(name));
       case 'picadas':
-        return /picada|parrilla/i.test(estName) || hasProductMatching(/picada|parrilla|churrasco/i);
+        return /picada|parrilla/i.test(estName) ||
+          hasProductMatching((name, cat, p) => {
+            if (isPizzaProduct(p)) return false;
+            return /picada|parrilla/i.test(cat) || /\bpicada\b|\bparrilla\b|\bchurrasco\b/i.test(name);
+          });
       case 'bebidas':
-        return /batido|jugo|bebida/i.test(estName) || hasProductMatching(/jugo|batido|malteada|frappe|cafe|café|refresco|malta|soda|merengada/i);
+        return /bebida|jugo|batido/i.test(estName) ||
+          hasProductMatching((name, cat, p) => {
+            if (/bebida|jugo|batido|malteada|frappe|refresco|malta|soda|merengada|sodas|frappes/i.test(cat)) return true;
+            return /\bjugo\b|\bbatido\b|\bmalteada\b|\bfrappe\b|\brefresco\b|\bmalta\b|\bsoda\b|\bmerengada\b|\bgaseosa\b|\bagua mineral\b|\blimonada\b|\bagua panela\b/i.test(name);
+          });
       case 'postres':
-        return /helado|postre|dulce/i.test(estName) || hasProductMatching(/helado|waffle|wafle|fresas con crema|torta|marquesa|brownie|paleta|dulce/i);
+        return /postre|helado|dulce/i.test(estName) ||
+          hasProductMatching((name, cat, p) => /postre|helado|dulce|waffle|fresas con crema|sundae|barquilla/i.test(cat) || /\bhelado\b|\bwaffle\b|\bwafle\b|fresas con crema|\btorta\b|\bmarquesa\b|\bbrownie\b|\bpaleta\b|\bsundae\b|\bbarquilla\b/i.test(name));
       default:
-        return estName.includes(tid) || hasProductMatching(new RegExp(tid, 'i'));
+        return estName.includes(tid) || hasProductMatching((name, cat) => cat.includes(tid) || name.includes(tid));
     }
   }
 

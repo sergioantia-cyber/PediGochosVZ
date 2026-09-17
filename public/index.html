@@ -23,11 +23,10 @@
       <div class="delivery-address-area" style="cursor: pointer;" onclick="MarketplaceApp.requestAutomaticGPS(true)" title="Toca para actualizar tu ubicación GPS en vivo">
         <span class="location-icon">📡</span>
         <div class="address-text-container">
-          <span class="delivery-label">Mi Ubicación GPS</span>
-          <span class="delivery-address-wrap">
-            <span id="active-location-display" class="delivery-address">📍 Detectando GPS...</span>
-          </span>
+          <span class="address-label">Ubicación GPS:</span>
+          <span class="address-text" id="header-selected-address">San Antonio del Táchira</span>
         </div>
+        <span class="dropdown-arrow">▼</span>
       </div>
       
       <div class="logo-area" onclick="MarketplaceApp.goHome()" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
@@ -218,9 +217,9 @@
         </section>
 
         <!-- Divider & Section Header for Main Establishments Grid -->
-        <div id="all-restaurants-header" style="margin: 16px 0 12px 0; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1);">
-          <h4 style="font-size: 15px; font-weight: 800; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 6px;">
-            <span>🏪</span> Todos los Comercios
+        <div id="all-restaurants-header" style="margin: 18px 0 12px 0; padding-top: 10px; border-top: 1.5px dashed #CBD5E1;">
+          <h4 id="all-restaurants-title" style="font-size: 16px; font-weight: 900; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 6px;">
+            <span>🏪</span> <span id="all-restaurants-title-text">Todos los Comercios</span>
           </h4>
         </div>
 
