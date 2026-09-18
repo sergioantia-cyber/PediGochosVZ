@@ -793,15 +793,40 @@ class MarketplaceController {
     grid.innerHTML = '';
 
     if (list.length === 0) {
-      const activeName = (window.activeFoodTypeFilter && categoryNames[window.activeFoodTypeFilter]) ? categoryNames[window.activeFoodTypeFilter] : (this.capitalize(this.currentCategory) || 'esta categoría');
+      const activeName = (window.activeFoodTypeFilter && categoryNames[window.activeFoodTypeFilter]) 
+        ? categoryNames[window.activeFoodTypeFilter] 
+        : (this.capitalize(this.currentCategory) || 'esta categoría');
+
+      const categoryEmoji = {
+        'comidas': '🍔',
+        'farmacias': '💊',
+        'mercados': '🛒',
+        'ferreterias': '🛠️'
+      }[this.currentCategory] || '🏪';
+
       grid.innerHTML = `
-        <div class="cart-empty-state" style="grid-column: 1 / -1; padding: 32px 18px; text-align: center; background: #FFFFFF; border-radius: 18px; border: 1.5px dashed #CBD5E1; margin: 12px 0; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
-          <span style="font-size: 42px; display: block; margin-bottom: 8px;">🍽️</span>
-          <h3 style="font-size: 16.5px; font-weight: 900; color: #0F172A; margin: 0 0 6px 0;">No hay comercios con ${activeName}</h3>
-          <p style="font-size: 13.5px; color: #64748B; margin: 0 0 16px 0; font-weight: 500;">Actualmente ningún comercio tiene productos registrados en esta especialidad.</p>
-          <button type="button" class="btn-primary" style="padding: 9px 20px; font-size: 13.5px; font-weight: 800; border-radius: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">
-            <span>⭐</span> Ver Todos los Restaurantes
-          </button>
+        <div class="empty-category-registration-card" style="grid-column: 1 / -1; padding: 26px 18px; text-align: center; background: #242936; border: 1.5px solid rgba(255, 107, 0, 0.35); border-radius: 18px; margin: 10px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+          <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(255, 107, 0, 0.12); border: 2px solid #FF6B00; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 10px; box-shadow: 0 0 16px rgba(255, 107, 0, 0.4);">
+            ${categoryEmoji}✨
+          </div>
+
+          <h3 style="font-size: 17px; font-weight: 900; color: #FFFFFF; margin: 0 0 6px 0; letter-spacing: -0.2px;">
+            ¿Tienes un comercio de ${activeName}?
+          </h3>
+          
+          <p style="font-size: 12.5px; color: #CBD5E1; margin: 0 auto 16px auto; max-width: 440px; line-height: 1.45; font-weight: 500;">
+            Aún no hay comercios registrados en esta categoría. ¡Sé el primero en aparecer! Registra tu negocio y obtén tu <strong style="color: #FF6B00; font-weight: 800;">Catálogo Virtual & Menú QR</strong> 100% gratuito para recibir pedidos directos.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; max-width: 360px; margin: 0 auto; width: 100%;">
+            <button type="button" class="btn-register-empty-cta" onclick="MarketplaceApp.openMerchantRegistrationModal('${this.currentCategory}')" style="background: linear-gradient(135deg, #FF6B00 0%, #E05A00 100%); color: #FFFFFF; border: none; padding: 12px 18px; font-size: 13.5px; font-weight: 900; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(255, 107, 0, 0.4); transition: transform 0.2s, box-shadow 0.2s; touch-action: manipulation;">
+              <span>🏪</span> Solicitar Registro y Catálogo Virtual
+            </button>
+
+            <button type="button" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')" style="background: rgba(255, 255, 255, 0.06); color: #CBD5E1; border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>⭐</span> Ver Otros Comercios Disponibles
+            </button>
+          </div>
         </div>
       `;
       return;
@@ -6339,11 +6364,23 @@ class MarketplaceController {
     if (modal) modal.classList.remove('active');
   }
 
-  openMerchantRegistrationModal() {
+  openMerchantRegistrationModal(category = '') {
     const modal = document.getElementById('merchant-register-modal');
     if (modal) {
       modal.style.display = 'flex';
       modal.classList.add('active');
+    }
+    if (category) {
+      const catInput = document.getElementById('reg-merchant-category');
+      if (catInput) {
+        const catMap = {
+          'farmacias': 'Farmacia / Medicamentos',
+          'mercados': 'Mercado / Víveres',
+          'ferreterias': 'Ferretería / Herramientas',
+          'comidas': 'Restaurante / Comidas'
+        };
+        catInput.value = catMap[category] || this.capitalize(category);
+      }
     }
   }
 
@@ -6372,12 +6409,12 @@ class MarketplaceController {
     }
 
     const message = 
-      `👋 *¡Hola PediGochos! Quiero Inscribir mi Restaurante GRATIS* 🏪🚀\n\n` +
-      `🏢 *Nombre del Negocio:* ${name}\n` +
+      `👋 *¡Hola PediGochos! Quiero Inscribir mi Comercio / Negocio GRATIS* 🏪🚀\n\n` +
+      `🏢 *Nombre del Comercio:* ${name}\n` +
       `📍 *Ubicación / Ciudad:* ${location}\n` +
-      `🍔 *Tipo de Comida / Categoría:* ${category || 'Restaurante / Comidas'}\n` +
+      `🏷️ *Categoría / Rubro:* ${category || 'Comercio General'}\n` +
       `📱 *WhatsApp de Contacto:* ${phone}\n\n` +
-      `¿Podrían indicarme los pasos para registrar nuestro menú y activar nuestro código QR y catálogo virtual? 🙏✨`;
+      `¿Podrían indicarme los pasos para registrar nuestros productos y activar nuestro catálogo virtual y pedidos directos? 🙏✨`;
 
     const supportPhone = '573227949751';
     const waUrl = `https://wa.me/${supportPhone}?text=${encodeURIComponent(message)}`;

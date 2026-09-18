@@ -1026,37 +1026,37 @@
 
   <!-- Modal Inscripción de Restaurantes / Comercios -->
   <div class="modal-overlay" id="merchant-register-modal" style="display: none; z-index: 5000; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
-    <div class="modal-content" style="max-width: 440px; width: 92%; background: #13141C; border: 1.5px solid rgba(255, 107, 0, 0.35); border-radius: 24px; padding: 22px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); color: #FFF; position: relative;">
+    <div class="modal-content" style="max-width: 440px; width: 92%; background: #1E222D; border: 1.5px solid rgba(255, 107, 0, 0.4); border-radius: 24px; padding: 22px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); color: #FFF; position: relative;">
       
       <!-- Close button -->
       <button class="btn-close" onclick="MarketplaceApp.closeMerchantRegistrationModal()" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.08); border: none; color: #FFF; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: 800;">✕</button>
 
       <div style="text-align: center; margin-bottom: 18px;">
         <span style="font-size: 38px; display: inline-block; margin-bottom: 4px;">🏪✨</span>
-        <h3 style="font-size: 19px; font-weight: 900; color: #FFFFFF; margin: 0 0 4px 0;">¡Inscribe tu Restaurante!</h3>
-        <p style="font-size: 12px; color: #94A3B8; margin: 0;">Registro y Catálogo Virtual 100% <strong>GRATUITO</strong></p>
+        <h3 style="font-size: 19px; font-weight: 900; color: #FFFFFF; margin: 0 0 4px 0;">¡Registra tu Comercio!</h3>
+        <p style="font-size: 12px; color: #94A3B8; margin: 0;">Obtén tu <strong>Catálogo Virtual 100% GRATUITO</strong></p>
       </div>
 
       <!-- Registration Form Fields -->
       <form id="merchant-register-form" onsubmit="event.preventDefault(); MarketplaceApp.sendMerchantRegistrationWhatsApp();">
         <div style="margin-bottom: 12px;">
-          <label style="font-size: 11.5px; font-weight: 800; color: #E2E8F0; display: block; margin-bottom: 4px;">🏢 Nombre del Restaurante / Negocio *</label>
-          <input type="text" id="reg-merchant-name" required placeholder="Ej: Arepera Los Gochos" style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #0A0A0F; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 13px; box-sizing: border-box;">
+          <label style="font-size: 11.5px; font-weight: 800; color: #E2E8F0; display: block; margin-bottom: 4px;">🏢 Nombre del Comercio / Negocio *</label>
+          <input type="text" id="reg-merchant-name" required placeholder="Ej: Mi Tienda / Restaurante" style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 13px; box-sizing: border-box;">
         </div>
 
         <div style="margin-bottom: 12px;">
           <label style="font-size: 11.5px; font-weight: 800; color: #E2E8F0; display: block; margin-bottom: 4px;">📍 Ciudad / Ubicación *</label>
-          <input type="text" id="reg-merchant-location" required placeholder="Ej: San Antonio del Táchira / Ureña" style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #0A0A0F; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 13px; box-sizing: border-box;">
+          <input type="text" id="reg-merchant-location" required placeholder="Ej: San Antonio del Táchira / Ureña" style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 13px; box-sizing: border-box;">
         </div>
 
         <div style="margin-bottom: 12px;">
-          <label style="font-size: 11.5px; font-weight: 800; color: #E2E8F0; display: block; margin-bottom: 4px;">🍔 Tipo de Comida / Categoría</label>
-          <input type="text" id="reg-merchant-category" placeholder="Ej: Arepas, Hamburguesas, Pizza, Desayunos..." style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #0A0A0F; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 13px; box-sizing: border-box;">
+          <label style="font-size: 11.5px; font-weight: 800; color: #E2E8F0; display: block; margin-bottom: 4px;">🏷️ Categoría / Rubro del Negocio</label>
+          <input type="text" id="reg-merchant-category" placeholder="Ej: Farmacia, Ferretería, Restaurante, Víveres..." style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 13px; box-sizing: border-box;">
         </div>
 
         <div style="margin-bottom: 18px;">
           <label style="font-size: 11.5px; font-weight: 800; color: #E2E8F0; display: block; margin-bottom: 4px;">📱 WhatsApp de Contacto / Encargado *</label>
-          <input type="tel" id="reg-merchant-phone" required placeholder="Ej: +58 414 1234567 / +57 320 1234567" style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #0A0A0F; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 13px; box-sizing: border-box;">
+          <input type="tel" id="reg-merchant-phone" required placeholder="Ej: +58 414 1234567 / +57 320 1234567" style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 13px; box-sizing: border-box;">
         </div>
 
         <!-- Submit Buttons -->
