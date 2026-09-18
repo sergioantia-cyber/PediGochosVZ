@@ -420,9 +420,18 @@ async function syncFromPostgres() {
         const existingReviews = (localData && Array.isArray(localData.reviews)) ? localData.reviews : [];
         const existingPromos = (localData && Array.isArray(localData.promotions)) ? localData.promotions : [];
 
+        const restoredOrders = (orders || []).map(ord => {
+          const det = ord.deliveryDetails || {};
+          return {
+            ...ord,
+            customerEmail: ord.customerEmail || det.customerEmail || null,
+            userId: ord.userId || det.userId || null
+          };
+        });
+
         const dbState = {
           establishments: dedupedEsts,
-          orders: orders || [],
+          orders: restoredOrders,
           drivers: existingDrivers,
           reviews: existingReviews,
           promotions: existingPromos,
@@ -493,7 +502,11 @@ async function saveToPostgres() {
         orderType: ord.orderType || null,
         customerName: ord.customerName || null,
         tableNumber: ord.tableNumber || null,
-        deliveryDetails: ord.deliveryDetails || {},
+        deliveryDetails: {
+          ...(ord.deliveryDetails || {}),
+          customerEmail: ord.customerEmail || (ord.deliveryDetails && ord.deliveryDetails.customerEmail) || null,
+          userId: ord.userId || (ord.deliveryDetails && ord.deliveryDetails.userId) || null
+        },
         status: ord.status || 'Pendiente',
         cancelReason: ord.cancelReason || null,
         paymentStatus: ord.paymentStatus || 'Pendiente',
@@ -1115,9 +1128,21 @@ app.post('/api/establishments', (req, res) => {
   res.status(201).json(newEstablishment);
 });
 
-// Get all orders
+// Get all orders (or filter by email, userId, phone)
 app.get('/api/orders', (req, res) => {
   const db = readDB();
+  const { email, userId, phone } = req.query;
+  if (email || userId || phone) {
+    const normEmail = email ? String(email).toLowerCase().trim() : null;
+    const normPhone = phone ? String(phone).replace(/\D/g, '') : null;
+    const filtered = (db.orders || []).filter(o => {
+      if (normEmail && o.customerEmail && String(o.customerEmail).toLowerCase().trim() === normEmail) return true;
+      if (userId && o.userId && String(o.userId) === String(userId)) return true;
+      if (normPhone && o.deliveryDetails?.phone && String(o.deliveryDetails.phone).replace(/\D/g, '') === normPhone) return true;
+      return false;
+    });
+    return res.json(filtered);
+  }
   res.json(db.orders);
 });
 
@@ -1254,14 +1279,27 @@ app.put('/api/orders/:id/status', (req, res) => {
     order
   });
 
+  // Also broadcast to connected customer clients and dashboard
+  const updatePayload = JSON.stringify({
+    type: 'ORDER_UPDATED',
+    orderId,
+    status: order.status,
+    order
+  });
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(updatePayload);
+    }
+  });
+
   res.json({ success: true, order });
 });
 
 // API configuration endpoint for Supabase
 app.get('/api/config/supabase', (req, res) => {
   res.json({
-    supabaseUrl: process.env.SUPABASE_URL || '',
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
+    supabaseUrl: process.env.SUPABASE_URL || 'https://bvdwxgfixirisqaavskj.supabase.co',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || 'sb_publishable_8n4-tEnAx5J98ZMh_QwZiw_Qcncleqx'
   });
 });
 
@@ -1279,6 +1317,10 @@ app.post('/api/orders', (req, res) => {
     return res.status(400).json({ error: `El establecimiento "${targetEst.name}" se encuentra cerrado en este momento. Horario: ${targetEst.open_time} a ${targetEst.close_time}.` });
   }
 
+  // Extract user identity
+  const customerEmail = orderDetails.customerEmail || orderDetails.userEmail || (orderDetails.deliveryDetails && orderDetails.deliveryDetails.customerEmail) || null;
+  const userId = orderDetails.userId || (orderDetails.deliveryDetails && orderDetails.deliveryDetails.userId) || null;
+
   // Create new order object
   const order = {
     id: 'ord-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
@@ -1291,8 +1333,14 @@ app.post('/api/orders', (req, res) => {
     paymentNotes: orderDetails.paymentNotes || '',
     paymentReceiptUrl: orderDetails.paymentReceiptUrl || null,
     customerName: orderDetails.customerName,
+    customerEmail: customerEmail ? String(customerEmail).toLowerCase().trim() : null,
+    userId: userId ? String(userId) : null,
     tableNumber: orderDetails.tableNumber || null,
-    deliveryDetails: orderDetails.deliveryDetails || null,
+    deliveryDetails: orderDetails.deliveryDetails ? {
+      ...orderDetails.deliveryDetails,
+      customerEmail: customerEmail ? String(customerEmail).toLowerCase().trim() : null,
+      userId: userId ? String(userId) : null
+    } : null,
     status: 'Pendiente', // 'Pendiente', 'Preparando', 'Listo', 'En Camino', 'Entregado', 'Cancelado'
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -1301,7 +1349,7 @@ app.post('/api/orders', (req, res) => {
   db.orders.push(order);
   writeDB(db);
 
-  console.log(`New order created: ${order.id} for establishment: ${order.establishmentId}`);
+  console.log(`New order created: ${order.id} for establishment: ${order.establishmentId} (User: ${order.customerEmail || 'Guest'})`);
 
   // Broadcast to all connected clients of this establishment in real-time
   broadcastToMerchant(order.establishmentId, {
@@ -1321,6 +1369,55 @@ app.post('/api/orders', (req, res) => {
   });
 
   res.status(201).json(order);
+});
+
+// Sync and link user orders (e.g. for Google OAuth sessions across devices)
+app.post('/api/user/sync-orders', (req, res) => {
+  const { email, userId, localOrderIds } = req.body;
+  if (!email && !userId) {
+    return res.status(400).json({ error: 'Email or userId is required' });
+  }
+
+  const db = readDB();
+  const normEmail = email ? String(email).toLowerCase().trim() : null;
+  let dbChanged = false;
+
+  // 1. Link any local orders submitted before logging in
+  if (Array.isArray(localOrderIds) && localOrderIds.length > 0) {
+    const idSet = new Set(localOrderIds.map(id => String(id)));
+    (db.orders || []).forEach(o => {
+      if (idSet.has(String(o.id))) {
+        if (normEmail && (!o.customerEmail || o.customerEmail !== normEmail)) {
+          o.customerEmail = normEmail;
+          if (o.deliveryDetails) o.deliveryDetails.customerEmail = normEmail;
+          dbChanged = true;
+        }
+        if (userId && (!o.userId || o.userId !== String(userId))) {
+          o.userId = String(userId);
+          if (o.deliveryDetails) o.deliveryDetails.userId = String(userId);
+          dbChanged = true;
+        }
+      }
+    });
+  }
+
+  if (dbChanged) {
+    writeDB(db);
+  }
+
+  // 2. Return all orders matching this user
+  const userOrders = (db.orders || []).filter(o => {
+    if (normEmail && o.customerEmail && String(o.customerEmail).toLowerCase().trim() === normEmail) return true;
+    if (normEmail && o.deliveryDetails?.customerEmail && String(o.deliveryDetails.customerEmail).toLowerCase().trim() === normEmail) return true;
+    if (userId && o.userId && String(o.userId) === String(userId)) return true;
+    if (userId && o.deliveryDetails?.userId && String(o.deliveryDetails.userId) === String(userId)) return true;
+    return false;
+  });
+
+  // Sort descending by date (most recent first)
+  userOrders.sort((a, b) => new Date(b.createdAt || b.timestamp || 0) - new Date(a.createdAt || a.timestamp || 0));
+
+  res.json({ success: true, orders: userOrders });
 });
 
 // PUT to update establishment details (authorized by linkKey or isOwner flag)

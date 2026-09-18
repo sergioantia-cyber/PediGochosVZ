@@ -45,15 +45,27 @@ class SupabaseHelper {
   async loginWithGoogle(redirectToPage) {
     await this.init();
     if (!this.client) {
-      alert('⚠️ Google OAuth requiere conexión con Supabase. Usa la Clave Maestra de Dueño (0424) para ingresar directamente.');
+      alert('⚠️ No se pudo conectar con el servicio de autenticación. Por favor intenta de nuevo.');
       return;
     }
     
-    // Redirect back to the specified page or admin.html
+    // Determine the page to redirect back to
+    let targetPage = redirectToPage;
+    if (!targetPage) {
+      const path = window.location.pathname || '';
+      if (path.includes('admin')) {
+        targetPage = '/admin.html';
+      } else if (path.includes('kitchen')) {
+        targetPage = '/kitchen.html';
+      } else {
+        targetPage = '/index.html';
+      }
+    }
+
     const isNative = window.location.origin.includes('localhost') || window.location.origin.includes('capacitor');
     const redirectUrl = isNative 
-      ? 'https://pedigochos.onrender.com' + (redirectToPage || '/admin.html')
-      : window.location.origin + (redirectToPage || '/admin.html');
+      ? 'https://pedigochos.onrender.com' + targetPage
+      : window.location.origin + targetPage;
     
     const { error } = await this.client.auth.signInWithOAuth({
       provider: 'google',
@@ -68,7 +80,7 @@ class SupabaseHelper {
 
     if (error) {
       console.error('Error logging in with Google:', error.message);
-      alert('Error de login con Google: ' + error.message + '\n\nPuedes ingresar directamente con la Clave Maestra: 0424');
+      alert('Error al iniciar sesión con Google: ' + error.message);
     }
   }
 

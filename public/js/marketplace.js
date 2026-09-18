@@ -137,8 +137,10 @@ class MarketplaceController {
       } catch(e) {}
     }
 
-    // Set initial history state
-    window.history.replaceState({ view: 'home' }, '');
+    // Set initial history state without stripping OAuth tokens if present
+    if (!window.location.hash || (!window.location.hash.includes('access_token') && !window.location.hash.includes('refresh_token'))) {
+      window.history.replaceState({ view: 'home' }, '', window.location.href);
+    }
     window.addEventListener('popstate', (e) => this.handlePopState(e));
 
     await this.loadSystemSettings();
@@ -240,6 +242,17 @@ class MarketplaceController {
               }
             }
           }
+          if (data.type === 'ORDER_UPDATED' && data.order) {
+            const currentOrders = this.getUserOrdersHistory();
+            const exists = currentOrders.some(o => String(o.id) === String(data.order.id));
+            if (exists) {
+              this.saveUserOrderToHistory(data.order);
+              const modal = document.getElementById('user-orders-modal');
+              if (modal && modal.classList.contains('active')) {
+                this.renderUserOrdersList();
+              }
+            }
+          }
         } catch (e) {
           console.error(e);
         }
@@ -252,37 +265,137 @@ class MarketplaceController {
   async checkSupabaseSession() {
     if (typeof SupabaseApp === 'undefined') return;
     await SupabaseApp.init();
+
+    // Listen to real-time auth changes from Supabase (e.g. Google OAuth redirect callback)
+    if (SupabaseApp.client && SupabaseApp.client.auth) {
+      SupabaseApp.client.auth.onAuthStateChange(async (event, session) => {
+        if (session && session.user) {
+          await this.handleUserSession(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          this.handleUserSignOut();
+        }
+      });
+    }
+
     const session = await SupabaseApp.getCurrentSession();
+    if (session && session.user) {
+      await this.handleUserSession(session.user);
+    } else {
+      this.renderAuthButton(null);
+    }
+  }
+
+  async handleUserSession(user) {
+    if (!user) return;
+    this.currentUser = user;
+    try {
+      localStorage.setItem('pedigochos_user_email', user.email || '');
+      localStorage.setItem('pedigochos_user_name', user.user_metadata?.full_name || user.email.split('@')[0]);
+      if (user.id) localStorage.setItem('pedigochos_user_id', user.id);
+    } catch(e) {}
+
+    this.renderAuthButton(user);
+
+    // Pre-fill checkout form name if empty
+    const nameInput = document.getElementById('order-customer-name');
+    if (nameInput && !nameInput.value.trim()) {
+      nameInput.value = user.user_metadata?.full_name || user.email.split('@')[0];
+    }
+
+    // Synchronize and restore all user orders from server
+    await this.syncUserOrdersWithServer(user.email, user.id);
+  }
+
+  handleUserSignOut() {
+    this.currentUser = null;
+    try {
+      localStorage.removeItem('pedigochos_user_email');
+      localStorage.removeItem('pedigochos_user_name');
+      localStorage.removeItem('pedigochos_user_id');
+    } catch(e) {}
+    this.renderAuthButton(null);
+  }
+
+  renderAuthButton(user) {
     const container = document.getElementById('auth-status-container');
     if (!container) return;
 
-    if (session && session.user) {
-      const user = session.user;
+    if (user) {
+      const displayName = user.user_metadata?.full_name || user.email.split('@')[0];
+      const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
       container.innerHTML = `
-        <span style="font-size: 12px; color: var(--text-main); font-weight: 700; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 4px;">
-          👤 ${user.user_metadata.full_name || user.email.split('@')[0]}
-        </span>
-        <button class="btn-notification" onclick="MarketplaceApp.logout()" title="Cerrar Sesión" style="background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; width: auto; height: auto; margin: 0;">
-          🚪
-        </button>
+        <div style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); padding: 3px 8px 3px 6px; border-radius: 20px;">
+          ${avatarUrl ? `<img src="${avatarUrl}" alt="Avatar" style="width: 18px; height: 18px; border-radius: 50%; object-fit: cover;">` : '<span style="font-size: 12px;">👤</span>'}
+          <span style="font-size: 11px; color: #FFFFFF; font-weight: 700; max-width: 85px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${displayName}
+          </span>
+          <button type="button" onclick="MarketplaceApp.logout()" title="Cerrar Sesión" style="background: none; border: none; font-size: 13px; cursor: pointer; padding: 0 2px; color: #94A3B8; display: flex; align-items: center; justify-content: center; line-height: 1;">
+            ✕
+          </button>
+        </div>
       `;
     } else {
       container.innerHTML = `
-        <button class="btn-notification" onclick="MarketplaceApp.loginWithGoogle()" title="Iniciar Sesión" style="background-color: var(--primary); color: #fff; padding: 6px 12px; font-size: 12px; font-weight: 700; width: auto; height: auto; border-radius: 20px; box-shadow: 0 2px 5px rgba(255, 94, 58, 0.25);">
-          🔑 Ingresar
+        <button class="btn-notification" onclick="MarketplaceApp.loginWithGoogle()" title="Iniciar Sesión con Google" style="background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #fff; padding: 4px 10px; font-size: 11.5px; font-weight: 800; width: auto; height: 26px; border-radius: 14px; box-shadow: 0 2px 8px rgba(255, 107, 0, 0.35); display: inline-flex; align-items: center; gap: 4px; border: none; cursor: pointer;">
+          <span>🔑</span> <span>Ingresar</span>
         </button>
       `;
     }
   }
 
+  async syncUserOrdersWithServer(email, userId) {
+    if (!email && !userId) return;
+    try {
+      const localOrders = this.getUserOrdersHistory();
+      const localOrderIds = localOrders.map(o => o.id).filter(Boolean);
+
+      const res = await fetch('/api/user/sync-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email || null,
+          userId: userId || null,
+          localOrderIds: localOrderIds
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.orders)) {
+          // Merge server orders with local orders, prioritizing latest server state
+          let merged = [...data.orders];
+          const serverIds = new Set(merged.map(o => String(o.id)));
+          
+          localOrders.forEach(loc => {
+            if (loc && loc.id && !serverIds.has(String(loc.id))) {
+              merged.push(loc);
+            }
+          });
+
+          // Sort by creation time descending
+          merged.sort((a, b) => new Date(b.createdAt || b.timestamp || 0) - new Date(a.createdAt || a.timestamp || 0));
+
+          if (merged.length > 50) merged = merged.slice(0, 50);
+          localStorage.setItem('pedigochos_user_orders', JSON.stringify(merged));
+          console.log(`✅ Historial de pedidos sincronizado con Google: ${merged.length} pedidos.`);
+        }
+      }
+    } catch(e) {
+      console.warn('Notice syncing user orders with server:', e);
+    }
+  }
+
   async loginWithGoogle() {
     if (typeof SupabaseApp === 'undefined') return;
-    await SupabaseApp.loginWithGoogle();
+    const returnPath = window.location.pathname || '/index.html';
+    await SupabaseApp.loginWithGoogle(returnPath);
   }
 
   async logout() {
-    if (typeof SupabaseApp === 'undefined') return;
-    await SupabaseApp.logout();
+    if (typeof SupabaseApp !== 'undefined') {
+      await SupabaseApp.logout();
+    }
+    this.handleUserSignOut();
     window.location.reload();
   }
 
@@ -4420,6 +4533,9 @@ class MarketplaceController {
         // Generate random 4-digit security code for delivery
         const randomCode = this.orderType === 'delivery' ? Math.floor(1000 + Math.random() * 9000).toString() : null;
         
+        const userEmail = this.currentUser?.email || localStorage.getItem('pedigochos_user_email') || null;
+        const userId = this.currentUser?.id || localStorage.getItem('pedigochos_user_id') || null;
+
         const orderData = {
           establishmentId: shop.id,
           establishmentName: shop.name,
@@ -4439,6 +4555,8 @@ class MarketplaceController {
           paymentNotes,
           paymentReceiptUrl: paymentReceiptUrl || null,
           customerName,
+          customerEmail: userEmail ? String(userEmail).toLowerCase().trim() : null,
+          userId: userId || null,
           tableNumber: tableNumber ? parseInt(tableNumber, 10) : null,
           deliveryDetails: this.orderType === 'delivery' ? { 
             phone, 
@@ -4447,7 +4565,9 @@ class MarketplaceController {
             latitude: this.selectedLatitude,
             longitude: this.selectedLongitude,
             distanceKm: this.calculatedDistanceKm,
-            housePhotoUrl: housePhotoUrl || null
+            housePhotoUrl: housePhotoUrl || null,
+            customerEmail: userEmail ? String(userEmail).toLowerCase().trim() : null,
+            userId: userId || null
           } : null
         };
 
@@ -5907,10 +6027,20 @@ class MarketplaceController {
   saveUserOrderToHistory(order) {
     if (!order || !order.id) return;
     try {
+      const userEmail = this.currentUser?.email || localStorage.getItem('pedigochos_user_email') || null;
+      const userId = this.currentUser?.id || localStorage.getItem('pedigochos_user_id') || null;
+
+      if (userEmail && !order.customerEmail) {
+        order.customerEmail = String(userEmail).toLowerCase().trim();
+      }
+      if (userId && !order.userId) {
+        order.userId = String(userId);
+      }
+
       let orders = JSON.parse(localStorage.getItem('pedigochos_user_orders') || '[]');
       if (!Array.isArray(orders)) orders = [];
       
-      const index = orders.findIndex(o => o.id === order.id);
+      const index = orders.findIndex(o => String(o.id) === String(order.id));
       if (index !== -1) {
         orders[index] = { ...orders[index], ...order };
       } else {
@@ -5946,20 +6076,29 @@ class MarketplaceController {
     }
     document.body.classList.add('modal-open');
 
-    // Fetch live status from server
+    // Fetch live status and sync with Google account / server
     try {
-      const res = await fetch('/api/orders');
-      if (res.ok) {
-        const liveOrders = await res.json();
-        let userOrders = this.getUserOrdersHistory();
-        
-        if (Array.isArray(liveOrders) && userOrders.length > 0) {
-          userOrders.forEach(localOrd => {
-            const serverOrd = liveOrders.find(o => String(o.id) === String(localOrd.id));
-            if (serverOrd) {
-              this.saveUserOrderToHistory(serverOrd);
-            }
-          });
+      const userEmail = this.currentUser?.email || localStorage.getItem('pedigochos_user_email');
+      const userId = this.currentUser?.id || localStorage.getItem('pedigochos_user_id');
+
+      if (userEmail || userId) {
+        // Sync directly with account on server
+        await this.syncUserOrdersWithServer(userEmail, userId);
+      } else {
+        // Fallback for guest devices without account
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const liveOrders = await res.json();
+          let userOrders = this.getUserOrdersHistory();
+          
+          if (Array.isArray(liveOrders) && userOrders.length > 0) {
+            userOrders.forEach(localOrd => {
+              const serverOrd = liveOrders.find(o => String(o.id) === String(localOrd.id));
+              if (serverOrd) {
+                this.saveUserOrderToHistory(serverOrd);
+              }
+            });
+          }
         }
       }
     } catch(e) {
@@ -5999,6 +6138,7 @@ class MarketplaceController {
     if (!container) return;
 
     let orders = this.getUserOrdersHistory();
+    const userEmail = this.currentUser?.email || localStorage.getItem('pedigochos_user_email') || null;
 
     const isFinished = (s) => s === 'Entregado' || s === 'completed' || s === 'Cancelado' || s === 'cancelled';
 
@@ -6009,17 +6149,46 @@ class MarketplaceController {
     }
 
     if (orders.length === 0) {
-      container.innerHTML = `
-        <div style="padding: 40px 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 16px;">
-          <span style="font-size: 42px; display: block; margin-bottom: 10px;">📋</span>
-          <h4 style="margin: 0 0 6px 0; color: #FFF; font-size: 15px; font-weight: 800;">No tienes pedidos registrados ${filterType !== 'all' ? 'en esta categoría' : ''}</h4>
-          <p style="margin: 0; font-size: 12px; color: var(--text-muted);">Tus pedidos realizados aparecerán aquí con su estado en vivo e ingredientes.</p>
-        </div>
-      `;
+      if (userEmail) {
+        container.innerHTML = `
+          <div style="padding: 36px 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 16px;">
+            <span style="font-size: 40px; display: block; margin-bottom: 10px;">📋✨</span>
+            <h4 style="margin: 0 0 6px 0; color: #FFF; font-size: 15px; font-weight: 800;">No tienes pedidos ${filterType !== 'all' ? 'en esta categoría' : 'registrados aún'}</h4>
+            <p style="margin: 0; font-size: 12px; color: #94A3B8; line-height: 1.5;">
+              Conectado como <strong style="color: #FF6B00;">${userEmail}</strong>.<br>Tus pedidos se guardan y sincronizan automáticamente en tu cuenta.
+            </p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div style="padding: 34px 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 16px;">
+            <span style="font-size: 40px; display: block; margin-bottom: 10px;">📋</span>
+            <h4 style="margin: 0 0 6px 0; color: #FFF; font-size: 15px; font-weight: 800;">No tienes pedidos registrados en este dispositivo</h4>
+            <p style="margin: 0 0 16px 0; font-size: 12px; color: #94A3B8; line-height: 1.5;">
+              Inicia sesión con tu cuenta de Google para guardar tu historial en la nube y acceder a tus pedidos desde cualquier teléfono o computadora.
+            </p>
+            <button type="button" onclick="MarketplaceApp.loginWithGoogle()" style="background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #FFFFFF; border: none; padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(255, 107, 0, 0.4);">
+              <span>🔑</span> Iniciar Sesión con Google
+            </button>
+          </div>
+        `;
+      }
       return;
     }
 
-    container.innerHTML = '';
+    let headerHtml = '';
+    if (userEmail) {
+      headerHtml = `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; margin-bottom: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; font-size: 11.5px; color: #6EE7B7;">
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <span>☁️</span> Historial respaldado en <strong>${userEmail}</strong>
+          </span>
+          <span style="font-size: 10.5px; opacity: 0.8;">Sincronizado ✓</span>
+        </div>
+      `;
+    }
+
+    container.innerHTML = headerHtml;
 
     orders.forEach((ord, index) => {
       const est = this.establishments.find(e => e.id === ord.establishmentId || e.id === ord.establishment_id);
