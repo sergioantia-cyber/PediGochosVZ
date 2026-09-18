@@ -4,24 +4,30 @@
 :root {
   --font-main: 'Outfit', sans-serif;
   
-  /* Brand Colors */
-  --primary: #FF5E3A; /* Vibrant Coral / Rappi Orange */
-  --primary-hover: #E04D2A;
-  --secondary: #1F2937;
-  --accent: #FFD700; /* Gold */
+  /* Brand Colors (From PediGochos Official Gastronomic Logo) */
+  --primary: #FF6B00; /* Electric Gastronomic Orange */
+  --primary-hover: #E05A00;
+  --primary-glow: rgba(255, 107, 0, 0.4);
+  --secondary: #FFFFFF;
+  --accent: #FFA800; /* Amber Gold Accent */
   
-  /* Light Theme Colors (Marketplace) */
-  --bg-app: #F8F9FA;
-  --bg-card: #FFFFFF;
-  --text-main: #111827;
-  --text-muted: #6B7280;
-  --border: #E5E7EB;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+  /* Dark Gastronomic Theme Colors */
+  --bg-app: #0B0B0E; /* Deep Carbon / Onyx */
+  --bg-surface: #13131A; /* Elevated Dark Surface */
+  --bg-card: #181824; /* Card Background */
+  --bg-card-hover: #222232;
+  --text-main: #FFFFFF;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(255, 107, 0, 0.6);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 12px 35px rgba(0, 0, 0, 0.75);
+  --shadow-glow: 0 0 20px rgba(255, 107, 0, 0.35);
   
   /* Category Colors */
-  --color-comidas: #FF5E3A;
+  --color-comidas: #FF6B00;
   --color-farmacias: #10B981;
   --color-mercados: #8B5CF6;
   --color-ferreterias: #3B82F6;
@@ -30,10 +36,10 @@
   --status-pending: #EF4444; /* Red */
   --status-preparing: #F59E0B; /* Amber */
   --status-ready: #10B981; /* Green */
-  --status-delivered: #6B7280; /* Gray */
+  --status-delivered: #94A3B8; /* Gray */
   
   /* Border Radius */
-  --radius-sm: 8px;
+  --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-full: 9999px;
@@ -194,16 +200,16 @@ a {
   height: 60px;
   border-radius: 50%;
   padding: 2.5px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 100%);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.35) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border: 1.5px solid rgba(255, 107, 0, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
   transition: all 0.25s ease;
   position: relative;
 }
 
 .bubble-story-item.active .bubble-ring {
-  background: linear-gradient(135deg, #FF5E3A 0%, #FF2A00 50%, #F59E0B 100%);
-  box-shadow: 0 0 16px rgba(255, 94, 58, 0.6);
+  background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 50%, #FFA800 100%);
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.75);
   transform: scale(1.08);
   border-color: transparent;
 }
@@ -212,22 +218,22 @@ a {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: #1E293B;
+  background: #111116;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 26px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.6);
 }
 
 .bubble-label {
   font-size: 12px;
   font-weight: 800;
-  color: #1E293B;
+  color: #CBD5E1;
   text-align: center;
   margin-top: 6px;
   white-space: nowrap;
-  max-width: 74px;
+  max-width: 76px;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: color 0.2s;
@@ -235,8 +241,9 @@ a {
 }
 
 .bubble-story-item.active .bubble-label {
-  color: #EA580C;
+  color: #FF6B00;
   font-weight: 900;
+  text-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
 }
 
 /* Live Active Green Light Pulse Badge */
