@@ -11,20 +11,20 @@
   --secondary: #FFFFFF;
   --accent: #FFA800; /* Amber Gold Accent */
   
-  /* Dark Gastronomic Theme Colors */
-  --bg-app: #0B0B0E; /* Deep Carbon / Onyx */
-  --bg-surface: #13131A; /* Elevated Dark Surface */
-  --bg-card: #181824; /* Card Background */
-  --bg-card-hover: #222232;
-  --text-main: #FFFFFF;
+  /* Soft Slate & Graphite Dark Theme Colors (Spotify / Discord Style) */
+  --bg-app: #1E222D; /* Soft Slate / Graphite (No pitch-black) */
+  --bg-surface: #242936; /* Elevated Surface */
+  --bg-card: #2B3141; /* Contrasted Card */
+  --bg-card-hover: #343B4E;
+  --text-main: #F8FAFC;
   --text-secondary: #CBD5E1;
   --text-muted: #94A3B8;
   --border: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(255, 107, 0, 0.6);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.55);
-  --shadow-lg: 0 12px 35px rgba(0, 0, 0, 0.75);
-  --shadow-glow: 0 0 20px rgba(255, 107, 0, 0.35);
+  --border-focus: rgba(255, 107, 0, 0.65);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 16px rgba(255, 107, 0, 0.35);
   
   /* Category Colors */
   --color-comidas: #FF6B00;
@@ -218,12 +218,12 @@ a {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: #111116;
+  background: #242936;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .bubble-label {
