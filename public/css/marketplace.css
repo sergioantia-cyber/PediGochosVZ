@@ -3294,3 +3294,39 @@ body {
   color: #34D399;
 }
 
+/* Ride Hailing Modal Visibility & Positioning */
+#ride-modal {
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+#ride-modal.open,
+#ride-modal.active {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+#ride-modal .ride-modal-content {
+  background: #1E222D !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid rgba(255, 107, 0, 0.45) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
+}
+
+@media (max-width: 768px) {
+  #ride-modal .ride-modal-content {
+    width: 100% !important;
+    max-height: 90vh !important;
+    border-radius: 24px 24px 0 0 !important;
+    padding: 18px 16px 28px 16px !important;
+    background: #1E222D !important;
+  }
+}
+
+

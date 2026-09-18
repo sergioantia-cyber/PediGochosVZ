@@ -6837,7 +6837,13 @@ class MarketplaceController {
   openRideModal() {
     const modal = document.getElementById('ride-modal');
     if (!modal) return;
+
     modal.style.display = 'flex';
+    modal.classList.add('open');
+    modal.classList.add('active');
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
 
     // Autofill user details if logged in or saved
     const savedName = localStorage.getItem('order_customer_name') || (this.currentUser && this.currentUser.name) || '';
@@ -6860,12 +6866,28 @@ class MarketplaceController {
     // Initialize or resize map
     setTimeout(() => {
       this.initRideMap();
-    }, 250);
+      if (this.rideLeafMap) {
+        this.rideLeafMap.invalidateSize();
+      }
+    }, 300);
+
+    setTimeout(() => {
+      if (this.rideLeafMap) {
+        this.rideLeafMap.invalidateSize();
+      }
+    }, 600);
   }
 
   closeRideModal() {
     const modal = document.getElementById('ride-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.classList.remove('open');
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
   }
 
   refreshRideOriginGPS() {
