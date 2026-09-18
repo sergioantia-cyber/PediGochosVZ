@@ -70,35 +70,38 @@
 .header-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 12px 24px;
+  padding: 8px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 12px;
 }
 
-/* Address Area */
+/* Address Area - Ultra-Compact & Sleek */
 .delivery-address-area {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
-  background: rgba(255, 107, 0, 0.12);
-  border: 1px solid rgba(255, 107, 0, 0.4);
-  border-radius: 24px;
-  padding: 6px 14px;
+  background: rgba(255, 107, 0, 0.08);
+  border: 1px solid rgba(255, 107, 0, 0.35);
+  border-radius: 18px;
+  padding: 3px 9px;
+  height: 28px;
+  max-height: 28px;
+  box-sizing: border-box;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
   position: relative;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .delivery-address-area:hover {
-  background: rgba(255, 107, 0, 0.2);
+  background: rgba(255, 107, 0, 0.18);
   border-color: #FF6B00;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(255, 107, 0, 0.3);
+  box-shadow: 0 3px 12px rgba(255, 107, 0, 0.35);
 }
 
 .delivery-address-area:active {
@@ -107,7 +110,7 @@
 }
 
 .location-icon {
-  font-size: 15px;
+  font-size: 11px;
   line-height: 1;
   color: #FF6B00;
   display: flex;
@@ -118,41 +121,30 @@
 
 .address-text-container {
   display: flex;
-  flex-direction: column;
-  min-width: 0;
-  justify-content: center;
-}
-
-.delivery-label {
-  font-size: 8px;
-  color: #CBD5E1;
-  text-transform: uppercase;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  line-height: 1;
-  margin-bottom: 1px;
-}
-
-.delivery-address-wrap {
-  display: inline-flex;
   align-items: center;
-  gap: 2px;
+  min-width: 0;
 }
 
-.delivery-address {
-  font-size: 12px;
-  font-weight: 800;
+.address-label, .delivery-label {
+  display: none !important;
+}
+
+.address-text, .delivery-address {
+  font-size: 11px;
+  font-weight: 700;
   color: #FFFFFF;
-  line-height: 1.1;
+  line-height: 1;
   white-space: nowrap;
+  max-width: 125px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.location-chevron {
-  font-size: 8px;
-  color: var(--primary);
-  font-weight: 900;
-  margin-left: 2px;
+.dropdown-arrow, .location-chevron {
+  font-size: 7px;
+  color: #FF6B00;
   opacity: 0.85;
+  margin-left: 2px;
   display: inline-block;
 }
 
@@ -253,18 +245,18 @@
 }
 
 .header-logo-badge {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   object-fit: cover;
   border: 1.5px solid #FF6B00;
-  box-shadow: 0 0 12px rgba(255, 107, 0, 0.45);
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
 
 .logo-area:hover .header-logo-badge {
-  transform: scale(1.08) rotate(4deg);
+  transform: scale(1.06) rotate(3deg);
 }
 
 .logo-text-wrapper {
@@ -274,10 +266,10 @@
 }
 
 .logo-text {
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 900;
   color: #FF6B00; /* Pedi in electric orange */
-  letter-spacing: -0.4px;
+  letter-spacing: -0.3px;
   margin: 0;
   display: flex;
   align-items: baseline;
@@ -289,23 +281,90 @@
 }
 
 .logo-slogan {
-  font-size: 9px;
+  font-size: 7.5px;
   font-weight: 700;
   color: #94A3B8;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.7px;
   text-transform: uppercase;
-  margin-top: 3px;
+  margin-top: 1px;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
+}
+
+#header-gochopoints-btn {
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #F59E0B !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  padding: 3px 8px !important;
+  border-radius: 14px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  height: 26px !important;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+#header-orders-btn {
+  background: rgba(59, 130, 246, 0.12) !important;
+  color: #3B82F6 !important;
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+  padding: 3px 8px !important;
+  border-radius: 14px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  height: 26px !important;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.btn-top-header {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--border) !important;
+  padding: 3px 8px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  height: 26px !important;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.btn-top-header.btn-header-cart {
+  background: linear-gradient(135deg, #FF6B00 0%, #E05A00 100%) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.35) !important;
+}
+
+#auth-status-container .btn-notification {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+  padding: 3px 8px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  height: 26px !important;
+  width: auto !important;
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .btn-notification {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   border-radius: var(--radius-full);
   background-color: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -313,7 +372,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.2s;
 }
 
@@ -385,13 +444,15 @@
 
 #global-search {
   width: 100%;
-  padding: 12px 18px 12px 44px;
-  border-radius: 14px;
+  padding: 8px 14px 8px 34px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   background-color: #14141B;
   color: #FFFFFF;
+  height: 36px;
+  box-sizing: border-box;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
   transition: all 0.25s ease;
 }
@@ -411,8 +472,8 @@
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
-  padding-bottom: 80px; /* Space for mobile navigation */
+  padding: 14px 18px;
+  padding-bottom: 75px; /* Space for mobile navigation */
 }
 
 .view {
@@ -424,21 +485,21 @@
   display: block;
 }
 
-/* Asymmetrical Categories Grid (DeliverCity Style) */
+/* Asymmetrical Categories Grid (DeliverCity Style) - Sleek Compact Scale */
 .categories-section {
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .categories-grid-delivercity {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  grid-template-rows: 90px 90px 90px;
-  gap: 12px;
+  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-rows: 64px 64px 64px;
+  gap: 8px;
 }
 
 .category-card-delivercity {
   position: relative;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   background-color: #E2E8F0;
@@ -450,12 +511,12 @@
 }
 
 .category-card-delivercity:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
 }
 
 .category-card-delivercity.active {
-  box-shadow: 0 0 0 3px var(--primary), 0 8px 16px rgba(255, 94, 58, 0.15);
+  box-shadow: 0 0 0 2.5px var(--primary), 0 8px 16px rgba(255, 107, 0, 0.25);
 }
 
 .category-card-bg {
@@ -486,31 +547,31 @@
 
 .category-card-content {
   position: absolute;
-  bottom: 14px;
-  left: 16px;
-  right: 16px;
+  bottom: 8px;
+  left: 10px;
+  right: 10px;
   color: #FFFFFF;
   z-index: 3;
   pointer-events: none;
 }
 
 .category-card-content h4 {
-  font-size: 16px;
+  font-size: 12.5px;
   font-weight: 900;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.15;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
   letter-spacing: -0.2px;
 }
 
 .card-restaurantes .category-card-content h4 {
-  font-size: 21px;
+  font-size: 16px;
 }
 
 .category-card-content p {
-  font-size: 12px;
+  font-size: 10px;
   color: #F1F5F9;
-  margin-top: 3px;
+  margin-top: 1px;
   font-weight: 700;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
@@ -535,22 +596,37 @@
   grid-column: 2 / 3;
 }
 
+/* Section Headers - Compact */
+.section-header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.section-title, #establishments-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+}
+
 /* Ofertas del día (Deals Carousel) */
 .deals-section {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .section-subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
-  margin-top: -14px;
-  margin-bottom: 18px;
+  margin-top: -8px;
+  margin-bottom: 14px;
   font-weight: 500;
 }
 
 .btn-view-all {
   color: var(--primary);
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -1107,18 +1183,18 @@
 
 .floating-cart-btn {
   position: fixed;
-  bottom: 80px;
-  right: 20px;
-  background-color: var(--primary);
+  bottom: 74px;
+  right: 18px;
+  background: linear-gradient(135deg, #FF6B00 0%, #E05A00 100%);
   color: #FFFFFF;
-  border-radius: var(--radius-full);
-  padding: 10px 18px;
-  height: 52px;
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  box-shadow: 0 6px 20px rgba(255, 94, 58, 0.5);
+  box-shadow: 0 4px 14px rgba(255, 107, 0, 0.5);
   z-index: 9998;
   transition: transform var(--transition-fast), background-color var(--transition-fast);
   transform: scale(1);
@@ -1132,30 +1208,29 @@
 }
 
 .floating-cart-btn:hover {
-  background-color: var(--primary-hover);
   transform: scale(1.08);
-  box-shadow: 0 8px 20px rgba(255, 94, 58, 0.6);
+  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.7);
 }
 
 .cart-icon {
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .cart-count {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  background-color: #3D1E05; /* Dark brown/black circle */
-  color: #FFFFFF;
-  font-size: 10px;
-  font-weight: 800;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-full);
+  top: -3px;
+  right: -3px;
+  background-color: #0E0E14;
+  color: #FF6B00;
+  font-size: 9.5px;
+  font-weight: 900;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--primary); /* Orange border overlap */
+  border: 1.5px solid #FF6B00;
 }
 
 .cart-count.badge-pop {
@@ -1641,8 +1716,8 @@ body {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
-    gap: 10px;
+    padding: 6px 10px;
+    gap: 6px;
   }
 
   .search-bar-container {
@@ -1651,57 +1726,87 @@ body {
     width: 100%;
   }
 
-  #global-search {
-    padding: 10px 16px 10px 42px;
-    font-size: 13.5px;
-    border-radius: 12px;
+  .search-section-wrapper {
+    padding: 2px 10px 4px 10px !important;
   }
 
+  #global-search {
+    padding: 5px 10px 5px 28px !important;
+    font-size: 11.5px !important;
+    height: 30px !important;
+    border-radius: 8px !important;
+  }
+
+  .search-icon {
+    left: 8px !important;
+    font-size: 11px !important;
+  }
+
+  /* Location Button - Ultra Compact on Mobile */
   .delivery-address-area {
     max-width: none;
     flex-shrink: 0;
-    padding: 4px 10px;
-    gap: 5px;
-    border-radius: 20px;
+    padding: 2px 7px !important;
+    height: 24px !important;
+    max-height: 24px !important;
+    gap: 3px !important;
+    border-radius: 12px !important;
   }
 
-  .delivery-label {
+  .delivery-label, .address-label {
     display: none !important;
   }
 
-  .delivery-address {
-    font-size: 11.5px !important;
-    font-weight: 800 !important;
+  .delivery-address, .address-text {
+    font-size: 10px !important;
+    font-weight: 700 !important;
     white-space: nowrap !important;
+    max-width: 90px !important;
     display: inline-block;
   }
 
   .location-icon {
-    font-size: 13px !important;
+    font-size: 10px !important;
+  }
+
+  .dropdown-arrow, .location-chevron {
+    font-size: 6.5px !important;
   }
 
   .logo-area {
     position: static !important;
     transform: none !important;
+    gap: 6px !important;
   }
 
   .header-logo-badge {
-    width: 32px !important;
-    height: 32px !important;
+    width: 25px !important;
+    height: 25px !important;
   }
 
   .logo-text {
-    font-size: 17px !important;
+    font-size: 14.5px !important;
   }
 
   .logo-slogan {
-    font-size: 8px !important;
-    letter-spacing: 0.5px !important;
+    font-size: 6.8px !important;
+    letter-spacing: 0.4px !important;
   }
 
   .header-actions {
     display: flex !important;
-    gap: 6px;
+    gap: 3px !important;
+  }
+
+  #header-gochopoints-btn,
+  #header-orders-btn,
+  .btn-top-header,
+  #auth-status-container .btn-notification {
+    padding: 2px 6px !important;
+    font-size: 9.5px !important;
+    height: 23px !important;
+    border-radius: 10px !important;
+    gap: 2px !important;
   }
 
   /* Hide the bell icon button on mobile, but keep the auth status container */
@@ -1714,28 +1819,60 @@ body {
   }
 
   .promo-banner-wrapper {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 
   .promo-banner {
     flex-direction: column;
-    padding: 16px;
+    padding: 12px;
     text-align: center;
-    border-radius: 16px;
+    border-radius: 12px;
   }
 
   .promo-content {
     max-width: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .promo-content h2 {
-    font-size: 20px;
+    font-size: 17px;
   }
 
   .promo-illustration {
-    font-size: 32px;
-    gap: 10px;
+    font-size: 26px;
+    gap: 8px;
+  }
+
+  /* Asymmetrical Categories Grid (Restaurantes, Farmacias, Mercados, Ferreterías) */
+  .categories-section {
+    margin-bottom: 14px !important;
+  }
+
+  .categories-grid-delivercity {
+    grid-template-rows: 52px 52px 52px !important;
+    gap: 6px !important;
+  }
+
+  .category-card-delivercity {
+    border-radius: 10px !important;
+  }
+
+  .card-restaurantes .category-card-content h4 {
+    font-size: 14px !important;
+  }
+
+  .category-card-content h4 {
+    font-size: 11.5px !important;
+  }
+
+  .category-card-content p {
+    font-size: 8.5px !important;
+  }
+
+  .category-card-content {
+    bottom: 6px !important;
+    left: 8px !important;
+    right: 8px !important;
   }
 
   /* Horizontal Category Chips Swiper */
@@ -1744,9 +1881,9 @@ body {
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    gap: 10px;
-    padding: 4px 2px;
-    margin-bottom: 10px;
+    gap: 8px;
+    padding: 2px 2px;
+    margin-bottom: 8px;
     width: 100%;
     justify-content: flex-start;
     -webkit-overflow-scrolling: touch;
@@ -1757,50 +1894,89 @@ body {
   }
 
   .category-card {
-    flex: 0 0 130px;
-    padding: 10px;
+    flex: 0 0 110px;
+    padding: 8px;
     border-radius: var(--radius-sm);
   }
 
   .category-icon-wrapper {
-    width: 44px;
-    height: 44px;
-    font-size: 22px;
-    margin-bottom: 6px;
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+    margin-bottom: 4px;
   }
 
   .category-card h4 {
-    font-size: 12.5px;
+    font-size: 11.5px;
   }
 
   .category-card p {
-    font-size: 10px;
+    font-size: 9px;
+  }
+
+  /* Food Bubbles Mobile Scaling */
+  .bubble-story-item {
+    width: 48px !important;
+  }
+
+  .bubble-ring {
+    width: 42px !important;
+    height: 42px !important;
+    padding: 1.5px !important;
+  }
+
+  .bubble-inner {
+    font-size: 17px !important;
+  }
+
+  .bubble-label {
+    font-size: 9.5px !important;
+    max-width: 48px !important;
+    margin-top: 2px !important;
+  }
+
+  .food-bubbles-container {
+    gap: 6px !important;
   }
 
   .establishments-grid {
     grid-template-columns: 1fr !important; /* Single column card list */
-    gap: 14px !important;
+    gap: 10px !important;
   }
 
   .establishments-list-delivercity {
     grid-template-columns: 1fr !important; /* Single column on mobile */
-    gap: 12px !important;
+    gap: 10px !important;
+  }
+
+  .est-row-card {
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .est-row-img-wrapper {
+    height: 90px !important;
+    border-radius: 9px !important;
+  }
+
+  .est-row-header-flex h4 {
+    font-size: 13.5px !important;
   }
 
   .products-grid {
     grid-template-columns: 1fr !important; /* Single column for all menus on mobile */
-    gap: 12px !important;
+    gap: 10px !important;
   }
 
   /* Compact Horizontal Product Layout for Mobile */
   .product-card {
     flex-direction: row !important;
-    padding: 12px 14px !important;
-    gap: 12px !important;
+    padding: 9px 11px !important;
+    gap: 10px !important;
     align-items: center !important;
     justify-content: space-between !important;
     min-width: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 12px !important;
   }
 
   .product-info {
@@ -1809,41 +1985,59 @@ body {
   }
 
   .product-info h4 {
-    font-size: 14.5px !important;
+    font-size: 13.5px !important;
     margin-bottom: 2px !important;
   }
 
   .product-info p {
     -webkit-line-clamp: 2;
-    margin-bottom: 6px;
-    font-size: 11px;
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+
+  .product-price {
+    font-size: 14px !important;
   }
 
   .product-image-container {
-    width: 74px !important;
-    height: 74px !important;
-    min-width: 74px !important;
+    width: 62px !important;
+    height: 62px !important;
+    min-width: 62px !important;
     flex-shrink: 0 !important;
-    border-radius: 10px !important;
+    border-radius: 8px !important;
   }
 
   .product-image-placeholder {
-    font-size: 26px;
+    font-size: 22px;
   }
 
   .btn-add-product {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    font-size: 22px !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    font-size: 17px !important;
   }
 
   /* Floating Cart Button sits above bottom nav */
   .floating-cart-btn {
-    bottom: 80px !important;
-    right: 16px;
-    padding: 12px 18px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    bottom: 68px !important;
+    right: 12px !important;
+    width: 42px !important;
+    height: 42px !important;
+    padding: 0 !important;
+    box-shadow: 0 4px 14px rgba(255, 107, 0, 0.4) !important;
+  }
+
+  .floating-cart-btn .cart-icon {
+    font-size: 18px !important;
+  }
+
+  .floating-cart-btn .cart-count {
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 9px !important;
+    top: -2px !important;
+    right: -2px !important;
   }
 
   /* Dark Full Screen / Bottom Sheet Modals for Mobile App Feel */

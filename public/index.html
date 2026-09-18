@@ -23,16 +23,13 @@
   <!-- App Header (Rapi Gochos Style) -->
   <header class="app-header">
     <div class="header-container">
-      <div class="delivery-address-area" style="cursor: pointer;" onclick="MarketplaceApp.requestAutomaticGPS(true)" title="Toca para actualizar tu ubicación GPS en vivo">
-        <span class="location-icon">📡</span>
-        <div class="address-text-container">
-          <span class="address-label">Ubicación GPS:</span>
-          <span class="address-text" id="header-selected-address">San Antonio del Táchira</span>
-        </div>
+      <div class="delivery-address-area" onclick="MarketplaceApp.requestAutomaticGPS(true)" title="Toca para actualizar tu ubicación GPS en vivo">
+        <span class="location-icon">📍</span>
+        <span class="address-text" id="header-selected-address">San Antonio del Táchira</span>
         <span class="dropdown-arrow">▼</span>
       </div>
       
-      <div class="logo-area" onclick="MarketplaceApp.goHome()" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+      <div class="logo-area" onclick="MarketplaceApp.goHome()" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
         <img src="/images/logo-pedigochos.png" alt="PediGochos" class="header-logo-badge">
         <div class="logo-text-wrapper">
           <h1 class="logo-text">Pedi<span>Gochos</span></h1>
@@ -44,31 +41,31 @@
         </div>
       </div>
 
-      <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
+      <div class="header-actions">
         <!-- GochoPoints Badge -->
-        <button type="button" id="header-gochopoints-btn" onclick="MarketplaceApp.openGochoPointsModal()" title="Ver tus GochoPoints" style="background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid #F59E0B; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        <button type="button" id="header-gochopoints-btn" onclick="MarketplaceApp.openGochoPointsModal()" title="Ver tus GochoPoints">
           ⭐ <span id="header-gochopoints-val">0</span> Pts
         </button>
 
         <!-- User Orders History Button -->
-        <button type="button" id="header-orders-btn" onclick="MarketplaceApp.openUserOrdersModal()" title="Mis Pedidos" style="background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid #3B82F6; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        <button type="button" id="header-orders-btn" onclick="MarketplaceApp.openUserOrdersModal()" title="Mis Pedidos">
           📋 <span>Mis Pedidos</span>
         </button>
 
         <!-- Top Back Button -->
-        <button class="btn-top-header" onclick="MarketplaceApp.handleNavBack()" title="Volver / Atrás" style="background: rgba(255,255,255,0.08); color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; font-size: 13px; font-weight: 700; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        <button class="btn-top-header" onclick="MarketplaceApp.handleNavBack()" title="Volver / Atrás">
           <span>⬅</span> <span>Atrás</span>
         </button>
 
         <!-- Top Header Cart Button -->
-        <button class="btn-top-header" onclick="MarketplaceApp.openCartModal()" title="Ver Carrito" style="background: var(--primary); color: #fff; border: none; padding: 6px 14px; font-size: 13px; font-weight: 800; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(255, 94, 58, 0.35);">
+        <button class="btn-top-header btn-header-cart" onclick="MarketplaceApp.openCartModal()" title="Ver Carrito">
           <span>🛒</span>
           <span id="header-cart-badge-count">0</span>
-          <span id="header-cart-badge-total" style="font-size: 11px; opacity: 0.9;">$0</span>
+          <span id="header-cart-badge-total">$0</span>
         </button>
         
-        <div id="auth-status-container" style="display: flex; align-items: center; gap: 8px;">
-          <button class="btn-notification" onclick="MarketplaceApp.loginWithGoogle()" title="Iniciar Sesión" style="background-color: rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; font-size: 12px; font-weight: 700; width: auto; height: auto; border-radius: 20px;">
+        <div id="auth-status-container">
+          <button class="btn-notification" onclick="MarketplaceApp.loginWithGoogle()" title="Iniciar Sesión">
             🔑 Ingresar
           </button>
         </div>
