@@ -71,6 +71,17 @@ class MarketplaceController {
     this.currentCategory = null; // Default to no category selected on home entry
     this.paymentMethod = 'Efectivo'; // Default payment method: 'Efectivo' or 'Transferencia'
     this.isTrackingMinimized = false; // Whether active order tracking is minimized
+
+    // Ride-hailing service state
+    this.rideOrigin = { lat: null, lng: null, address: '' };
+    this.rideDestination = { lat: null, lng: null, address: '' };
+    this.selectedVehicle = 'moto';
+    this.rideDistanceKm = 0;
+    this.rideFares = { moto: 4000, auto: 8000, lujo: 14000 };
+    this.rideLeafMap = null;
+    this.rideOriginMarker = null;
+    this.rideDestMarker = null;
+    this.rideRouteLine = null;
   }
 
   async forceCleanUpdate() {
@@ -6817,6 +6828,372 @@ class MarketplaceController {
       };
       qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(url)}&color=0F172A&bgcolor=FFFFFF&margin=1`;
     }
+  }
+
+  // ==========================================
+  // RIDE HAILING (MOTO TAXI, AUTO, LUJO) LOGIC
+  // ==========================================
+
+  openRideModal() {
+    const modal = document.getElementById('ride-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    // Autofill user details if logged in or saved
+    const savedName = localStorage.getItem('order_customer_name') || (this.currentUser && this.currentUser.name) || '';
+    const savedPhone = localStorage.getItem('order_customer_phone') || (this.currentUser && this.currentUser.phone) || '';
+    const nameInp = document.getElementById('ride-customer-name');
+    const phoneInp = document.getElementById('ride-customer-phone');
+    if (nameInp && !nameInp.value && savedName) nameInp.value = savedName;
+    if (phoneInp && !phoneInp.value && savedPhone) phoneInp.value = savedPhone;
+
+    // Set initial vehicle
+    this.selectRideVehicle(this.selectedVehicle || 'moto');
+
+    // Detect GPS origin if not set yet
+    if (!this.rideOrigin || !this.rideOrigin.lat) {
+      this.refreshRideOriginGPS();
+    } else {
+      this.setRideOrigin(this.rideOrigin.lat, this.rideOrigin.lng, this.rideOrigin.address || 'Mi Ubicación Actual');
+    }
+
+    // Initialize or resize map
+    setTimeout(() => {
+      this.initRideMap();
+    }, 250);
+  }
+
+  closeRideModal() {
+    const modal = document.getElementById('ride-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  refreshRideOriginGPS() {
+    const originInp = document.getElementById('ride-origin-input');
+    const coordsSpan = document.getElementById('ride-origin-coords-text');
+    if (originInp) originInp.value = 'Detectando ubicación GPS...';
+    if (coordsSpan) coordsSpan.innerText = '📡 Obteniendo señal GPS...';
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          this.setRideOrigin(lat, lng, 'Mi Ubicación GPS Actual');
+          this.showToast('📍 Ubicación GPS detectada');
+        },
+        (err) => {
+          console.warn('Ride geolocation error:', err);
+          const cachedLat = localStorage.getItem('user_gps_lat');
+          const cachedLng = localStorage.getItem('user_gps_lng');
+          if (cachedLat && cachedLng) {
+            this.setRideOrigin(parseFloat(cachedLat), parseFloat(cachedLng), 'Última Ubicación Conocida');
+          } else {
+            this.setRideOrigin(7.8145, -72.4455, 'San Antonio del Táchira (Centro)');
+          }
+          this.showToast('📍 Puedes ajustar tu ubicación en el mapa');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      this.setRideOrigin(7.8145, -72.4455, 'San Antonio del Táchira (Centro)');
+    }
+  }
+
+  setRideOrigin(lat, lng, label = 'Mi Ubicación') {
+    this.rideOrigin = { lat, lng, address: label };
+    const originInp = document.getElementById('ride-origin-input');
+    const coordsSpan = document.getElementById('ride-origin-coords-text');
+    if (originInp) originInp.value = label;
+    if (coordsSpan) coordsSpan.innerText = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+    try {
+      localStorage.setItem('user_gps_lat', lat.toString());
+      localStorage.setItem('user_gps_lng', lng.toString());
+    } catch (e) {}
+
+    if (this.rideLeafMap && typeof L !== 'undefined') {
+      const originIcon = L.divIcon({
+        className: 'custom-ride-origin-marker',
+        html: `<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
+                 <div style="position: absolute; width: 34px; height: 34px; background: rgba(16, 185, 129, 0.35); border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+                 <div style="position: relative; background: #10B981; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.6); border: 2px solid white;">🟢</div>
+               </div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      });
+
+      if (this.rideOriginMarker) {
+        this.rideOriginMarker.setLatLng([lat, lng]);
+      } else {
+        this.rideOriginMarker = L.marker([lat, lng], { icon: originIcon, draggable: true }).addTo(this.rideLeafMap);
+        this.rideOriginMarker.on('dragend', (e) => {
+          const newPos = e.target.getLatLng();
+          this.setRideOrigin(newPos.lat, newPos.lng, 'Punto de recogida ajustado');
+        });
+      }
+      this.updateRideRoute();
+    }
+  }
+
+  initRideMap() {
+    if (typeof L === 'undefined') {
+      console.warn('Leaflet map library is not loaded');
+      return;
+    }
+    const mapContainer = document.getElementById('ride-leaflet-map');
+    if (!mapContainer) return;
+
+    if (this.rideLeafMap) {
+      this.rideLeafMap.invalidateSize();
+      if (this.rideOrigin && this.rideOrigin.lat && this.rideOrigin.lng) {
+        if (!this.rideOriginMarker) {
+          this.setRideOrigin(this.rideOrigin.lat, this.rideOrigin.lng, this.rideOrigin.address);
+        }
+      }
+      return;
+    }
+
+    const defaultCenter = (this.rideOrigin && this.rideOrigin.lat) 
+      ? [this.rideOrigin.lat, this.rideOrigin.lng] 
+      : [7.8145, -72.4455];
+
+    this.rideLeafMap = L.map('ride-leaflet-map', {
+      center: defaultCenter,
+      zoom: 14,
+      zoomControl: true
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(this.rideLeafMap);
+
+    this.rideLeafMap.on('click', (e) => {
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+      this.setRideDestination(lat, lng, `Destino fijado en mapa (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+    });
+
+    if (this.rideOrigin && this.rideOrigin.lat && this.rideOrigin.lng) {
+      this.setRideOrigin(this.rideOrigin.lat, this.rideOrigin.lng, this.rideOrigin.address);
+    }
+  }
+
+  selectQuickDestination(name, lat, lng) {
+    const destInp = document.getElementById('ride-dest-input');
+    if (destInp) destInp.value = name;
+    this.setRideDestination(lat, lng, name);
+  }
+
+  onRideDestInput(val) {
+    if (!this.rideDestination) {
+      this.rideDestination = {};
+    }
+    this.rideDestination.address = val;
+    if (!this.rideDestination.lat && this.rideOrigin && this.rideOrigin.lat) {
+      const estimatedDist = 2.5;
+      this.rideDistanceKm = estimatedDist;
+      this.calculateRideFares(estimatedDist);
+    }
+  }
+
+  setRideDestination(lat, lng, addressName) {
+    this.rideDestination = { lat, lng, address: addressName };
+    const destInp = document.getElementById('ride-dest-input');
+    if (destInp) destInp.value = addressName;
+
+    if (this.rideLeafMap && typeof L !== 'undefined') {
+      const destIcon = L.divIcon({
+        className: 'custom-ride-dest-marker',
+        html: `<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
+                 <div style="position: absolute; width: 34px; height: 34px; background: rgba(255, 107, 0, 0.35); border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+                 <div style="position: relative; background: #FF6B00; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 3px 10px rgba(255, 107, 0, 0.6); border: 2px solid white;">🏁</div>
+               </div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      });
+
+      if (this.rideDestMarker) {
+        this.rideDestMarker.setLatLng([lat, lng]);
+      } else {
+        this.rideDestMarker = L.marker([lat, lng], { icon: destIcon, draggable: true }).addTo(this.rideLeafMap);
+        this.rideDestMarker.on('dragend', (e) => {
+          const newPos = e.target.getLatLng();
+          this.setRideDestination(newPos.lat, newPos.lng, `Destino ajustado (${newPos.lat.toFixed(4)}, ${newPos.lng.toFixed(4)})`);
+        });
+      }
+      this.updateRideRoute();
+    }
+  }
+
+  updateRideRoute() {
+    if (!this.rideLeafMap || typeof L === 'undefined') return;
+
+    if (this.rideOrigin && this.rideOrigin.lat && this.rideDestination && this.rideDestination.lat) {
+      const dist = this.calculateGeodesicDistance(
+        this.rideOrigin.lat,
+        this.rideOrigin.lng,
+        this.rideDestination.lat,
+        this.rideDestination.lng
+      );
+      this.rideDistanceKm = Math.max(0.5, parseFloat(dist.toFixed(1)));
+
+      const distBadge = document.getElementById('ride-distance-badge');
+      if (distBadge) {
+        distBadge.innerText = `📏 Distancia: ${this.rideDistanceKm} km`;
+      }
+
+      if (this.rideRouteLine) {
+        this.rideLeafMap.removeLayer(this.rideRouteLine);
+      }
+      this.rideRouteLine = L.polyline([
+        [this.rideOrigin.lat, this.rideOrigin.lng],
+        [this.rideDestination.lat, this.rideDestination.lng]
+      ], {
+        color: '#FF6B00',
+        weight: 4,
+        dashArray: '6, 8'
+      }).addTo(this.rideLeafMap);
+
+      try {
+        const bounds = L.latLngBounds([
+          [this.rideOrigin.lat, this.rideOrigin.lng],
+          [this.rideDestination.lat, this.rideDestination.lng]
+        ]);
+        this.rideLeafMap.fitBounds(bounds, { padding: [30, 30] });
+      } catch (e) {}
+
+      this.calculateRideFares(this.rideDistanceKm);
+    } else {
+      this.calculateRideFares(1.0);
+    }
+  }
+
+  calculateRideFares(distanceKm = 1.0) {
+    const d = parseFloat(distanceKm) || 1.0;
+    
+    // Moto Taxi: Base $4.000 COP (hasta 2 km) + $1.500 COP/km extra
+    const moto = d <= 2 ? 4000 : 4000 + Math.ceil(d - 2) * 1500;
+
+    // Auto Estándar: Base $8.000 COP (hasta 2 km) + $2.500 COP/km extra
+    const auto = d <= 2 ? 8000 : 8000 + Math.ceil(d - 2) * 2500;
+
+    // Lujo / VIP: Base $14.000 COP (hasta 2 km) + $4.000 COP/km extra
+    const lujo = d <= 2 ? 14000 : 14000 + Math.ceil(d - 2) * 4000;
+
+    this.rideFares = { moto, auto, lujo };
+
+    const pMoto = document.getElementById('ride-price-moto');
+    const pAuto = document.getElementById('ride-price-auto');
+    const pLujo = document.getElementById('ride-price-lujo');
+    if (pMoto) pMoto.innerText = `$${moto.toLocaleString('es-CO')}`;
+    if (pAuto) pAuto.innerText = `$${auto.toLocaleString('es-CO')}`;
+    if (pLujo) pLujo.innerText = `$${lujo.toLocaleString('es-CO')}`;
+
+    this.updateRideSubmitButton();
+  }
+
+  selectRideVehicle(type) {
+    this.selectedVehicle = type; // 'moto' | 'auto' | 'lujo'
+
+    ['moto', 'auto', 'lujo'].forEach(v => {
+      const card = document.getElementById(`vehicle-card-${v}`);
+      if (card) {
+        if (v === type) card.classList.add('active');
+        else card.classList.remove('active');
+      }
+    });
+
+    this.updateRideSubmitButton();
+  }
+
+  updateRideSubmitButton() {
+    const btnText = document.getElementById('btn-submit-ride-text');
+    if (!btnText) return;
+
+    const vehicleNames = {
+      moto: 'Moto Taxi',
+      auto: 'Auto',
+      lujo: 'Auto de Lujo'
+    };
+
+    const vType = this.selectedVehicle || 'moto';
+    const name = vehicleNames[vType] || 'Moto Taxi';
+    const fare = (this.rideFares && this.rideFares[vType]) ? this.rideFares[vType] : 4000;
+    const formattedFare = `$${fare.toLocaleString('es-CO')} COP`;
+
+    btnText.innerText = `Pedir ${name} por WhatsApp (${formattedFare})`;
+  }
+
+  sendRideRequestWhatsApp() {
+    const nameInp = document.getElementById('ride-customer-name');
+    const phoneInp = document.getElementById('ride-customer-phone');
+    const originInp = document.getElementById('ride-origin-input');
+    const destInp = document.getElementById('ride-dest-input');
+    const notesInp = document.getElementById('ride-notes-input');
+
+    const customerName = (nameInp ? nameInp.value : '').trim();
+    const customerPhone = (phoneInp ? phoneInp.value : '').trim();
+    const originAddress = (originInp ? originInp.value : '').trim() || (this.rideOrigin && this.rideOrigin.address) || 'Ubicación GPS';
+    const destAddress = (destInp ? destInp.value : '').trim() || (this.rideDestination && this.rideDestination.address) || '';
+    const notes = (notesInp ? notesInp.value : '').trim();
+
+    if (!customerName) {
+      this.showToast('⚠️ Por favor indica tu nombre');
+      if (nameInp) nameInp.focus();
+      return;
+    }
+    if (!customerPhone) {
+      this.showToast('⚠️ Por favor indica tu número de teléfono / WhatsApp');
+      if (phoneInp) phoneInp.focus();
+      return;
+    }
+    if (!destAddress) {
+      this.showToast('⚠️ Por favor selecciona o escribe tu destino');
+      if (destInp) destInp.focus();
+      return;
+    }
+
+    try {
+      localStorage.setItem('order_customer_name', customerName);
+      localStorage.setItem('order_customer_phone', customerPhone);
+    } catch (e) {}
+
+    const vType = this.selectedVehicle || 'moto';
+    const vehicleLabels = {
+      moto: '🛵 *MOTO TAXI* (Rápido y económico)',
+      auto: '🚗 *AUTO ESTÁNDAR* (Hasta 4 personas)',
+      lujo: '✨ *AUTO DE LUJO / VIP* (Máximo confort con A/C)'
+    };
+    const vehicleTitle = vehicleLabels[vType] || '🛵 MOTO TAXI';
+    const fare = (this.rideFares && this.rideFares[vType]) ? this.rideFares[vType] : 4000;
+    const formattedFare = `$${fare.toLocaleString('es-CO')} COP`;
+
+    const originLink = (this.rideOrigin && this.rideOrigin.lat && this.rideOrigin.lng)
+      ? `https://www.google.com/maps?q=${this.rideOrigin.lat},${this.rideOrigin.lng}`
+      : 'Ubicación aproximada';
+
+    const destLink = (this.rideDestination && this.rideDestination.lat && this.rideDestination.lng)
+      ? `https://www.google.com/maps?q=${this.rideDestination.lat},${this.rideDestination.lng}`
+      : destAddress;
+
+    const message = `🚖 *¡SOLICITUD DE VEHÍCULO - PEDIGOCHOS!* 🚖\n\n` +
+      `👤 *Cliente:* ${customerName}\n` +
+      `📱 *Teléfono:* ${customerPhone}\n` +
+      `🛞 *Tipo de Servicio:* ${vehicleTitle}\n\n` +
+      `🟢 *Punto de Recogida (Origen):*\n${originAddress}\n` +
+      (originLink.startsWith('http') ? `🔗 Ver en Mapa: ${originLink}\n\n` : `\n`) +
+      `🏁 *Destino:*\n${destAddress}\n` +
+      (destLink.startsWith('http') ? `🔗 Ver en Mapa: ${destLink}\n\n` : `\n`) +
+      `📏 *Distancia Estimada:* ${this.rideDistanceKm || 1} km\n` +
+      `💰 *Tarifa Estimada:* ${formattedFare}\n` +
+      (notes ? `📝 *Referencia del Encuentro:* ${notes}\n\n` : `\n`) +
+      `⚡ _Por favor confirmar disponibilidad del conductor para pasar a buscarme. ¡Gracias!_`;
+
+    const waUrl = `https://wa.me/573227949751?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+    this.showToast('🚀 Solicitud enviada por WhatsApp');
+    this.closeRideModal();
   }
 }
 

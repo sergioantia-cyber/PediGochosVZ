@@ -3172,3 +3172,125 @@ body {
   align-items: center;
   gap: 6px;
 }
+
+/* ==========================================================
+   PediGochos Móvil - Ride & Vehicle Booking Styles
+   ========================================================== */
+.btn-ride-header {
+  background: linear-gradient(135deg, #FF6B00 0%, #E05A00 100%) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  padding: 3px 9px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.35) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  height: 25px !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.btn-ride-header:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.5) !important;
+}
+
+.quick-btn.btn-quick-ride {
+  background: rgba(255, 107, 0, 0.14);
+  color: #FF6B00;
+  border: 1px solid rgba(255, 107, 0, 0.35);
+}
+.quick-btn.btn-quick-ride:hover,
+.quick-btn.btn-quick-ride:active {
+  background: #FF6B00;
+  color: #FFF;
+}
+
+.ride-promo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 107, 0, 0.25);
+  border-color: rgba(255, 107, 0, 0.6);
+}
+
+.ride-dest-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #CBD5E1;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.ride-dest-chip:hover,
+.ride-dest-chip:active {
+  background: rgba(255, 107, 0, 0.2);
+  border-color: #FF6B00;
+  color: #FFF;
+}
+
+.vehicle-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.vehicle-card {
+  background: #141721;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 10px 6px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  touch-action: manipulation;
+}
+.vehicle-card:hover {
+  border-color: rgba(255, 107, 0, 0.5);
+  background: rgba(255, 107, 0, 0.06);
+}
+.vehicle-card.active {
+  border-color: #FF6B00;
+  background: rgba(255, 107, 0, 0.16);
+  box-shadow: 0 0 16px rgba(255, 107, 0, 0.35);
+  transform: scale(1.02);
+}
+.vehicle-card .vehicle-icon {
+  font-size: 24px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.vehicle-card .vehicle-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #FFF;
+}
+.vehicle-card.active .vehicle-name {
+  color: #FF6B00;
+}
+.vehicle-card .vehicle-desc {
+  font-size: 10px;
+  color: #94A3B8;
+  margin-bottom: 4px;
+}
+.vehicle-card .vehicle-price {
+  font-size: 12px;
+  font-weight: 900;
+  color: #10B981;
+}
+.vehicle-card.active .vehicle-price {
+  color: #34D399;
+}
+

@@ -52,6 +52,11 @@
           📋 <span>Mis Pedidos</span>
         </button>
 
+        <!-- Ride Hailing (Moto Taxi / Carro) Button -->
+        <button type="button" id="header-ride-btn" onclick="MarketplaceApp.openRideModal()" title="Pedir Moto Taxi o Auto" class="btn-ride-header">
+          🛵 <span>Pedir Móvil</span>
+        </button>
+
         <!-- Top Back Button -->
         <button class="btn-top-header" onclick="MarketplaceApp.handleNavBack()" title="Volver / Atrás">
           <span>⬅</span> <span>Atrás</span>
@@ -179,7 +184,25 @@
         </div>
       </section>
 
-
+      <!-- Ride Service Promotion Banner -->
+      <div class="ride-promo-card" onclick="MarketplaceApp.openRideModal()" style="background: linear-gradient(135deg, #1E222D 0%, #252A38 100%); border: 1.5px solid rgba(255, 107, 0, 0.35); border-radius: 18px; padding: 14px 16px; margin: 16px 0 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,0.25); transition: transform 0.2s, box-shadow 0.2s;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 46px; height: 46px; border-radius: 14px; background: rgba(255, 107, 0, 0.15); border: 1.5px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; box-shadow: 0 0 14px rgba(255, 107, 0, 0.35);">
+            🛵
+          </div>
+          <div>
+            <h4 style="margin: 0 0 2px 0; font-size: 14px; font-weight: 900; color: #FFFFFF; display: flex; align-items: center; gap: 6px;">
+              ¿Necesitas trasladarte? <span style="font-size: 10px; background: #FF6B00; color: #FFF; padding: 1px 7px; border-radius: 8px; font-weight: 800;">EN VIVO</span>
+            </h4>
+            <p style="margin: 0; font-size: 11.5px; color: #94A3B8; line-height: 1.3;">
+              Pide tu <strong>Moto Taxi</strong>, <strong>Auto</strong> o <strong>Lujo</strong> con tarifa calculada por GPS.
+            </p>
+          </div>
+        </div>
+        <button type="button" style="background: linear-gradient(135deg, #FF6B00 0%, #E05A00 100%); color: #FFF; border: none; padding: 8px 14px; border-radius: 12px; font-weight: 900; font-size: 12px; white-space: nowrap; cursor: pointer; box-shadow: 0 3px 12px rgba(255, 107, 0, 0.35); pointer-events: none;">
+          Pedir ➔
+        </button>
+      </div>
 
       <!-- Establishments List (Popular) -->
       <section class="establishments-section">
@@ -295,6 +318,10 @@
     <button class="quick-btn btn-quick-back" onclick="MarketplaceApp.handleNavBack()" title="Regresar / Atrás">
       <span class="quick-icon">⬅️</span>
       <span class="quick-label">Atrás</span>
+    </button>
+    <button class="quick-btn btn-quick-ride" onclick="MarketplaceApp.openRideModal()" title="Pedir Moto Taxi o Auto">
+      <span class="quick-icon">🛵</span>
+      <span class="quick-label">Viajes</span>
     </button>
     <button class="quick-btn btn-quick-cart" onclick="MarketplaceApp.openCartModal()" title="Ver Carrito">
       <span class="quick-icon">🛒</span>
@@ -1077,6 +1104,8 @@
           ¿Ya tienes tu local registrado? <a href="/kitchen.html" style="color: #F59E0B; font-weight: 800; text-decoration: none;">Abrir Cocina / KDS 🍳</a>
         </p>
       </div>
+    </div>
+  </div>
 
   <!-- Modal: Visualizador de Código QR de Pago en Alta Resolución -->
   <div class="modal-overlay" id="payment-qr-zoom-modal" style="display: none; z-index: 5200; align-items: center; justify-content: center; background: rgba(0,0,0,0.88); backdrop-filter: blur(12px);">
@@ -1097,6 +1126,127 @@
       <button type="button" onclick="MarketplaceApp.closePaymentQRZoom()" style="width: 100%; padding: 12px; border-radius: 12px; background: #3B82F6; color: #FFF; border: none; font-weight: 800; font-size: 13px; cursor: pointer;">
         Cerrar Visualizador
       </button>
+    </div>
+  </div>
+
+  <!-- Modal: Solicitud de Vehículos (Moto Taxi, Auto, Lujo) con GPS y WhatsApp -->
+  <div class="modal-overlay" id="ride-modal" style="display: none; z-index: 5100; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+    <div class="modal-content ride-modal-content" style="max-width: 480px; width: 94%; max-height: 90vh; overflow-y: auto; background: #1E222D; border: 1.5px solid rgba(255, 107, 0, 0.45); border-radius: 24px; padding: 20px 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); color: #FFF; position: relative;">
+      
+      <!-- Close Button -->
+      <button type="button" class="btn-close" onclick="MarketplaceApp.closeRideModal()" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.08); border: none; color: #FFF; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: 800;">✕</button>
+
+      <!-- Modal Header -->
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 107, 0, 0.15); border: 2px solid #FF6B00; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 6px; box-shadow: 0 0 16px rgba(255, 107, 0, 0.4);">
+          🛵
+        </div>
+        <h3 style="font-size: 19px; font-weight: 900; color: #FFFFFF; margin: 0 0 4px 0; letter-spacing: -0.2px;">PediGochos Móvil</h3>
+        <p style="font-size: 12px; color: #94A3B8; margin: 0;">Pide tu <strong>Moto Taxi</strong> o <strong>Auto</strong> con tarifa calculada al instante</p>
+      </div>
+
+      <!-- Form Container -->
+      <form id="ride-request-form" onsubmit="event.preventDefault(); MarketplaceApp.sendRideRequestWhatsApp();">
+        
+        <!-- Step 1: Origin (Current GPS) -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <label style="font-size: 12px; font-weight: 800; color: #10B981; display: flex; align-items: center; gap: 4px;">
+              <span>🟢</span> Punto de Origen (Tu Ubicación)
+            </label>
+            <button type="button" onclick="MarketplaceApp.refreshRideOriginGPS()" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+              <span>🎯</span> Mi GPS
+            </button>
+          </div>
+          <input type="text" id="ride-origin-input" required placeholder="Detectando tu ubicación GPS..." style="width: 100%; padding: 9px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12.5px; box-sizing: border-box;">
+          <div id="ride-origin-coords-badge" style="font-size: 10.5px; color: #6EE7B7; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+            <span>📡 Coordenadas: </span><span id="ride-origin-coords-text">Esperando señal GPS...</span>
+          </div>
+        </div>
+
+        <!-- Step 2: Destination -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 12px;">
+          <label style="font-size: 12px; font-weight: 800; color: #FF6B00; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
+            <span>🏁</span> ¿A dónde vas? (Destino) *
+          </label>
+          <input type="text" id="ride-dest-input" required placeholder="Escribe tu destino o toca en el mapa..." oninput="MarketplaceApp.onRideDestInput(this.value)" style="width: 100%; padding: 9px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12.5px; box-sizing: border-box;">
+          
+          <!-- Quick Destination Chips -->
+          <div style="display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px 0; -webkit-overflow-scrolling: touch;" class="premium-scroll">
+            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Terminal de Pasajeros', 7.8180, -72.4410)">🏢 Terminal San Antonio</button>
+            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Puente Simón Bolívar', 7.8285, -72.4542)">🌉 Puente Simón Bolívar</button>
+            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Plaza Bolívar / Centro', 7.8145, -72.4455)">🏛️ Centro / Plaza</button>
+            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Ureña / Centro', 7.9192, -72.4468)">🏙️ Ureña</button>
+            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Hospital / Centro de Salud', 7.8120, -72.4430)">🏥 Hospital</button>
+          </div>
+        </div>
+
+        <!-- Interactive Map Container -->
+        <div style="margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #CBD5E1;">🗺️ Toca en el mapa para fijar tu destino:</span>
+            <span id="ride-distance-badge" style="font-size: 11.5px; font-weight: 800; color: #FF6B00; background: rgba(255, 107, 0, 0.15); border: 1px solid rgba(255, 107, 0, 0.3); padding: 2px 8px; border-radius: 8px;">📏 Distancia: -- km</span>
+          </div>
+          <div id="ride-leaflet-map" style="width: 100%; height: 210px; border-radius: 14px; border: 1.5px solid rgba(255,255,255,0.12); overflow: hidden; background: #0F172A; box-shadow: 0 4px 14px rgba(0,0,0,0.3);"></div>
+        </div>
+
+        <!-- Step 3: Vehicle Type Selection (3 Options) -->
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 12px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 8px;">🚖 Selecciona tu Vehículo:</label>
+          
+          <div class="vehicle-selector-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <!-- Option 1: Moto Taxi -->
+            <div class="vehicle-card active" id="vehicle-card-moto" onclick="MarketplaceApp.selectRideVehicle('moto')">
+              <span class="vehicle-icon">🛵</span>
+              <span class="vehicle-name">Moto Taxi</span>
+              <span class="vehicle-desc">1 pasajero</span>
+              <span class="vehicle-price" id="ride-price-moto">$4.000</span>
+            </div>
+
+            <!-- Option 2: Auto Estándar -->
+            <div class="vehicle-card" id="vehicle-card-auto" onclick="MarketplaceApp.selectRideVehicle('auto')">
+              <span class="vehicle-icon">🚗</span>
+              <span class="vehicle-name">Auto</span>
+              <span class="vehicle-desc">Hasta 4 pers.</span>
+              <span class="vehicle-price" id="ride-price-auto">$8.000</span>
+            </div>
+
+            <!-- Option 3: Lujo / VIP -->
+            <div class="vehicle-card" id="vehicle-card-lujo" onclick="MarketplaceApp.selectRideVehicle('lujo')">
+              <span class="vehicle-icon">✨</span>
+              <span class="vehicle-name">Lujo</span>
+              <span class="vehicle-desc">Confort A/C</span>
+              <span class="vehicle-price" id="ride-price-lujo">$14.000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Customer Details -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label style="font-size: 11px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 3px;">👤 Tu Nombre *</label>
+            <input type="text" id="ride-customer-name" required placeholder="Ej. Sergio Pérez" style="width: 100%; padding: 8px 10px; border-radius: 9px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12px; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 3px;">📱 Tu WhatsApp *</label>
+            <input type="tel" id="ride-customer-phone" required placeholder="Ej. 0414... / 320..." style="width: 100%; padding: 8px 10px; border-radius: 9px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12px; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 11px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 3px;">📝 Referencia del Punto de Encuentro (Opcional)</label>
+          <input type="text" id="ride-notes-input" placeholder="Ej. Frente a la farmacia, casa con rejas blancas..." style="width: 100%; padding: 8px 10px; border-radius: 9px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12px; box-sizing: border-box;">
+        </div>
+
+        <!-- Step 5: Submit WhatsApp Button -->
+        <button type="submit" id="btn-submit-ride-wa" style="width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: #FFF; border: none; padding: 13px; border-radius: 14px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 18px rgba(37, 211, 102, 0.4); touch-action: manipulation; transition: transform 0.2s;">
+          <span>💬</span> <span id="btn-submit-ride-text">Pedir Moto Taxi por WhatsApp ($4.000 COP)</span>
+        </button>
+
+        <button type="button" onclick="MarketplaceApp.closeRideModal()" style="width: 100%; background: transparent; color: #94A3B8; border: none; padding: 8px; font-size: 12px; cursor: pointer; margin-top: 4px;">
+          Cancelar
+        </button>
+      </form>
     </div>
   </div>
 
