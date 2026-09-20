@@ -7276,6 +7276,26 @@ class MarketplaceController {
   }
 
   // ========================================================
+  // SERVICES MENU MODAL METHODS
+  // ========================================================
+
+  toggleServicesMenu(force = null) {
+    const modal = document.getElementById('services-menu-modal');
+    if (!modal) return;
+    const isVisible = modal.style.display === 'flex';
+    const show = force !== null ? force : !isVisible;
+    if (show) {
+      this.closeSosMenu();
+    }
+    modal.style.display = show ? 'flex' : 'none';
+  }
+
+  closeServicesMenu() {
+    const modal = document.getElementById('services-menu-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  // ========================================================
   // S.O.S EMERGENCY & 24H MOBILE CAUCHERA METHODS
   // ========================================================
 
@@ -7284,6 +7304,9 @@ class MarketplaceController {
     if (!modal) return;
     const isVisible = modal.style.display === 'flex';
     const show = force !== null ? force : !isVisible;
+    if (show) {
+      this.closeServicesMenu();
+    }
     modal.style.display = show ? 'flex' : 'none';
   }
 
