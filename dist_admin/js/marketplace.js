@@ -7150,21 +7150,92 @@ class MarketplaceController {
   }
 
   onRideDestInput(val) {
+    const text = (val || '').trim();
     if (!this.rideDestination) {
       this.rideDestination = {};
     }
-    this.rideDestination.address = val;
-    if (!this.rideDestination.lat && this.rideOrigin && this.rideOrigin.lat) {
-      const estimatedDist = 2.5;
-      this.rideDistanceKm = estimatedDist;
-      this.calculateRideFares(estimatedDist);
+    this.rideDestination.address = text;
+
+    if (!text || text.length < 2) {
+      return;
     }
+
+    const norm = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    // 1. Comprehensive Local Landmarks & Sectors Recognition for San Antonio / Ureña / Frontera
+    const localPlaces = [
+      { keys: ['terminal', 'expreso', 'bus'], name: 'Terminal de Pasajeros', lat: 7.8180, lng: -72.4410 },
+      { keys: ['puente', 'bolivar', 'simon bolivar', 'frontera', 'aduana', 'seniat', 'migracion', 'la linea'], name: 'Puente Internacional Simón Bolívar', lat: 7.8285, lng: -72.4542 },
+      { keys: ['plaza bolivar', 'plaza', 'centro', 'alcaldia', 'banco', 'comercio'], name: 'Plaza Bolívar / Centro', lat: 7.8145, lng: -72.4455 },
+      { keys: ['hospital', 'cdi', 'ambulatorio', 'seguro', 'medico', 'clinica', 'salud'], name: 'Hospital Dr. Samuel Darío Maldonado', lat: 7.8120, lng: -72.4430 },
+      { keys: ['urena', 'pedro maria urena'], name: 'Ureña / Centro', lat: 7.9192, lng: -72.4468 },
+      { keys: ['tienditas', 'atanasio girardot'], name: 'Puente Atanasio Girardot (Tienditas)', lat: 7.8680, lng: -72.4560 },
+      { keys: ['aeropuerto', 'pista', 'avion'], name: 'Aeropuerto Juan Vicente Gómez', lat: 7.8398, lng: -72.4402 },
+      { keys: ['palotal'], name: 'Palotal', lat: 7.8020, lng: -72.4460 },
+      { keys: ['llano', 'el llano'], name: 'Barrio El Llano', lat: 7.8115, lng: -72.4490 },
+      { keys: ['peracal', 'alcabala'], name: 'Alcabala de Peracal', lat: 7.8290, lng: -72.4210 },
+      { keys: ['libertadores', '5 de julio', 'miranda', 'obrero'], name: 'Sector Libertadores / Obrero', lat: 7.8170, lng: -72.4480 },
+      { keys: ['cementerio'], name: 'Cementerio Municipal', lat: 7.8090, lng: -72.4415 }
+    ];
+
+    // Check street grid numbers: "calle 4", "carrera 6", etc.
+    const calleMatch = norm.match(/calle\s*(\d+)/i);
+    const carreraMatch = norm.match(/carrera\s*(\d+)/i);
+
+    const match = localPlaces.find(p => p.keys.some(k => norm.includes(k)));
+
+    if (match) {
+      this.setRideDestination(match.lat, match.lng, text, false);
+      return;
+    }
+
+    if (calleMatch || carreraMatch) {
+      const calleNum = calleMatch ? parseInt(calleMatch[1]) : 4;
+      const carreraNum = carreraMatch ? parseInt(carreraMatch[1]) : 6;
+      // San Antonio del Táchira street grid coordinate mapping
+      const baseLat = 7.8145 - ((calleNum - 4) * 0.0009);
+      const baseLng = -72.4455 + ((carreraNum - 6) * 0.0009);
+      this.setRideDestination(baseLat, baseLng, text, false);
+      return;
+    }
+
+    // 2. Debounced Online OpenStreetMap Nominatim Geocoding for anywhere else
+    clearTimeout(this._destGeocodeTimer);
+    this._destGeocodeTimer = setTimeout(() => {
+      if (!this.rideLeafMap) return;
+      const query = encodeURIComponent(text + ', San Antonio del Táchira, Venezuela');
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`)
+        .then(res => res.json())
+        .then(results => {
+          if (results && results.length > 0) {
+            const foundLat = parseFloat(results[0].lat);
+            const foundLng = parseFloat(results[0].lon);
+            if (!isNaN(foundLat) && !isNaN(foundLng)) {
+              this.setRideDestination(foundLat, foundLng, text, false);
+            }
+          } else {
+            // If not found online, offset gently from origin to visually mark destination on map
+            if (this.rideOrigin && this.rideOrigin.lat) {
+              const fallbackLat = this.rideOrigin.lat + 0.012;
+              const fallbackLng = this.rideOrigin.lng + 0.008;
+              this.setRideDestination(fallbackLat, fallbackLng, text, false);
+            }
+          }
+        })
+        .catch(() => {
+          if (this.rideOrigin && this.rideOrigin.lat) {
+            const fallbackLat = this.rideOrigin.lat + 0.012;
+            const fallbackLng = this.rideOrigin.lng + 0.008;
+            this.setRideDestination(fallbackLat, fallbackLng, text, false);
+          }
+        });
+    }, 450);
   }
 
-  setRideDestination(lat, lng, addressName) {
+  setRideDestination(lat, lng, addressName, updateInput = true) {
     this.rideDestination = { lat, lng, address: addressName };
     const destInp = document.getElementById('ride-dest-input');
-    if (destInp) destInp.value = addressName;
+    if (destInp && updateInput) destInp.value = addressName;
 
     if (this.rideLeafMap && typeof L !== 'undefined') {
       const destIcon = L.divIcon({
@@ -7183,7 +7254,7 @@ class MarketplaceController {
         this.rideDestMarker = L.marker([lat, lng], { icon: destIcon, draggable: true }).addTo(this.rideLeafMap);
         this.rideDestMarker.on('dragend', (e) => {
           const newPos = e.target.getLatLng();
-          this.setRideDestination(newPos.lat, newPos.lng, `Destino ajustado (${newPos.lat.toFixed(4)}, ${newPos.lng.toFixed(4)})`);
+          this.setRideDestination(newPos.lat, newPos.lng, `Destino ajustado (${newPos.lat.toFixed(4)}, ${newPos.lng.toFixed(4)})`, true);
         });
       }
       this.updateRideRoute();
