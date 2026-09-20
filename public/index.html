@@ -9,8 +9,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="icon" type="image/png" href="/images/logo-pedigochos.png">
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
-  <link rel="stylesheet" href="/css/common.css?v=229">
-  <link rel="stylesheet" href="/css/marketplace.css?v=229">
+  <link rel="stylesheet" href="/css/common.css?v=230">
+  <link rel="stylesheet" href="/css/marketplace.css?v=230">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
@@ -167,7 +167,7 @@
           <!-- Servicios (Horizontal Card 2) -->
           <div class="category-card-delivercity card-servicios" data-category="servicios" onclick="MarketplaceApp.selectCategory('servicios')">
             <div class="category-overlay-dark"></div>
-            <div class="category-card-bg" style="background: linear-gradient(135deg, #FF6B00 0%, #B91C1C 100%);"></div>
+            <div class="category-card-bg" style="background-image: url('/images/servicios.jpg'); background-color: #EA580C;"></div>
             <div class="category-card-content">
               <h4>🛵 Servicios</h4>
             </div>
@@ -1895,13 +1895,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/supabase-helper.js?v=217"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="/js/qrcode.min.js?v=229"></script>
-  <script src="/js/sound.js?v=229"></script>
-  <script src="/js/marketplace.js?v=229"></script>
+  <script src="/js/qrcode.min.js?v=230"></script>
+  <script src="/js/sound.js?v=230"></script>
+  <script src="/js/marketplace.js?v=230"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=229').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=230').then((reg) => {
           reg.update();
         }).catch(() => {});
       });

@@ -36,8 +36,9 @@ const CATEGORY_EMOJIS = {
 const DEFAULT_IMAGES = {
   comidas: '/images/burger_royale.jpg',
   farmacias: '/images/vitamina_c.jpg',
+  servicios: '/images/servicios.jpg',
   mercados: '/images/pack_frutas.jpg',
-  ferreterias: '/images/pack_frutas.jpg'
+  ferreterias: '/images/ferreteria.jpg'
 };
 
 function normalizeStoreName(name) {
