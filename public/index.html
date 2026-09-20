@@ -9,8 +9,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="icon" type="image/png" href="/images/logo-pedigochos.png">
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
-  <link rel="stylesheet" href="/css/common.css?v=225">
-  <link rel="stylesheet" href="/css/marketplace.css?v=225">
+  <link rel="stylesheet" href="/css/common.css?v=227">
+  <link rel="stylesheet" href="/css/marketplace.css?v=227">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
@@ -1273,107 +1273,176 @@
   </div>
 
   <!-- ========================================================
-       MODAL: MENÚ DE TODOS LOS SERVICIOS PEDIGOCHOS
+       MODAL: MENÚ DESPLEGABLE DE LA IZQUIERDA (SERVICIOS Y MOVILIDAD)
        ======================================================== -->
-  <div id="services-menu-modal" class="modal-overlay" onclick="if(event.target === this) MarketplaceApp.closeServicesMenu();" style="display: none; align-items: flex-end; justify-content: center; z-index: 999997; backdrop-filter: blur(10px); background: rgba(5, 7, 15, 0.85);">
-    <div class="services-sheet-container" style="width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; background: linear-gradient(180deg, #1A1E29 0%, #0F121C 100%); border-top-left-radius: 28px; border-top-right-radius: 28px; border-top: 2.5px solid #FF6B00; box-shadow: 0 -10px 40px rgba(255, 107, 0, 0.35); padding: 20px 18px 28px 18px; color: #FFF; animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+  <div id="services-menu-modal" class="services-drawer-overlay" onclick="if(event.target === this) MarketplaceApp.closeServicesMenu();">
+    <div class="services-drawer-content">
       
-      <!-- Sheet Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <!-- Drawer Header -->
+      <div style="padding: 18px 18px 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(255, 107, 0, 0.2); border: 1.5px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 0 12px rgba(255, 107, 0, 0.4);">
-            🧭
+          <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #FF6B00 0%, #D95300 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 0 14px rgba(255, 107, 0, 0.4); flex-shrink: 0;">
+            🛵
           </div>
           <div>
-            <h3 style="margin: 0; font-size: 17.5px; font-weight: 900; color: #FFF; letter-spacing: 0.3px;">SERVICIOS PEDIGOCHOS</h3>
-            <p style="margin: 2px 0 0 0; font-size: 11.5px; color: #FDBA74;">Selecciona el servicio que deseas utilizar</p>
+            <h3 style="margin: 0; font-size: 16.5px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">PediGochos</h3>
+            <span style="font-size: 11px; color: #FF6B00; font-weight: 800; letter-spacing: 0.3px;">SERVICIOS & MENÚ</span>
           </div>
         </div>
-        <button type="button" onclick="MarketplaceApp.closeServicesMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #CBD5E1; border-radius: 50%; width: 32px; height: 32px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+        <button type="button" onclick="MarketplaceApp.closeServicesMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #CBD5E1; border-radius: 50%; width: 34px; height: 34px; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
       </div>
 
-      <!-- Services Grid -->
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        
-        <!-- Service 1: Pedir Móvil / Moto Taxi / Auto -->
-        <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openRideModal();" style="background: linear-gradient(135deg, rgba(255, 107, 0, 0.18) 0%, rgba(224, 90, 0, 0.08) 100%); border: 1.5px solid #FF6B00; border-radius: 18px; padding: 13px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25);">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 44px; height: 44px; border-radius: 14px; background: #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 0 12px rgba(255, 107, 0, 0.5); flex-shrink: 0;">
-              🛵
+      <!-- Drawer Scrollable Body -->
+      <div style="padding: 14px 14px 28px 14px; display: flex; flex-direction: column; gap: 14px;">
+
+        <!-- Categoría Desplegable Principal: Movilidad 🚗 -->
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1.5px solid rgba(255, 107, 0, 0.4); border-radius: 18px; padding: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.35);">
+          
+          <div class="drawer-movilidad-header" onclick="MarketplaceApp.toggleMovilidadAccordion()" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 4px 2px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255, 107, 0, 0.2); border: 1.5px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                🧭
+              </div>
+              <div>
+                <h4 style="margin: 0; font-size: 15px; font-weight: 900; color: #FFF; display: flex; align-items: center; gap: 6px;">
+                  Movilidad 🚗
+                </h4>
+                <span style="font-size: 10.5px; color: #FDBA74; font-weight: 700;">Toca para desplegar tipos de vehículo</span>
+              </div>
+            </div>
+            <span id="movilidad-accordion-arrow" style="font-size: 12px; color: #FF6B00; font-weight: 900; transition: transform 0.25s;">▼</span>
+          </div>
+
+          <!-- Tipos de vehículos desplegados: Moto, Auto, Auto de Lujo -->
+          <div id="drawer-movilidad-subitems" style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            
+            <!-- 1. Moto -->
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openRideModal('moto');" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255, 107, 0, 0.15); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                  🛵
+                </div>
+                <div>
+                  <div style="font-size: 13.5px; font-weight: 900; color: #FFF;">Moto</div>
+                  <div style="font-size: 11px; color: #94A3B8;">Moto Taxi • Rápido y económico</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; font-weight: 900; color: #FF6B00; background: rgba(255, 107, 0, 0.15); padding: 4px 10px; border-radius: 10px; white-space: nowrap;">
+                Pedir ➔
+              </span>
+            </div>
+
+            <!-- 2. Auto -->
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openRideModal('auto');" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                  🚗
+                </div>
+                <div>
+                  <div style="font-size: 13.5px; font-weight: 900; color: #FFF;">Auto</div>
+                  <div style="font-size: 11px; color: #94A3B8;">Auto Estándar • Hasta 4 personas</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; font-weight: 900; color: #3B82F6; background: rgba(59, 130, 246, 0.15); padding: 4px 10px; border-radius: 10px; white-space: nowrap;">
+                Pedir ➔
+              </span>
+            </div>
+
+            <!-- 3. Auto de Lujo -->
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openRideModal('lujo');" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                  ✨
+                </div>
+                <div>
+                  <div style="font-size: 13.5px; font-weight: 900; color: #FFF;">Auto de Lujo</div>
+                  <div style="font-size: 11px; color: #94A3B8;">Vehículo Premium • Con A/C</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; font-weight: 900; color: #F59E0B; background: rgba(245, 158, 11, 0.15); padding: 4px 10px; border-radius: 10px; white-space: nowrap;">
+                Pedir ➔
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Servicio 2: Cauchera Móvil 24H -->
+        <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openCaucheraModal();" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 12px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(239, 68, 68, 0.2); border: 1px solid #EF4444; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+              🛞
             </div>
             <div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <h4 style="margin: 0; font-size: 14.5px; font-weight: 900; color: #FFF;">Pedir Móvil (Moto Taxi / Auto)</h4>
-                <span style="background: #FF6B00; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 6px;">EN VIVO</span>
-              </div>
-              <p style="margin: 2px 0 0 0; font-size: 11.5px; color: #CBD5E1;">Transporte rápido con cálculo automático de tarifa por GPS</p>
+              <div style="font-size: 13px; font-weight: 900; color: #FFF;">Cauchera Móvil 24H</div>
+              <div style="font-size: 10.5px; color: #FCA5A5;">Montallantas El Cachu • Auxilio Vial</div>
             </div>
           </div>
-          <span style="font-size: 12px; font-weight: 900; color: #FF6B00; background: rgba(255, 107, 0, 0.15); padding: 6px 12px; border-radius: 12px; white-space: nowrap;">
-            Pedir ➔
+          <span style="font-size: 10.5px; font-weight: 900; color: #EF4444; background: rgba(239, 68, 68, 0.15); padding: 4px 8px; border-radius: 8px;">
+            Auxilio ➔
           </span>
         </div>
 
-        <!-- 2 Column Grid for Stores Categories -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          
-          <!-- Restaurantes -->
-          <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('comidas');" style="background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 12px; cursor: pointer;">
-            <div style="font-size: 26px; margin-bottom: 4px;">🍔</div>
-            <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Restaurantes</div>
-            <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">Comidas rápidas, pizzas, sushi y más</div>
+        <!-- Categorías de Comercio -->
+        <div>
+          <div style="font-size: 11.5px; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding-left: 2px;">
+            Categorías
           </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('comidas');" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; cursor: pointer;">
+              <div style="font-size: 22px; margin-bottom: 2px;">🍔</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Restaurantes</div>
+            </div>
 
-          <!-- Farmacias -->
-          <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('farmacias');" style="background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 12px; cursor: pointer;">
-            <div style="font-size: 26px; margin-bottom: 4px;">💊</div>
-            <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Farmacias</div>
-            <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">Medicinas y cuidado personal</div>
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('farmacias');" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; cursor: pointer;">
+              <div style="font-size: 22px; margin-bottom: 2px;">💊</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Farmacias</div>
+            </div>
+
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('servicios');" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; cursor: pointer;">
+              <div style="font-size: 22px; margin-bottom: 2px;">🛵</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Servicios</div>
+            </div>
+
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('ferreterias');" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; cursor: pointer;">
+              <div style="font-size: 22px; margin-bottom: 2px;">🛠️</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Ferreterías</div>
+            </div>
+
           </div>
-
-          <!-- Servicios -->
-          <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('servicios');" style="background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 12px; cursor: pointer;">
-            <div style="font-size: 26px; margin-bottom: 4px;">🛵</div>
-            <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Servicios</div>
-            <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">Cauchera 24/7 y Vehículos</div>
-          </div>
-
-          <!-- Ferreterías -->
-          <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('ferreterias');" style="background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 12px; cursor: pointer;">
-            <div style="font-size: 26px; margin-bottom: 4px;">🛠️</div>
-            <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Ferreterías</div>
-            <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">Herramientas y construcción</div>
-          </div>
-
         </div>
 
-        <!-- Service: Cauchera Móvil 24H -->
-        <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openCaucheraModal();" style="background: rgba(239, 68, 68, 0.08); border: 1.5px solid rgba(239, 68, 68, 0.35); border-radius: 16px; padding: 11px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 24px;">🛞</span>
-            <div>
-              <div style="font-size: 13px; font-weight: 800; color: #FFF;">Cauchera Móvil 24H (Montallantas El Cachu)</div>
-              <div style="font-size: 11px; color: #FCA5A5;">Despinche y auxilio vial en el lugar</div>
-            </div>
+        <!-- Accesos Rápidos y Ayudas -->
+        <div>
+          <div style="font-size: 11.5px; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding-left: 2px;">
+            Accesos Rápidos
           </div>
-          <span style="font-size: 11px; font-weight: 900; color: #EF4444; background: rgba(239, 68, 68, 0.15); padding: 4px 10px; border-radius: 8px;">Auxilio ➔</span>
-        </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
 
-        <!-- Service: Mis Pedidos & GochoPoints -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openUserOrdersModal();" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 20px;">📋</span>
-            <div>
-              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Mis Pedidos</div>
-              <div style="font-size: 10px; color: #94A3B8;">Historial y estado</div>
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.toggleSosMenu();" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">🚨</span>
+                <div>
+                  <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Emergencias S.O.S</div>
+                  <div style="font-size: 10px; color: #FCA5A5;">Números de auxilio VEN / COL</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; color: #EF4444; font-weight: 900;">Ver ➔</span>
             </div>
-          </div>
-          <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openGochoPointsModal();" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 20px;">⭐</span>
-            <div>
-              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">GochoPoints</div>
-              <div style="font-size: 10px; color: #94A3B8;">Puntos y premios</div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openUserOrdersModal();" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">📋</span>
+                <span style="font-size: 12px; font-weight: 800; color: #FFF;">Mis Pedidos</span>
+              </div>
+
+              <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openGochoPointsModal();" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">⭐</span>
+                <span style="font-size: 12px; font-weight: 800; color: #FFF;">GochoPoints</span>
+              </div>
             </div>
+
           </div>
         </div>
 
@@ -1829,13 +1898,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/supabase-helper.js?v=217"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="/js/qrcode.min.js?v=225"></script>
-  <script src="/js/sound.js?v=217"></script>
-  <script src="/js/marketplace.js?v=225"></script>
+  <script src="/js/qrcode.min.js?v=227"></script>
+  <script src="/js/sound.js?v=227"></script>
+  <script src="/js/marketplace.js?v=227"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=217').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=227').then((reg) => {
           reg.update();
         }).catch(() => {});
       });

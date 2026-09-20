@@ -6972,9 +6972,13 @@ class MarketplaceController {
   // RIDE HAILING (MOTO TAXI, AUTO, LUJO) LOGIC
   // ==========================================
 
-  openRideModal() {
+  openRideModal(vehicleType = null) {
     const modal = document.getElementById('ride-modal');
     if (!modal) return;
+
+    if (vehicleType) {
+      this.selectedVehicle = vehicleType;
+    }
 
     modal.style.display = 'flex';
     modal.classList.add('open');
@@ -7420,17 +7424,37 @@ class MarketplaceController {
   toggleServicesMenu(force = null) {
     const modal = document.getElementById('services-menu-modal');
     if (!modal) return;
-    const isVisible = modal.style.display === 'flex';
+    const isVisible = modal.classList.contains('open') || modal.style.display === 'flex';
     const show = force !== null ? force : !isVisible;
     if (show) {
       this.closeSosMenu();
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.classList.add('open');
+      }, 10);
+    } else {
+      modal.classList.remove('open');
+      setTimeout(() => {
+        if (!modal.classList.contains('open')) {
+          modal.style.display = 'none';
+        }
+      }, 280);
     }
-    modal.style.display = show ? 'flex' : 'none';
   }
 
   closeServicesMenu() {
-    const modal = document.getElementById('services-menu-modal');
-    if (modal) modal.style.display = 'none';
+    this.toggleServicesMenu(false);
+  }
+
+  toggleMovilidadAccordion() {
+    const subitems = document.getElementById('drawer-movilidad-subitems');
+    const arrow = document.getElementById('movilidad-accordion-arrow');
+    if (!subitems) return;
+    const isHidden = subitems.style.display === 'none';
+    subitems.style.display = isHidden ? 'flex' : 'none';
+    if (arrow) {
+      arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+    }
   }
 
   // ========================================================
