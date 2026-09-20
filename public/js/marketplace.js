@@ -7324,6 +7324,11 @@ class MarketplaceController {
     } catch (e) {}
 
     const vType = this.selectedVehicle || 'moto';
+    const vehicleNames = {
+      moto: 'Moto Taxi',
+      auto: 'Auto Estándar',
+      lujo: 'Auto de Lujo'
+    };
     const vehicleLabels = {
       moto: '🛵 *MOTO TAXI* (Rápido y económico)',
       auto: '🚗 *AUTO ESTÁNDAR* (Hasta 4 personas)',
@@ -7333,22 +7338,49 @@ class MarketplaceController {
     const fare = (this.rideFares && this.rideFares[vType]) ? this.rideFares[vType] : 4000;
     const formattedFare = `$${fare.toLocaleString('es-CO')} COP`;
 
-    const originLink = (this.rideOrigin && this.rideOrigin.lat && this.rideOrigin.lng)
-      ? `https://www.google.com/maps?q=${this.rideOrigin.lat},${this.rideOrigin.lng}`
-      : 'Ubicación aproximada';
+    // Guarantee destination coordinates and Google Maps GPS link
+    let destLat = this.rideDestination?.lat;
+    let destLng = this.rideDestination?.lng;
 
-    const destLink = (this.rideDestination && this.rideDestination.lat && this.rideDestination.lng)
-      ? `https://www.google.com/maps?q=${this.rideDestination.lat},${this.rideDestination.lng}`
-      : destAddress;
+    if (!destLat || !destLng) {
+      const valLower = (destAddress || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const landmarks = [
+        { keys: ['terminal'], lat: 7.8180, lng: -72.4410 },
+        { keys: ['puente', 'bolivar', 'simon', 'aduana'], lat: 7.8285, lng: -72.4542 },
+        { keys: ['plaza', 'centro', 'alcaldia'], lat: 7.8145, lng: -72.4455 },
+        { keys: ['urena', 'tienditas'], lat: 7.9192, lng: -72.4468 },
+        { keys: ['hospital', 'ambulatorio', 'cdi'], lat: 7.8120, lng: -72.4430 },
+        { keys: ['aeropuerto'], lat: 7.8398, lng: -72.4402 }
+      ];
+      const match = landmarks.find(l => l.keys.some(k => valLower.includes(k)));
+      if (match) {
+        destLat = match.lat;
+        destLng = match.lng;
+      } else if (this.rideOrigin && this.rideOrigin.lat) {
+        destLat = this.rideOrigin.lat + 0.012;
+        destLng = this.rideOrigin.lng + 0.008;
+      } else {
+        destLat = 7.8145;
+        destLng = -72.4455;
+      }
+      this.rideDestination = { lat: destLat, lng: destLng, address: destAddress };
+    }
+
+    const originLat = (this.rideOrigin && this.rideOrigin.lat) ? this.rideOrigin.lat : 7.8145;
+    const originLng = (this.rideOrigin && this.rideOrigin.lng) ? this.rideOrigin.lng : -72.4455;
+    const originLink = `https://www.google.com/maps?q=${originLat},${originLng}`;
+    const destLink = `https://www.google.com/maps?q=${destLat},${destLng}`;
+    const destCoordsStr = `${destLat.toFixed(5)}, ${destLng.toFixed(5)}`;
 
     const message = `🚖 *¡SOLICITUD DE VEHÍCULO - PEDIGOCHOS!* 🚖\n\n` +
       `👤 *Cliente:* ${customerName}\n` +
       `📱 *Teléfono:* ${customerPhone}\n` +
       `🛞 *Tipo de Servicio:* ${vehicleTitle}\n\n` +
       `🟢 *Punto de Recogida (Origen):*\n${originAddress}\n` +
-      (originLink.startsWith('http') ? `🔗 Ver en Mapa: ${originLink}\n\n` : `\n`) +
-      `🏁 *Destino:*\n${destAddress}\n` +
-      (destLink.startsWith('http') ? `🔗 Ver en Mapa: ${destLink}\n\n` : `\n`) +
+      `📍 *GPS Origen:* ${originLink}\n\n` +
+      `🏁 *Destino Solicitado:*\n${destAddress}\n` +
+      `📍 *GPS Destino:* ${destLink}\n` +
+      `🌐 *Coordenadas Destino:* (${destCoordsStr})\n\n` +
       `📏 *Distancia Estimada:* ${this.rideDistanceKm || 1} km\n` +
       `💰 *Tarifa Estimada:* ${formattedFare}\n` +
       (notes ? `📝 *Referencia del Encuentro:* ${notes}\n\n` : `\n`) +
@@ -7382,10 +7414,10 @@ class MarketplaceController {
           address: `${originAddress} ➡️ ${destAddress}`,
           origin: originAddress,
           destination: destAddress,
-          originLat: (this.rideOrigin && this.rideOrigin.lat) || null,
-          originLng: (this.rideOrigin && this.rideOrigin.lng) || null,
-          destLat: (this.rideDestination && this.rideDestination.lat) || null,
-          destLng: (this.rideDestination && this.rideDestination.lng) || null,
+          originLat: originLat,
+          originLng: originLng,
+          destLat: destLat,
+          destLng: destLng,
           distanceKm: this.rideDistanceKm || 1,
           notes: notes,
           serviceType: 'ride',
