@@ -7567,17 +7567,29 @@ class MarketplaceController {
   toggleSosMenu(force = null) {
     const modal = document.getElementById('sos-menu-modal');
     if (!modal) return;
-    const isVisible = modal.style.display === 'flex';
+    const isVisible = modal.classList.contains('open') || modal.classList.contains('active') || (modal.style.display === 'flex' && modal.style.opacity !== '0');
     const show = force !== null ? force : !isVisible;
     if (show) {
       this.closeServicesMenu();
+      modal.style.display = 'flex';
+      modal.classList.add('open', 'active');
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+      modal.style.pointerEvents = 'auto';
+    } else {
+      this.closeSosMenu();
     }
-    modal.style.display = show ? 'flex' : 'none';
   }
 
   closeSosMenu() {
     const modal = document.getElementById('sos-menu-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.classList.remove('open', 'active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
   }
 
   openEmergencyNumbersModal(country = 'venezuela') {
@@ -7585,13 +7597,23 @@ class MarketplaceController {
     const modal = document.getElementById('emergency-numbers-modal');
     if (modal) {
       modal.style.display = 'flex';
+      modal.classList.add('open', 'active');
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+      modal.style.pointerEvents = 'auto';
       this.switchEmergencyCountry(country);
     }
   }
 
   closeEmergencyNumbersModal() {
     const modal = document.getElementById('emergency-numbers-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.classList.remove('open', 'active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
   }
 
   switchEmergencyCountry(country) {
@@ -7618,6 +7640,10 @@ class MarketplaceController {
     const modal = document.getElementById('cauchera-modal');
     if (!modal) return;
     modal.style.display = 'flex';
+    modal.classList.add('open', 'active');
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
 
     this.caucheraVehicle = this.caucheraVehicle || 'moto';
     this.caucheraService = this.caucheraService || 'frio';
@@ -7643,7 +7669,13 @@ class MarketplaceController {
 
   closeCaucheraModal() {
     const modal = document.getElementById('cauchera-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.classList.remove('open', 'active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
   }
 
   isNightRateActive() {
