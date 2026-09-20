@@ -949,3 +949,104 @@ body.modal-open {
     max-width: 300px !important;
   }
 }
+
+/* ========================================================
+   Live Orders & Vehicle Requests Center (Admin Styling)
+   ======================================================== */
+.order-filter-pill-group {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-filter-pill {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94A3B8;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-filter-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFF;
+}
+
+.btn-filter-pill.active {
+  background: #3B82F6;
+  border-color: #3B82F6;
+  color: #FFF;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+}
+
+.btn-filter-pill.pill-restaurant.active {
+  background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%);
+  border-color: #FF6B00;
+  color: #FFF;
+  box-shadow: 0 2px 10px rgba(255, 107, 0, 0.4);
+}
+
+.btn-filter-pill.pill-ride.active {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border-color: #10B981;
+  color: #FFF;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+}
+
+/* Service Badges (Restaurante vs Moto Taxi vs Auto vs Lujo) */
+.service-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.service-badge.badge-restaurant {
+  background: rgba(255, 107, 0, 0.18);
+  color: #FF6B00;
+  border: 1px solid rgba(255, 107, 0, 0.35);
+}
+
+.service-badge.badge-ride-moto {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.service-badge.badge-ride-auto {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.service-badge.badge-ride-lujo {
+  background: rgba(168, 85, 247, 0.18);
+  color: #C084FC;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+/* Live Orders Table Row Styles */
+.live-order-row {
+  transition: background 0.15s ease;
+}
+.live-order-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.live-order-row.row-restaurant {
+  border-left: 3px solid #FF6B00;
+}
+.live-order-row.row-ride {
+  border-left: 3px solid #10B981;
+}
+

@@ -1308,13 +1308,17 @@ app.post('/api/orders', (req, res) => {
   const db = readDB();
   const orderDetails = req.body;
 
-  if (!orderDetails.establishmentId || !orderDetails.items || orderDetails.items.length === 0) {
+  const isRide = orderDetails.orderType === 'ride' || orderDetails.serviceType === 'ride';
+
+  if (!isRide && (!orderDetails.establishmentId || !orderDetails.items || orderDetails.items.length === 0)) {
     return res.status(400).json({ error: 'EstablishmentId and items are required' });
   }
 
-  const targetEst = db.establishments.find(e => e.id === orderDetails.establishmentId);
-  if (targetEst && !isEstablishmentOpen(targetEst)) {
-    return res.status(400).json({ error: `El establecimiento "${targetEst.name}" se encuentra cerrado en este momento. Horario: ${targetEst.open_time} a ${targetEst.close_time}.` });
+  if (!isRide) {
+    const targetEst = db.establishments.find(e => e.id === orderDetails.establishmentId);
+    if (targetEst && !isEstablishmentOpen(targetEst)) {
+      return res.status(400).json({ error: `El establecimiento "${targetEst.name}" se encuentra cerrado en este momento. Horario: ${targetEst.open_time} a ${targetEst.close_time}.` });
+    }
   }
 
   // Extract user identity
@@ -1323,16 +1327,19 @@ app.post('/api/orders', (req, res) => {
 
   // Create new order object
   const order = {
-    id: 'ord-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-    establishmentId: orderDetails.establishmentId,
-    establishmentName: orderDetails.establishmentName || '',
-    items: orderDetails.items,
-    total: orderDetails.total,
-    orderType: orderDetails.orderType, // 'mesa' or 'delivery'
+    id: (isRide ? 'movil-' : 'ord-') + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    establishmentId: orderDetails.establishmentId || (isRide ? 'pedigochos-movil' : ''),
+    establishmentName: orderDetails.establishmentName || (isRide ? 'PediGochos Móvil' : ''),
+    items: orderDetails.items || [],
+    total: orderDetails.total || 0,
+    orderType: isRide ? 'ride' : (orderDetails.orderType || 'delivery'), // 'mesa', 'delivery', or 'ride'
+    serviceType: isRide ? 'ride' : 'food',
+    vehicleType: orderDetails.vehicleType || (isRide ? 'moto' : null),
     paymentMethod: orderDetails.paymentMethod || 'Efectivo', // 'Efectivo' or 'Transferencia'
     paymentNotes: orderDetails.paymentNotes || '',
     paymentReceiptUrl: orderDetails.paymentReceiptUrl || null,
     customerName: orderDetails.customerName,
+    customerPhone: orderDetails.customerPhone || (orderDetails.deliveryDetails && orderDetails.deliveryDetails.phone) || null,
     customerEmail: customerEmail ? String(customerEmail).toLowerCase().trim() : null,
     userId: userId ? String(userId) : null,
     tableNumber: orderDetails.tableNumber || null,

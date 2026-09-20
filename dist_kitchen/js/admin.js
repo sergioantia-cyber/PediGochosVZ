@@ -52,6 +52,8 @@ class AdminController {
   constructor() {
     this.establishments = [];
     this.orders = [];
+    this.ordersFilter = 'all'; // 'all' | 'restaurant' | 'ride'
+    this.ordersSearchTerm = '';
     this.isAuthenticated = false;
 
     // Clear any stale cached establishments - server is authoritative
@@ -497,12 +499,14 @@ class AdminController {
         this.orders = allOrders;
         this.initialOrdersLoaded = true;
         this.renderTable();
+        this.renderLiveOrders();
         return;
       }
 
       const brandNew = allOrders.filter(ao => !this.orders.some(o => o.id === ao.id));
       this.orders = allOrders;
       this.renderTable();
+      this.renderLiveOrders();
 
       if (brandNew.length > 0) {
         const now = Date.now();
@@ -525,12 +529,15 @@ class AdminController {
     }
   }
 
-  showAlarmBanner(orderCode, storeName = null, estId = null, orderId = null) {
+  showAlarmBanner(orderCode, storeName = null, estId = null, orderId = null, isRide = false) {
     this.lastAlarmEstId = estId || this.lastAlarmEstId;
     this.lastAlarmOrderId = orderId || this.lastAlarmOrderId;
+    this.lastAlarmIsRide = isRide;
 
     let banner = document.getElementById('admin-alarm-banner');
-    const storeLabel = storeName ? `🏪 ${storeName}` : '¡NUEVO PEDIDO ENTRANTE EN LA PLATAFORMA!';
+    const storeLabel = isRide 
+      ? `🛵 SOLICITUD DE VEHÍCULO (${storeName || 'PediGochos Móvil'})` 
+      : (storeName ? `🏪 ${storeName}` : '¡NUEVO PEDIDO ENTRANTE EN LA PLATAFORMA!');
     
     if (!banner) {
       banner = document.createElement('div');
@@ -542,10 +549,10 @@ class AdminController {
     banner.innerHTML = `
       <div class="alarm-banner-inner" onclick="AdminApp.handleAlarmBannerClick();">
         <div class="alarm-banner-left">
-          <span class="alarm-siren-icon">🚨</span>
+          <span class="alarm-siren-icon">${isRide ? '🛵' : '🚨'}</span>
           <div class="alarm-banner-text">
             <div class="alarm-title">${storeLabel} <span class="alarm-order-code">${orderCode ? '#' + orderCode : ''}</span></div>
-            <div class="alarm-subtitle">👉 Toca aquí para ver este restaurante y apagar la alarma</div>
+            <div class="alarm-subtitle">${isRide ? '👉 Toca aquí para ver detalles del viaje y apagar la alarma' : '👉 Toca aquí para ver este restaurante y apagar la alarma'}</div>
           </div>
         </div>
         <button class="alarm-btn-silence" onclick="event.stopPropagation(); if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner();">
@@ -559,7 +566,12 @@ class AdminController {
   handleAlarmBannerClick() {
     if (window.Sound) Sound.stopAlarm();
     this.hideAlarmBanner();
-    if (this.lastAlarmEstId) {
+    if (this.lastAlarmIsRide) {
+      const rideOrder = (this.orders || []).find(o => String(o.id) === String(this.lastAlarmOrderId));
+      if (rideOrder) {
+        this.showNewOrderModal(rideOrder, 'PediGochos Móvil');
+      }
+    } else if (this.lastAlarmEstId) {
       this.focusEstablishment(this.lastAlarmEstId, this.lastAlarmOrderId);
     }
   }
@@ -610,6 +622,7 @@ class AdminController {
   renderTable() {
     this.updateSaveButtonState();
     this.renderAnalyticsPro();
+    this.renderLiveOrders();
     const tbody = document.getElementById('keys-table-body');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -3638,7 +3651,11 @@ class AdminController {
 
     totalSalesUsdEl.innerText = `$${totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     totalSalesCopEl.innerText = `${Math.round(totalCop).toLocaleString()} COP`;
-    totalOrdersEl.innerText = totalOrderCount.toString();
+    
+    const restCount = (this.orders || []).filter(o => !this.isRideOrder(o)).length;
+    const rideCount = (this.orders || []).filter(o => this.isRideOrder(o)).length;
+    totalOrdersEl.innerHTML = `${totalOrderCount} <span style="font-size: 10px; font-weight: 800; color: #94A3B8; display: block; margin-top: 3px;">🍔 ${restCount} Comercios · 🛵 ${rideCount} Móviles</span>`;
+    
     avgTicketEl.innerText = `$${avgTicket.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Top Products List
@@ -4240,26 +4257,41 @@ class AdminController {
       Sound.startPersistentOrderAlarm(20);
     }
 
+    const isRide = this.isRideOrder(order);
     const est = this.establishments.find(e => e.id === order.establishmentId || e.id === order.establishment_id);
-    const storeName = est ? est.name : 'Restaurante';
+    const storeName = isRide ? 'PediGochos Móvil' : (est ? est.name : 'Restaurante');
     const customerName = order.customerName || order.deliveryDetails?.name || 'Cliente';
-    const orderCode = order.deliveryDetails?.code || (order.id ? order.id.slice(-4) : '####');
-    const orderTotal = order.total !== undefined ? `$${parseFloat(order.total).toFixed(2)}` : '';
-    const orderType = order.orderType === 'mesa' ? '🍽️ Mesa ' + (order.mesaNumber || order.deliveryDetails?.mesa || '') : '🚴 Delivery';
+    const orderCode = order.deliveryDetails?.code || (order.id ? String(order.id).slice(-4) : '####');
+    const orderTotal = order.total !== undefined ? `$${Math.round(order.total).toLocaleString('es-CO')} COP` : '';
 
-    const estId = order.establishmentId || order.establishment_id || '';
+    const vType = order.vehicleType || order.deliveryDetails?.vehicleType || 'moto';
+    const vehicleNames = { moto: 'Moto Taxi', auto: 'Auto', lujo: 'Auto de Lujo' };
+    const vName = vehicleNames[vType] || 'Moto Taxi';
+
+    const orderType = isRide 
+      ? `🛵 ${vName}` 
+      : (order.orderType === 'mesa' ? '🍽️ Mesa ' + (order.mesaNumber || order.deliveryDetails?.mesa || '') : '🚴 Delivery');
+
+    const estId = order.establishmentId || order.establishment_id || (isRide ? 'pedigochos-movil' : '');
 
     // Show top flashing persistent alarm banner with direct store linkage
-    this.showAlarmBanner(orderCode, storeName, estId, order.id);
+    this.showAlarmBanner(orderCode, isRide ? vName : storeName, estId, order.id, isRide);
 
     // 2. Native OS Push Notification (Capacitor or Web)
+    const notifTitle = isRide 
+      ? `🚖 ¡SOLICITUD DE VEHÍCULO (${vName.toUpperCase()})!`
+      : `🚨 ¡NUEVO PEDIDO RECIBIDO! #${orderCode}`;
+    const notifBody = isRide
+      ? `🛵 ${vName} solicitado por ${customerName}\n🟢 Recogida: ${order.deliveryDetails?.origin || 'GPS'}\n🏁 Destino: ${order.deliveryDetails?.destination || ''}\n💰 Tarifa: ${orderTotal}`
+      : `🏪 ${storeName}\n👤 ${customerName} (${orderType})\n💰 Total: ${orderTotal}`;
+
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
       try {
         window.Capacitor.Plugins.LocalNotifications.schedule({
           notifications: [
             {
-              title: `🚨 ¡NUEVO PEDIDO RECIBIDO! #${orderCode}`,
-              body: `🏪 ${storeName}\n👤 ${customerName} (${orderType})\n💰 Total: ${orderTotal}`,
+              title: notifTitle,
+              body: notifBody,
               id: Math.floor(Math.random() * 1000000),
               schedule: { at: new Date(Date.now() + 100) },
               sound: 'alarm.wav',
@@ -4268,7 +4300,8 @@ class AdminController {
               extra: {
                 establishmentId: estId,
                 orderId: order.id,
-                storeName: storeName
+                storeName: storeName,
+                isRide: isRide
               }
             }
           ]
@@ -4278,28 +4311,37 @@ class AdminController {
       }
     } else if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        const notif = new Notification(`🚨 ¡NUEVO PEDIDO RECIBIDO! #${orderCode}`, {
-          body: `🏪 ${storeName}\n👤 ${customerName} (${orderType})\n💰 Total: ${orderTotal}`,
+        const notif = new Notification(notifTitle, {
+          body: notifBody,
           icon: '/icons/icon-192.png',
           tag: 'order-' + order.id,
           requireInteraction: true,
-          data: { establishmentId: estId, orderId: order.id }
+          data: { establishmentId: estId, orderId: order.id, isRide: isRide }
         });
         notif.onclick = () => {
           window.focus();
-          if (estId) AdminApp.focusEstablishment(estId, order.id);
+          if (isRide) {
+            AdminApp.showNewOrderModal(order, 'PediGochos Móvil');
+          } else if (estId) {
+            AdminApp.focusEstablishment(estId, order.id);
+          }
         };
       } catch(e) {}
     }
 
     // 3. Display High-Priority 3D Toast Alert in Admin UI
-    this.showToast(`🚨 ¡NUEVO PEDIDO! #${orderCode} en ${storeName} - ${customerName} (${orderTotal})`);
+    if (isRide) {
+      this.showToast(`🚖 ¡SOLICITUD DE VEHÍCULO! #${orderCode} (${vName}) - ${customerName} (${orderTotal})`);
+    } else {
+      this.showToast(`🚨 ¡NUEVO PEDIDO! #${orderCode} en ${storeName} - ${customerName} (${orderTotal})`);
+    }
 
     // 4. Show high-priority popup modal with all order details
     this.showNewOrderModal(order, storeName);
   }
 
   showNewOrderModal(order, storeName) {
+    if (!order) return;
     let modal = document.getElementById('admin-new-order-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -4308,10 +4350,101 @@ class AdminController {
       document.body.appendChild(modal);
     }
 
+    const isRide = this.isRideOrder(order);
     const estId = order.establishmentId || order.establishment_id || '';
-    const orderCode = order.deliveryDetails?.code || (order.id ? order.id.slice(-4) : '####');
+    const orderCode = order.deliveryDetails?.code || (order.id ? String(order.id).slice(-4) : '####');
     const customerName = order.customerName || order.deliveryDetails?.name || 'Cliente';
     const phone = order.customerPhone || order.deliveryDetails?.phone || 'Sin teléfono';
+    const cleanPhone = String(phone).replace(/\D/g, '');
+    const totalFormatted = `$${Math.round(order.total || 0).toLocaleString('es-CO')} COP`;
+
+    if (isRide) {
+      // --- VEHICLE REQUEST MODAL ---
+      const vType = order.vehicleType || order.deliveryDetails?.vehicleType || 'moto';
+      const vNames = { moto: 'Moto Taxi', auto: 'Auto Estándar', lujo: 'Auto de Lujo' };
+      const vIcons = { moto: '🛵', auto: '🚗', lujo: '✨' };
+      const vName = vNames[vType] || 'Moto Taxi';
+      const vIcon = vIcons[vType] || '🛵';
+
+      const origin = order.deliveryDetails?.origin || 'Ubicación GPS';
+      const dest = order.deliveryDetails?.destination || order.deliveryDetails?.address || 'Destino fijado';
+      const dist = order.deliveryDetails?.distanceKm || 1;
+      const notes = order.deliveryDetails?.notes || order.paymentNotes || '';
+
+      const originMapUrl = (order.deliveryDetails?.originLat && order.deliveryDetails?.originLng)
+        ? `https://www.google.com/maps?q=${order.deliveryDetails.originLat},${order.deliveryDetails.originLng}`
+        : null;
+      const destMapUrl = (order.deliveryDetails?.destLat && order.deliveryDetails?.destLng)
+        ? `https://www.google.com/maps?q=${order.deliveryDetails.destLat},${order.deliveryDetails.destLng}`
+        : null;
+
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 480px; border-radius: 24px; border: 2px solid #10B981; background: #111827; box-shadow: 0 0 40px rgba(16, 185, 129, 0.4); animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+          <div style="background: linear-gradient(135deg, #10B981 0%, #0D9488 100%); color: #FFF; padding: 18px 20px; border-radius: 22px 22px 0 0; text-align: center; position: relative;">
+            <span style="font-size: 38px; display: block; margin-bottom: 4px;">${vIcon}</span>
+            <h3 style="margin: 0; font-size: 19px; font-weight: 900;">¡SOLICITUD DE VEHÍCULO!</h3>
+            <span style="background: rgba(0,0,0,0.3); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; margin-top: 4px;">
+              ${vName.toUpperCase()} · Código #${orderCode}
+            </span>
+          </div>
+          <div style="padding: 20px; color: #FFF;">
+            
+            <!-- Pasajero Card -->
+            <div style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="font-size: 11px; color: #34D399; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">👤 Datos del Pasajero</div>
+              <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 800; color: #FFF;">${customerName}</p>
+              <p style="margin: 0; font-size: 13px; color: #CBD5E1; display: flex; align-items: center; justify-content: space-between;">
+                <span>📱 ${phone}</span>
+                ${cleanPhone ? `<a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '57' + cleanPhone}" target="_blank" style="color: #25D366; font-weight: 800; text-decoration: underline; font-size: 12px;">💬 Abrir WhatsApp</a>` : ''}
+              </p>
+            </div>
+
+            <!-- Ruta Card -->
+            <div style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08); font-size: 13px; line-height: 1.45;">
+              <div style="font-size: 11px; color: #F59E0B; font-weight: 800; text-transform: uppercase; margin-bottom: 6px;">🗺️ Ruta del Viaje</div>
+              <div style="margin-bottom: 6px;">
+                <span style="color: #10B981; font-weight: 800;">🟢 Recogida:</span> ${origin}
+                ${originMapUrl ? `<br><a href="${originMapUrl}" target="_blank" style="color: #38BDF8; font-weight: 800; font-size: 11.5px; text-decoration: underline;">🗺️ Ver Origen en Google Maps</a>` : ''}
+              </div>
+              <div style="margin-bottom: 6px;">
+                <span style="color: #FF6B00; font-weight: 800;">🏁 Destino:</span> ${dest}
+                ${destMapUrl ? `<br><a href="${destMapUrl}" target="_blank" style="color: #38BDF8; font-weight: 800; font-size: 11.5px; text-decoration: underline;">🗺️ Ver Destino en Google Maps</a>` : ''}
+              </div>
+              <div style="color: #94A3B8; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; margin-top: 6px;">
+                📏 <strong>Distancia Estimada:</strong> ${dist} km
+                ${notes ? `<br>📝 <strong>Referencia:</strong> <em>${notes}</em>` : ''}
+              </div>
+            </div>
+
+            <!-- Tarifa Card -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; padding: 12px 16px; border-radius: 14px; margin-bottom: 16px;">
+              <span style="font-size: 14px; font-weight: 700; color: #FFF;">Tarifa Estimada del Viaje:</span>
+              <span style="font-size: 20px; font-weight: 900; color: #34D399;">${totalFormatted}</span>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              ${cleanPhone ? `
+                <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '57' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te contactamos de PediGochos Móvil para confirmar tu solicitud de ${vName} (#${orderCode}). Un conductor va en camino.`)}" target="_blank" class="btn-primary" style="flex: 1; padding: 11px; font-size: 12.5px; font-weight: 800; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; background: #25D366; border: none; color: #FFF; box-shadow: 0 4px 12px rgba(37,211,102,0.3);">
+                  💬 Escribir al Pasajero
+                </a>
+              ` : ''}
+              <button type="button" onclick="AdminApp.updateOrderStatusFromSelect('${order.id}', 'En Camino'); document.getElementById('admin-new-order-modal').style.display='none'; if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner();" class="btn-primary" style="flex: 1; padding: 11px; font-size: 12.5px; font-weight: 800; border-radius: 10px; cursor: pointer; background: #3B82F6; border: none; color: #FFF;">
+                🛵 Asignar Conductor
+              </button>
+            </div>
+
+            <button type="button" onclick="if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner(); document.getElementById('admin-new-order-modal').style.display='none';" class="btn-primary" style="width: 100%; padding: 11px; font-size: 13px; font-weight: 800; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #FFF;">
+              ✅ Aceptar y Cerrar Alerta
+            </button>
+          </div>
+        </div>
+      `;
+      modal.style.display = 'flex';
+      return;
+    }
+
+    // --- RESTAURANT / FOOD ORDER MODAL (STANDARD) ---
     const address = order.deliveryDetails?.address || order.deliveryDetails?.mesa || 'Sin dirección';
     const total = order.total !== undefined ? parseFloat(order.total).toFixed(2) : '0.00';
     const items = order.items || [];
@@ -4319,8 +4452,8 @@ class AdminController {
     modal.innerHTML = `
       <div class="modal-content" style="max-width: 460px; border-radius: 24px; border: 2px solid var(--primary); background: #111827; box-shadow: 0 0 35px rgba(255, 94, 58, 0.4); animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
         <div style="background: linear-gradient(135deg, #FF5E3A 0%, #FF2A00 100%); color: #FFF; padding: 18px 20px; border-radius: 22px 22px 0 0; text-align: center; position: relative;">
-          <span style="font-size: 36px; display: block; margin-bottom: 4px;">🔔</span>
-          <h3 style="margin: 0; font-size: 18px; font-weight: 800;">¡NUEVO PEDIDO RECIBIDO!</h3>
+          <span style="font-size: 36px; display: block; margin-bottom: 4px;">🍔</span>
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800;">¡NUEVO PEDIDO DE RESTAURANTE!</h3>
           <span style="background: rgba(0,0,0,0.25); padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 800;">Código #${orderCode}</span>
         </div>
         <div style="padding: 20px; color: #FFF;">
@@ -4369,6 +4502,286 @@ class AdminController {
       </div>
     `;
     modal.style.display = 'flex';
+  }
+
+  // ========================================================
+  // LIVE ORDERS & VEHICLE REQUESTS MANAGEMENT METHODS
+  // ========================================================
+
+  isRideOrder(order) {
+    if (!order) return false;
+    return order.orderType === 'ride' || 
+           order.serviceType === 'ride' || 
+           order.establishmentId === 'pedigochos-movil' ||
+           !!order.vehicleType ||
+           (order.id && String(order.id).startsWith('movil-')) ||
+           (order.deliveryDetails && (order.deliveryDetails.serviceType === 'ride' || !!order.deliveryDetails.originLat));
+  }
+
+  setOrdersFilter(filter) {
+    this.ordersFilter = filter;
+    ['all', 'restaurant', 'ride'].forEach(f => {
+      const btn = document.getElementById(`filter-pill-${f}`);
+      if (btn) {
+        if (f === filter) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+    });
+    this.renderLiveOrders();
+  }
+
+  filterLiveOrdersList() {
+    const inp = document.getElementById('admin-orders-search-input');
+    this.ordersSearchTerm = inp ? inp.value.trim().toLowerCase() : '';
+    this.renderLiveOrders();
+  }
+
+  renderLiveOrders() {
+    const tbody = document.getElementById('admin-live-orders-tbody');
+    if (!tbody) return;
+
+    const all = this.orders || [];
+    const rideOrders = all.filter(o => this.isRideOrder(o));
+    const restaurantOrders = all.filter(o => !this.isRideOrder(o));
+
+    // Update counter badges
+    const countAll = document.getElementById('filter-count-all');
+    const countRest = document.getElementById('filter-count-restaurant');
+    const countRide = document.getElementById('filter-count-ride');
+    const statRest = document.getElementById('badge-stat-restaurants');
+    const statRide = document.getElementById('badge-stat-rides');
+
+    if (countAll) countAll.innerText = all.length;
+    if (countRest) countRest.innerText = restaurantOrders.length;
+    if (countRide) countRide.innerText = rideOrders.length;
+    if (statRest) statRest.innerText = `🍔 Restaurantes: ${restaurantOrders.length}`;
+    if (statRide) statRide.innerText = `🛵 Vehículos: ${rideOrders.length}`;
+
+    // Select subset based on active filter
+    let displayedOrders = all;
+    if (this.ordersFilter === 'restaurant') {
+      displayedOrders = restaurantOrders;
+    } else if (this.ordersFilter === 'ride') {
+      displayedOrders = rideOrders;
+    }
+
+    // Apply search filter if active
+    if (this.ordersSearchTerm) {
+      const term = this.ordersSearchTerm;
+      displayedOrders = displayedOrders.filter(o => {
+        const cName = (o.customerName || o.deliveryDetails?.name || '').toLowerCase();
+        const phone = (o.customerPhone || o.deliveryDetails?.phone || '').toLowerCase();
+        const estName = (o.establishmentName || '').toLowerCase();
+        const code = (o.deliveryDetails?.code || o.id || '').toLowerCase();
+        const origin = (o.deliveryDetails?.origin || '').toLowerCase();
+        const dest = (o.deliveryDetails?.destination || o.deliveryDetails?.address || '').toLowerCase();
+        return cName.includes(term) || phone.includes(term) || estName.includes(term) || code.includes(term) || origin.includes(term) || dest.includes(term);
+      });
+    }
+
+    // Sort newest first
+    displayedOrders.sort((a, b) => {
+      const tA = new Date(a.createdAt || a.created_at || a.timestamp || 0).getTime();
+      const tB = new Date(b.createdAt || b.created_at || b.timestamp || 0).getTime();
+      return tB - tA;
+    });
+
+    if (displayedOrders.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 26px; color: #94A3B8; font-size: 13px;">
+            🔍 No hay pedidos ni solicitudes que coincidan con la vista actual.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    const htmlRows = displayedOrders.map(ord => {
+      const isRide = this.isRideOrder(ord);
+      const rawDate = ord.createdAt || ord.created_at || ord.timestamp;
+      const orderDate = rawDate ? new Date(rawDate) : null;
+      const timeAgoStr = orderDate ? this.getTimeAgoStr(orderDate) : 'Reciente';
+      const orderTimeStr = orderDate ? orderDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+      const orderCode = ord.deliveryDetails?.code || (ord.id ? String(ord.id).slice(-4) : '####');
+      const customerName = ord.customerName || ord.deliveryDetails?.name || 'Cliente';
+      const rawPhone = ord.customerPhone || ord.deliveryDetails?.phone || '';
+      const cleanPhone = String(rawPhone).replace(/\D/g, '');
+
+      // Status pill formatting
+      const currentStatus = ord.status || 'Pendiente';
+      const statusOptions = isRide 
+        ? ['Pendiente', 'Asignado', 'En Camino', 'Entregado', 'Cancelado']
+        : ['Pendiente', 'Preparando', 'Listo', 'En Camino', 'Entregado', 'Cancelado'];
+
+      const statusSelectHtml = `
+        <select onchange="AdminApp.updateOrderStatusFromSelect('${ord.id}', this.value)" style="padding: 4px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 800; background: #0F172A; border: 1.5px solid ${currentStatus === 'Entregado' ? '#10B981' : currentStatus === 'Cancelado' ? '#EF4444' : '#F59E0B'}; color: #FFF; outline: none; cursor: pointer;">
+          ${statusOptions.map(st => `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st === 'Entregado' ? '✅ Entregado' : st === 'Cancelado' ? '❌ Cancelado' : st === 'Pendiente' ? '⏳ Pendiente' : st === 'Preparando' ? '👨‍🍳 Preparando' : st === 'Listo' ? '📦 Listo' : '🛵 En Camino'}</option>`).join('')}
+        </select>
+      `;
+
+      if (isRide) {
+        // --- VEHICLE REQUEST ROW (MOTO TAXI, AUTO, LUJO) ---
+        const vType = ord.vehicleType || ord.deliveryDetails?.vehicleType || 'moto';
+        const vBadges = {
+          moto: '<span class="service-badge badge-ride-moto">🛵 MOTO TAXI</span>',
+          auto: '<span class="service-badge badge-ride-auto">🚗 AUTO</span>',
+          lujo: '<span class="service-badge badge-ride-lujo">✨ AUTO LUJO</span>'
+        };
+        const badgeHtml = vBadges[vType] || '<span class="service-badge badge-ride-moto">🛵 MÓVIL</span>';
+
+        const originAddr = ord.deliveryDetails?.origin || 'Ubicación GPS';
+        const destAddr = ord.deliveryDetails?.destination || ord.deliveryDetails?.address || 'Destino';
+        const distanceKm = ord.deliveryDetails?.distanceKm || 1;
+        const notes = ord.deliveryDetails?.notes || ord.paymentNotes || '';
+
+        const originMapUrl = (ord.deliveryDetails?.originLat && ord.deliveryDetails?.originLng)
+          ? `https://www.google.com/maps?q=${ord.deliveryDetails.originLat},${ord.deliveryDetails.originLng}`
+          : null;
+        const destMapUrl = (ord.deliveryDetails?.destLat && ord.deliveryDetails?.destLng)
+          ? `https://www.google.com/maps?q=${ord.deliveryDetails.destLat},${ord.deliveryDetails.destLng}`
+          : null;
+
+        const totalFormatted = `$${Math.round(ord.total || 0).toLocaleString('es-CO')} COP`;
+
+        return `
+          <tr class="live-order-row row-ride">
+            <td>
+              ${badgeHtml}
+              <div style="font-size: 10.5px; color: #34D399; font-weight: 700; margin-top: 4px;">🚖 Transporte</div>
+            </td>
+            <td>
+              <strong style="color: #38BDF8; font-size: 13px;">#${orderCode}</strong>
+              <div style="font-size: 11px; color: #94A3B8;">${timeAgoStr}</div>
+              <div style="font-size: 10px; color: #64748B;">${orderTimeStr}</div>
+            </td>
+            <td>
+              <div style="font-weight: 800; color: #FFF; font-size: 13px;">👤 ${customerName}</div>
+              <div style="font-size: 11.5px; color: #CBD5E1; margin-top: 2px;">📱 ${rawPhone || 'Sin tlf'}</div>
+            </td>
+            <td>
+              <div style="font-size: 12px; color: #E2E8F0; line-height: 1.4;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #10B981; font-weight: 800;">🟢 Recogida:</span> ${originAddr}
+                  ${originMapUrl ? `<a href="${originMapUrl}" target="_blank" style="color: #38BDF8; font-size: 11px; font-weight: 800; text-decoration: underline; margin-left: 4px;" title="Ver origen en Google Maps">🗺️ Mapa</a>` : ''}
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                  <span style="color: #FF6B00; font-weight: 800;">🏁 Destino:</span> ${destAddr}
+                  ${destMapUrl ? `<a href="${destMapUrl}" target="_blank" style="color: #38BDF8; font-size: 11px; font-weight: 800; text-decoration: underline; margin-left: 4px;" title="Ver destino en Google Maps">🗺️ Mapa</a>` : ''}
+                </div>
+                <div style="font-size: 11px; color: #F59E0B; margin-top: 2px;">
+                  📏 <strong>${distanceKm} km</strong> estimados ${notes ? `· 📝 <em>${notes}</em>` : ''}
+                </div>
+              </div>
+            </td>
+            <td>
+              <strong style="color: #10B981; font-size: 13.5px;">${totalFormatted}</strong>
+              <div style="font-size: 10.5px; color: #94A3B8;">Tarifa Viaje</div>
+            </td>
+            <td>
+              ${statusSelectHtml}
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                ${cleanPhone ? `
+                  <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '57' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te escribimos de PediGochos Móvil sobre tu solicitud de ${vType === 'moto' ? 'Moto Taxi' : 'Auto'} (#${orderCode}).`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Chatear con el pasajero por WhatsApp">
+                    💬 WhatsApp
+                  </a>
+                ` : ''}
+                <button type="button" onclick="AdminApp.showNewOrderModal(AdminApp.orders.find(o => String(o.id) === '${ord.id}'), 'PediGochos Móvil')" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                  👁️ Detalles
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      } else {
+        // --- RESTAURANT / MERCHANT ORDER ROW ---
+        const est = this.establishments.find(e => e.id === ord.establishmentId || e.id === ord.establishment_id);
+        const estName = est ? est.name : (ord.establishmentName || 'Restaurante');
+        const badgeHtml = '<span class="service-badge badge-restaurant">🍔 RESTAURANTE</span>';
+
+        const itemsSummary = (ord.items && Array.isArray(ord.items))
+          ? ord.items.map(it => `${it.quantity || 1}x ${it.name}`).join(', ')
+          : 'Platillos solicitados';
+
+        const locText = ord.orderType === 'mesa'
+          ? `🍽️ Mesa #${ord.tableNumber || 1}`
+          : `🚴 Domicilio: ${ord.deliveryDetails?.address || 'Dirección de entrega'}`;
+
+        const totalFormatted = `$${Math.round(ord.total || 0).toLocaleString('es-CO')} COP`;
+
+        return `
+          <tr class="live-order-row row-restaurant">
+            <td>
+              ${badgeHtml}
+              <div style="font-weight: 800; color: #FFD700; font-size: 11.5px; margin-top: 3px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                🏪 ${estName}
+              </div>
+            </td>
+            <td>
+              <strong style="color: #FF6B00; font-size: 13px;">#${orderCode}</strong>
+              <div style="font-size: 11px; color: #94A3B8;">${timeAgoStr}</div>
+              <div style="font-size: 10px; color: #64748B;">${orderTimeStr}</div>
+            </td>
+            <td>
+              <div style="font-weight: 800; color: #FFF; font-size: 13px;">👤 ${customerName}</div>
+              <div style="font-size: 11.5px; color: #CBD5E1; margin-top: 2px;">📱 ${rawPhone || 'Sin tlf'}</div>
+            </td>
+            <td>
+              <div style="font-size: 12px; color: #FFF; font-weight: 700;">
+                📦 ${itemsSummary}
+              </div>
+              <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">
+                ${locText}
+              </div>
+            </td>
+            <td>
+              <strong style="color: #FFD700; font-size: 13.5px;">${totalFormatted}</strong>
+              <div style="font-size: 10.5px; color: #94A3B8;">${ord.paymentMethod || 'Efectivo'}</div>
+            </td>
+            <td>
+              ${statusSelectHtml}
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                ${cleanPhone ? `
+                  <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '57' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te escribimos de PediGochos sobre tu pedido #${orderCode} de ${estName}.`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Chatear con el cliente por WhatsApp">
+                    💬 WhatsApp
+                  </a>
+                ` : ''}
+                ${ord.establishmentId ? `
+                  <button type="button" onclick="AdminApp.openStoreKitchen('${ord.establishmentId}')" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #F59E0B; color: #FCD34D; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                    🍳 Cocina
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+    }).join('');
+
+    tbody.innerHTML = htmlRows;
+  }
+
+  async updateOrderStatusFromSelect(orderId, newStatus) {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        const order = (this.orders || []).find(o => String(o.id) === String(orderId));
+        if (order) order.status = newStatus;
+        this.showToast(`✅ Estado actualizado a: ${newStatus}`);
+        this.renderLiveOrders();
+        this.renderTable();
+      }
+    } catch(e) {
+      console.warn('Error updating status:', e);
+    }
   }
 
   openStoreQRModal(estId) {

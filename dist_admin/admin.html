@@ -272,6 +272,71 @@
 
       <!-- Right Column: Active Establishments List and Private Keys -->
       <section class="admin-list-column">
+
+        <!-- Card: Centro de Pedidos y Solicitudes en Vivo (Diferenciación Restaurantes vs Móviles) -->
+        <div class="admin-card" id="admin-live-orders-card" style="margin-bottom: 24px; border: 1.5px solid rgba(255, 107, 0, 0.4); background: linear-gradient(135deg, #1A1F2C 0%, #151822 100%); border-radius: 18px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: #fff;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 22px;">📦</span>
+                <h3 style="margin: 0; color: #FFF; font-size: 17px; font-weight: 900;">Centro de Pedidos y Solicitudes</h3>
+                <span class="live-active-light-badge" style="padding: 3px 8px; font-size: 10px;" title="Actualización en tiempo real vía WebSocket">
+                  <span class="green-pulse-dot"></span> EN VIVO
+                </span>
+              </div>
+              <p class="card-subtitle" style="margin: 4px 0 0 0; font-size: 12px; color: #94A3B8;">
+                Monitoreo y despacho diferenciado: <strong>Pedidos de Restaurantes</strong> vs <strong>Solicitudes de Vehículos (Moto / Auto)</strong>.
+              </p>
+            </div>
+
+            <!-- Filtros: Todos / Restaurantes / Vehículos -->
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;" class="order-filter-pill-group">
+              <button type="button" class="btn-filter-pill active" id="filter-pill-all" onclick="AdminApp.setOrdersFilter('all')">
+                🌟 Todos (<span id="filter-count-all">0</span>)
+              </button>
+              <button type="button" class="btn-filter-pill pill-restaurant" id="filter-pill-restaurant" onclick="AdminApp.setOrdersFilter('restaurant')">
+                🍔 Restaurantes (<span id="filter-count-restaurant">0</span>)
+              </button>
+              <button type="button" class="btn-filter-pill pill-ride" id="filter-pill-ride" onclick="AdminApp.setOrdersFilter('ride')">
+                🛵 Vehículos (<span id="filter-count-ride">0</span>)
+              </button>
+            </div>
+          </div>
+
+          <!-- Buscador y Métricas Rápidas -->
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
+            <input type="text" id="admin-orders-search-input" oninput="AdminApp.filterLiveOrdersList()" placeholder="🔍 Buscar por cliente, teléfono, destino, restaurante o código..." style="flex: 1; min-width: 240px; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #FFF; font-size: 12.5px;">
+            <div style="display: flex; gap: 8px; align-items: center; font-size: 11.5px; font-weight: 800;">
+              <span id="badge-stat-restaurants" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid rgba(255, 107, 0, 0.3); padding: 4px 10px; border-radius: 12px;">🍔 Restaurantes: 0</span>
+              <span id="badge-stat-rides" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 12px;">🛵 Vehículos: 0</span>
+            </div>
+          </div>
+
+          <!-- Tabla de Pedidos y Solicitudes -->
+          <div class="table-container premium-scroll" style="max-height: 440px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;">
+            <table class="keys-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th style="width: 130px;">Tipo / Servicio</th>
+                  <th style="width: 90px;">Código</th>
+                  <th>Cliente & Teléfono</th>
+                  <th>Detalle del Pedido / Ruta GPS</th>
+                  <th style="width: 110px;">Total</th>
+                  <th style="width: 130px;">Estado</th>
+                  <th style="text-align: center; width: 140px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="admin-live-orders-tbody">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 24px; color: #94A3B8;">
+                    ⏳ Cargando centro de pedidos y solicitudes en tiempo real...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="admin-card">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
             <div>

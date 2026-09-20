@@ -7212,6 +7212,63 @@ class MarketplaceController {
       (notes ? `📝 *Referencia del Encuentro:* ${notes}\n\n` : `\n`) +
       `⚡ _Por favor confirmar disponibilidad del conductor para pasar a buscarme. ¡Gracias!_`;
 
+    // Also register ride request in system database for Admin operations
+    try {
+      const ridePayload = {
+        orderType: 'ride',
+        serviceType: 'ride',
+        vehicleType: vType,
+        establishmentId: 'pedigochos-movil',
+        establishmentName: `PediGochos Móvil (${vehicleNames[vType] || 'Transporte'})`,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerEmail: (this.currentUser && this.currentUser.email) || null,
+        userId: (this.currentUser && this.currentUser.id) || null,
+        total: fare,
+        paymentMethod: 'Efectivo',
+        items: [
+          {
+            name: `Servicio de ${vehicleNames[vType] || 'Móvil'}`,
+            price: fare,
+            quantity: 1,
+            notes: `${originAddress} ➡️ ${destAddress} (${this.rideDistanceKm || 1} km)`
+          }
+        ],
+        deliveryDetails: {
+          name: customerName,
+          phone: customerPhone,
+          address: `${originAddress} ➡️ ${destAddress}`,
+          origin: originAddress,
+          destination: destAddress,
+          originLat: (this.rideOrigin && this.rideOrigin.lat) || null,
+          originLng: (this.rideOrigin && this.rideOrigin.lng) || null,
+          destLat: (this.rideDestination && this.rideDestination.lat) || null,
+          destLng: (this.rideDestination && this.rideDestination.lng) || null,
+          distanceKm: this.rideDistanceKm || 1,
+          notes: notes,
+          serviceType: 'ride',
+          vehicleType: vType
+        }
+      };
+
+      fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ridePayload)
+      }).then(r => r.json()).then(createdOrder => {
+        console.log('✅ Ride order registered on backend:', createdOrder?.id);
+        if (createdOrder && createdOrder.id) {
+          const userOrders = JSON.parse(localStorage.getItem('pedigochos_user_orders') || '[]');
+          userOrders.push(createdOrder.id);
+          localStorage.setItem('pedigochos_user_orders', JSON.stringify(userOrders));
+        }
+      }).catch(err => {
+        console.warn('Could not register ride order on backend:', err);
+      });
+    } catch (e) {
+      console.warn('Error constructing ride order payload:', e);
+    }
+
     const waUrl = `https://wa.me/573227949751?text=${encodeURIComponent(message)}`;
     window.open(waUrl, '_blank');
     this.showToast('🚀 Solicitud enviada por WhatsApp');
