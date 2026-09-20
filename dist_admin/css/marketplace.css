@@ -348,6 +348,32 @@
   box-shadow: 0 2px 8px rgba(255, 107, 0, 0.35) !important;
 }
 
+.btn-sos-header {
+  background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  padding: 3px 9px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  border-radius: 14px !important;
+  height: 26px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5) !important;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-sos-header:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.8) !important;
+}
+
+.btn-sos-header.hidden {
+  display: none !important;
+}
+
 #auth-status-container .btn-notification {
   background-color: rgba(255, 255, 255, 0.08) !important;
   color: #FFFFFF !important;
@@ -586,7 +612,8 @@
   grid-column: 2 / 3;
 }
 
-.card-mercados {
+.card-mercados,
+.card-servicios {
   grid-row: 2 / 3;
   grid-column: 2 / 3;
 }
@@ -1803,6 +1830,7 @@ body {
   #header-gochopoints-btn,
   #header-orders-btn,
   .btn-top-header,
+  .btn-sos-header,
   #auth-status-container .btn-notification {
     padding: 2px 6px !important;
     font-size: 9.5px !important;
@@ -3374,6 +3402,11 @@ body {
   flex-direction: column;
   gap: 12px;
   align-items: center;
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+.floating-left-actions-container.hidden {
+  display: none !important;
 }
 
 .floating-fab-btn {

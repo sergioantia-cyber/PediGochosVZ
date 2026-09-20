@@ -29,6 +29,7 @@
 const CATEGORY_EMOJIS = {
   comidas: ['🍔', '🍕', '🌭', '🥤', '🍲', '🌯', '🫓', '🌽', '🍞', '🥖', '🍣', '🌮', '🍜', '🍰', '☕'],
   farmacias: ['💊', '🩹', '🧪', '🧼', '🧴', '🩺'],
+  servicios: ['🛵', '🛞', '🚗', '🚕', '🔧', '🚨', '⛽'],
   mercados: ['🛒', '🍎', '🥛', '🍞', '🥩', '🧀', '🍌'],
   ferreterias: ['🛠️', '🔨', '🔩', '🔧', '🪚', '🧰', '📐']
 };
@@ -36,8 +37,9 @@ const CATEGORY_EMOJIS = {
 const DEFAULT_IMAGES = {
   comidas: '/images/burger_royale.jpg',
   farmacias: '/images/vitamina_c.jpg',
+  servicios: '/images/burger_royale.jpg',
   mercados: '/images/pack_frutas.jpg',
-  ferreterias: '/images/pack_frutas.jpg' // Falls back gracefully
+  ferreterias: '/images/ferreteria.jpg'
 };
 
 class MarketplaceController {
@@ -173,6 +175,9 @@ class MarketplaceController {
         card.classList.remove('active');
       }
     });
+
+    // Initialize floating bubbles (visible on home) and header SOS (hidden on home)
+    this.updateFloatingAndHeaderSos(false);
 
     this.renderEstablishments();
     this.updateCartBadge();
@@ -526,7 +531,35 @@ class MarketplaceController {
       }
     });
 
+    // Category selected -> Hide floating bubbles (Services and SOS) and show header SOS button
+    this.updateFloatingAndHeaderSos(true);
+
     this.renderEstablishments();
+  }
+
+  updateFloatingAndHeaderSos(isInSubCategoryOrStore) {
+    const floatingContainer = document.querySelector('.floating-left-actions-container');
+    const headerSosBtn = document.getElementById('header-sos-btn');
+
+    if (isInSubCategoryOrStore) {
+      if (floatingContainer) {
+        floatingContainer.classList.add('hidden');
+        floatingContainer.style.setProperty('display', 'none', 'important');
+      }
+      if (headerSosBtn) {
+        headerSosBtn.classList.remove('hidden');
+        headerSosBtn.style.removeProperty('display');
+      }
+    } else {
+      if (floatingContainer) {
+        floatingContainer.classList.remove('hidden');
+        floatingContainer.style.removeProperty('display');
+      }
+      if (headerSosBtn) {
+        headerSosBtn.classList.add('hidden');
+        headerSosBtn.style.setProperty('display', 'none', 'important');
+      }
+    }
   }
 
   showFoodCategoriesGrid() {
@@ -562,6 +595,9 @@ class MarketplaceController {
     document.documentElement.style.setProperty('--primary', '#FF5E3A');
     document.documentElement.style.setProperty('--primary-hover', '#E04A27');
     
+    // Back to root home -> Show floating bubbles and hide header SOS button
+    this.updateFloatingAndHeaderSos(false);
+
     this.renderEstablishments();
     this.setActiveMobileTab('home');
     this.closeAllModals();
@@ -596,6 +632,9 @@ class MarketplaceController {
     if (pushState) {
       window.history.pushState({ view: 'establishment', estId: estId }, '');
     }
+
+    // Inside establishment -> Hide floating bubbles and show header SOS button
+    this.updateFloatingAndHeaderSos(true);
 
     // Apply custom accent theme color
     if (est.themeColor) {
@@ -643,6 +682,7 @@ class MarketplaceController {
     const categoryEmojis = {
       comidas: '🍔 Comida',
       farmacias: '💊 Farmacia',
+      servicios: '🛵 Servicio',
       mercados: '🛒 Mercado',
       ferreterias: '🛠️ Ferretería'
     };
@@ -866,6 +906,102 @@ class MarketplaceController {
     const titleEl = document.getElementById('establishments-title');
     if (titleEl) titleEl.innerHTML = displayTitle;
 
+    // Special dedicated rendering for Servicios category (Cauchera 24/7 & PediGochos Móvil)
+    if (this.currentCategory === 'servicios' && !filtered) {
+      const allRestHeader = document.getElementById('all-restaurants-header');
+      const allRestTitle = document.getElementById('all-restaurants-title-text');
+      if (allRestHeader) allRestHeader.style.display = 'block';
+      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (2)';
+
+      const promoSection = document.getElementById('daily-promotions-section');
+      if (promoSection) {
+        promoSection.style.display = 'none';
+        promoSection.classList.add('hidden');
+      }
+
+      const container = document.getElementById('food-type-filters-container');
+      if (container) container.style.display = 'none';
+
+      const featSection = document.getElementById('featured-carousel-section');
+      if (featSection) {
+        featSection.style.display = 'none';
+        featSection.classList.add('hidden');
+      }
+
+      grid.innerHTML = `
+        <!-- Cauchera Móvil 24/7 -->
+        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openCaucheraModal()" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1.5px solid rgba(239, 68, 68, 0.45); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(239, 68, 68, 0.18); border: 2px solid #EF4444; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);">
+              🛞
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  Montallantas El Cachu
+                </h4>
+                <span style="background: #EF4444; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                  🔴 24/7 ACTIVO
+                </span>
+              </div>
+              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
+                Cauchera Móvil a Domicilio. Despinche y auxilio para motos, autos y camionetas con GPS.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 10px; font-weight: 800; color: #FCD34D; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 6px;">
+                  ⭐ 5.0 • Auxilio Vial Inmediato
+                </span>
+                <span style="font-size: 11px; font-weight: 900; color: #EF4444; background: rgba(239, 68, 68, 0.18); border: 1px solid #EF4444; padding: 3px 10px; border-radius: 10px;">
+                  Solicitar Auxilio ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PediGochos Móvil (Vehículos de Diferentes Gamas) -->
+        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openRideModal()" style="background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1.5px solid rgba(255, 107, 0, 0.45); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(255, 107, 0, 0.18); border: 2px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(255, 107, 0, 0.4);">
+              🛵
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  PediGochos Móvil
+                </h4>
+                <span style="background: #FF6B00; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                  ⚡ EN VIVO
+                </span>
+              </div>
+              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
+                Vehículos de diferentes gamas: <strong>Moto Taxi</strong>, <strong>Auto</strong> y <strong>Lujo</strong>. Tarifa automática por GPS.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 10px; font-weight: 800; color: #60A5FA; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 6px;">
+                  ⭐ 4.9 • Transporte Seguro
+                </span>
+                <span style="font-size: 11px; font-weight: 900; color: #FF6B00; background: rgba(255, 107, 0, 0.18); border: 1px solid #FF6B00; padding: 3px 10px; border-radius: 10px;">
+                  Pedir Móvil ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invite to Register Another Service -->
+        <div style="grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
+          <p style="font-size: 12px; color: #94A3B8; margin: 0 0 10px 0;">
+            ¿Ofreces un servicio técnico, grúa, cerrajería o profesional en San Antonio?
+          </p>
+          <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer;">
+            ➕ Solicitar Registro de Servicio
+          </button>
+        </div>
+      `;
+      return;
+    }
+
     // Get session seed for fair play rotation (Strictly exclude disabled establishments from ANY list)
     const baseList = filtered ? filtered.filter(e => !e.disabled) : this.establishments;
     const rawList = baseList.filter(e => {
@@ -924,6 +1060,7 @@ class MarketplaceController {
       const categoryEmoji = {
         'comidas': '🍔',
         'farmacias': '💊',
+        'servicios': '🛵',
         'mercados': '🛒',
         'ferreterias': '🛠️'
       }[this.currentCategory] || '🏪';
@@ -6555,6 +6692,7 @@ class MarketplaceController {
       if (catInput) {
         const catMap = {
           'farmacias': 'Farmacia / Medicamentos',
+          'servicios': 'Servicio Técnico / Auxilio',
           'mercados': 'Mercado / Víveres',
           'ferreterias': 'Ferretería / Herramientas',
           'comidas': 'Restaurante / Comidas'

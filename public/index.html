@@ -63,6 +63,11 @@
           <span id="header-cart-badge-count">0</span>
           <span id="header-cart-badge-total">$0</span>
         </button>
+
+        <!-- Header S.O.S Button (Appears when viewing a category or store) -->
+        <button type="button" id="header-sos-btn" class="btn-sos-header hidden" onclick="MarketplaceApp.toggleSosMenu()" title="Emergencias y Auxilio Vial S.O.S">
+          🚨 <span>S.O.S</span>
+        </button>
         
         <div id="auth-status-container">
           <button class="btn-notification" onclick="MarketplaceApp.loginWithGoogle()" title="Iniciar Sesión">
@@ -159,19 +164,19 @@
             </div>
           </div>
 
-          <!-- Mercados (Horizontal Card 2) -->
-          <div class="category-card-delivercity card-mercados" data-category="mercados" onclick="MarketplaceApp.selectCategory('mercados')">
+          <!-- Servicios (Horizontal Card 2) -->
+          <div class="category-card-delivercity card-servicios" data-category="servicios" onclick="MarketplaceApp.selectCategory('servicios')">
             <div class="category-overlay-dark"></div>
-            <div class="category-card-bg" style="background-image: url('/images/pack_frutas.jpg');"></div>
+            <div class="category-card-bg" style="background: linear-gradient(135deg, #FF6B00 0%, #B91C1C 100%);"></div>
             <div class="category-card-content">
-              <h4>🛒 Mercados</h4>
+              <h4>🛵 Servicios</h4>
             </div>
           </div>
 
           <!-- Ferreterías (Horizontal Card 3) -->
           <div class="category-card-delivercity card-ferreterias" data-category="ferreterias" onclick="MarketplaceApp.selectCategory('ferreterias')">
             <div class="category-overlay-dark"></div>
-            <div class="category-card-bg" style="background-image: url('/images/destornilladores.jpg'); background-color: #B8860B;"></div>
+            <div class="category-card-bg" style="background-image: url('/images/ferreteria.jpg'); background-color: #B8860B;"></div>
             <div class="category-card-content">
               <h4>🛠️ Ferreterías</h4>
             </div>
@@ -1326,11 +1331,11 @@
             <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">Medicinas y cuidado personal</div>
           </div>
 
-          <!-- Mercados -->
-          <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('mercados');" style="background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 12px; cursor: pointer;">
-            <div style="font-size: 26px; margin-bottom: 4px;">🛒</div>
-            <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Mercados</div>
-            <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">Víveres, frutas y abarrotes</div>
+          <!-- Servicios -->
+          <div class="sos-bubble-card" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('servicios');" style="background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 12px; cursor: pointer;">
+            <div style="font-size: 26px; margin-bottom: 4px;">🛵</div>
+            <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Servicios</div>
+            <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">Cauchera 24/7 y Vehículos</div>
           </div>
 
           <!-- Ferreterías -->
