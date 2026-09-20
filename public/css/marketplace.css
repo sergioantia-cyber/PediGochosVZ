@@ -3329,4 +3329,191 @@ body {
   }
 }
 
+/* ==========================================================
+   S.O.S Emergency Services & Cauchera Móvil 24H Styles
+   ========================================================== */
+.btn-sos-header {
+  background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  padding: 3px 9px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.45) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  height: 25px !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  white-space: nowrap !important;
+}
+
+.btn-sos-header:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.65) !important;
+}
+
+.sos-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #FFF;
+  box-shadow: 0 0 6px #FFF;
+  animation: sosPulse 1.5s infinite;
+}
+
+/* Floating S.O.S Action Button */
+.floating-sos-btn {
+  position: fixed;
+  bottom: 84px;
+  right: 16px;
+  z-index: 99990;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5), 0 0 0 0 rgba(239, 68, 68, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.floating-sos-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.7);
+}
+
+.floating-sos-btn:active {
+  transform: scale(0.95);
+}
+
+.sos-halo-pulse {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  border: 2px solid #EF4444;
+  animation: sosHalo 2s infinite cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: none;
+}
+
+.sos-fab-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0px;
+  line-height: 1;
+}
+
+.sos-fab-emoji {
+  font-size: 20px;
+}
+
+.sos-fab-text {
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #FFF;
+  letter-spacing: 0.5px;
+}
+
+@keyframes sosPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+@keyframes sosHalo {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.sos-pulse-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1.5px solid #EF4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
+.sos-bubble-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, border-color 0.2s;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.sos-bubble-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sos-bubble-card:active {
+  transform: scale(0.98);
+}
+
+/* Cauchera Selection Cards */
+.cauchera-v-card {
+  background: #141721;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.cauchera-v-card.active {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #EF4444;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
+}
+
+.cauchera-s-card {
+  background: #141721;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.cauchera-s-card.active {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #EF4444;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
+}
+
+/* Responsive adjustment for floating button on desktop/mobile */
+@media (max-width: 600px) {
+  .floating-sos-btn {
+    bottom: 76px;
+    right: 14px;
+    width: 54px;
+    height: 54px;
+  }
+}
+
+
 

@@ -7274,6 +7274,379 @@ class MarketplaceController {
     this.showToast('🚀 Solicitud enviada por WhatsApp');
     this.closeRideModal();
   }
+
+  // ========================================================
+  // S.O.S EMERGENCY & 24H MOBILE CAUCHERA METHODS
+  // ========================================================
+
+  toggleSosMenu(force = null) {
+    const modal = document.getElementById('sos-menu-modal');
+    if (!modal) return;
+    const isVisible = modal.style.display === 'flex';
+    const show = force !== null ? force : !isVisible;
+    modal.style.display = show ? 'flex' : 'none';
+  }
+
+  closeSosMenu() {
+    const modal = document.getElementById('sos-menu-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  openEmergencyNumbersModal(country = 'venezuela') {
+    this.closeSosMenu();
+    const modal = document.getElementById('emergency-numbers-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      this.switchEmergencyCountry(country);
+    }
+  }
+
+  closeEmergencyNumbersModal() {
+    const modal = document.getElementById('emergency-numbers-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  switchEmergencyCountry(country) {
+    const tabVe = document.getElementById('tab-btn-emergency-ve');
+    const tabCo = document.getElementById('tab-btn-emergency-co');
+    const contVe = document.getElementById('emergency-country-venezuela');
+    const contCo = document.getElementById('emergency-country-colombia');
+
+    if (country === 'venezuela') {
+      if (tabVe) tabVe.classList.add('active');
+      if (tabCo) tabCo.classList.remove('active');
+      if (contVe) contVe.style.display = 'flex';
+      if (contCo) contCo.style.display = 'none';
+    } else {
+      if (tabCo) tabCo.classList.add('active');
+      if (tabVe) tabVe.classList.remove('active');
+      if (contCo) contCo.style.display = 'flex';
+      if (contVe) contVe.style.display = 'none';
+    }
+  }
+
+  openCaucheraModal() {
+    this.closeSosMenu();
+    const modal = document.getElementById('cauchera-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    this.caucheraVehicle = this.caucheraVehicle || 'moto';
+    this.caucheraService = this.caucheraService || 'frio';
+
+    // Pre-fill user data if available
+    const savedName = localStorage.getItem('customer_name') || localStorage.getItem('pedigochos_user_name') || '';
+    const savedPhone = localStorage.getItem('customer_phone') || localStorage.getItem('pedigochos_user_phone') || '';
+    const nameInp = document.getElementById('cauchera-customer-name');
+    const phoneInp = document.getElementById('cauchera-customer-phone');
+    if (nameInp && !nameInp.value && savedName) nameInp.value = savedName;
+    if (phoneInp && !phoneInp.value && savedPhone) phoneInp.value = savedPhone;
+
+    // Check night tariff
+    this.updateCaucheraNightBanner();
+    this.updateCaucheraPricing();
+
+    // Auto capture GPS if not yet captured
+    const locInp = document.getElementById('cauchera-location-input');
+    if (!locInp || !locInp.value || locInp.value.includes('Obteniendo')) {
+      this.captureCaucheraGps();
+    }
+  }
+
+  closeCaucheraModal() {
+    const modal = document.getElementById('cauchera-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  isNightRateActive() {
+    const currentHour = new Date().getHours();
+    return currentHour >= 20 || currentHour < 6; // 8:00 PM to 6:00 AM
+  }
+
+  updateCaucheraNightBanner() {
+    const banner = document.getElementById('cauchera-night-rate-banner');
+    if (!banner) return;
+    const isNight = this.isNightRateActive();
+
+    if (isNight) {
+      banner.style.background = 'linear-gradient(135deg, rgba(147, 51, 234, 0.25) 0%, rgba(109, 40, 217, 0.15) 100%)';
+      banner.style.border = '1px solid #9333EA';
+      banner.style.color = '#E9D5FF';
+      banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🌙</span>
+          <span>Tarifa Nocturna Activa (8:00 PM - 6:00 AM)</span>
+        </div>
+        <span style="background: #9333EA; color: #FFF; padding: 2px 8px; border-radius: 8px; font-size: 10.5px; font-weight: 900;">+$5.000 COP</span>
+      `;
+    } else {
+      banner.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)';
+      banner.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+      banner.style.color = '#A7F3D0';
+      banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">☀️</span>
+          <span>Tarifa Diurna Regular (Sin recargos adicionales)</span>
+        </div>
+        <span style="background: rgba(16, 185, 129, 0.3); color: #10B981; padding: 2px 8px; border-radius: 8px; font-size: 10.5px; font-weight: 900;">Tarifa Estándar</span>
+      `;
+    }
+  }
+
+  selectCaucheraVehicle(vType) {
+    this.caucheraVehicle = vType;
+    ['moto', 'carro', 'camioneta', 'camion'].forEach(t => {
+      const card = document.getElementById(`cauchera-v-${t}`);
+      if (card) {
+        if (t === vType) card.classList.add('active');
+        else card.classList.remove('active');
+      }
+    });
+    this.updateCaucheraPricing();
+  }
+
+  selectCaucheraService(sKey) {
+    this.caucheraService = sKey;
+    ['frio', 'caliente', 'aire', 'camara'].forEach(s => {
+      const card = document.getElementById(`cauchera-s-${s}`);
+      if (card) {
+        if (s === sKey) card.classList.add('active');
+        else card.classList.remove('active');
+      }
+    });
+    this.updateCaucheraPricing();
+  }
+
+  updateCaucheraPricing() {
+    const vType = this.caucheraVehicle || 'moto';
+    const sKey = this.caucheraService || 'frio';
+
+    const basePrices = {
+      moto: 10000,
+      carro: 15000,
+      camioneta: 20000,
+      camion: 30000
+    };
+
+    const serviceExtras = {
+      frio: 0,
+      caliente: 5000,
+      aire: 2000,
+      camara: 3000
+    };
+
+    const isNight = this.isNightRateActive();
+    const nightSurcharge = isNight ? 5000 : 0;
+
+    const base = basePrices[vType] || 10000;
+    const serviceExtra = serviceExtras[sKey] || 0;
+    const total = base + serviceExtra + nightSurcharge;
+
+    this.caucheraTotal = total;
+    this.caucheraNightSurcharge = nightSurcharge;
+
+    const baseEl = document.getElementById('cauchera-calc-base');
+    const servEl = document.getElementById('cauchera-calc-service');
+    const nightEl = document.getElementById('cauchera-calc-night');
+    const totalEl = document.getElementById('cauchera-calc-total');
+    const btnText = document.getElementById('btn-submit-cauchera-text');
+
+    if (baseEl) baseEl.innerText = `$${base.toLocaleString('es-CO')} COP`;
+    if (servEl) servEl.innerText = `+$${serviceExtra.toLocaleString('es-CO')} COP`;
+    if (nightEl) nightEl.innerText = isNight ? `+$${nightSurcharge.toLocaleString('es-CO')} COP` : '$0 COP';
+    if (totalEl) totalEl.innerText = `$${total.toLocaleString('es-CO')} COP`;
+    if (btnText) btnText.innerText = `Solicitar Auxilio por WhatsApp ($${total.toLocaleString('es-CO')} COP)`;
+  }
+
+  captureCaucheraGps() {
+    const locInp = document.getElementById('cauchera-location-input');
+    const coordsText = document.getElementById('cauchera-gps-coords-text');
+
+    if (locInp) locInp.placeholder = '📡 Localizando satélites GPS...';
+    if (coordsText) coordsText.innerText = 'Detectando ubicación satelital...';
+
+    if (!('geolocation' in navigator)) {
+      if (locInp) locInp.value = 'San Antonio del Táchira (Ubicación manual)';
+      if (coordsText) coordsText.innerText = 'GPS no disponible en navegador';
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        this.caucheraGps = { lat, lng };
+
+        if (coordsText) {
+          coordsText.innerText = `${lat.toFixed(5)}, ${lng.toFixed(5)} (Precisión: ±${Math.round(pos.coords.accuracy)}m)`;
+        }
+
+        // Reverse geocoding via OpenStreetMap Nominatim
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+          .then(r => r.json())
+          .then(data => {
+            const display = data.display_name ? data.display_name.split(',').slice(0, 3).join(',') : `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            if (locInp) locInp.value = display;
+            this.caucheraGps.address = display;
+          })
+          .catch(() => {
+            if (locInp) locInp.value = `Ubicación GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            this.caucheraGps.address = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+          });
+      },
+      (err) => {
+        console.warn('Cauchera GPS detection error:', err);
+        if (locInp) locInp.placeholder = 'Escribe tu dirección o ubicación...';
+        if (coordsText) coordsText.innerText = 'Permiso de ubicación denegado. Escribe tu referencia.';
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 }
+    );
+  }
+
+  submitCaucheraRequest() {
+    const nameInp = document.getElementById('cauchera-customer-name');
+    const phoneInp = document.getElementById('cauchera-customer-phone');
+    const locInp = document.getElementById('cauchera-location-input');
+    const refInp = document.getElementById('cauchera-reference-input');
+
+    const customerName = nameInp ? nameInp.value.trim() : '';
+    const customerPhone = phoneInp ? phoneInp.value.trim() : '';
+    const location = locInp ? locInp.value.trim() : '';
+    const reference = refInp ? refInp.value.trim() : '';
+
+    if (!customerName) {
+      alert('⚠️ Por favor ingresa tu nombre.');
+      if (nameInp) nameInp.focus();
+      return;
+    }
+    if (!customerPhone || customerPhone.length < 7) {
+      alert('⚠️ Por favor ingresa un número de teléfono / WhatsApp válido.');
+      if (phoneInp) phoneInp.focus();
+      return;
+    }
+    if (!location) {
+      alert('⚠️ Por favor indica o captura tu ubicación donde estás varado.');
+      if (locInp) locInp.focus();
+      return;
+    }
+
+    // Save for next time
+    localStorage.setItem('customer_name', customerName);
+    localStorage.setItem('customer_phone', customerPhone);
+    localStorage.setItem('pedigochos_user_name', customerName);
+    localStorage.setItem('pedigochos_user_phone', customerPhone);
+
+    const vType = this.caucheraVehicle || 'moto';
+    const sKey = this.caucheraService || 'frio';
+    const vNames = {
+      moto: '🛵 Moto',
+      carro: '🚗 Carro Particular',
+      camioneta: '🚙 Camioneta / 4x4',
+      camion: '🚚 Camión / Carga Pesada'
+    };
+    const sNames = {
+      frio: '❄️ Parche Frío (Estándar)',
+      caliente: '🔥 Vulcanizado / Parche Caliente',
+      aire: '💨 Carga de Aire / Calibración',
+      camara: '🔩 Reparación con Cámara / Neumático'
+    };
+
+    const vLabel = vNames[vType] || vType;
+    const sLabel = sNames[sKey] || sKey;
+    const isNight = this.isNightRateActive();
+    const total = this.caucheraTotal || 10000;
+    const totalFormatted = `$${Math.round(total).toLocaleString('es-CO')} COP`;
+
+    const gpsLat = this.caucheraGps?.lat;
+    const gpsLng = this.caucheraGps?.lng;
+    const mapLink = (gpsLat && gpsLng) ? `https://www.google.com/maps?q=${gpsLat},${gpsLng}` : '';
+
+    // Construct WhatsApp message
+    let waMessage = `🛞 *¡SOLICITUD DE CAUCHERA MÓVIL 24H - PEDIGOCHOS!* 🛞\n`;
+    waMessage += `🏪 *Montallantas El Cachu*\n\n`;
+    waMessage += `👤 *Conductor / Cliente:* ${customerName}\n`;
+    waMessage += `📱 *WhatsApp:* ${customerPhone}\n\n`;
+    waMessage += `🚗 *Vehículo:* ${vLabel}\n`;
+    waMessage += `🔧 *Trabajo Solicitado:* ${sLabel}\n`;
+    if (isNight) {
+      waMessage += `🌙 *Tarifa:* Horario Nocturno 24H (+$5.000 COP incluido)\n`;
+    } else {
+      waMessage += `☀️ *Tarifa:* Diurna Regular\n`;
+    }
+    waMessage += `\n📍 *Lugar donde estoy varado:* ${location}\n`;
+    if (reference) {
+      waMessage += `📝 *Punto de Referencia:* ${reference}\n`;
+    }
+    if (mapLink) {
+      waMessage += `🗺️ *Ubicación GPS en vivo:* ${mapLink}\n`;
+    }
+    waMessage += `\n💰 *VALOR TOTAL ESTIMADO:* ${totalFormatted}\n`;
+    waMessage += `💳 *Métodos de pago:* Efectivo COP / Bolívares / Pago Móvil / Nequi / Bancolombia\n\n`;
+    waMessage += `_Por favor confírmenme si un mecánico móvil viene en camino hacia mi ubicación. ¡Gracias!_`;
+
+    // Persist order on backend
+    try {
+      const payload = {
+        orderType: 'cauchera',
+        serviceType: 'cauchera',
+        establishmentId: 'montallantas-el-cachu',
+        establishmentName: 'Montallantas El Cachu 24H',
+        customerName: customerName,
+        customerPhone: customerPhone,
+        total: total,
+        nightSurcharge: isNight ? 5000 : 0,
+        vehicleType: vType,
+        items: [{
+          id: `cauchera-${vType}-${sKey}`,
+          name: `${vLabel} - ${sLabel}`,
+          price: total,
+          quantity: 1
+        }],
+        serviceDetails: {
+          vehicleType: vType,
+          serviceKey: sKey,
+          serviceTitle: `${vLabel} (${sLabel})`,
+          hasNightSurcharge: isNight,
+          nightSurchargeAmount: isNight ? 5000 : 0
+        },
+        deliveryDetails: {
+          name: customerName,
+          phone: customerPhone,
+          address: location,
+          reference: reference,
+          latitude: gpsLat,
+          longitude: gpsLng,
+          serviceType: 'cauchera',
+          vehicleType: vType
+        }
+      };
+
+      fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(r => r.json()).then(created => {
+        console.log('✅ Cauchera mobile order registered on backend:', created?.id);
+        if (created && created.id) {
+          const userOrders = JSON.parse(localStorage.getItem('pedigochos_user_orders') || '[]');
+          userOrders.push(created.id);
+          localStorage.setItem('pedigochos_user_orders', JSON.stringify(userOrders));
+        }
+      }).catch(err => {
+        console.warn('Could not persist cauchera order on backend:', err);
+      });
+    } catch(e) {
+      console.warn('Error constructing cauchera payload:', e);
+    }
+
+    // Open WhatsApp to Montallantas El Cachu (+58 424 5516340)
+    const targetWa = '584245516340';
+    const waUrl = `https://wa.me/${targetWa}?text=${encodeURIComponent(waMessage)}`;
+    window.open(waUrl, '_blank');
+
+    this.showToast('🚀 Solicitud de auxilio enviada a Montallantas El Cachu');
+    this.closeCaucheraModal();
+  }
 }
 
 const MarketplaceApp = new MarketplaceController();

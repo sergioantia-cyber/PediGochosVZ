@@ -1309,12 +1309,14 @@ app.post('/api/orders', (req, res) => {
   const orderDetails = req.body;
 
   const isRide = orderDetails.orderType === 'ride' || orderDetails.serviceType === 'ride';
+  const isCauchera = orderDetails.orderType === 'cauchera' || orderDetails.serviceType === 'cauchera' || orderDetails.establishmentId === 'montallantas-el-cachu';
+  const isSpecial = isRide || isCauchera;
 
-  if (!isRide && (!orderDetails.establishmentId || !orderDetails.items || orderDetails.items.length === 0)) {
+  if (!isSpecial && (!orderDetails.establishmentId || !orderDetails.items || orderDetails.items.length === 0)) {
     return res.status(400).json({ error: 'EstablishmentId and items are required' });
   }
 
-  if (!isRide) {
+  if (!isSpecial) {
     const targetEst = db.establishments.find(e => e.id === orderDetails.establishmentId);
     if (targetEst && !isEstablishmentOpen(targetEst)) {
       return res.status(400).json({ error: `El establecimiento "${targetEst.name}" se encuentra cerrado en este momento. Horario: ${targetEst.open_time} a ${targetEst.close_time}.` });
@@ -1325,16 +1327,22 @@ app.post('/api/orders', (req, res) => {
   const customerEmail = orderDetails.customerEmail || orderDetails.userEmail || (orderDetails.deliveryDetails && orderDetails.deliveryDetails.customerEmail) || null;
   const userId = orderDetails.userId || (orderDetails.deliveryDetails && orderDetails.deliveryDetails.userId) || null;
 
+  const prefix = isCauchera ? 'cauchera-' : (isRide ? 'movil-' : 'ord-');
+  const defaultEstId = isCauchera ? 'montallantas-el-cachu' : (isRide ? 'pedigochos-movil' : '');
+  const defaultEstName = isCauchera ? 'Montallantas El Cachu 24H' : (isRide ? 'PediGochos Móvil' : '');
+
   // Create new order object
   const order = {
-    id: (isRide ? 'movil-' : 'ord-') + Date.now() + '-' + Math.floor(Math.random() * 1000),
-    establishmentId: orderDetails.establishmentId || (isRide ? 'pedigochos-movil' : ''),
-    establishmentName: orderDetails.establishmentName || (isRide ? 'PediGochos Móvil' : ''),
+    id: prefix + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    establishmentId: orderDetails.establishmentId || defaultEstId,
+    establishmentName: orderDetails.establishmentName || defaultEstName,
     items: orderDetails.items || [],
     total: orderDetails.total || 0,
-    orderType: isRide ? 'ride' : (orderDetails.orderType || 'delivery'), // 'mesa', 'delivery', or 'ride'
-    serviceType: isRide ? 'ride' : 'food',
+    orderType: isCauchera ? 'cauchera' : (isRide ? 'ride' : (orderDetails.orderType || 'delivery')),
+    serviceType: isCauchera ? 'cauchera' : (isRide ? 'ride' : 'food'),
     vehicleType: orderDetails.vehicleType || (isRide ? 'moto' : null),
+    serviceDetails: orderDetails.serviceDetails || null,
+    nightSurcharge: orderDetails.nightSurcharge || 0,
     paymentMethod: orderDetails.paymentMethod || 'Efectivo', // 'Efectivo' or 'Transferencia'
     paymentNotes: orderDetails.paymentNotes || '',
     paymentReceiptUrl: orderDetails.paymentReceiptUrl || null,

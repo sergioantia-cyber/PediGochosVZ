@@ -4257,9 +4257,10 @@ class AdminController {
       Sound.startPersistentOrderAlarm(20);
     }
 
-    const isRide = this.isRideOrder(order);
+    const isCauchera = this.isCaucheraOrder(order);
+    const isRide = !isCauchera && this.isRideOrder(order);
     const est = this.establishments.find(e => e.id === order.establishmentId || e.id === order.establishment_id);
-    const storeName = isRide ? 'PediGochos Móvil' : (est ? est.name : 'Restaurante');
+    const storeName = isCauchera ? 'Montallantas El Cachu 24H' : (isRide ? 'PediGochos Móvil' : (est ? est.name : 'Restaurante'));
     const customerName = order.customerName || order.deliveryDetails?.name || 'Cliente';
     const orderCode = order.deliveryDetails?.code || (order.id ? String(order.id).slice(-4) : '####');
     const orderTotal = order.total !== undefined ? `$${Math.round(order.total).toLocaleString('es-CO')} COP` : '';
@@ -4268,22 +4269,28 @@ class AdminController {
     const vehicleNames = { moto: 'Moto Taxi', auto: 'Auto', lujo: 'Auto de Lujo' };
     const vName = vehicleNames[vType] || 'Moto Taxi';
 
-    const orderType = isRide 
-      ? `🛵 ${vName}` 
-      : (order.orderType === 'mesa' ? '🍽️ Mesa ' + (order.mesaNumber || order.deliveryDetails?.mesa || '') : '🚴 Delivery');
+    const orderType = isCauchera
+      ? `🛞 SOS Cauchera 24H`
+      : (isRide 
+        ? `🛵 ${vName}` 
+        : (order.orderType === 'mesa' ? '🍽️ Mesa ' + (order.mesaNumber || order.deliveryDetails?.mesa || '') : '🚴 Delivery'));
 
-    const estId = order.establishmentId || order.establishment_id || (isRide ? 'pedigochos-movil' : '');
+    const estId = order.establishmentId || order.establishment_id || (isCauchera ? 'montallantas-el-cachu' : (isRide ? 'pedigochos-movil' : ''));
 
     // Show top flashing persistent alarm banner with direct store linkage
-    this.showAlarmBanner(orderCode, isRide ? vName : storeName, estId, order.id, isRide);
+    this.showAlarmBanner(orderCode, isCauchera ? 'SOS Cauchera 24H' : (isRide ? vName : storeName), estId, order.id, isRide || isCauchera);
 
     // 2. Native OS Push Notification (Capacitor or Web)
-    const notifTitle = isRide 
-      ? `🚖 ¡SOLICITUD DE VEHÍCULO (${vName.toUpperCase()})!`
-      : `🚨 ¡NUEVO PEDIDO RECIBIDO! #${orderCode}`;
-    const notifBody = isRide
-      ? `🛵 ${vName} solicitado por ${customerName}\n🟢 Recogida: ${order.deliveryDetails?.origin || 'GPS'}\n🏁 Destino: ${order.deliveryDetails?.destination || ''}\n💰 Tarifa: ${orderTotal}`
-      : `🏪 ${storeName}\n👤 ${customerName} (${orderType})\n💰 Total: ${orderTotal}`;
+    const notifTitle = isCauchera
+      ? `🛞 ¡AUXILIO VIAL SOS CAUCHERA 24H! #${orderCode}`
+      : (isRide 
+        ? `🚖 ¡SOLICITUD DE VEHÍCULO (${vName.toUpperCase()})!`
+        : `🚨 ¡NUEVO PEDIDO RECIBIDO! #${orderCode}`);
+    const notifBody = isCauchera
+      ? `🛞 Solicitud de El Cachu por ${customerName}\n📍 Lugar: ${order.deliveryDetails?.address || 'GPS'}\n💰 Total: ${orderTotal}`
+      : (isRide
+        ? `🛵 ${vName} solicitado por ${customerName}\n🟢 Recogida: ${order.deliveryDetails?.origin || 'GPS'}\n🏁 Destino: ${order.deliveryDetails?.destination || ''}\n💰 Tarifa: ${orderTotal}`
+        : `🏪 ${storeName}\n👤 ${customerName} (${orderType})\n💰 Total: ${orderTotal}`);
 
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
       try {
@@ -4301,7 +4308,7 @@ class AdminController {
                 establishmentId: estId,
                 orderId: order.id,
                 storeName: storeName,
-                isRide: isRide
+                isRide: isRide || isCauchera
               }
             }
           ]
@@ -4316,12 +4323,12 @@ class AdminController {
           icon: '/icons/icon-192.png',
           tag: 'order-' + order.id,
           requireInteraction: true,
-          data: { establishmentId: estId, orderId: order.id, isRide: isRide }
+          data: { establishmentId: estId, orderId: order.id, isRide: isRide, isCauchera: isCauchera }
         });
         notif.onclick = () => {
           window.focus();
-          if (isRide) {
-            AdminApp.showNewOrderModal(order, 'PediGochos Móvil');
+          if (isRide || isCauchera) {
+            AdminApp.showNewOrderModal(order, isCauchera ? 'Montallantas El Cachu 24H' : 'PediGochos Móvil');
           } else if (estId) {
             AdminApp.focusEstablishment(estId, order.id);
           }
@@ -4330,7 +4337,9 @@ class AdminController {
     }
 
     // 3. Display High-Priority 3D Toast Alert in Admin UI
-    if (isRide) {
+    if (isCauchera) {
+      this.showToast(`🛞 ¡AUXILIO VIAL SOS CAUCHERA! #${orderCode} - ${customerName} (${orderTotal})`);
+    } else if (isRide) {
       this.showToast(`🚖 ¡SOLICITUD DE VEHÍCULO! #${orderCode} (${vName}) - ${customerName} (${orderTotal})`);
     } else {
       this.showToast(`🚨 ¡NUEVO PEDIDO! #${orderCode} en ${storeName} - ${customerName} (${orderTotal})`);
@@ -4350,7 +4359,87 @@ class AdminController {
       document.body.appendChild(modal);
     }
 
-    const isRide = this.isRideOrder(order);
+    const isCauchera = this.isCaucheraOrder(order);
+    const isRide = !isCauchera && this.isRideOrder(order);
+    const estId = order.establishmentId || order.establishment_id || '';
+    const orderCode = order.deliveryDetails?.code || (order.id ? String(order.id).slice(-4) : '####');
+    const customerName = order.customerName || order.deliveryDetails?.name || 'Cliente';
+    const phone = order.customerPhone || order.deliveryDetails?.phone || 'Sin teléfono';
+    const cleanPhone = String(phone).replace(/\D/g, '');
+    const totalFormatted = `$${Math.round(order.total || 0).toLocaleString('es-CO')} COP`;
+
+    if (isCauchera) {
+      // --- SOS CAUCHERA MODAL ---
+      const vType = order.vehicleType || order.serviceDetails?.vehicleType || 'Vehículo';
+      const sTitle = order.serviceDetails?.serviceTitle || order.items?.[0]?.name || 'Despinche / Auxilio';
+      const hasNight = (order.nightSurcharge && order.nightSurcharge > 0) || order.serviceDetails?.hasNightSurcharge;
+      const vIcons = { moto: '🛵 Moto', carro: '🚗 Carro', camioneta: '🚙 Camioneta / 4x4', camion: '🚚 Camión' };
+      const vDisplay = vIcons[vType] || vType;
+
+      const locAddr = order.deliveryDetails?.address || order.deliveryDetails?.origin || 'Ubicación GPS';
+      const reference = order.deliveryDetails?.reference || order.deliveryDetails?.notes || order.paymentNotes || '';
+      const mapUrl = (order.deliveryDetails?.latitude && order.deliveryDetails?.longitude)
+        ? `https://www.google.com/maps?q=${order.deliveryDetails.latitude},${order.deliveryDetails.longitude}`
+        : null;
+
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 480px; border-radius: 24px; border: 2px solid #EF4444; background: #111827; box-shadow: 0 0 40px rgba(239, 68, 68, 0.4); animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+          <div style="background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%); color: #FFF; padding: 18px 20px; border-radius: 22px 22px 0 0; text-align: center; position: relative;">
+            <span style="font-size: 38px; display: block; margin-bottom: 4px;">🛞</span>
+            <h3 style="margin: 0; font-size: 19px; font-weight: 900;">¡AUXILIO VIAL SOS CAUCHERA!</h3>
+            <span style="background: rgba(0,0,0,0.3); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; margin-top: 4px;">
+              MONTALLANTAS EL CACHU · #${orderCode}
+            </span>
+          </div>
+          <div style="padding: 20px; color: #FFF;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 14px;">
+              <div>
+                <div style="font-size: 11px; color: #94A3B8;">CONDUCTOR SOLICITANTE</div>
+                <div style="font-size: 16px; font-weight: 800;">👤 ${customerName}</div>
+                <div style="font-size: 13px; color: #38BDF8;">📱 ${phone}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 11px; color: #94A3B8;">TARIFA TOTAL</div>
+                <div style="font-size: 20px; font-weight: 900; color: #10B981;">${totalFormatted}</div>
+                ${hasNight ? `<span style="font-size: 10px; background: rgba(147,51,234,0.3); color: #C084FC; padding: 2px 6px; border-radius: 6px; font-weight: 800;">🌙 Recargo Nocturno</span>` : ''}
+              </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 14px;">
+              <div style="font-size: 13px; font-weight: 800; color: #FCD34D; margin-bottom: 6px;">
+                ${vDisplay} · ${sTitle}
+              </div>
+              <div style="font-size: 12.5px; color: #E2E8F0;">
+                <span style="color: #EF4444; font-weight: 800;">📍 Ubicación:</span> ${locAddr}
+              </div>
+              ${reference ? `<div style="font-size: 11.5px; color: #CBD5E1; margin-top: 4px;">📝 <em>${reference}</em></div>` : ''}
+              ${mapUrl ? `
+                <a href="${mapUrl}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; color: #38BDF8; font-weight: 800; text-decoration: underline;">
+                  🗺️ Abrir ubicación exacta en Google Maps ➔
+                </a>
+              ` : ''}
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              ${cleanPhone ? `
+                <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '58' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te contactamos de PediGochos respecto a tu solicitud de auxilio con Montallantas El Cachu (#${orderCode}).`)}" target="_blank" class="btn-primary" style="flex: 1; padding: 11px; font-size: 12.5px; font-weight: 800; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; background: #25D366; border: none; color: #FFF; box-shadow: 0 4px 12px rgba(37,211,102,0.3);">
+                  💬 WhatsApp Cliente
+                </a>
+              ` : ''}
+              <a href="https://wa.me/584245516340?text=${encodeURIComponent(`Hola El Cachu, nueva solicitud #${orderCode} de auxilio vial para ${customerName} (${phone}) en: ${locAddr}.`)}" target="_blank" class="btn-primary" style="flex: 1; padding: 11px; font-size: 12.5px; font-weight: 800; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; background: #EF4444; border: none; color: #FFF; box-shadow: 0 4px 12px rgba(239,68,68,0.3);">
+                🛞 Avisar a El Cachu
+              </a>
+            </div>
+
+            <button type="button" onclick="if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner(); document.getElementById('admin-new-order-modal').style.display='none';" class="btn-primary" style="width: 100%; padding: 11px; font-size: 13.5px; font-weight: 800; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #FFF;">
+              ✅ Cerrar Alerta
+            </button>
+          </div>
+        </div>
+      `;
+      modal.style.display = 'flex';
+      return;
+    }
     const estId = order.establishmentId || order.establishment_id || '';
     const orderCode = order.deliveryDetails?.code || (order.id ? String(order.id).slice(-4) : '####');
     const customerName = order.customerName || order.deliveryDetails?.name || 'Cliente';
@@ -4508,8 +4597,17 @@ class AdminController {
   // LIVE ORDERS & VEHICLE REQUESTS MANAGEMENT METHODS
   // ========================================================
 
-  isRideOrder(order) {
+  isCaucheraOrder(order) {
     if (!order) return false;
+    return order.orderType === 'cauchera' || 
+           order.serviceType === 'cauchera' || 
+           order.establishmentId === 'montallantas-el-cachu' ||
+           (order.id && String(order.id).startsWith('cauchera-')) ||
+           (order.deliveryDetails && order.deliveryDetails.serviceType === 'cauchera');
+  }
+
+  isRideOrder(order) {
+    if (!order || this.isCaucheraOrder(order)) return false;
     return order.orderType === 'ride' || 
            order.serviceType === 'ride' || 
            order.establishmentId === 'pedigochos-movil' ||
@@ -4520,7 +4618,7 @@ class AdminController {
 
   setOrdersFilter(filter) {
     this.ordersFilter = filter;
-    ['all', 'restaurant', 'ride'].forEach(f => {
+    ['all', 'restaurant', 'ride', 'cauchera'].forEach(f => {
       const btn = document.getElementById(`filter-pill-${f}`);
       if (btn) {
         if (f === filter) btn.classList.add('active');
@@ -4541,21 +4639,26 @@ class AdminController {
     if (!tbody) return;
 
     const all = this.orders || [];
+    const caucheraOrders = all.filter(o => this.isCaucheraOrder(o));
     const rideOrders = all.filter(o => this.isRideOrder(o));
-    const restaurantOrders = all.filter(o => !this.isRideOrder(o));
+    const restaurantOrders = all.filter(o => !this.isRideOrder(o) && !this.isCaucheraOrder(o));
 
     // Update counter badges
     const countAll = document.getElementById('filter-count-all');
     const countRest = document.getElementById('filter-count-restaurant');
     const countRide = document.getElementById('filter-count-ride');
+    const countCauchera = document.getElementById('filter-count-cauchera');
     const statRest = document.getElementById('badge-stat-restaurants');
     const statRide = document.getElementById('badge-stat-rides');
+    const statCauchera = document.getElementById('badge-stat-cauchera');
 
     if (countAll) countAll.innerText = all.length;
     if (countRest) countRest.innerText = restaurantOrders.length;
     if (countRide) countRide.innerText = rideOrders.length;
+    if (countCauchera) countCauchera.innerText = caucheraOrders.length;
     if (statRest) statRest.innerText = `🍔 Restaurantes: ${restaurantOrders.length}`;
     if (statRide) statRide.innerText = `🛵 Vehículos: ${rideOrders.length}`;
+    if (statCauchera) statCauchera.innerText = `🛞 Cauchera: ${caucheraOrders.length}`;
 
     // Select subset based on active filter
     let displayedOrders = all;
@@ -4563,6 +4666,8 @@ class AdminController {
       displayedOrders = restaurantOrders;
     } else if (this.ordersFilter === 'ride') {
       displayedOrders = rideOrders;
+    } else if (this.ordersFilter === 'cauchera') {
+      displayedOrders = caucheraOrders;
     }
 
     // Apply search filter if active
@@ -4598,7 +4703,8 @@ class AdminController {
     }
 
     const htmlRows = displayedOrders.map(ord => {
-      const isRide = this.isRideOrder(ord);
+      const isCauchera = this.isCaucheraOrder(ord);
+      const isRide = !isCauchera && this.isRideOrder(ord);
       const rawDate = ord.createdAt || ord.created_at || ord.timestamp;
       const orderDate = rawDate ? new Date(rawDate) : null;
       const timeAgoStr = orderDate ? this.getTimeAgoStr(orderDate) : 'Reciente';
@@ -4610,17 +4716,89 @@ class AdminController {
 
       // Status pill formatting
       const currentStatus = ord.status || 'Pendiente';
-      const statusOptions = isRide 
-        ? ['Pendiente', 'Asignado', 'En Camino', 'Entregado', 'Cancelado']
+      const statusOptions = (isRide || isCauchera)
+        ? ['Pendiente', 'En Camino', 'Entregado', 'Cancelado']
         : ['Pendiente', 'Preparando', 'Listo', 'En Camino', 'Entregado', 'Cancelado'];
 
       const statusSelectHtml = `
         <select onchange="AdminApp.updateOrderStatusFromSelect('${ord.id}', this.value)" style="padding: 4px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 800; background: #0F172A; border: 1.5px solid ${currentStatus === 'Entregado' ? '#10B981' : currentStatus === 'Cancelado' ? '#EF4444' : '#F59E0B'}; color: #FFF; outline: none; cursor: pointer;">
-          ${statusOptions.map(st => `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st === 'Entregado' ? '✅ Entregado' : st === 'Cancelado' ? '❌ Cancelado' : st === 'Pendiente' ? '⏳ Pendiente' : st === 'Preparando' ? '👨‍🍳 Preparando' : st === 'Listo' ? '📦 Listo' : '🛵 En Camino'}</option>`).join('')}
+          ${statusOptions.map(st => `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st === 'Entregado' ? '✅ Atendido' : st === 'Cancelado' ? '❌ Cancelado' : st === 'Pendiente' ? '⏳ Pendiente' : st === 'Preparando' ? '👨‍🍳 Preparando' : st === 'Listo' ? '📦 Listo' : '🛵 En Camino'}</option>`).join('')}
         </select>
       `;
 
-      if (isRide) {
+      if (isCauchera) {
+        // --- SOS CAUCHERA 24H ROW (MONTALLANTAS EL CACHU) ---
+        const vType = ord.vehicleType || ord.serviceDetails?.vehicleType || ord.deliveryDetails?.vehicleType || 'Vehículo';
+        const sTitle = ord.serviceDetails?.serviceTitle || ord.items?.[0]?.name || 'Despinche / Reparación';
+        const hasNight = (ord.nightSurcharge && ord.nightSurcharge > 0) || ord.serviceDetails?.hasNightSurcharge;
+        const vIcons = {
+          moto: '🛵 Moto',
+          carro: '🚗 Carro Particular',
+          camioneta: '🚙 Camioneta / 4x4',
+          camion: '🚚 Camión / Carga'
+        };
+        const vDisplay = vIcons[vType] || vType;
+
+        const locAddr = ord.deliveryDetails?.address || ord.deliveryDetails?.origin || 'Ubicación GPS';
+        const reference = ord.deliveryDetails?.reference || ord.deliveryDetails?.notes || ord.paymentNotes || '';
+        const mapUrl = (ord.deliveryDetails?.latitude && ord.deliveryDetails?.longitude)
+          ? `https://www.google.com/maps?q=${ord.deliveryDetails.latitude},${ord.deliveryDetails.longitude}`
+          : ((ord.deliveryDetails?.originLat && ord.deliveryDetails?.originLng)
+            ? `https://www.google.com/maps?q=${ord.deliveryDetails.originLat},${ord.deliveryDetails.originLng}`
+            : null);
+
+        const totalFormatted = `$${Math.round(ord.total || 0).toLocaleString('es-CO')} COP`;
+
+        return `
+          <tr class="live-order-row row-cauchera" style="background: rgba(239, 68, 68, 0.05); border-left: 3px solid #EF4444;">
+            <td>
+              <span class="service-badge" style="background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid #EF4444; padding: 3px 8px; border-radius: 8px; font-weight: 900; font-size: 11px; display: inline-block;">🛞 SOS CAUCHERA</span>
+              <div style="font-size: 10.5px; color: #FCA5A5; font-weight: 800; margin-top: 4px;">El Cachu 24H</div>
+            </td>
+            <td>
+              <strong style="color: #F87171; font-size: 13px;">#${orderCode}</strong>
+              <div style="font-size: 11px; color: #94A3B8;">${timeAgoStr}</div>
+              <div style="font-size: 10px; color: #64748B;">${orderTimeStr}</div>
+            </td>
+            <td>
+              <div style="font-weight: 800; color: #FFF; font-size: 13px;">👤 ${customerName}</div>
+              <div style="font-size: 11.5px; color: #CBD5E1; margin-top: 2px;">📱 ${rawPhone || 'Sin tlf'}</div>
+            </td>
+            <td>
+              <div style="font-size: 12px; color: #E2E8F0; line-height: 1.4;">
+                <div style="font-weight: 800; color: #FCD34D;">
+                  ${vDisplay} · <span style="color: #FFF;">${sTitle}</span>
+                </div>
+                ${hasNight ? `<span style="background: rgba(147, 51, 234, 0.25); color: #C084FC; border: 1px solid #9333EA; padding: 1px 6px; border-radius: 6px; font-size: 10px; font-weight: 800; margin-top: 3px; display: inline-block;">🌙 Tarifa Nocturna (+$5.000 COP)</span>` : ''}
+                <div style="display: flex; align-items: center; gap: 4px; margin-top: 3px;">
+                  <span style="color: #EF4444; font-weight: 800;">📍 Lugar:</span> ${locAddr}
+                  ${mapUrl ? `<a href="${mapUrl}" target="_blank" style="color: #38BDF8; font-size: 11px; font-weight: 800; text-decoration: underline; margin-left: 4px;" title="Ver ubicación en Google Maps">🗺️ Mapa</a>` : ''}
+                </div>
+                ${reference ? `<div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">📝 <em>${reference}</em></div>` : ''}
+              </div>
+            </td>
+            <td>
+              <strong style="color: #10B981; font-size: 13.5px;">${totalFormatted}</strong>
+              <div style="font-size: 10.5px; color: #94A3B8;">Total Auxilio</div>
+            </td>
+            <td>
+              ${statusSelectHtml}
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                ${cleanPhone ? `
+                  <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '58' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te contactamos de PediGochos respecto a tu solicitud de auxilio vial con Montallantas El Cachu (#${orderCode}).`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Chatear con el cliente por WhatsApp">
+                    💬 Cliente
+                  </a>
+                ` : ''}
+                <a href="https://wa.me/584245516340?text=${encodeURIComponent(`Hola El Cachu, orden #${orderCode} de auxilio vial para ${customerName} (${rawPhone}).`)}" target="_blank" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #EF4444; color: #F87171; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Contactar a Montallantas El Cachu">
+                  🛞 El Cachu
+                </a>
+              </div>
+            </td>
+          </tr>
+        `;
+      } else if (isRide) {
         // --- VEHICLE REQUEST ROW (MOTO TAXI, AUTO, LUJO) ---
         const vType = ord.vehicleType || ord.deliveryDetails?.vehicleType || 'moto';
         const vBadges = {
