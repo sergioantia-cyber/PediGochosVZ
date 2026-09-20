@@ -4440,12 +4440,6 @@ class AdminController {
       modal.style.display = 'flex';
       return;
     }
-    const estId = order.establishmentId || order.establishment_id || '';
-    const orderCode = order.deliveryDetails?.code || (order.id ? String(order.id).slice(-4) : '####');
-    const customerName = order.customerName || order.deliveryDetails?.name || 'Cliente';
-    const phone = order.customerPhone || order.deliveryDetails?.phone || 'Sin teléfono';
-    const cleanPhone = String(phone).replace(/\D/g, '');
-    const totalFormatted = `$${Math.round(order.total || 0).toLocaleString('es-CO')} COP`;
 
     if (isRide) {
       // --- VEHICLE REQUEST MODAL ---
