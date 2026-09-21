@@ -31,8 +31,24 @@ console.log('🔄 [3/5] Sincronizando con plataforma Android nativa...');
 execSync('npx cap sync android', { stdio: 'inherit', cwd: rootDir });
 
 console.log('🔨 [4/5] Compilando APK nativo con Gradle...');
-const javaHome = 'C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot';
-const androidHome = 'C:\\Users\\Owen\\AppData\\Local\\Android\\Sdk';
+const candidateJavas = [
+  process.env.JAVA_HOME,
+  'C:\\Program Files\\Android\\Android Studio\\jbr',
+  'C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot',
+  'C:\\Program Files\\Java\\jdk-21'
+].filter(Boolean);
+const javaHome = candidateJavas.find(p => fs.existsSync(p)) || 'C:\\Program Files\\Android\\Android Studio\\jbr';
+
+const candidateAndroids = [
+  process.env.ANDROID_HOME,
+  path.join(process.env.LOCALAPPDATA || '', 'Android', 'Sdk'),
+  'C:\\Users\\DerEine\\AppData\\Local\\Android\\Sdk',
+  'C:\\Users\\Owen\\AppData\\Local\\Android\\Sdk'
+].filter(Boolean);
+const androidHome = candidateAndroids.find(p => fs.existsSync(p)) || 'C:\\Users\\DerEine\\AppData\\Local\\Android\\Sdk';
+
+console.log(`☕ Usando JAVA_HOME: ${javaHome}`);
+console.log(`📱 Usando ANDROID_HOME: ${androidHome}`);
 
 const env = {
   ...process.env,
@@ -47,7 +63,8 @@ execSync(`"${gradlewPath}" assembleDebug`, { stdio: 'inherit', cwd: path.join(ro
 console.log('📦 [5/5] Exportando PediGochos-Cocina.apk...');
 const apkSrc = path.join(rootDir, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
 const apkDestProject = path.join(rootDir, 'PediGochos-Cocina.apk');
-const apkDestDesktop = 'C:\\Users\\Owen\\Desktop\\PediGochos-Cocina.apk';
+const userDesktop = path.join(process.env.USERPROFILE || 'C:\\Users\\DerEine', 'Desktop');
+const apkDestDesktop = path.join(userDesktop, 'PediGochos-Cocina.apk');
 
 if (fs.existsSync(apkSrc)) {
   fs.copyFileSync(apkSrc, apkDestProject);
