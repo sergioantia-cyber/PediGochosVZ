@@ -187,6 +187,8 @@ class MarketplaceController {
     this.initPushNotifications();
     this.initOfflineSync();
     this.checkFirstTimeWelcome();
+    this.checkRidePromoVisibility();
+    this.startActiveOrdersPolling();
 
     // Auto-open store if scanned via QR or visited via direct link
     if (storeParam && Array.isArray(this.establishments) && this.establishments.length > 0) {
@@ -260,13 +262,15 @@ class MarketplaceController {
           }
           if (data.type === 'ORDER_UPDATED' && data.order) {
             const currentOrders = this.getUserOrdersHistory();
-            const exists = currentOrders.some(o => String(o.id) === String(data.order.id));
-            if (exists) {
+            const existingOrder = currentOrders.find(o => String(o.id) === String(data.order.id));
+            if (existingOrder) {
+              const oldStatus = existingOrder.status;
               this.saveUserOrderToHistory(data.order);
               const modal = document.getElementById('user-orders-modal');
               if (modal && modal.classList.contains('active')) {
                 this.renderUserOrdersList();
               }
+              this.handleCustomerOrderStatusUpdate(data.order, oldStatus);
             }
           }
         } catch (e) {
@@ -5994,16 +5998,361 @@ class MarketplaceController {
           navigator.serviceWorker.ready.then(registration => {
             registration.showNotification(title, {
               body: body,
-              icon: '/images/burger_royale.jpg',
+              icon: '/images/logo-pedigochos.png',
+              badge: '/images/logo-pedigochos.png',
               vibrate: [200, 100, 200]
             });
           });
         } else {
-          new Notification(title, { body: body, icon: '/images/burger_royale.jpg' });
+          new Notification(title, { body: body, icon: '/images/logo-pedigochos.png' });
         }
       } catch(e) {
         console.warn('Local push notification fallback:', e);
       }
+    }
+  }
+
+  // ========================================================
+  // CUSTOMER ORDER STATUS NOTIFICATIONS & RIDE PROMO LOGIC
+  // ========================================================
+
+  handleCustomerOrderStatusUpdate(order, previousStatus = null) {
+    if (!order) return;
+    const newStatus = String(order.status || '').trim();
+    if (!newStatus || newStatus === previousStatus) return;
+
+    console.log(`🔔 Customer order status transition: #${order.id} ${previousStatus || 'inicial'} -> ${newStatus}`);
+
+    const est = this.establishments.find(e => String(e.id) === String(order.establishmentId || order.establishment_id));
+    const estName = est ? est.name : (order.establishmentName || 'Restaurante');
+    const orderIdShort = String(order.id).slice(-4);
+
+    let title = '';
+    let body = '';
+    let icon = '🔔';
+    let statusClass = 'status-default';
+
+    switch (newStatus) {
+      case 'Preparando':
+      case 'Aceptado':
+        title = `👨‍🍳 ¡Pedido Aceptado! (#${orderIdShort})`;
+        body = `El restaurante ${estName} ha aceptado tu pedido y comenzó su preparación en cocina.`;
+        icon = '👨‍🍳';
+        statusClass = 'status-preparando';
+        // Show "¿Necesitas trasladarte?" promo notification banner
+        this.showRidePromoNotification();
+        break;
+
+      case 'Listo':
+        title = `📦 ¡Tu Pedido está Listo! (#${orderIdShort})`;
+        body = order.orderType === 'mesa'
+          ? `Tu pedido en ${estName} ya está servido en tu mesa. ¡Buen provecho!`
+          : `El pedido en ${estName} está empacado y listo para despacho o retiro.`;
+        icon = '📦';
+        statusClass = 'status-listo';
+        break;
+
+      case 'En Camino':
+        const driverName = order.driver && order.driver.name ? order.driver.name : null;
+        title = `🛵 ¡Tu Pedido va en Camino! (#${orderIdShort})`;
+        body = driverName
+          ? `${driverName} va en ruta hacia tu dirección con tu pedido de ${estName}.`
+          : `Tu domiciliario va en camino hacia tu dirección con tu pedido de ${estName}.`;
+        icon = '🛵';
+        statusClass = 'status-en-camino';
+        break;
+
+      case 'Entregado':
+      case 'completed':
+        title = `🎉 ¡Pedido Entregado! (#${orderIdShort})`;
+        body = `Tu pedido de ${estName} fue entregado con éxito. ¡Gracias por preferir PediGochos!`;
+        icon = '🎉';
+        statusClass = 'status-entregado';
+        this.checkRidePromoVisibility();
+        break;
+
+      case 'Cancelado':
+      case 'cancelled':
+        const reason = order.cancelReason ? ` (${order.cancelReason})` : '';
+        title = `⚠️ Pedido Cancelado (#${orderIdShort})`;
+        body = `Tu pedido en ${estName} fue cancelado${reason}.`;
+        icon = '⚠️';
+        statusClass = 'status-cancelado';
+        this.checkRidePromoVisibility();
+        break;
+
+      default:
+        title = `📋 Pedido Actualizado (#${orderIdShort})`;
+        body = `Tu pedido en ${estName} cambió a: ${newStatus}`;
+        icon = '📋';
+        statusClass = 'status-default';
+        break;
+    }
+
+    // 1. Play synthesized Web Audio chime
+    if (window.Sound && typeof window.Sound.playCustomerStatusChime === 'function') {
+      window.Sound.playCustomerStatusChime(newStatus);
+    } else if (window.Sound && typeof window.Sound.playBell === 'function') {
+      window.Sound.playBell();
+    }
+
+    // 2. Mobile haptic vibration
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        if (newStatus === 'En Camino') navigator.vibrate([100, 60, 100, 60, 200]);
+        else if (newStatus === 'Entregado') navigator.vibrate([100, 50, 100, 50, 250]);
+        else if (newStatus === 'Cancelado') navigator.vibrate([300, 100, 300]);
+        else navigator.vibrate([150, 80, 150]);
+      } catch (e) {}
+    }
+
+    // 3. Web Push / Native OS notification
+    this.sendPushNotification(title, body);
+
+    // 4. In-App Floating notification banner
+    this.showCustomerAlertBanner({
+      title,
+      body,
+      icon,
+      statusClass,
+      orderId: order.id
+    });
+  }
+
+  showCustomerAlertBanner({ title, body, icon, statusClass, orderId }) {
+    const banner = document.getElementById('customer-order-alert-banner');
+    if (!banner) return;
+
+    const iconEl = document.getElementById('banner-status-icon');
+    const titleEl = document.getElementById('banner-status-title');
+    const descEl = document.getElementById('banner-status-desc');
+    const timeEl = document.getElementById('banner-status-time');
+
+    if (iconEl) iconEl.innerText = icon || '🔔';
+    if (titleEl) titleEl.innerText = title;
+    if (descEl) descEl.innerText = body;
+    if (timeEl) timeEl.innerText = 'Ahora';
+
+    banner.className = `customer-order-banner show ${statusClass}`;
+    banner.style.display = 'flex';
+    banner.dataset.orderId = orderId;
+
+    if (this._customerAlertBannerTimeout) {
+      clearTimeout(this._customerAlertBannerTimeout);
+    }
+
+    // Auto-dismiss after 8.5 seconds
+    this._customerAlertBannerTimeout = setTimeout(() => {
+      this.dismissCustomerAlertBanner();
+    }, 8500);
+  }
+
+  dismissCustomerAlertBanner() {
+    const banner = document.getElementById('customer-order-alert-banner');
+    if (!banner) return;
+    banner.classList.remove('show');
+    setTimeout(() => {
+      if (!banner.classList.contains('show')) {
+        banner.style.display = 'none';
+      }
+    }, 420);
+  }
+
+  onCustomerAlertBannerClick(event) {
+    this.dismissCustomerAlertBanner();
+    this.openUserOrdersModal();
+  }
+
+  // Ride Promotion Card Visibility & Swipe to Dismiss Handlers
+  checkRidePromoVisibility() {
+    const card = document.getElementById('ride-promo-card');
+    if (!card) return;
+
+    if (sessionStorage.getItem('ride_promo_dismissed') === 'true') {
+      card.style.display = 'none';
+      return;
+    }
+
+    const orders = this.getUserOrdersHistory();
+    // Only display if merchant has accepted the order (Preparando, Aceptado, Listo, En Camino)
+    const hasAcceptedOrder = orders.some(o => {
+      const s = String(o.status || '').trim();
+      return s === 'Preparando' || s === 'Aceptado' || s === 'Listo' || s === 'En Camino';
+    });
+
+    if (hasAcceptedOrder) {
+      card.style.display = 'flex';
+      this.initRidePromoSwipe();
+    } else {
+      card.style.display = 'none';
+    }
+  }
+
+  showRidePromoNotification() {
+    sessionStorage.removeItem('ride_promo_dismissed');
+    const card = document.getElementById('ride-promo-card');
+    if (!card) return;
+
+    card.style.display = 'flex';
+    card.style.transform = 'translateX(0)';
+    card.style.opacity = '0';
+    card.style.transition = 'opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+    setTimeout(() => {
+      card.style.opacity = '1';
+    }, 20);
+    this.initRidePromoSwipe();
+  }
+
+  initRidePromoSwipe() {
+    const card = document.getElementById('ride-promo-card');
+    if (!card || this._ridePromoSwipeInitialized) return;
+
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let isSwiping = false;
+    let isHorizontal = null;
+    let isMouseDown = false;
+
+    const onStart = (clientX, clientY) => {
+      startX = clientX;
+      startY = clientY;
+      currentX = 0;
+      isSwiping = false;
+      isHorizontal = null;
+      card.style.transition = 'none';
+    };
+
+    const onMove = (clientX, clientY, e) => {
+      const deltaX = clientX - startX;
+      const deltaY = clientY - startY;
+
+      if (isHorizontal === null) {
+        if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+          isHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
+        }
+      }
+
+      if (isHorizontal) {
+        // Only allow sliding to the left
+        if (deltaX < 0) {
+          if (e && e.cancelable) e.preventDefault();
+          this._isRidePromoSwiping = true;
+          isSwiping = true;
+          currentX = deltaX;
+          card.style.transform = `translateX(${deltaX}px)`;
+          const opacity = Math.max(0, 1 - Math.abs(deltaX) / (card.offsetWidth * 0.75));
+          card.style.opacity = opacity;
+        } else {
+          // Resist swipe to the right
+          card.style.transform = `translateX(${deltaX * 0.15}px)`;
+        }
+      }
+    };
+
+    const onEnd = () => {
+      if (isSwiping && currentX < -65) {
+        // Disappear smoothly to the left
+        card.style.transition = 'transform 0.28s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.28s ease';
+        card.style.transform = 'translateX(-120%)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          card.style.display = 'none';
+          card.style.transform = '';
+          card.style.opacity = '';
+          sessionStorage.setItem('ride_promo_dismissed', 'true');
+          this._isRidePromoSwiping = false;
+        }, 300);
+      } else {
+        // Snap back
+        card.style.transition = 'transform 0.22s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.22s ease';
+        card.style.transform = 'translateX(0)';
+        card.style.opacity = '1';
+        setTimeout(() => {
+          this._isRidePromoSwiping = false;
+        }, 80);
+      }
+      isSwiping = false;
+    };
+
+    card.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length === 1) {
+        onStart(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    card.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches.length === 1) {
+        onMove(e.touches[0].clientX, e.touches[0].clientY, e);
+      }
+    }, { passive: false });
+
+    card.addEventListener('touchend', () => {
+      onEnd();
+    });
+
+    card.addEventListener('mousedown', (e) => {
+      isMouseDown = true;
+      onStart(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isMouseDown) return;
+      onMove(e.clientX, e.clientY, e);
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isMouseDown) {
+        isMouseDown = false;
+        onEnd();
+      }
+    });
+
+    this._ridePromoSwipeInitialized = true;
+  }
+
+  onRidePromoCardClick(event) {
+    if (this._isRidePromoSwiping) return;
+    this.openRideModal();
+  }
+
+  // Active Orders Polling Fallback
+  startActiveOrdersPolling() {
+    if (this._activeOrdersPollingInterval) return;
+    this._activeOrdersPollingInterval = setInterval(() => {
+      this.pollActiveUserOrders();
+    }, 9000);
+  }
+
+  async pollActiveUserOrders() {
+    const localOrders = this.getUserOrdersHistory();
+    const activeOrders = localOrders.filter(o => {
+      const s = String(o.status || '').trim();
+      return s !== 'Entregado' && s !== 'completed' && s !== 'Cancelado' && s !== 'cancelled';
+    });
+
+    if (activeOrders.length === 0) return;
+
+    try {
+      const res = await fetch('/api/orders');
+      if (!res.ok) return;
+      const serverOrders = await res.json();
+      if (!Array.isArray(serverOrders)) return;
+
+      activeOrders.forEach(localOrd => {
+        const fresh = serverOrders.find(s => String(s.id) === String(localOrd.id));
+        if (fresh && String(fresh.status).trim() !== String(localOrd.status).trim()) {
+          const oldStatus = localOrd.status;
+          this.saveUserOrderToHistory(fresh);
+          this.handleCustomerOrderStatusUpdate(fresh, oldStatus);
+          const modal = document.getElementById('user-orders-modal');
+          if (modal && modal.classList.contains('active')) {
+            this.renderUserOrdersList();
+          }
+        }
+      });
+    } catch (e) {
+      // silent
     }
   }
 
