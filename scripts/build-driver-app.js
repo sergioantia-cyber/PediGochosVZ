@@ -20,7 +20,7 @@ foldersToCopy.forEach(folder => {
 });
 
 // Copy driver.html as index.html and driver.html
-let driverHtml = fs.readFileSync(path.join(publicDir, 'driver.html'), 'utf8');
+const driverHtml = fs.readFileSync(path.join(publicDir, 'driver.html'), 'utf8');
 fs.writeFileSync(path.join(distDir, 'index.html'), driverHtml);
 fs.writeFileSync(path.join(distDir, 'driver.html'), driverHtml);
 

@@ -3,40 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Pedi Gochos Repartidor - Yoxman</title>
-  <link rel="stylesheet" href="/css/common.css?v=85">
+  <title>Pedi Gochos Repartidor - App de Domiciliarios</title>
+  <link rel="stylesheet" href="/css/common.css?v=80">
   <link rel="stylesheet" href="/css/driver.css?v=170">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 </head>
 <body class="driver-body">
 
-  <!-- Driver Login Gate Overlay (Protegido para cuenta Yoxman) -->
+  <!-- Driver Login Gate Overlay (Cuenta Yoxman) -->
   <div id="driver-login-gate" class="driver-gate-overlay">
     <div class="driver-gate-card">
       <div class="gate-icon-pulse">🛵</div>
       <h2>Pedi Gochos <span>Repartidor</span></h2>
       <p class="gate-subtitle">Portal Oficial de Domiciliarios</p>
       
-      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 10px; margin-top: 16px; font-size: 11.5px; color: #34D399; text-align: left;">
-        🔒 <strong>Acceso Registrado:</strong> Inicia sesión con tus credenciales asignadas para acceder al chat grupal de carreras y a tu control de dinero del día.
-      </div>
+      <form onsubmit="event.preventDefault(); DriverApp.loginDriver();" style="margin-top: 20px; text-align: left;">
+        <div class="form-group">
+          <label for="driver-input-username" style="font-size: 11.5px; color: #94A3B8; font-weight: 700;">Usuario de Repartidor *</label>
+          <input type="text" id="driver-input-username" value="yoxman" placeholder="Usuario (Ej. yoxman)" class="input-3d" autocomplete="username">
+        </div>
 
-      <div class="form-group" style="margin-top: 16px; text-align: left;">
-        <label for="driver-login-user" style="display: block; font-size: 12px; font-weight: 700; color: #94A3B8; margin-bottom: 5px;">Usuario *</label>
-        <input type="text" id="driver-login-user" placeholder="yoxman" value="yoxman" class="input-3d" autocomplete="username">
-      </div>
+        <div class="form-group" style="margin-top: 14px;">
+          <label for="driver-input-password" style="font-size: 11.5px; color: #94A3B8; font-weight: 700;">Clave de Acceso *</label>
+          <input type="password" id="driver-input-password" value="12345@" placeholder="Clave (Ej. 12345@)" class="input-3d" autocomplete="current-password">
+        </div>
 
-      <div class="form-group" style="margin-top: 12px; text-align: left;">
-        <label for="driver-login-pass" style="display: block; font-size: 12px; font-weight: 700; color: #94A3B8; margin-bottom: 5px;">Contraseña *</label>
-        <input type="password" id="driver-login-pass" placeholder="12345@" class="input-3d" autocomplete="current-password">
-      </div>
+        <button type="submit" class="btn-3d btn-3d-emerald" style="width: 100%; margin-top: 18px; font-size: 15px; padding: 14px;">
+          🚀 Iniciar Sesión (Yoxman)
+        </button>
 
-      <button type="button" class="btn-3d btn-3d-emerald" onclick="DriverApp.loginDriver()" style="width: 100%; margin-top: 18px; font-size: 15px; padding: 14px;">
-        🚀 Iniciar Turno Domiciliario
-      </button>
-
-      <div id="driver-login-error" class="error-text hidden" style="margin-top: 12px; color: #EF4444; font-size: 12px; font-weight: 700;"></div>
+        <div id="driver-login-error" class="error-text hidden" style="margin-top: 12px; font-size: 12.5px; color: #EF4444; font-weight: 700; text-align: center;"></div>
+      </form>
     </div>
   </div>
 
@@ -45,218 +43,148 @@
     
     <!-- Top Header -->
     <header class="driver-header">
-      <div class="driver-brand" style="display: flex; align-items: center; gap: 8px;">
+      <div class="driver-brand" style="display: flex; align-items: center; gap: 10px;">
         <span class="logo-emoji">🛵</span>
         <div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <h2 id="driver-profile-name" style="margin: 0; font-size: 15px; font-weight: 900; color: #FFF;">Yoxman</h2>
-            <span class="locked-badge" title="Nombre Protegido y Bloqueado">🔒 Bloqueado</span>
-          </div>
-          <span id="driver-profile-phone" class="driver-sub-info">Red Domiciliarios Pedigochos</span>
+          <h2 id="driver-profile-name" style="margin: 0; font-size: 17px; font-weight: 900; color: #FFF;">Yoxman</h2>
+          <span id="driver-profile-phone" class="driver-sub-info" style="font-size: 11px; color: #10B981; font-weight: 700;">Repartidor Oficial • Moto 🛵</span>
+        </div>
+        <div class="live-active-light-badge" title="App del Repartidor Activa" style="margin-left: 4px;">
+          <span class="green-pulse-dot"></span>
+          <span class="live-label">GPS ACTIVO</span>
         </div>
       </div>
       
       <div style="display: flex; align-items: center; gap: 8px;">
-        <div class="live-active-light-badge" title="Conexión en Tiempo Real">
-          <span class="green-pulse-dot"></span>
-          <span class="live-label">EN VIVO</span>
+        <div class="driver-status-toggle">
+          <label class="switch-3d">
+            <input type="checkbox" id="driver-duty-toggle" onchange="DriverApp.toggleDutyStatus(this.checked)">
+            <span class="slider-3d"></span>
+          </label>
+          <span id="duty-status-badge" class="duty-badge badge-offline">🔴 Fuera</span>
         </div>
-        <button type="button" onclick="DriverApp.logout()" class="btn-logout" title="Cerrar Turno">
-          Salir 🚪
-        </button>
+        <button type="button" onclick="DriverApp.logout()" title="Cerrar Sesión" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #F87171; font-size: 11px; padding: 5px 8px; cursor: pointer; font-weight: 800;">Salir</button>
       </div>
     </header>
 
-    <!-- Navigation Bar Tabs (Solo Chat Grupal y Domicilios del Día) -->
+    <!-- Navigation Bar Tabs -->
     <nav class="driver-nav-tabs">
-      <button type="button" class="tab-btn-3d active" onclick="DriverApp.switchTab('group_chat')" id="tab-btn-group_chat">
+      <button type="button" class="tab-btn-3d active" onclick="DriverApp.switchTab('chat')" id="tab-btn-chat">
         💬 Chat Grupal <span id="badge-chat-count" class="count-pill hidden">0</span>
       </button>
-      <button type="button" class="tab-btn-3d" onclick="DriverApp.switchTab('finances')" id="tab-btn-finances">
+      <button type="button" class="tab-btn-3d" onclick="DriverApp.switchTab('active')" id="tab-btn-active">
+        🛵 Pedido Activo
+      </button>
+      <button type="button" class="tab-btn-3d" onclick="DriverApp.switchTab('history')" id="tab-btn-history">
         📊 Domicilios del Día
       </button>
     </nav>
 
-    <!-- ============================================================== -->
-    <!-- TAB 1: CHAT GRUPAL DE DOMICILIARIOS (EN VIVO)                   -->
-    <!-- ============================================================== -->
-    <main id="tab-view-group_chat" class="tab-content active">
-      <div class="chat-banner-info">
-        <span>🚨</span>
-        <div style="font-size: 11.5px; line-height: 1.3;">
-          <strong>Canal Oficial de Domiciliarios:</strong> Aquí entran las solicitudes de vehículos de <em>pedigochos.com</em> y pedidos de delivery. ¡Haz clic en <strong>Tomar Servicio Ahora</strong> para ganar la carrera!
+    <!-- Tab 1: Group Chat of Domiciliarios & Incoming Services -->
+    <main id="tab-view-chat" class="tab-content active">
+      <div class="driver-chat-container">
+        <div class="driver-chat-header">
+          <h3>💬 Chat Grupal de Domiciliarios</h3>
+          <span style="font-size: 11px; color: #10B981; font-weight: 800; display: flex; align-items: center; gap: 4px;">
+            <span class="green-pulse-dot" style="width: 8px; height: 8px;"></span> EN LÍNEA
+          </span>
         </div>
-        <button type="button" class="btn-refresh-sm" onclick="DriverApp.loadGroupChat(); DriverApp.loadOrders();" title="Refrescar">🔄</button>
-      </div>
 
-      <!-- Feed del Chat Grupal -->
-      <div id="group-chat-feed" class="group-chat-box">
-        <div class="loading-spinner">Cargando servicios y mensajes en vivo...</div>
-      </div>
+        <!-- Chat messages & Interactive Service Cards Feed -->
+        <div id="driver-chat-feed" class="driver-chat-feed">
+          <div class="loading-spinner">Cargando chat grupal y solicitudes en tiempo real...</div>
+        </div>
 
-      <!-- Barra Inferior de Envío en el Chat Grupal -->
-      <div class="chat-input-container">
-        <input type="text" id="group-chat-input" placeholder="Escribe un mensaje al grupo de repartidores..." class="chat-text-input" onkeypress="if(event.key === 'Enter') DriverApp.sendGroupMessage()">
-        <button type="button" class="btn-chat-send" onclick="DriverApp.sendGroupMessage()" title="Enviar">
-          ➤
+        <!-- Chat input bar -->
+        <form class="driver-chat-input-bar" onsubmit="event.preventDefault(); DriverApp.sendChatMessage();">
+          <input type="text" id="driver-chat-input" placeholder="Escribe un mensaje al grupo de repartidores..." autocomplete="off">
+          <button type="submit">📤 Enviar</button>
+        </form>
+      </div>
+    </main>
+
+    <!-- Tab 2: Active Assigned Order & Customer Details -->
+    <main id="tab-view-active" class="tab-content hidden">
+      <div id="no-active-order-msg" class="empty-state-card">
+        <span class="empty-icon">🛵</span>
+        <h3>Sin Servicio en Curso</h3>
+        <p>Toca en <strong>"Tomar Servicio"</strong> en el chat grupal para iniciar tu carrera o entrega.</p>
+        <button type="button" class="btn-3d btn-3d-emerald" onclick="DriverApp.switchTab('chat')">
+          💬 Ver Chat de Servicios
         </button>
       </div>
-    </main>
 
-    <!-- ============================================================== -->
-    <!-- TAB 2: TABLA DE DOMICILIOS DEL DÍA (FINANZAS Y CUENTAS)         -->
-    <!-- ============================================================== -->
-    <main id="tab-view-finances" class="tab-content hidden">
-      <!-- Tarjetas Resumen de Dinero -->
-      <div class="finance-metric-grid">
-        <div class="finance-card card-earnings">
-          <span class="f-label">💵 Ganancias Netas</span>
-          <div class="f-value" id="f-earnings">$0 COP</div>
-          <span class="f-sub">Por servicios completados</span>
-        </div>
-
-        <div class="finance-card card-cash">
-          <span class="f-label">💰 Efectivo en Mano</span>
-          <div class="f-value" id="f-cash">$0 COP</div>
-          <span class="f-sub">Pendiente por liquidar</span>
-        </div>
-
-        <div class="finance-card card-digital">
-          <span class="f-label">📲 Pagos Digitales</span>
-          <div class="f-value" id="f-digital">$0 COP</div>
-          <span class="f-sub">Nequi / Daviplata / Transf</span>
-        </div>
-
-        <div class="finance-card card-deliveries">
-          <span class="f-label">📦 Total Servicios</span>
-          <div class="f-value" id="f-count">0</div>
-          <span class="f-sub">Carreras hoy</span>
-        </div>
-      </div>
-
-      <!-- Filtros de la Tabla -->
-      <div class="finance-filter-bar">
-        <button type="button" class="filter-chip active" id="filter-chip-all" onclick="DriverApp.setFinanceFilter('all')">Todos</button>
-        <button type="button" class="filter-chip" id="filter-chip-pending" onclick="DriverApp.setFinanceFilter('pending')">En Curso / Pendientes</button>
-        <button type="button" class="filter-chip" id="filter-chip-completed" onclick="DriverApp.setFinanceFilter('completed')">Completados</button>
-      </div>
-
-      <!-- Listado / Tabla de Carreras del Día -->
-      <div class="section-title-bar" style="margin-top: 14px;">
-        <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: #FFF;">📋 Detalle de Domicilios del Día</h3>
-      </div>
-      <div id="finance-rides-list" class="orders-cards-grid" style="margin-top: 8px;">
-        <!-- Llenado dinámicamente -->
+      <div id="active-order-details-card" class="active-order-card hidden">
+        <!-- Rendered dynamically via driver.js -->
       </div>
     </main>
 
-    <!-- ============================================================== -->
-    <!-- MODAL: DETALLE DEL SERVICIO Y CHAT PRIVADO CON EL CLIENTE      -->
-    <!-- ============================================================== -->
-    <div id="ride-modal-overlay" class="driver-modal-overlay hidden">
-      <div class="driver-modal-card">
-        <div class="modal-header">
-          <div>
-            <span class="modal-pre-title" id="modal-service-type">🛵 Solicitud de Vehículo</span>
-            <h3 id="modal-service-code" style="margin: 0; font-size: 17px; font-weight: 900; color: #FFF;">#SERV-0000</h3>
-          </div>
-          <button type="button" class="btn-modal-close" onclick="DriverApp.closeRideModal()">✕</button>
+    <!-- Tab 3: Daily Deliveries Table & Money Details -->
+    <main id="tab-view-history" class="tab-content hidden">
+      <!-- Important Money Details -->
+      <div class="finances-grid">
+        <div class="finance-card" style="border-color: #10B981;">
+          <div class="finance-card-icon">💰</div>
+          <div class="finance-card-title">Ganancia Total Hoy</div>
+          <div class="finance-card-val" id="fin-today-earnings" style="color: #10B981;">$0 COP</div>
+          <div class="finance-card-sub" id="fin-today-usd">≈ $0.00 USD</div>
         </div>
 
-        <div class="modal-body-scroll">
-          <!-- Tarifa y Estado -->
-          <div class="service-highlight-box">
-            <div>
-              <span style="font-size: 11px; color: #94A3B8; text-transform: uppercase; font-weight: 700;">Tarifa Acordada:</span>
-              <div id="modal-service-fare" style="font-size: 22px; font-weight: 900; color: #10B981;">$0 COP</div>
-            </div>
-            <div style="text-align: right;">
-              <span style="font-size: 11px; color: #94A3B8; text-transform: uppercase; font-weight: 700;">Método:</span>
-              <div id="modal-service-payment" style="font-size: 13px; font-weight: 800; color: #F59E0B;">Efectivo</div>
-            </div>
-          </div>
+        <div class="finance-card">
+          <div class="finance-card-icon">🛵</div>
+          <div class="finance-card-title">Servicios Realizados</div>
+          <div class="finance-card-val" id="fin-today-count">0</div>
+          <div class="finance-card-sub">Entregas & Traslados</div>
+        </div>
 
-          <!-- Ruta GPS -->
-          <div class="route-box">
-            <div class="route-row">
-              <span class="route-icon">🟢</span>
-              <div>
-                <strong style="color: #34D399; font-size: 12px; display: block;">PUNTO DE RECOGIDA (ORIGEN):</strong>
-                <span id="modal-service-origin" style="font-size: 13.5px; color: #FFF; font-weight: 700;">Dirección</span>
-              </div>
-            </div>
-            <div class="route-divider-line"></div>
-            <div class="route-row">
-              <span class="route-icon">🏁</span>
-              <div>
-                <strong style="color: #F97316; font-size: 12px; display: block;">PUNTO DE ENTREGA (DESTINO):</strong>
-                <span id="modal-service-dest" style="font-size: 13.5px; color: #FFF; font-weight: 700;">Destino</span>
-              </div>
-            </div>
-            <div id="modal-service-km-box" style="margin-top: 6px; font-size: 11.5px; color: #94A3B8; font-weight: 700;">
-              📏 Distancia estimada: <span id="modal-service-km">1.0 km</span>
-            </div>
-          </div>
+        <div class="finance-card">
+          <div class="finance-card-icon">💵</div>
+          <div class="finance-card-title">Efectivo Cobrado</div>
+          <div class="finance-card-val" id="fin-today-cash">$0 COP</div>
+          <div class="finance-card-sub">Cobrado en mano</div>
+        </div>
 
-          <!-- Datos del Cliente & Contacto Directo -->
-          <div class="customer-contact-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div>
-                <strong id="modal-service-customer" style="font-size: 14px; color: #FFF; display: block;">Cliente</strong>
-                <span id="modal-service-phone" style="font-size: 12px; color: #94A3B8;">Tel: ---</span>
-              </div>
-              <div style="display: flex; gap: 6px;">
-                <a id="modal-btn-call" href="tel:" class="btn-quick-act btn-call">📞 Llamar</a>
-                <a id="modal-btn-wa" href="#" target="_blank" class="btn-quick-act btn-wa">💬 WhatsApp</a>
-              </div>
-            </div>
-
-            <!-- Botones GPS Google Maps y Waze -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
-              <a id="modal-btn-gmaps" href="#" target="_blank" class="btn-gps btn-gmaps">📍 Google Maps</a>
-              <a id="modal-btn-waze" href="#" target="_blank" class="btn-gps btn-waze">🗺️ Waze</a>
-            </div>
-
-            <div id="modal-service-notes-container" style="margin-top: 8px; font-size: 11.5px; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 8px; color: #E2E8F0; display: none;">
-              📝 <strong>Nota:</strong> <span id="modal-service-notes"></span>
-            </div>
-          </div>
-
-          <!-- Botones de Transición de Estado -->
-          <div class="state-actions-container">
-            <button type="button" class="btn-status-act btn-status-arrived" onclick="DriverApp.updateRideStatus('Llegó al Origen')">
-              📍 Llegué al Punto de Recogida
-            </button>
-            <button type="button" class="btn-status-act btn-status-traveling" onclick="DriverApp.updateRideStatus('En Camino')">
-              🛵 En Camino al Destino
-            </button>
-            <button type="button" class="btn-status-act btn-status-complete" onclick="DriverApp.updateRideStatus('Entregado')">
-              ✅ Finalizar Entrega y Cobrar
-            </button>
-          </div>
-
-          <!-- Chat Privado en Tiempo Real con el Cliente -->
-          <div class="private-chat-section">
-            <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #FFF; display: flex; align-items: center; gap: 6px;">
-              💬 Chat Directo con el Cliente
-            </h4>
-            <div id="private-chat-feed" class="private-chat-feed">
-              <div style="font-size: 11.5px; color: #64748B; text-align: center; padding: 12px;">
-                Escribe un mensaje para avisarle al cliente que vas en camino o consultar detalles.
-              </div>
-            </div>
-            <div class="private-chat-input-bar">
-              <input type="text" id="private-chat-input" placeholder="Escribe un mensaje al cliente..." class="chat-text-input" onkeypress="if(event.key === 'Enter') DriverApp.sendPrivateMessage()">
-              <button type="button" class="btn-chat-send" onclick="DriverApp.sendPrivateMessage()">➤</button>
-            </div>
-          </div>
+        <div class="finance-card">
+          <div class="finance-card-icon">📲</div>
+          <div class="finance-card-title">Transferencias</div>
+          <div class="finance-card-val" id="fin-today-transfers">$0 COP</div>
+          <div class="finance-card-sub">Pagos confirmados</div>
         </div>
       </div>
-    </div>
+
+      <!-- Tabla de Domicilios del Día -->
+      <div style="margin-top: 16px;">
+        <div class="section-title-bar" style="margin-bottom: 12px;">
+          <h3>📋 Tabla de Domicilios del Día</h3>
+          <button type="button" class="btn-3d-icon" onclick="DriverApp.loadDailyHistory()" title="Actualizar">🔄</button>
+        </div>
+
+        <div class="table-responsive-wrapper">
+          <table class="driver-table">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Servicio</th>
+                <th>Cliente</th>
+                <th>Ruta (Origen ➡️ Destino)</th>
+                <th>Km</th>
+                <th>Ganancia</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="daily-orders-table-body">
+              <tr>
+                <td colspan="7" style="text-align: center; color: #94A3B8; padding: 24px;">Cargando tabla de domicilios...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
 
   </div>
 
-  <script src="/js/sound.js?v=85"></script>
+  <script src="/js/sound.js?v=83"></script>
   <script src="/js/driver.js?v=200"></script>
 </body>
 </html>

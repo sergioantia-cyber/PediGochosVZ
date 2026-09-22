@@ -428,256 +428,270 @@ input:checked + .slider-3d:before {
   to { transform: scale(1); opacity: 1; }
 }
 
-/* Yoxman Locked Badge & Logout */
-.locked-badge {
-  background: rgba(16, 185, 129, 0.18);
-  border: 1px solid #10B981;
-  color: #34D399;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 6px;
-  letter-spacing: 0.5px;
-}
-
-.btn-logout {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #F87171;
-  font-size: 11px;
-  font-weight: 800;
-  padding: 6px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-logout:active {
-  transform: scale(0.95);
-  background: rgba(239, 68, 68, 0.25);
-}
-
-/* Chat Banner */
-.chat-banner-info {
-  background: #1E293B;
-  border: 1px solid #334155;
-  border-radius: 14px;
-  padding: 10px 12px;
+/* ==========================================
+   DRIVER GROUP CHAT & SERVICE CARDS STYLING
+   ========================================== */
+.driver-chat-container {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #CBD5E1;
-  margin-bottom: 12px;
-}
-
-.btn-refresh-sm {
+  flex-direction: column;
+  height: calc(100vh - 180px);
+  min-height: 480px;
   background: #0F172A;
-  border: 1px solid #334155;
-  color: #FFF;
-  border-radius: 8px;
-  padding: 4px 8px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-left: auto;
-}
-
-/* Group Chat Box */
-.group-chat-box {
-  background: #0D1322;
   border: 1px solid #1E293B;
-  border-radius: 16px;
-  padding: 12px;
-  height: calc(100vh - 225px);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-sizing: border-box;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
 }
 
-.chat-input-container {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.chat-text-input {
-  flex: 1;
-  background: #161F33;
-  border: 1px solid #2A364F;
-  border-radius: 14px;
-  padding: 12px 14px;
-  color: #FFF;
-  font-size: 13.5px;
-  outline: none;
-}
-
-.chat-text-input:focus {
-  border-color: #10B981;
-}
-
-.btn-chat-send {
-  background: linear-gradient(180deg, #10B981 0%, #059669 100%);
-  color: #FFF;
-  border: none;
-  border-radius: 14px;
-  width: 48px;
-  font-size: 18px;
-  font-weight: 900;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 0 #047857;
-}
-
-.btn-chat-send:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #047857;
-}
-
-/* Chat Message Bubbles */
-.chat-msg-row {
-  display: flex;
-  flex-direction: column;
-  max-width: 82%;
-}
-
-.chat-msg-row.mine {
-  align-self: flex-end;
-  align-items: flex-end;
-}
-
-.chat-msg-row.other {
-  align-self: flex-start;
-  align-items: flex-start;
-}
-
-.chat-msg-sender {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #94A3B8;
-  margin-bottom: 2px;
-  padding: 0 4px;
-}
-
-.chat-msg-bubble {
-  padding: 9px 13px;
-  border-radius: 14px;
-  font-size: 13px;
-  line-height: 1.35;
-  word-break: break-word;
-}
-
-.chat-msg-row.mine .chat-msg-bubble {
-  background: #10B981;
-  color: #022C22;
-  font-weight: 600;
-  border-bottom-right-radius: 4px;
-}
-
-.chat-msg-row.other .chat-msg-bubble {
+.driver-chat-header {
+  padding: 12px 16px;
   background: #1E293B;
-  color: #F8FAFC;
-  border: 1px solid #334155;
-  border-bottom-left-radius: 4px;
-}
-
-/* Service Clickeable Card in Chat */
-.service-chat-card {
-  width: 100%;
-  background: #161F33;
-  border: 2px solid #F59E0B;
-  border-radius: 16px;
-  padding: 14px;
-  box-sizing: border-box;
-  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.15);
-  animation: scaleUp 0.25s ease-out;
-}
-
-.service-chat-card.taken-by-me {
-  border-color: #10B981;
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.2);
-}
-
-.service-chat-card.completed {
-  border-color: #475569;
-  opacity: 0.75;
-}
-
-.service-header-row {
+  border-bottom: 1px solid #334155;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 8px;
+}
+
+.driver-chat-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.driver-chat-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-behavior: smooth;
+}
+
+/* Clickable Service Request Card in Chat */
+.service-request-card {
+  background: linear-gradient(145deg, #1E293B 0%, #162032 100%);
+  border: 2px solid #10B981;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+  animation: scaleUp 0.25s ease-out;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.service-request-card.taken {
+  border-color: #64748B;
+  opacity: 0.8;
+  box-shadow: none;
+}
+
+.service-request-card.ride-lujo {
+  border-color: #F59E0B;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
+}
+
+.service-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 10px;
 }
 
-.service-fare-badge {
-  background: #F59E0B;
-  color: #78350F;
+.service-type-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+  font-size: 12px;
   font-weight: 900;
-  font-size: 14px;
-  padding: 3px 8px;
-  border-radius: 8px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.service-body-grid {
+.service-type-badge.lujo {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.service-price-pill {
+  font-size: 15px;
+  font-weight: 900;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 10px;
+  border-radius: 10px;
+}
+
+.service-route-box {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.route-step {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 12.5px;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.route-step:last-child {
+  margin-bottom: 0;
+}
+
+.route-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.route-text strong {
+  color: #FFF;
+  display: block;
+}
+
+.route-text span {
+  color: #94A3B8;
+  font-size: 11.5px;
+}
+
+.service-details-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
   color: #CBD5E1;
   margin-bottom: 12px;
+  padding: 0 4px;
 }
 
-.btn-take-ride {
+.btn-take-service {
   width: 100%;
-  background: linear-gradient(180deg, #F59E0B 0%, #D97706 100%);
-  color: #000;
+  padding: 13px;
+  font-size: 14.5px;
+  font-weight: 900;
   border: none;
   border-radius: 12px;
-  padding: 12px;
-  font-size: 14px;
-  font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 4px 0 #B45309;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  text-transform: uppercase;
-}
-
-.btn-take-ride:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #B45309;
-}
-
-.btn-open-mine {
-  width: 100%;
   background: linear-gradient(180deg, #10B981 0%, #059669 100%);
   color: #FFF;
-  border: none;
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 13.5px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #047857;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 
-/* Finances Metric Grid */
-.finance-metric-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.btn-take-service:active {
+  transform: scale(0.98);
+}
+
+.btn-take-service.disabled {
+  background: #334155;
+  color: #94A3B8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Chat text bubbles */
+.chat-bubble-msg {
+  background: #1E293B;
+  border: 1px solid #334155;
+  padding: 10px 14px;
+  border-radius: 14px;
+  max-width: 82%;
+  align-self: flex-start;
+  word-break: break-word;
+}
+
+.chat-bubble-msg.self {
+  background: #064E3B;
+  border-color: #059669;
+  align-self: flex-end;
+}
+
+.chat-sender-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: #10B981;
+  margin-bottom: 3px;
+  display: flex;
+  justify-content: space-between;
   gap: 10px;
-  margin-bottom: 14px;
+}
+
+.chat-bubble-msg.self .chat-sender-name {
+  color: #6EE7B7;
+}
+
+.chat-time-tag {
+  font-size: 10px;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.chat-body-text {
+  font-size: 13.5px;
+  color: #F8FAFC;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+/* Chat input bar */
+.driver-chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #161F33;
+  border-top: 1px solid #334155;
+}
+
+.driver-chat-input-bar input {
+  flex: 1;
+  background: #0D1322;
+  border: 1px solid #2A364F;
+  border-radius: 12px;
+  padding: 11px 14px;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+}
+
+.driver-chat-input-bar input:focus {
+  border-color: #10B981;
+}
+
+.driver-chat-input-bar button {
+  background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  color: #FFF;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ==========================================
+   DAILY DELIVERIES TABLE & FINANCES
+   ========================================== */
+.finances-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .finance-card {
@@ -685,269 +699,93 @@ input:checked + .slider-3d:before {
   border: 1px solid #2A364F;
   border-radius: 16px;
   padding: 14px;
-  box-sizing: border-box;
+  text-align: center;
 }
 
-.finance-card.card-earnings {
-  border-color: #10B981;
-  background: rgba(16, 185, 129, 0.08);
+.finance-card-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
 }
 
-.finance-card.card-cash {
-  border-color: #F59E0B;
-  background: rgba(245, 158, 11, 0.08);
-}
-
-.f-label {
+.finance-card-title {
   font-size: 11px;
-  font-weight: 800;
+  text-transform: uppercase;
   color: #94A3B8;
-  display: block;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
-.f-value {
+.finance-card-val {
   font-size: 20px;
   font-weight: 900;
   color: #FFF;
   margin: 4px 0;
 }
 
-.f-sub {
-  font-size: 10px;
+.finance-card-sub {
+  font-size: 11px;
   color: #64748B;
-  display: block;
-}
-
-.finance-filter-bar {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.filter-chip {
-  background: #1E293B;
-  border: 1px solid #334155;
-  color: #94A3B8;
-  font-size: 12px;
   font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 20px;
-  cursor: pointer;
-  white-space: nowrap;
 }
 
-.filter-chip.active {
-  background: #10B981;
-  color: #022C22;
-  border-color: #10B981;
+.table-responsive-wrapper {
+  background: #161F33;
+  border: 1px solid #2A364F;
+  border-radius: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Modal Overlay & Card */
-.driver-modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px;
-}
-
-.driver-modal-card {
-  background: #111827;
-  border: 2px solid #2A364F;
-  border-radius: 20px;
+.driver-table {
   width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.8);
-  animation: scaleUp 0.2s ease-out;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+  min-width: 540px;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
-  border-bottom: 1px solid #1F2937;
+.driver-table th {
+  background: #1E293B;
+  color: #94A3B8;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #334155;
 }
 
-.modal-pre-title {
+.driver-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #CBD5E1;
+  vertical-align: middle;
+}
+
+.driver-table tr:last-child td {
+  border-bottom: none;
+}
+
+.driver-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.badge-status {
+  padding: 3px 8px;
+  border-radius: 8px;
   font-size: 11px;
   font-weight: 800;
-  color: #F59E0B;
-  text-transform: uppercase;
-  display: block;
+  display: inline-block;
 }
 
-.btn-modal-close {
-  background: #1F2937;
-  border: 1px solid #374151;
-  color: #FFF;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 14px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.modal-body-scroll {
-  padding: 14px 16px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.service-highlight-box {
-  background: #161F33;
-  border: 1px solid #2A364F;
-  border-radius: 14px;
-  padding: 12px 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.route-box {
-  background: #161F33;
-  border: 1px solid #2A364F;
-  border-radius: 14px;
-  padding: 12px 14px;
-}
-
-.route-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.route-icon {
-  font-size: 16px;
-  margin-top: 2px;
-}
-
-.route-divider-line {
-  height: 14px;
-  border-left: 2px dashed #475569;
-  margin-left: 14px;
-  margin-top: 3px;
-  margin-bottom: 3px;
-}
-
-.customer-contact-box {
-  background: #161F33;
-  border: 1px solid #2A364F;
-  border-radius: 14px;
-  padding: 12px 14px;
-}
-
-.btn-quick-act {
-  font-size: 11.5px;
-  font-weight: 800;
-  padding: 6px 10px;
-  border-radius: 8px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.btn-call {
-  background: rgba(16, 185, 129, 0.2);
-  border: 1px solid #10B981;
+.badge-status-completed {
+  background: rgba(16, 185, 129, 0.15);
   color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-.btn-wa {
-  background: rgba(37, 211, 102, 0.2);
-  border: 1px solid #25D366;
-  color: #25D366;
-}
-
-.btn-gps {
-  font-size: 11.5px;
-  font-weight: 800;
-  padding: 8px;
-  border-radius: 8px;
-  text-decoration: none;
-  text-align: center;
-  display: block;
-}
-
-.btn-gmaps {
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid #3B82F6;
-  color: #60A5FA;
-}
-
-.btn-waze {
-  background: rgba(51, 204, 255, 0.2);
-  border: 1px solid #33CCFF;
-  color: #33CCFF;
-}
-
-.state-actions-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.btn-status-act {
-  border: none;
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  text-align: center;
-}
-
-.btn-status-arrived {
-  background: #1E293B;
-  border: 1px solid #3B82F6;
-  color: #60A5FA;
-}
-
-.btn-status-traveling {
-  background: #1E293B;
-  border: 1px solid #F59E0B;
+.badge-status-active {
+  background: rgba(245, 158, 11, 0.15);
   color: #FBBF24;
-}
-
-.btn-status-complete {
-  background: linear-gradient(180deg, #10B981 0%, #059669 100%);
-  color: #FFF;
-  box-shadow: 0 4px 0 #047857;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.private-chat-section {
-  background: #0D1322;
-  border: 1px solid #1E293B;
-  border-radius: 14px;
-  padding: 10px;
-}
-
-.private-chat-feed {
-  max-height: 180px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 6px 0;
-}
-
-.private-chat-input-bar {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
