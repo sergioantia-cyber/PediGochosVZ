@@ -1362,6 +1362,27 @@ app.post('/api/orders', (req, res) => {
   };
 
   db.orders.push(order);
+
+  // Notificar al Chat Grupal de Domiciliarios en Tiempo Real
+  if (!db.groupChatMessages) db.groupChatMessages = [];
+  const isVeh = order.orderType === 'ride' || order.serviceType === 'ride';
+  const originStr = order.deliveryDetails?.origin || order.deliveryDetails?.address || 'Ubicación Origen';
+  const destStr = order.deliveryDetails?.destination || order.deliveryDetails?.address || 'Destino';
+  const distKm = order.deliveryDetails?.distanceKm || 1;
+
+  db.groupChatMessages.push({
+    id: 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    senderId: 'system',
+    senderName: 'Central Pedigochos',
+    text: isVeh 
+      ? `🛵 NUEVA SOLICITUD DE VEHÍCULO (${(order.vehicleType || 'Moto').toUpperCase()}): Tarifa $${(order.total || 4000).toLocaleString()} • ${distKm} km`
+      : `📦 NUEVO PEDIDO: ${order.establishmentName || 'Restaurante'} • Ganancia: $${(order.deliveryDetails?.deliveryFee || 0)}`,
+    createdAt: new Date().toISOString(),
+    isServiceCard: true,
+    orderId: order.id,
+    orderData: order
+  });
+
   writeDB(db);
 
   console.log(`New order created: ${order.id} for establishment: ${order.establishmentId} (User: ${order.customerEmail || 'Guest'})`);
@@ -1949,12 +1970,98 @@ app.post('/api/drivers/register', (req, res) => {
   res.status(201).json(driverData);
 });
 
-// GET orders ready for drivers
+// POST Login de Repartidor (Yoxman)
+app.post('/api/driver/login', (req, res) => {
+  const { username, password } = req.body;
+  const cleanUser = String(username || '').trim().toLowerCase();
+  const cleanPass = String(password || '').trim();
+
+  if (cleanUser === 'yoxman' && cleanPass === '12345@') {
+    const driverData = {
+      id: 'drv-yoxman',
+      name: 'Yoxman',
+      username: 'yoxman',
+      role: 'delivery',
+      isNameLocked: true,
+      phone: '+573227949751',
+      vehicleType: 'Moto 🛵',
+      status: 'Disponible'
+    };
+    return res.json({ success: true, driver: driverData });
+  }
+
+  return res.status(401).json({ success: false, error: 'Credenciales inválidas. Solo la cuenta yoxman está autorizada.' });
+});
+
+// GET Chat Grupal de Domiciliarios
+app.get('/api/driver/group-chat', (req, res) => {
+  const db = readDB();
+  res.json(db.groupChatMessages || []);
+});
+
+// POST Enviar Mensaje al Chat Grupal de Domiciliarios
+app.post('/api/driver/group-chat', (req, res) => {
+  const { senderId, senderName, text } = req.body;
+  if (!text || !text.trim()) {
+    return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
+  }
+
+  const db = readDB();
+  if (!db.groupChatMessages) db.groupChatMessages = [];
+
+  const newMsg = {
+    id: 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    senderId: senderId || 'drv-yoxman',
+    senderName: senderName || 'Yoxman',
+    text: text.trim(),
+    createdAt: new Date().toISOString(),
+    isServiceCard: false
+  };
+
+  db.groupChatMessages.push(newMsg);
+  if (db.groupChatMessages.length > 300) {
+    db.groupChatMessages = db.groupChatMessages.slice(-300);
+  }
+  writeDB(db);
+
+  res.status(201).json(newMsg);
+});
+
+// GET Chat Privado del Pedido / Carrera
+app.get('/api/orders/:id/chat', (req, res) => {
+  const db = readDB();
+  const order = db.orders.find(o => o.id === req.params.id);
+  if (!order) return res.status(404).json({ error: 'Pedido no encontrado' });
+  res.json(order.chatMessages || []);
+});
+
+// POST Mensaje al Chat Privado del Pedido / Carrera
+app.post('/api/orders/:id/chat', (req, res) => {
+  const { senderId, senderName, text } = req.body;
+  const db = readDB();
+  const order = db.orders.find(o => o.id === req.params.id);
+  if (!order) return res.status(404).json({ error: 'Pedido no encontrado' });
+
+  if (!order.chatMessages) order.chatMessages = [];
+  const msg = {
+    id: 'chat-' + Date.now(),
+    senderId: senderId || 'drv-yoxman',
+    senderName: senderName || 'Yoxman',
+    text: (text || '').trim(),
+    timestamp: new Date().toISOString()
+  };
+  order.chatMessages.push(msg);
+  writeDB(db);
+
+  res.status(201).json(msg);
+});
+
+// GET orders ready for drivers (incluye Pendientes para carreras y entregas)
 app.get('/api/driver/orders', (req, res) => {
   const { location } = req.query;
   const db = readDB();
 
-  let readyOrders = db.orders.filter(o => o.status === 'Listo' || o.status === 'Preparando' || o.status === 'En Camino');
+  let readyOrders = db.orders.filter(o => o.status === 'Pendiente' || o.status === 'Listo' || o.status === 'Preparando' || o.status === 'En Camino');
 
   if (location && location !== 'all') {
     const matchingEstIds = db.establishments
@@ -1966,11 +2073,11 @@ app.get('/api/driver/orders', (req, res) => {
   res.json(readyOrders);
 });
 
-// POST driver accepts order
+// POST driver accepts order / ride
 app.post('/api/driver/accept-order', (req, res) => {
   const { orderId, driverId, driverName, driverPhone } = req.body;
-  if (!orderId || !driverName) {
-    return res.status(400).json({ error: 'OrderId and driverName are required' });
+  if (!orderId) {
+    return res.status(400).json({ error: 'OrderId is required' });
   }
 
   const db = readDB();
@@ -1981,18 +2088,29 @@ app.post('/api/driver/accept-order', (req, res) => {
 
   order.status = 'En Camino';
   order.driver = {
-    id: driverId || 'drv-temp',
-    name: driverName,
-    phone: driverPhone || '',
+    id: driverId || 'drv-yoxman',
+    name: driverName || 'Yoxman',
+    phone: driverPhone || '+573227949751',
     acceptedAt: new Date().toISOString()
   };
   order.updatedAt = new Date().toISOString();
 
-  // Update driver status
+  // Update driver status in drivers list
   if (db.drivers) {
-    const drv = db.drivers.find(d => d.id === driverId || d.phone === driverPhone);
+    const drv = db.drivers.find(d => d.id === (driverId || 'drv-yoxman') || d.phone === driverPhone);
     if (drv) drv.status = 'En Camino';
   }
+
+  // Avisar al Chat Grupal que el servicio fue tomado por Yoxman
+  if (!db.groupChatMessages) db.groupChatMessages = [];
+  db.groupChatMessages.push({
+    id: 'msg-' + Date.now(),
+    senderId: driverId || 'drv-yoxman',
+    senderName: driverName || 'Yoxman',
+    text: `⚡ ¡He tomado el servicio #${order.id.slice(-4)} (${order.customerName || 'Cliente'})! Voy en camino.`,
+    createdAt: new Date().toISOString(),
+    isServiceCard: false
+  });
 
   writeDB(db);
 
@@ -2001,6 +2119,27 @@ app.post('/api/driver/accept-order', (req, res) => {
     type: 'ORDER_UPDATED',
     orderId: order.id,
     status: 'En Camino',
+    order: order
+  });
+
+  res.json({ success: true, order: order });
+});
+
+// POST Actualizar Estado de Servicio en curso (Llegó al Origen, En Camino, etc.)
+app.post('/api/driver/update-status', (req, res) => {
+  const { orderId, status } = req.body;
+  const db = readDB();
+  const order = db.orders.find(o => o.id === orderId);
+  if (!order) return res.status(404).json({ error: 'Pedido no encontrado' });
+
+  order.status = status;
+  order.updatedAt = new Date().toISOString();
+  writeDB(db);
+
+  broadcastToMerchant(order.establishmentId, {
+    type: 'ORDER_UPDATED',
+    orderId: order.id,
+    status: status,
     order: order
   });
 

@@ -21,8 +21,6 @@ foldersToCopy.forEach(folder => {
 
 // Copy driver.html as index.html and driver.html
 let driverHtml = fs.readFileSync(path.join(publicDir, 'driver.html'), 'utf8');
-// Ensure driver login gate is hidden by default for immediate operation
-driverHtml = driverHtml.replace('id="driver-login-gate" class="driver-gate-overlay"', 'id="driver-login-gate" class="driver-gate-overlay hidden" style="display: none !important;"');
 fs.writeFileSync(path.join(distDir, 'index.html'), driverHtml);
 fs.writeFileSync(path.join(distDir, 'driver.html'), driverHtml);
 
