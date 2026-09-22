@@ -20,7 +20,9 @@ foldersToCopy.forEach(folder => {
 });
 
 // Copy admin.html as index.html and kitchen.html
-const adminHtml = fs.readFileSync(path.join(publicDir, 'admin.html'), 'utf8');
+let adminHtml = fs.readFileSync(path.join(publicDir, 'admin.html'), 'utf8');
+adminHtml = adminHtml.replace('id="login-gate" class="login-gate-overlay flex-center"', 'id="login-gate" class="login-gate-overlay flex-center hidden" style="display: none !important;"');
+adminHtml = adminHtml.replace('id="admin-panel" class="admin-dashboard-container hidden"', 'id="admin-panel" class="admin-dashboard-container"');
 fs.writeFileSync(path.join(distDir, 'index.html'), adminHtml);
 fs.writeFileSync(path.join(distDir, 'admin.html'), adminHtml);
 

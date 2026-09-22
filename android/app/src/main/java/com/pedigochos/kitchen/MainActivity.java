@@ -38,7 +38,7 @@ public class MainActivity extends BridgeActivity {
         // 2. Route default volume controls to media/alarm stream
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-        // 3. Configure WebView for autonomous audio autoplay and persistent storage
+        // 3. Configure WebView for autonomous audio autoplay, persistent storage, and GPS geolocation
         if (bridge != null && bridge.getWebView() != null) {
             WebSettings settings = bridge.getWebView().getSettings();
             settings.setMediaPlaybackRequiresUserGesture(false);
@@ -46,6 +46,14 @@ public class MainActivity extends BridgeActivity {
             settings.setDatabaseEnabled(true);
             settings.setAllowFileAccess(true);
             settings.setJavaScriptCanOpenWindowsAutomatically(true);
+            settings.setGeolocationEnabled(true);
+
+            bridge.getWebView().setWebChromeClient(new android.webkit.WebChromeClient() {
+                @Override
+                public void onGeolocationPermissionsShowPrompt(String origin, android.webkit.GeolocationPermissions.Callback callback) {
+                    callback.invoke(origin, true, false);
+                }
+            });
         }
 
         // 4. Create High-Priority Notification Channel for background order alarms
@@ -53,6 +61,9 @@ public class MainActivity extends BridgeActivity {
 
         // 5. Request Android 13+ Notification Permissions if not yet granted
         requestNotificationPermission();
+
+        // 5.1 Request Geolocation permissions if not granted
+        requestLocationPermission();
 
         // 6. Request Battery Optimization Exemption so app is NEVER killed in background
         requestIgnoreBatteryOptimizations();
@@ -159,6 +170,19 @@ public class MainActivity extends BridgeActivity {
                     PERMISSION_REQUEST_NOTIFICATIONS
                 );
             }
+        }
+    }
+
+    private void requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this,
+                new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                },
+                1002
+            );
         }
     }
 

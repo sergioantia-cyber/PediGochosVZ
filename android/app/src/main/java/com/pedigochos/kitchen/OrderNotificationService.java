@@ -171,9 +171,23 @@ public class OrderNotificationService extends Service {
             PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
         );
 
+        String pkg = getPackageName();
+        boolean isDriver = pkg.contains("driver");
+        boolean isKitchen = pkg.contains("kitchen");
+
+        String title = "👑 PediGochos Dueño - Activo 24/7";
+        String content = "🟢 Monitoreando pedidos en segundo plano con alarma sonora";
+        if (isDriver) {
+            title = "🛵 PediGochos Repartidor - Activo 24/7";
+            content = "🟢 Monitoreando encomiendas y traslados con alerta sonora";
+        } else if (isKitchen) {
+            title = "🍳 PediGochos Cocina - Activo 24/7";
+            content = "🟢 Recibiendo comandas en tiempo real con alarma sonora";
+        }
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, SERVICE_CHANNEL_ID)
-            .setContentTitle("👑 PediGochos - Activo 24/7")
-            .setContentText("🟢 Monitoreando pedidos en segundo plano con alarma sonora")
+            .setContentTitle(title)
+            .setContentText(content)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -261,6 +275,7 @@ public class OrderNotificationService extends Service {
 
     private synchronized void handleOrdersData(JSONArray orders) {
         if (orders == null) return;
+        boolean isDriver = getPackageName().contains("driver");
 
         if (isFirstFetch) {
             isFirstFetch = false;
@@ -272,10 +287,15 @@ public class OrderNotificationService extends Service {
                     knownOrderIds.add(id);
 
                     String status = order.optString("status", "Pendiente");
-                    boolean isPending = "Pendiente".equalsIgnoreCase(status) || "pending".equalsIgnoreCase(status) || "Preparando".equalsIgnoreCase(status);
+                    boolean isRelevant;
+                    if (isDriver) {
+                        isRelevant = "Listo".equalsIgnoreCase(status) || "Preparando".equalsIgnoreCase(status) || "Pendiente".equalsIgnoreCase(status);
+                    } else {
+                        isRelevant = "Pendiente".equalsIgnoreCase(status) || "pending".equalsIgnoreCase(status) || "Preparando".equalsIgnoreCase(status);
+                    }
 
-                    if (isPending && isOrderRecent(order)) {
-                        Log.d(TAG, "🚨 NEW PENDING ORDER ON APP START/RESTART: " + id);
+                    if (isRelevant && isOrderRecent(order)) {
+                        Log.d(TAG, "🚨 NEW RELEVANT ORDER ON APP START/RESTART: " + id);
                         triggerNewOrderAlarm(order);
                     }
                 } catch (Exception ignored) {}
@@ -294,11 +314,16 @@ public class OrderNotificationService extends Service {
                 if (!knownOrderIds.contains(id)) {
                     knownOrderIds.add(id);
 
-                    // Check if order is actually pending
+                    // Check if order is actually pending or ready for driver
                     String status = order.optString("status", "Pendiente");
-                    boolean isPending = "Pendiente".equalsIgnoreCase(status) || "pending".equalsIgnoreCase(status) || "Preparando".equalsIgnoreCase(status);
+                    boolean isRelevant;
+                    if (isDriver) {
+                        isRelevant = "Listo".equalsIgnoreCase(status) || "Preparando".equalsIgnoreCase(status) || "Pendiente".equalsIgnoreCase(status);
+                    } else {
+                        isRelevant = "Pendiente".equalsIgnoreCase(status) || "pending".equalsIgnoreCase(status) || "Preparando".equalsIgnoreCase(status);
+                    }
 
-                    if (isPending) {
+                    if (isRelevant) {
                         Log.d(TAG, "🚨 NEW LIVE ORDER DETECTED: " + id + " Status: " + status);
                         triggerNewOrderAlarm(order);
                     }
@@ -445,12 +470,20 @@ public class OrderNotificationService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
 
+            boolean isDriver = getPackageName().contains("driver");
+            String title = isDriver ? "🛵 ¡NUEVA ENCOMIENDA DISPONIBLE!" : "🚨 ¡NUEVO PEDIDO RECIBIDO!";
+            String contentText = isDriver 
+                ? "📦 Recoger en " + restaurant + " para " + customer
+                : "🛒 " + customer + " en " + restaurant + " - Total: $" + String.format("%.2f", total);
+            String bigText = isDriver
+                ? "🛵 ¡Nueva encomienda lista para reparto!\n🏪 Local: " + restaurant + "\n👤 Cliente: " + customer + "\n👉 Toca aquí para abrir PediGochos Repartidor y tomar la entrega."
+                : "🛒 Cliente: " + customer + "\n🏪 Local: " + restaurant + "\n💵 Total: $" + String.format("%.2f", total) + "\n\n👉 Toca aquí para ver los detalles del restaurante.";
+
             NotificationCompat.Builder alert = new NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setContentTitle("🚨 ¡NUEVO PEDIDO RECIBIDO!")
-                .setContentText("🛒 " + customer + " en " + restaurant + " - Total: $" + String.format("%.2f", total))
-                .setStyle(new NotificationCompat.BigTextStyle()
-                    .bigText("🛒 Cliente: " + customer + "\n🏪 Local: " + restaurant + "\n💵 Total: $" + String.format("%.2f", total) + "\n\n👉 Toca aquí para ver los detalles del restaurante."))
+                .setContentTitle(title)
+                .setContentText(contentText)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(bigText))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

@@ -219,18 +219,29 @@ class AdminController {
     // Start 3.5-second REST polling fallback for live order detection across all stores
     this.startOrdersPolling();
 
-    // Check if Google OAuth session is active
-    await this.checkSupabaseSession();
+    // Permanent persistent auto-login (NEVER logs out, never shows login screen)
+    this.isAuthenticated = true;
+    localStorage.setItem('owner_authenticated_permanently', 'true');
+    localStorage.setItem('is_platform_owner', 'true');
+    localStorage.setItem('owner_password', '0424');
 
-    // Permanent persistent auto-login (NEVER logs out or closes)
-    if (!this.isAuthenticated) {
-      const isOwnerPerm = localStorage.getItem('owner_authenticated_permanently') === 'true';
-      const isNative = window.location.origin.includes('localhost') || window.location.origin.includes('capacitor') || (typeof window.Capacitor !== 'undefined');
-      const savedPass = localStorage.getItem('owner_password') || ((isOwnerPerm || isNative) ? '0424' : '0424');
-      if (savedPass) {
-        await this.login(savedPass, true);
-      }
+    const gate = document.getElementById('login-gate');
+    if (gate) {
+      gate.classList.add('hidden');
+      gate.style.display = 'none';
     }
+    const panel = document.getElementById('admin-panel');
+    if (panel) {
+      panel.classList.remove('hidden');
+      panel.style.display = 'block';
+    }
+
+    // Auto-login with master key in background immediately
+    const savedPass = localStorage.getItem('owner_password') || '0424';
+    this.login(savedPass, true);
+
+    // Check if Google OAuth session is active in background (non-blocking)
+    this.checkSupabaseSession().catch(e => console.warn('Supabase session check notice:', e));
 
     // Process any pending notification click target on app start
     if (window.pendingTargetEstId) {

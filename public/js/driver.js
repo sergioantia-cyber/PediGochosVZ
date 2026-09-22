@@ -34,25 +34,75 @@ class DriverController {
     this.activeOrder = null;
     this.watchId = null;
     this.pollingTimer = null;
+    this.knownOrderIds = new Set();
+    this.isFirstLoad = true;
+    this.wakeLock = null;
   }
 
   init() {
+    this.requestWakeLock();
+    this.setupAudioUnlock();
     this.checkLocalSession();
+  }
+
+  setupAudioUnlock() {
+    const unlock = () => {
+      if (typeof Sound !== 'undefined') {
+        Sound.init();
+      }
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('touchstart', unlock);
+    };
+    document.addEventListener('click', unlock, { once: true });
+    document.addEventListener('touchstart', unlock, { once: true });
+  }
+
+  async requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        if (!this.wakeLock || this.wakeLock.released) {
+          this.wakeLock = await navigator.wakeLock.request('screen');
+        }
+      }
+    } catch(err) {
+      console.warn('Wake Lock notice in driver app:', err);
+    }
   }
 
   checkLocalSession() {
     try {
-      const savedDriver = JSON.parse(localStorage.getItem('pedigochos_active_driver') || 'null');
-      if (savedDriver && savedDriver.phone) {
-        this.driver = savedDriver;
-        document.getElementById('driver-login-gate').classList.add('hidden');
-        this.updateProfileUI();
-        this.startDriverServices();
-      } else {
-        document.getElementById('driver-login-gate').classList.remove('hidden');
+      let savedDriver = JSON.parse(localStorage.getItem('pedigochos_active_driver') || 'null');
+      if (!savedDriver || !savedDriver.phone) {
+        // Auto-login with Central Driver so the driver is immediately online
+        savedDriver = {
+          id: 'drv-central',
+          name: 'Repartidor Gocho Central',
+          phone: '+573227949751',
+          linkKey: 'GOCHO-8821',
+          vehicleType: 'Moto 🛵',
+          status: 'Disponible'
+        };
+        localStorage.setItem('pedigochos_active_driver', JSON.stringify(savedDriver));
       }
+
+      this.driver = savedDriver;
+      const gate = document.getElementById('driver-login-gate');
+      if (gate) {
+        gate.classList.add('hidden');
+        gate.style.display = 'none';
+      }
+      this.updateProfileUI();
+      this.startDriverServices();
     } catch(e) {
-      document.getElementById('driver-login-gate').classList.remove('hidden');
+      console.warn('Driver session check notice:', e);
+    }
+  }
+
+  showLoginGate() {
+    const gate = document.getElementById('driver-login-gate');
+    if (gate) {
+      gate.classList.remove('hidden');
+      gate.style.display = 'flex';
     }
   }
 
@@ -167,12 +217,27 @@ class DriverController {
       const orders = await res.json();
 
       // Separate orders assigned to THIS driver vs unassigned orders
-      const assigned = orders.find(o => o.driver && (o.driver.phone === this.driver.phone || o.driver.id === this.driver.id) && o.status === 'En Camino');
+      const assigned = orders.find(o => o.driver && (o.driver.phone === this.driver.phone || o.driver.id === this.driver.id) && (o.status === 'En Camino' || o.status === 'Listo'));
       if (assigned) {
+        const wasNewAssigned = !this.activeOrder || this.activeOrder.id !== assigned.id;
         this.activeOrder = assigned;
+        if (wasNewAssigned && !this.isFirstLoad) {
+          if (typeof Sound !== 'undefined') Sound.playLoudAlarmBurst();
+          if (navigator.vibrate) navigator.vibrate([0, 1000, 300, 1000]);
+          this.switchTab('active');
+        }
       }
 
       this.availableOrders = orders.filter(o => o.status === 'Listo' || o.status === 'Preparando');
+
+      // Check if new unassigned orders arrived
+      const hasNewOrder = this.availableOrders.some(no => !this.knownOrderIds.has(no.id));
+      if (hasNewOrder && !this.isFirstLoad) {
+        if (typeof Sound !== 'undefined') Sound.playLoudAlarmBurst();
+        if (navigator.vibrate) navigator.vibrate([0, 800, 300, 800, 300, 1000]);
+      }
+      this.availableOrders.forEach(o => this.knownOrderIds.add(o.id));
+      this.isFirstLoad = false;
 
       const badge = document.getElementById('badge-available-count');
       if (badge) badge.innerText = this.availableOrders.length;
