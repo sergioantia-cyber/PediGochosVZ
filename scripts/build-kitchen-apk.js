@@ -18,13 +18,22 @@ const stringsXmlPath = path.join(rootDir, 'android', 'app', 'src', 'main', 'res'
 if (fs.existsSync(stringsXmlPath)) {
   const stringsContent = `<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">PediGochos Cocina</string>
-    <string name="title_activity_main">PediGochos Cocina</string>
+    <string name="app_name">PediGochos Dueño</string>
+    <string name="title_activity_main">PediGochos Dueño</string>
     <string name="package_name">com.pedigochos.kitchen</string>
     <string name="custom_url_scheme">com.pedigochos.kitchen</string>
 </resources>
 `;
   fs.writeFileSync(stringsXmlPath, stringsContent, 'utf8');
+}
+
+// Ensure unique Android package applicationId in build.gradle
+const buildGradlePath = path.join(rootDir, 'android', 'app', 'build.gradle');
+if (fs.existsSync(buildGradlePath)) {
+  let gradleContent = fs.readFileSync(buildGradlePath, 'utf8');
+  gradleContent = gradleContent.replace(/applicationId\s+["'][^"']+["']/, 'applicationId "com.pedigochos.kitchen"');
+  fs.writeFileSync(buildGradlePath, gradleContent, 'utf8');
+  console.log('📱 ApplicationId configurado como independiente: com.pedigochos.kitchen');
 }
 
 console.log('🔄 [3/5] Sincronizando con plataforma Android nativa...');

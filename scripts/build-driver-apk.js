@@ -27,6 +27,15 @@ if (fs.existsSync(stringsXmlPath)) {
   fs.writeFileSync(stringsXmlPath, stringsContent, 'utf8');
 }
 
+// Ensure unique Android package applicationId in build.gradle
+const buildGradlePath = path.join(rootDir, 'android', 'app', 'build.gradle');
+if (fs.existsSync(buildGradlePath)) {
+  let gradleContent = fs.readFileSync(buildGradlePath, 'utf8');
+  gradleContent = gradleContent.replace(/applicationId\s+["'][^"']+["']/, 'applicationId "com.pedigochos.driver"');
+  fs.writeFileSync(buildGradlePath, gradleContent, 'utf8');
+  console.log('📱 ApplicationId configurado como independiente: com.pedigochos.driver');
+}
+
 console.log('🔄 [3/5] Sincronizando con plataforma Android nativa...');
 execSync('npx cap sync android', { stdio: 'inherit', cwd: rootDir });
 
