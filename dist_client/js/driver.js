@@ -45,6 +45,10 @@ class DriverController {
     this.currentLat = 7.7669;
     this.currentLng = -72.2250;
     this.dismissedOrderIds = new Set();
+    this.chatFilter = 'all';
+    this.voiceAlertsEnabled = localStorage.getItem('driver_voice_alerts_enabled') !== 'false';
+    this.currentProofPhoto = null;
+    this.showChangeCalc = false;
     try {
       const savedDismissed = JSON.parse(localStorage.getItem('pedigochos_dismissed_services') || '[]');
       if (Array.isArray(savedDismissed)) {
@@ -56,7 +60,71 @@ class DriverController {
   init() {
     this.requestWakeLock();
     this.setupAudioUnlock();
+    this.updateVoiceToggleUI();
     this.checkLocalSession();
+  }
+
+  toggleVoiceAlerts() {
+    this.voiceAlertsEnabled = !this.voiceAlertsEnabled;
+    localStorage.setItem('driver_voice_alerts_enabled', this.voiceAlertsEnabled ? 'true' : 'false');
+    this.updateVoiceToggleUI();
+    if (this.voiceAlertsEnabled) {
+      this.speakText('Alertas por voz activadas');
+    }
+  }
+
+  updateVoiceToggleUI() {
+    const btn = document.getElementById('btn-voice-toggle');
+    const icon = document.getElementById('voice-icon');
+    const label = document.getElementById('voice-label');
+    if (btn && icon && label) {
+      if (this.voiceAlertsEnabled) {
+        btn.classList.remove('off');
+        icon.innerText = '🔊';
+        label.innerText = 'Voz Activa';
+      } else {
+        btn.classList.add('off');
+        icon.innerText = '🔇';
+        label.innerText = 'Voz Silenciada';
+      }
+    }
+  }
+
+  speakText(text) {
+    if (!this.voiceAlertsEnabled || !text) return;
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES';
+        utterance.rate = 1.05;
+        utterance.pitch = 1.0;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const esVoice = voices.find(v => v.lang && (v.lang.startsWith('es') || v.lang.includes('ES')));
+        if (esVoice) utterance.voice = esVoice;
+
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch(err) {
+      console.warn('Speech synthesis notice:', err);
+    }
+  }
+
+  speakServiceAlert(msg) {
+    if (!this.voiceAlertsEnabled || !msg) return;
+    const isRide = msg.serviceType === 'ride';
+    const origin = (msg.origin || 'ubicación actual').replace(/[^\w\s\u00C0-\u00FF]/gi, ' ').trim();
+    const dest = (msg.destination || 'destino').replace(/[^\w\s\u00C0-\u00FF]/gi, ' ').trim();
+    const fare = msg.fare || 0;
+    
+    let text = '';
+    if (isRide) {
+      text = `¡Atención! Nueva carrera móvil de ${origin} hacia ${dest}. Ganancia: ${fare} pesos.`;
+    } else {
+      text = `¡Atención! Nuevo pedido en ${origin} para entregar en ${dest}. Ganancia: ${fare} pesos.`;
+    }
+    this.speakText(text);
   }
 
   setupAudioUnlock() {
@@ -247,6 +315,14 @@ class DriverController {
   // ==========================================
   // GROUP CHAT & INCOMING SERVICE REQUESTS
   // ==========================================
+  setChatFilter(filter) {
+    this.chatFilter = filter;
+    document.querySelectorAll('.chat-filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+    });
+    this.renderChatFeed();
+  }
+
   async loadChatMessages() {
     try {
       const res = await fetch('/api/driver/chat');
@@ -254,17 +330,19 @@ class DriverController {
       const messages = await res.json();
       if (!Array.isArray(messages)) return;
 
-      // Check for newly arrived available service requests to sound loud alarm
+      // Check for newly arrived available service requests to sound loud alarm & speak voice
       const newServiceRequests = messages.filter(m => m.type === 'service_request' && m.status === 'Disponible');
-      const hasBrandNew = newServiceRequests.some(r => !this.knownMessageIds.has(r.id));
+      const brandNewList = newServiceRequests.filter(r => !this.knownMessageIds.has(r.id));
 
-      if (hasBrandNew && !this.isFirstLoad) {
+      if (brandNewList.length > 0 && !this.isFirstLoad) {
         if (typeof Sound !== 'undefined') {
           Sound.playLoudAlarmBurst();
         }
         if (navigator.vibrate) {
           navigator.vibrate([0, 800, 300, 800, 300, 1000]);
         }
+        // Speak incoming service announcement aloud
+        this.speakServiceAlert(brandNewList[0]);
       }
 
       messages.forEach(m => this.knownMessageIds.add(m.id));
@@ -281,18 +359,70 @@ class DriverController {
     const feed = document.getElementById('driver-chat-feed');
     if (!feed) return;
 
-    if (this.chatMessages.length === 0) {
+    // Update filter badge counters
+    let countAll = 0;
+    let countRide = 0;
+    let countFood = 0;
+    let countParcel = 0;
+    let countMessages = 0;
+
+    this.chatMessages.forEach(m => {
+      countAll++;
+      if (m.type === 'service_request') {
+        const isRide = m.serviceType === 'ride';
+        const isParcel = m.serviceType === 'parcel' || m.serviceType === 'encomienda' || m.vehicleType === 'encomienda';
+        if (isRide) countRide++;
+        else if (isParcel) countParcel++;
+        else countFood++;
+      } else {
+        countMessages++;
+      }
+    });
+
+    const elAll = document.getElementById('filter-count-all');
+    const elRide = document.getElementById('filter-count-ride');
+    const elFood = document.getElementById('filter-count-food');
+    const elParcel = document.getElementById('filter-count-parcel');
+    const elMessages = document.getElementById('filter-count-messages');
+
+    if (elAll) elAll.innerText = countAll;
+    if (elRide) elRide.innerText = countRide;
+    if (elFood) elFood.innerText = countFood;
+    if (elParcel) elParcel.innerText = countParcel;
+    if (elMessages) elMessages.innerText = countMessages;
+
+    // Filter messages according to current filter
+    const visibleMessages = this.chatMessages.filter(msg => {
+      if (this.chatFilter === 'all') return true;
+      if (this.chatFilter === 'messages') return msg.type !== 'service_request';
+      if (msg.type !== 'service_request') return false;
+      const isRide = msg.serviceType === 'ride';
+      const isParcel = msg.serviceType === 'parcel' || msg.serviceType === 'encomienda' || msg.vehicleType === 'encomienda';
+      if (this.chatFilter === 'ride') return isRide;
+      if (this.chatFilter === 'parcel') return isParcel;
+      if (this.chatFilter === 'food') return !isRide && !isParcel;
+      return true;
+    });
+
+    if (visibleMessages.length === 0) {
+      const filterLabels = {
+        all: 'solicitudes en tiempo real',
+        ride: 'solicitudes de carreras de motos/autos',
+        food: 'pedidos de restaurantes',
+        parcel: 'solicitudes de encomiendas',
+        messages: 'mensajes de texto'
+      };
       feed.innerHTML = `
         <div class="empty-state-card" style="margin-top: 10px; padding: 24px;">
           <span class="empty-icon">💬</span>
-          <h3 style="font-size: 15px; margin: 0 0 6px 0;">Chat Grupal Conectado</h3>
-          <p style="font-size: 12px; color: #94A3B8; margin: 0;">Esperando solicitudes de carreras y pedidos en tiempo real...</p>
+          <h3 style="font-size: 15px; margin: 0 0 6px 0;">Sin elementos para este filtro</h3>
+          <p style="font-size: 12px; color: #94A3B8; margin: 0;">No hay ${filterLabels[this.chatFilter] || 'elementos'} en este momento.</p>
         </div>
       `;
       return;
     }
 
-    const html = this.chatMessages.map(msg => {
+    const html = visibleMessages.map(msg => {
       const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
       if (msg.type === 'service_request') {
@@ -364,11 +494,14 @@ class DriverController {
               </div>
             </div>
 
-            <!-- Info Bar -->
+            <!-- Info Bar with Voice Button -->
             <div class="service-details-row">
-              <span>📏 <strong>${msg.distanceKm || 1} km</strong> estimados</span>
-              <span>👤 Cliente: <strong>${msg.customerName || 'Cliente'}</strong></span>
-              <span style="color: #94A3B8;">⏰ ${timeStr}</span>
+              <span>📏 <strong>${msg.distanceKm || 1} km</strong></span>
+              <span>👤 <strong>${msg.customerName || 'Cliente'}</strong></span>
+              <button type="button" class="btn-mini-map-action" onclick="event.stopPropagation(); DriverApp.speakServiceAlert({ serviceType: '${msg.serviceType || ''}', origin: '${safeOrigin}', destination: '${safeDest}', fare: ${msg.fare || 0} })" title="Escuchar detalles por audio de voz" style="color: #38BDF8; background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.3);">
+                🔊 Oír
+              </button>
+              <span style="color: #94A3B8; margin-left: auto;">⏰ ${timeStr}</span>
             </div>
 
             <!-- Clickable Action Button -->
@@ -742,8 +875,13 @@ class DriverController {
         </div>
 
         <!-- 3. Payment & Money Details -->
-        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
-          <span style="font-size: 11px; text-transform: uppercase; color: #10B981; font-weight: 800; display: block; margin-bottom: 4px;">💵 Cobro en Destino</span>
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 14px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: #10B981; font-weight: 800;">💵 Cobro en Destino</span>
+            <button type="button" class="btn-mini-map-action" onclick="DriverApp.toggleChangeCalc()" style="background: #10B981; color: #000; font-weight: 900; border: none; padding: 4px 10px; cursor: pointer;">
+              🧮 Calcular Vuelto
+            </button>
+          </div>
           <div style="font-size: 18px; font-weight: 900; color: #FFF;">Total: $${totalCop.toLocaleString('de-DE')} COP</div>
           <div style="display: flex; gap: 8px; font-size: 11.5px; color: #CBD5E1; margin-top: 4px;">
             <span>🇻🇪 Bs. ${totalBs}</span>
@@ -753,9 +891,42 @@ class DriverController {
           <div style="font-size: 12.5px; font-weight: 800; color: #34D399; margin-top: 6px;">
             ${order.paymentMethod === 'Transferencia' ? '📲 Pagado por Transferencia / Pago Móvil' : `💵 Efectivo: ${order.paymentNotes || 'Monto exacto'}`}
           </div>
+
+          <!-- Quick Change / Vuelto Calculator Box -->
+          <div id="driver-change-calc-box" class="change-calc-box ${this.showChangeCalc ? '' : 'hidden'}">
+            <div style="font-size: 11.5px; color: #94A3B8; font-weight: 800; margin-bottom: 6px;">¿Con cuánto paga el cliente?</div>
+            <div class="calc-quick-pills">
+              <button type="button" class="calc-pill-btn" onclick="DriverApp.calculateChange(${totalCop})">Monto Exacto</button>
+              <button type="button" class="calc-pill-btn" onclick="DriverApp.calculateChange(10000)">$10.000 COP</button>
+              <button type="button" class="calc-pill-btn" onclick="DriverApp.calculateChange(20000)">$20.000 COP</button>
+              <button type="button" class="calc-pill-btn" onclick="DriverApp.calculateChange(50000)">$50.000 COP</button>
+              <button type="button" class="calc-pill-btn" onclick="DriverApp.calculateChange(100000)">$100.000 COP</button>
+              <button type="button" class="calc-pill-btn" onclick="DriverApp.calculateChange(20000)" style="border-color: #38BDF8; color: #38BDF8;">$5 USD ($20k)</button>
+              <button type="button" class="calc-pill-btn" onclick="DriverApp.calculateChange(40000)" style="border-color: #38BDF8; color: #38BDF8;">$10 USD ($40k)</button>
+              <button type="button" class="calc-pill-btn" onclick="DriverApp.calculateChange(80000)" style="border-color: #38BDF8; color: #38BDF8;">$20 USD ($80k)</button>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <input type="number" id="calc-received-input" placeholder="Otro monto en pesos ($ COP)" class="input-3d" style="padding: 8px 12px; font-size: 13px;" oninput="DriverApp.calculateChange()">
+            </div>
+            <div id="calc-change-result" class="calc-result-badge hidden"></div>
+          </div>
         </div>
 
-        <!-- 4. Complete Action Button -->
+        <!-- 4. Photo Proof of Delivery -->
+        <div class="proof-photo-section">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 800;">📸 Foto de Comprobante (Opcional)</span>
+            <span style="font-size: 11px; color: #10B981; font-weight: 700;">Prueba de Entrega</span>
+          </div>
+          <p style="font-size: 11.5px; color: #64748B; margin: 4px 0 10px 0;">Toma una foto de la fachada o el paquete entregado como respaldo.</p>
+          <input type="file" id="driver-proof-file-input" accept="image/*" capture="environment" style="display: none;" onchange="DriverApp.handleProofPhoto(event)">
+          <button type="button" class="btn-3d" onclick="DriverApp.triggerProofPhoto()" style="background: #1E293B; border: 1px solid #334155; color: #F8FAFC; width: 100%; font-size: 12.5px; padding: 10px;">
+            📷 Tomar / Adjuntar Foto de Entrega
+          </button>
+          <div id="driver-proof-preview-wrap" class="hidden"></div>
+        </div>
+
+        <!-- 5. Complete Action Button -->
         <button type="button" class="btn-3d btn-3d-emerald" onclick="DriverApp.completeOrder('${order.id}')" style="width: 100%; font-size: 15px; padding: 16px; background: linear-gradient(180deg, #059669 0%, #047857 100%);">
           ✅ Confirmar Entrega Realizada / Carrera Finalizada
         </button>
@@ -764,6 +935,132 @@ class DriverController {
 
     // Initialize interactive Leaflet map with Start and Destination marked
     this.initActiveRouteMap(order);
+
+    // If proof photo exists in state, restore preview
+    if (this.currentProofPhoto) {
+      this.renderProofPhotoPreview();
+    }
+  }
+
+  toggleChangeCalc() {
+    this.showChangeCalc = !this.showChangeCalc;
+    const box = document.getElementById('driver-change-calc-box');
+    if (box) box.classList.toggle('hidden', !this.showChangeCalc);
+  }
+
+  calculateChange(receivedAmount) {
+    if (!this.activeOrder) return;
+    const totalCop = Math.round(this.activeOrder.total < 1000 ? this.activeOrder.total * 1000 : this.activeOrder.total);
+    const inp = document.getElementById('calc-received-input');
+    if (inp && receivedAmount !== undefined) {
+      inp.value = receivedAmount;
+    }
+    const val = parseFloat(inp ? inp.value : receivedAmount) || 0;
+    const changeCop = Math.max(0, val - totalCop);
+    const changeBs = (changeCop / 100).toFixed(2);
+    const changeUsd = (changeCop / 4000).toFixed(2);
+
+    const resBox = document.getElementById('calc-change-result');
+    if (resBox) {
+      if (val < totalCop && val > 0) {
+        resBox.innerHTML = `
+          <div style="color: #F87171; font-weight: 800; font-size: 13px;">
+            ⚠️ Falta dinero: Faltan $${(totalCop - val).toLocaleString('de-DE')} COP por cobrar.
+          </div>
+        `;
+        resBox.classList.remove('hidden');
+      } else if (val >= totalCop) {
+        resBox.innerHTML = `
+          <div style="font-size: 11px; text-transform: uppercase; color: #10B981; font-weight: 800;">💰 Vuelto a entregar al Cliente:</div>
+          <div style="font-size: 22px; font-weight: 900; color: #34D399; margin: 4px 0;">$${changeCop.toLocaleString('de-DE')} COP</div>
+          <div style="font-size: 12px; color: #CBD5E1; font-weight: 700; display: flex; gap: 8px;">
+            <span>🇻🇪 Bs. ${changeBs}</span>
+            <span>•</span>
+            <span>💵 $${changeUsd} USD</span>
+          </div>
+        `;
+        resBox.classList.remove('hidden');
+      } else {
+        resBox.classList.add('hidden');
+      }
+    }
+  }
+
+  triggerProofPhoto() {
+    const fileInp = document.getElementById('driver-proof-file-input');
+    if (fileInp) fileInp.click();
+  }
+
+  handleProofPhoto(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Compress image using canvas
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 960;
+        const scale = Math.min(1, MAX_WIDTH / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+        this.currentProofPhoto = compressedBase64;
+        this.renderProofPhotoPreview();
+        this.speakText('Foto de comprobante capturada correctamente');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeProofPhoto() {
+    this.currentProofPhoto = null;
+    this.renderProofPhotoPreview();
+    const fileInp = document.getElementById('driver-proof-file-input');
+    if (fileInp) fileInp.value = '';
+  }
+
+  renderProofPhotoPreview() {
+    const previewContainer = document.getElementById('driver-proof-preview-wrap');
+    if (!previewContainer) return;
+    if (this.currentProofPhoto) {
+      previewContainer.innerHTML = `
+        <div class="proof-photo-preview">
+          <img src="${this.currentProofPhoto}" alt="Foto de Entrega">
+          <button type="button" class="btn-remove-photo" onclick="DriverApp.removeProofPhoto()">✕ Eliminar Foto</button>
+        </div>
+      `;
+      previewContainer.classList.remove('hidden');
+    } else {
+      previewContainer.innerHTML = '';
+      previewContainer.classList.add('hidden');
+    }
+  }
+
+  viewSavedProofPhoto(orderId) {
+    if (!orderId) return;
+    const photo = localStorage.getItem('proof_photo_' + orderId);
+    if (!photo) {
+      alert('No se encontró foto guardada para este pedido.');
+      return;
+    }
+    const modal = document.getElementById('modal-view-proof-photo');
+    const img = document.getElementById('modal-proof-img');
+    if (modal && img) {
+      img.src = photo;
+      modal.classList.remove('hidden');
+    }
+  }
+
+  closeProofPhotoModal() {
+    const modal = document.getElementById('modal-view-proof-photo');
+    if (modal) modal.classList.add('hidden');
+  }
   }
 
   // Render Leaflet Route Map with both points marked (Inicio a Destino)
@@ -886,17 +1183,30 @@ class DriverController {
     if (!confirm('¿Confirmas que has completado el servicio y entregado al cliente exitosamente?')) return;
 
     try {
+      if (this.currentProofPhoto) {
+        try {
+          localStorage.setItem('proof_photo_' + orderId, this.currentProofPhoto);
+        } catch(err) {
+          console.warn('Could not save proof photo locally:', err);
+        }
+      }
+
       const res = await fetch('/api/driver/complete-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId: orderId,
-          driverPhone: this.driver?.phone || 'yoxman'
+          driverPhone: this.driver?.phone || 'yoxman',
+          hasProof: !!this.currentProofPhoto
         })
       });
 
       if (res.ok) {
+        if (typeof Sound !== 'undefined') Sound.playSuccessChime();
+        if (navigator.vibrate) navigator.vibrate([0, 250, 100, 250]);
+        this.speakText('¡Servicio completado con éxito! Buen trabajo.');
         alert('🎉 ¡Excelente trabajo Yoxman! Servicio completado con éxito.');
+        this.currentProofPhoto = null;
         this.activeOrder = null;
         this.switchTab('history');
       }
@@ -972,7 +1282,7 @@ class DriverController {
       if (todayOrders.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" style="text-align: center; color: #94A3B8; padding: 28px;">
+            <td colspan="8" style="text-align: center; color: #94A3B8; padding: 28px;">
               Aún no has completado servicios hoy. ¡Toma carreras en el chat grupal para empezar!
             </td>
           </tr>
@@ -1004,6 +1314,7 @@ class DriverController {
         const isEntregado = o.status === 'Entregado';
         const badgeClass = isEntregado ? 'badge-status-completed' : 'badge-status-active';
         const statusText = isEntregado ? '✅ Entregado' : '🛵 En Camino';
+        const savedPhoto = localStorage.getItem('proof_photo_' + o.id);
 
         return `
           <tr>
@@ -1013,6 +1324,13 @@ class DriverController {
             <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${route}">${route}</td>
             <td>${km}</td>
             <td style="color: #10B981; font-weight: 900;">$${fare.toLocaleString('de-DE')}</td>
+            <td>
+              ${savedPhoto ? `
+                <button type="button" class="btn-mini-map-action" style="background: rgba(16,185,129,0.15); color: #34D399; border-color: rgba(16,185,129,0.3); padding: 3px 8px;" onclick="DriverApp.viewSavedProofPhoto('${o.id}')">
+                  📷 Ver
+                </button>
+              ` : `<span style="color: #64748B; font-size: 11px;">-</span>`}
+            </td>
             <td><span class="badge-status ${badgeClass}">${statusText}</span></td>
           </tr>
         `;

@@ -1179,18 +1179,15 @@
 
         <!-- Step 2: Destination -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 12px;">
-          <label style="font-size: 12.5px; font-weight: 900; color: #FF6B00; display: flex; align-items: center; gap: 5px; margin-bottom: 6px;">
-            <span>🏁</span> Destino *
-          </label>
-          <input type="text" id="ride-dest-input" required placeholder="Escribe tu destino (se detectará en el mapa)..." oninput="MarketplaceApp.onRideDestInput(this.value)" style="width: 100%; padding: 9px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12.5px; box-sizing: border-box;">
-          
-          <!-- Quick Destination Chips -->
-          <div style="display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px 0; -webkit-overflow-scrolling: touch;" class="premium-scroll">
-            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Terminal de Pasajeros', 7.8180, -72.4410)">🏢 Terminal San Antonio</button>
-            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Puente Simón Bolívar', 7.8285, -72.4542)">🌉 Puente Simón Bolívar</button>
-            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Plaza Bolívar / Centro', 7.8145, -72.4455)">🏛️ Centro / Plaza</button>
-            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Ureña / Centro', 7.9192, -72.4468)">🏙️ Ureña</button>
-            <button type="button" class="ride-dest-chip" onclick="MarketplaceApp.selectQuickDestination('Hospital / Centro de Salud', 7.8120, -72.4430)">🏥 Hospital</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 12.5px; font-weight: 900; color: #FF6B00; display: flex; align-items: center; gap: 5px; margin: 0;">
+              <span>🏁</span> Destino *
+            </label>
+            <span id="ride-dest-status-icon" style="font-size: 11px; color: #94A3B8;">🎯 Detección en mapa</span>
+          </div>
+          <input type="text" id="ride-dest-input" required placeholder="Escribe tu destino (calle, barrio, punto de referencia)..." oninput="MarketplaceApp.onRideDestInput(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault(); MarketplaceApp.onRideDestInput(this.value, true);}" onblur="MarketplaceApp.onRideDestInput(this.value, true);" style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 13px; box-sizing: border-box;">
+          <div id="ride-dest-status-badge" style="font-size: 11px; color: #94A3B8; margin-top: 6px; display: flex; align-items: center; gap: 5px; min-height: 18px;">
+            <span>🗺️</span> <span id="ride-dest-status-text">Escribe tu lugar de llegada para ubicar el punto más cercano en el mapa</span>
           </div>
         </div>
 

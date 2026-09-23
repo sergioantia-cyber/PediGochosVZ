@@ -7498,87 +7498,189 @@ class MarketplaceController {
     this.setRideDestination(lat, lng, name);
   }
 
-  onRideDestInput(val) {
+  onRideDestInput(val, immediate = false) {
     const text = (val || '').trim();
     if (!this.rideDestination) {
       this.rideDestination = {};
     }
     this.rideDestination.address = text;
 
+    const statusBadge = document.getElementById('ride-dest-status-text');
+    const statusIcon = document.getElementById('ride-dest-status-icon');
+
     if (!text || text.length < 2) {
+      if (statusBadge) statusBadge.innerText = 'Escribe tu lugar de llegada para ubicar el punto más cercano en el mapa';
+      if (statusIcon) statusIcon.innerText = '🎯 Detección en mapa';
       return;
     }
 
-    const norm = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (statusBadge) statusBadge.innerHTML = '<span style="color: #F59E0B;">⏳ Buscando el punto más cercano en el mapa...</span>';
+    if (statusIcon) statusIcon.innerText = '🔍 Ubicando...';
 
-    // 1. Comprehensive Local Landmarks & Sectors Recognition for San Antonio / Ureña / Frontera
+    if (this._destGeocodeTimer) clearTimeout(this._destGeocodeTimer);
+
+    if (immediate) {
+      this.findClosestDestination(text);
+    } else {
+      this._destGeocodeTimer = setTimeout(() => {
+        this.findClosestDestination(text);
+      }, 350);
+    }
+  }
+
+  async findClosestDestination(text) {
+    if (!text || text.length < 2) return;
+
+    const statusBadge = document.getElementById('ride-dest-status-text');
+    const statusIcon = document.getElementById('ride-dest-status-icon');
+
+    // Reference Origin Point (User GPS or Map Center)
+    const originLat = (this.rideOrigin && this.rideOrigin.lat) ? this.rideOrigin.lat : (this.rideLeafMap ? this.rideLeafMap.getCenter().lat : 7.8145);
+    const originLng = (this.rideOrigin && this.rideOrigin.lng) ? this.rideOrigin.lng : (this.rideLeafMap ? this.rideLeafMap.getCenter().lng : -72.4455);
+
+    const norm = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+    // 1. Comprehensive Database of Landmarks & Sectors across Táchira & Frontera
     const localPlaces = [
-      { keys: ['terminal', 'expreso', 'bus'], name: 'Terminal de Pasajeros', lat: 7.8180, lng: -72.4410 },
-      { keys: ['puente', 'bolivar', 'simon bolivar', 'frontera', 'aduana', 'seniat', 'migracion', 'la linea'], name: 'Puente Internacional Simón Bolívar', lat: 7.8285, lng: -72.4542 },
-      { keys: ['plaza bolivar', 'plaza', 'centro', 'alcaldia', 'banco', 'comercio'], name: 'Plaza Bolívar / Centro', lat: 7.8145, lng: -72.4455 },
-      { keys: ['hospital', 'cdi', 'ambulatorio', 'seguro', 'medico', 'clinica', 'salud'], name: 'Hospital Dr. Samuel Darío Maldonado', lat: 7.8120, lng: -72.4430 },
-      { keys: ['urena', 'pedro maria urena'], name: 'Ureña / Centro', lat: 7.9192, lng: -72.4468 },
-      { keys: ['tienditas', 'atanasio girardot'], name: 'Puente Atanasio Girardot (Tienditas)', lat: 7.8680, lng: -72.4560 },
-      { keys: ['aeropuerto', 'pista', 'avion'], name: 'Aeropuerto Juan Vicente Gómez', lat: 7.8398, lng: -72.4402 },
-      { keys: ['palotal'], name: 'Palotal', lat: 7.8020, lng: -72.4460 },
-      { keys: ['llano', 'el llano'], name: 'Barrio El Llano', lat: 7.8115, lng: -72.4490 },
-      { keys: ['peracal', 'alcabala'], name: 'Alcabala de Peracal', lat: 7.8290, lng: -72.4210 },
-      { keys: ['libertadores', '5 de julio', 'miranda', 'obrero'], name: 'Sector Libertadores / Obrero', lat: 7.8170, lng: -72.4480 },
-      { keys: ['cementerio'], name: 'Cementerio Municipal', lat: 7.8090, lng: -72.4415 }
+      // San Antonio del Táchira & Frontera
+      { keys: ['terminal', 'expreso', 'bus', 'terminal san antonio'], name: 'Terminal de Pasajeros de San Antonio', lat: 7.8180, lng: -72.4410 },
+      { keys: ['puente', 'bolivar', 'simon bolivar', 'frontera', 'aduana', 'seniat', 'migracion', 'la linea', 'paso'], name: 'Puente Internacional Simón Bolívar', lat: 7.8285, lng: -72.4542 },
+      { keys: ['plaza bolivar', 'plaza san antonio', 'centro san antonio', 'alcaldia bolivar', 'banco banesco', 'banco mercantil', 'banco venezuela', 'centro'], name: 'Plaza Bolívar / Centro (San Antonio)', lat: 7.8145, lng: -72.4455 },
+      { keys: ['hospital', 'cdi', 'ambulatorio', 'seguro', 'samuel dario', 'clinica', 'medico', 'salud'], name: 'Hospital Dr. Samuel Darío Maldonado', lat: 7.8120, lng: -72.4430 },
+      { keys: ['aeropuerto', 'pista', 'avion', 'juan vicente gomez', 'aeropuerto san antonio'], name: 'Aeropuerto Juan Vicente Gómez', lat: 7.8398, lng: -72.4402 },
+      { keys: ['palotal', 'sector palotal'], name: 'Palotal', lat: 7.8020, lng: -72.4460 },
+      { keys: ['llano', 'el llano', 'barrio el llano'], name: 'Barrio El Llano', lat: 7.8115, lng: -72.4490 },
+      { keys: ['peracal', 'alcabala peracal', 'alcabala'], name: 'Alcabala de Peracal', lat: 7.8290, lng: -72.4210 },
+      { keys: ['libertadores', 'sector libertadores', '5 de julio'], name: 'Sector Libertadores / 5 de Julio', lat: 7.8170, lng: -72.4480 },
+      { keys: ['obrero', 'barrio obrero san antonio', 'miranda'], name: 'Barrio Obrero / Miranda (San Antonio)', lat: 7.8160, lng: -72.4495 },
+      { keys: ['cementerio', 'camposanto'], name: 'Cementerio Municipal', lat: 7.8090, lng: -72.4415 },
+      { keys: ['tienditas', 'atanasio girardot', 'puente nuevo tienditas'], name: 'Puente Atanasio Girardot (Tienditas)', lat: 7.8680, lng: -72.4560 },
+
+      // Pedro María Ureña
+      { keys: ['urena', 'centro urena', 'plaza urena', 'pedro maria urena', 'alcaldia urena'], name: 'Ureña / Centro', lat: 7.9192, lng: -72.4468 },
+      { keys: ['aguas calientes', 'aguascalientes', 'termas'], name: 'Aguas Calientes (Ureña)', lat: 7.9350, lng: -72.4350 },
+      { keys: ['puente santander', 'puente francisco de paula santander'], name: 'Puente Francisco de Paula Santander (Ureña)', lat: 7.9255, lng: -72.4590 },
+      { keys: ['zona industrial urena', 'zona industrial'], name: 'Zona Industrial de Ureña', lat: 7.9250, lng: -72.4420 },
+
+      // San Cristóbal & Área Metropolitana
+      { keys: ['barrio obrero', 'obrero sc', 'plaza los mangos', 'los mangos', 'carrera 21', 'calle 10'], name: 'Plaza Los Mangos / Barrio Obrero (San Cristóbal)', lat: 7.7712, lng: -72.2223 },
+      { keys: ['centro san cristobal', '5ta avenida', 'quinta avenida', 'plaza bolivar sc', 'catedral sc', 'ateneo'], name: 'Centro / 5ta Avenida (San Cristóbal)', lat: 7.7669, lng: -72.2280 },
+      { keys: ['sambil', 'sambil san cristobal', 'centro comercial sambil', 'autopista'], name: 'Sambil San Cristóbal', lat: 7.7950, lng: -72.2030 },
+      { keys: ['terminal san cristobal', 'terminal big low sc', 'terminal sc', 'expresos san cristobal'], name: 'Terminal de Pasajeros de San Cristóbal', lat: 7.7550, lng: -72.2350 },
+      { keys: ['hospital central', 'hospital de san cristobal', 'hospital central sc', 'maternidad'], name: 'Hospital Central de San Cristóbal', lat: 7.7600, lng: -72.2210 },
+      { keys: ['pueblo nuevo', 'polideportivo', 'estadio pueblo nuevo', 'plaza de toros', 'monumental'], name: 'Pueblo Nuevo / Polideportivo (San Cristóbal)', lat: 7.7920, lng: -72.2150 },
+      { keys: ['pirineos', 'pirineos 1', 'pirineos 2', 'las lomas', 'avenida principal pirineos'], name: 'Pirineos / Las Lomas (San Cristóbal)', lat: 7.7850, lng: -72.2280 },
+      { keys: ['la concordia', 'concordia', 'mercado la concordia', 'plaza miranda concordia'], name: 'La Concordia / Mercado (San Cristóbal)', lat: 7.7580, lng: -72.2380 },
+      { keys: ['unet', 'universidad experimental del tachira'], name: 'UNET (San Cristóbal)', lat: 7.7985, lng: -72.2110 },
+      { keys: ['ula', 'universidad de los andes', 'ula tachira', 'paramillo'], name: 'ULA Táchira / Paramillo', lat: 7.7810, lng: -72.2190 },
+      { keys: ['palo gordo', 'paramillo palo gordo'], name: 'Palo Gordo', lat: 7.8150, lng: -72.2050 },
+
+      // Capacho, Táriba, Palmira, Rubio
+      { keys: ['capacho', 'capacho nuevo', 'independencia'], name: 'Capacho Nuevo', lat: 7.7950, lng: -72.3100 },
+      { keys: ['capacho viejo', 'libertad'], name: 'Capacho Viejo', lat: 7.7880, lng: -72.3250 },
+      { keys: ['tariba', 'plaza tariba', 'basilica tariba', 'cardenas'], name: 'Táriba / Basílica', lat: 7.8200, lng: -72.2230 },
+      { keys: ['palmira', 'plaza palmira', 'guasimos'], name: 'Palmira', lat: 7.8450, lng: -72.2280 },
+      { keys: ['rubio', 'junin', 'centro rubio', 'los teques'], name: 'Rubio / Centro', lat: 7.7020, lng: -72.3550 },
+
+      // Cúcuta / Frontera
+      { keys: ['la parada', 'parada frontera', 'villa del rosario'], name: 'La Parada (Frontera Cúcuta)', lat: 7.8310, lng: -72.4600 },
+      { keys: ['terminal cucuta', 'transporte cucuta'], name: 'Terminal de Transportes de Cúcuta', lat: 7.9010, lng: -72.5020 },
+      { keys: ['ventura', 'ventura plaza'], name: 'Ventura Plaza (Cúcuta)', lat: 7.8920, lng: -72.4970 },
+      { keys: ['centro cucuta', 'parque santander cucuta'], name: 'Centro de Cúcuta', lat: 7.8890, lng: -72.5050 }
     ];
 
-    // Check street grid numbers: "calle 4", "carrera 6", etc.
+    const candidates = [];
+
+    // Check Local Landmarks
+    const words = norm.split(/\s+/).filter(w => w.length > 2);
+    localPlaces.forEach(place => {
+      let matched = false;
+      if (place.keys.some(k => norm.includes(k) || k.includes(norm))) {
+        matched = true;
+      } else if (words.length > 0 && place.keys.some(k => words.some(w => k.includes(w)))) {
+        matched = true;
+      }
+      if (matched) {
+        candidates.push({
+          name: place.name,
+          lat: place.lat,
+          lng: place.lng,
+          source: 'local'
+        });
+      }
+    });
+
+    // Check Calles & Carreras
     const calleMatch = norm.match(/calle\s*(\d+)/i);
     const carreraMatch = norm.match(/carrera\s*(\d+)/i);
-
-    const match = localPlaces.find(p => p.keys.some(k => norm.includes(k)));
-
-    if (match) {
-      this.setRideDestination(match.lat, match.lng, text, false);
-      return;
-    }
-
     if (calleMatch || carreraMatch) {
       const calleNum = calleMatch ? parseInt(calleMatch[1]) : 4;
       const carreraNum = carreraMatch ? parseInt(carreraMatch[1]) : 6;
-      // San Antonio del Táchira street grid coordinate mapping
-      const baseLat = 7.8145 - ((calleNum - 4) * 0.0009);
-      const baseLng = -72.4455 + ((carreraNum - 6) * 0.0009);
-      this.setRideDestination(baseLat, baseLng, text, false);
-      return;
+      const isSC = Math.abs(originLat - 7.77) < 0.15 && Math.abs(originLng - (-72.22)) < 0.15;
+      const baseLat = isSC ? (7.7669 - ((calleNum - 5) * 0.0008)) : (7.8145 - ((calleNum - 4) * 0.0009));
+      const baseLng = isSC ? (-72.2280 + ((carreraNum - 5) * 0.0008)) : (-72.4455 + ((carreraNum - 6) * 0.0009));
+      candidates.push({
+        name: `Calle ${calleNum} con Carrera ${carreraNum}`,
+        lat: baseLat,
+        lng: baseLng,
+        source: 'grid'
+      });
     }
 
-    // 2. Debounced Online OpenStreetMap Nominatim Geocoding for anywhere else
-    clearTimeout(this._destGeocodeTimer);
-    this._destGeocodeTimer = setTimeout(() => {
-      if (!this.rideLeafMap) return;
-      const query = encodeURIComponent(text + ', San Antonio del Táchira, Venezuela');
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`)
-        .then(res => res.json())
-        .then(results => {
-          if (results && results.length > 0) {
-            const foundLat = parseFloat(results[0].lat);
-            const foundLng = parseFloat(results[0].lon);
-            if (!isNaN(foundLat) && !isNaN(foundLng)) {
-              this.setRideDestination(foundLat, foundLng, text, false);
+    // Query OpenStreetMap Nominatim with proximity around origin
+    try {
+      const qRegion = `${text}, Táchira, Venezuela`;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(qRegion)}&limit=4`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const results = await res.json();
+        if (Array.isArray(results) && results.length > 0) {
+          results.forEach(r => {
+            const rLat = parseFloat(r.lat);
+            const rLng = parseFloat(r.lon);
+            if (!isNaN(rLat) && !isNaN(rLng)) {
+              candidates.push({
+                name: (r.display_name ? r.display_name.split(',')[0] : text).trim(),
+                lat: rLat,
+                lng: rLng,
+                source: 'osm'
+              });
             }
-          } else {
-            // If not found online, offset gently from origin to visually mark destination on map
-            if (this.rideOrigin && this.rideOrigin.lat) {
-              const fallbackLat = this.rideOrigin.lat + 0.012;
-              const fallbackLng = this.rideOrigin.lng + 0.008;
-              this.setRideDestination(fallbackLat, fallbackLng, text, false);
-            }
-          }
-        })
-        .catch(() => {
-          if (this.rideOrigin && this.rideOrigin.lat) {
-            const fallbackLat = this.rideOrigin.lat + 0.012;
-            const fallbackLng = this.rideOrigin.lng + 0.008;
-            this.setRideDestination(fallbackLat, fallbackLng, text, false);
-          }
-        });
-    }, 450);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Nominatim geocode query skipped:', e);
+    }
+
+    // Calculate distance from origin to all candidates and pick closest
+    if (candidates.length > 0) {
+      candidates.forEach(c => {
+        c.distance = this.calculateGeodesicDistance(originLat, originLng, c.lat, c.lng);
+      });
+      // Sort ascending by distance (closest first)
+      candidates.sort((a, b) => a.distance - b.distance);
+      const closest = candidates[0];
+
+      // Set destination on the map at the closest point
+      this.setRideDestination(closest.lat, closest.lng, text, false);
+
+      if (statusBadge) {
+        statusBadge.innerHTML = `✅ <strong style="color: #34D399;">Punto más cercano:</strong> ${closest.name} (<span style="color: #FBBF24; font-weight: 800;">${closest.distance.toFixed(1)} km</span>)`;
+      }
+      if (statusIcon) statusIcon.innerText = '📍 Detectado';
+    } else {
+      // Fallback: place point in nearby area on map
+      const fallbackLat = originLat + 0.010;
+      const fallbackLng = originLng + 0.008;
+      const fallbackDist = this.calculateGeodesicDistance(originLat, originLng, fallbackLat, fallbackLng);
+      this.setRideDestination(fallbackLat, fallbackLng, text, false);
+
+      if (statusBadge) {
+        statusBadge.innerHTML = `📍 <span style="color: #38BDF8;">Punto fijado en mapa:</span> ${text} (${fallbackDist.toFixed(1)} km). Puedes mover el marcador si lo deseas.`;
+      }
+      if (statusIcon) statusIcon.innerText = '📍 Fijado';
+    }
   }
 
   setRideDestination(lat, lng, addressName, updateInput = true) {
