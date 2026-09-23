@@ -51,6 +51,8 @@ class KitchenController {
     const directKey = urlParams.get('key') || urlParams.get('clave');
     const directShop = urlParams.get('shop') || urlParams.get('store');
 
+    const fromAdmin = urlParams.get('from') === 'admin' || window.location.pathname.includes('dist_admin') || localStorage.getItem('is_platform_owner') === 'true' || localStorage.getItem('owner_authenticated_permanently') === 'true';
+
     if (directKey) {
       const keyInp = document.getElementById('auth-link-key');
       if (keyInp) keyInp.value = directKey.trim().toUpperCase();
@@ -65,8 +67,24 @@ class KitchenController {
         this.showLoginScreen();
       }
     } else {
-      // By default: Always show the login screen so the user can enter the correct kitchen
-      this.showLoginScreen();
+      const savedShopId = localStorage.getItem('active_merchant_shop_id');
+      if (savedShopId) {
+        this.checkLocalSession();
+      }
+
+      // If still not selected, but in Admin/Dueño environment: auto-select the first store
+      if (!this.selectedId && fromAdmin && Array.isArray(this.establishments) && this.establishments.length > 0) {
+        const firstEst = this.establishments[0];
+        const keyInp = document.getElementById('auth-link-key');
+        if (keyInp && firstEst.linkKey) {
+          keyInp.value = firstEst.linkKey;
+        } else if (keyInp) {
+          keyInp.value = '0424';
+        }
+        await this.verifyAndLinkKeyDirect();
+      } else if (!this.selectedId) {
+        this.showLoginScreen();
+      }
     }
 
     // Set up auto-stop listeners and audio unlock for persistent alarm
