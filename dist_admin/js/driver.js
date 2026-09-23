@@ -41,6 +41,16 @@ class DriverController {
     this.wakeLock = null;
     this.isFirstLoad = true;
     this.ws = null;
+    this.routeMap = null;
+    this.currentLat = 7.7669;
+    this.currentLng = -72.2250;
+    this.dismissedOrderIds = new Set();
+    try {
+      const savedDismissed = JSON.parse(localStorage.getItem('pedigochos_dismissed_services') || '[]');
+      if (Array.isArray(savedDismissed)) {
+        savedDismissed.forEach(id => this.dismissedOrderIds.add(id));
+      }
+    } catch(e) {}
   }
 
   init() {
@@ -291,41 +301,65 @@ class DriverController {
         const isTaken = msg.status === 'Tomado';
         const isEntregado = msg.status === 'Entregado';
         const takenByMe = isTaken && (msg.takenBy === 'Yoxman' || msg.takenBy === this.driver?.name);
+        const isDismissed = this.dismissedOrderIds.has(msg.orderId);
 
-        const gmapsOriginUrl = (msg.originLat && msg.originLng)
-          ? `https://www.google.com/maps?q=${msg.originLat},${msg.originLng}`
-          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(msg.origin)}`;
+        // Folded & greyed out collapsed card when dismissed by driver
+        if (isDismissed) {
+          return `
+            <div class="service-request-card service-card-dismissed" id="service-card-${msg.orderId}">
+              <div class="service-card-top">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="service-type-badge">✖ Descartado</span>
+                  <span style="font-size: 12px; color: #94A3B8; font-weight: 700;">
+                    ${isRide ? '🚖 Traslado' : '📦 Encomienda'} #${(msg.orderId || '').slice(-4)} • ${msg.fareFormatted || `$${msg.fare} COP`}
+                  </span>
+                </div>
+                <button type="button" class="btn-restore-card" onclick="event.stopPropagation(); DriverApp.restoreServiceCard('${msg.orderId}')" title="Restaurar y ver detalles">
+                  ↩ Restaurar
+                </button>
+              </div>
+            </div>
+          `;
+        }
 
-        const gmapsDestUrl = (msg.destLat && msg.destLng)
-          ? `https://www.google.com/maps?q=${msg.destLat},${msg.destLng}`
-          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(msg.destination)}`;
+        const safeOrigin = (msg.origin || 'Ubicación GPS').replace(/'/g, "\\'");
+        const safeDest = (msg.destination || 'Dirección de entrega').replace(/'/g, "\\'");
 
         return `
-          <div class="service-request-card ${isTaken ? 'taken' : ''} ${isLujo ? 'ride-lujo' : ''}">
+          <div class="service-request-card ${isTaken ? 'taken' : ''} ${isLujo ? 'ride-lujo' : ''}" id="service-card-${msg.orderId}">
             <div class="service-card-top">
               <span class="service-type-badge ${isLujo ? 'lujo' : ''}">
                 ${isRide ? '🚖 TRASLADO MÓVIL' : '📦 ENCOMIENDA DELIVERY'} • ${msg.vehicleLabel || 'Moto Taxi'}
               </span>
-              <span class="service-price-pill">${msg.fareFormatted || `$${msg.fare} COP`}</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="service-price-pill">${msg.fareFormatted || `$${msg.fare} COP`}</span>
+                <button type="button" class="btn-dismiss-card" onclick="event.stopPropagation(); DriverApp.dismissServiceCard('${msg.orderId}')" title="Cerrar / Descartar servicio">
+                  ✕ Cerrar
+                </button>
+              </div>
             </div>
 
             <!-- Route Details -->
             <div class="service-route-box">
               <div class="route-step">
                 <span class="route-icon" style="color: #10B981;">🟢</span>
-                <div class="route-text">
+                <div class="route-text" style="flex: 1;">
                   <strong>Recogida (Origen):</strong>
                   <span>${msg.origin || 'Ubicación GPS'}</span>
-                  <a href="${gmapsOriginUrl}" target="_blank" style="color: #60A5FA; font-size: 11px; margin-left: 6px; text-decoration: underline;">Ver mapa</a>
+                  <button type="button" class="btn-mini-map-action" onclick="event.stopPropagation(); DriverApp.openMapLocation('${msg.originLat || ''}', '${msg.originLng || ''}', '${safeOrigin}')">
+                    🗺️ Ver mapa
+                  </button>
                 </div>
               </div>
 
-              <div class="route-step" style="margin-top: 6px;">
+              <div class="route-step" style="margin-top: 8px;">
                 <span class="route-icon" style="color: #EF4444;">🏁</span>
-                <div class="route-text">
+                <div class="route-text" style="flex: 1;">
                   <strong>Destino (Llegada):</strong>
                   <span>${msg.destination || 'Dirección de entrega'}</span>
-                  <a href="${gmapsDestUrl}" target="_blank" style="color: #60A5FA; font-size: 11px; margin-left: 6px; text-decoration: underline;">Ver mapa</a>
+                  <button type="button" class="btn-mini-map-action" onclick="event.stopPropagation(); DriverApp.openMapLocation('${msg.destLat || ''}', '${msg.destLng || ''}', '${safeDest}')">
+                    🗺️ Ver mapa
+                  </button>
                 </div>
               </div>
             </div>
@@ -408,6 +442,97 @@ class DriverController {
       }
     } catch(e) {
       console.error('Error sending chat message:', e);
+    }
+  }
+
+  // Dismiss and fold a service card ("se recoge y se queda gris como deshabilitada y se cierra la ventana de informacion")
+  dismissServiceCard(orderId) {
+    if (!orderId) return;
+    this.dismissedOrderIds.add(orderId);
+    try {
+      localStorage.setItem('pedigochos_dismissed_services', JSON.stringify(Array.from(this.dismissedOrderIds)));
+    } catch(e) {}
+
+    // Close active info card if it was open for this order
+    if (this.activeOrder && this.activeOrder.id === orderId) {
+      this.activeOrder = null;
+    }
+    
+    // Switch to chat tab to close any active window/view
+    this.switchTab('chat');
+    this.renderChatFeed();
+  }
+
+  // Restore a folded/dismissed service card
+  restoreServiceCard(orderId) {
+    if (!orderId) return;
+    this.dismissedOrderIds.delete(orderId);
+    try {
+      localStorage.setItem('pedigochos_dismissed_services', JSON.stringify(Array.from(this.dismissedOrderIds)));
+    } catch(e) {}
+    this.renderChatFeed();
+  }
+
+  // Open location in Google Maps (Fixed for Android Capacitor WebView)
+  openMapLocation(lat, lng, address) {
+    let query = '';
+    const numLat = parseFloat(lat);
+    const numLng = parseFloat(lng);
+
+    if (!isNaN(numLat) && !isNaN(numLng) && numLat !== 0 && numLng !== 0) {
+      query = `${numLat},${numLng}`;
+    } else if (address && address.trim()) {
+      query = address.trim();
+    } else {
+      query = 'San Cristóbal, Táchira';
+    }
+
+    const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    
+    try {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.open(gmapsUrl, '_system');
+      } else {
+        const opened = window.open(gmapsUrl, '_system') || window.open(gmapsUrl, '_blank');
+        if (!opened) window.location.href = gmapsUrl;
+      }
+    } catch(e) {
+      window.location.href = gmapsUrl;
+    }
+  }
+
+  // Open full route with origin and destination in Google Maps
+  openFullRouteInGoogleMaps(oLat, oLng, dLat, dLng, originName, destName) {
+    const oQuery = (oLat && oLng && !isNaN(parseFloat(oLat))) ? `${oLat},${oLng}` : (originName || 'Punto de Recogida');
+    const dQuery = (dLat && dLng && !isNaN(parseFloat(dLat))) ? `${dLat},${dLng}` : (destName || 'Destino');
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(oQuery)}&destination=${encodeURIComponent(dQuery)}&travelmode=driving`;
+
+    try {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.open(url, '_system');
+      } else {
+        const opened = window.open(url, '_system') || window.open(url, '_blank');
+        if (!opened) window.location.href = url;
+      }
+    } catch(e) {
+      window.location.href = url;
+    }
+  }
+
+  // Open Destination in Waze GPS
+  openWazeNavigation(dLat, dLng, destName) {
+    let wazeUrl = '';
+    if (dLat && dLng && !isNaN(parseFloat(dLat))) {
+      wazeUrl = `https://waze.com/ul?ll=${dLat},${dLng}&navigate=yes`;
+    } else {
+      wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(destName || 'Destino')}&navigate=yes`;
+    }
+
+    try {
+      const opened = window.open(wazeUrl, '_system') || window.open(wazeUrl, '_blank');
+      if (!opened) window.location.href = wazeUrl;
+    } catch(e) {
+      window.location.href = wazeUrl;
     }
   }
 
@@ -545,6 +670,30 @@ class DriverController {
           <span class="card-fee-badge" style="font-size: 14px;">💰 $${totalCop.toLocaleString('de-DE')} COP</span>
         </div>
 
+        <!-- 0. Interactive Leaflet Route Map (Two Marked Points: Origen ➡️ Destino) -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: #10B981; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+              🗺️ Mapa de la Carrera (Inicio ➔ Destino)
+            </span>
+            <span style="font-size: 11px; color: #94A3B8; font-weight: 700;">
+              📏 ${dDetails.distanceKm || 1} km
+            </span>
+          </div>
+
+          <div id="driver-route-map" class="driver-route-map"></div>
+
+          <!-- Direct Navigation Launchers -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+            <button type="button" class="btn-3d btn-3d-blue" onclick="DriverApp.openFullRouteInGoogleMaps('${originLat || ''}', '${originLng || ''}', '${destLat || ''}', '${destLng || ''}', '${originAddr.replace(/'/g, "\\'")}', '${destAddr.replace(/'/g, "\\'")}')" style="font-size: 11.5px; padding: 10px;">
+              🗺️ Ruta Google Maps
+            </button>
+            <button type="button" class="btn-3d" onclick="DriverApp.openWazeNavigation('${destLat || ''}', '${destLng || ''}', '${destAddr.replace(/'/g, "\\'")}')" style="background: #33CCFF; color: #000; font-weight: 900; font-size: 11.5px; padding: 10px;">
+              🧭 Navegar en Waze
+            </button>
+          </div>
+        </div>
+
         <!-- 1. Customer Details & Direct Contact -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 12px;">
           <span style="font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 800; display: block; margin-bottom: 6px;">👤 Datos del Cliente</span>
@@ -570,9 +719,9 @@ class DriverController {
           <div style="margin-bottom: 10px;">
             <span style="color: #10B981; font-weight: 800; font-size: 12px;">🟢 1. Punto de Recogida:</span>
             <div style="font-size: 13.5px; color: #FFF; font-weight: 700; margin: 2px 0 4px 0;">${originAddr}</div>
-            <a href="${gmapsOrigin}" target="_blank" class="btn-3d btn-3d-blue" style="font-size: 11.5px; padding: 6px 10px; display: inline-flex;">
+            <button type="button" class="btn-3d btn-3d-blue" onclick="DriverApp.openMapLocation('${originLat || ''}', '${originLng || ''}', '${originAddr.replace(/'/g, "\\'")}')" style="font-size: 11.5px; padding: 6px 12px; display: inline-flex;">
               📍 Navegar al Origen (Google Maps)
-            </a>
+            </button>
           </div>
 
           <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 8px 0;">
@@ -582,12 +731,12 @@ class DriverController {
             <div style="font-size: 13.5px; color: #FFF; font-weight: 700; margin: 2px 0 6px 0;">${destAddr}</div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <a href="${gmapsDest}" target="_blank" class="btn-3d btn-3d-blue" style="font-size: 11.5px; padding: 8px;">
+              <button type="button" class="btn-3d btn-3d-blue" onclick="DriverApp.openMapLocation('${destLat || ''}', '${destLng || ''}', '${destAddr.replace(/'/g, "\\'")}')" style="font-size: 11.5px; padding: 8px;">
                 📍 Google Maps
-              </a>
-              <a href="${wazeDest}" target="_blank" class="btn-3d" style="background: #33CCFF; color: #000; font-weight: 900; font-size: 11.5px; padding: 8px;">
+              </button>
+              <button type="button" class="btn-3d" onclick="DriverApp.openWazeNavigation('${destLat || ''}', '${destLng || ''}', '${destAddr.replace(/'/g, "\\'")}')" style="background: #33CCFF; color: #000; font-weight: 900; font-size: 11.5px; padding: 8px;">
                 🗺️ Waze GPS
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -612,6 +761,125 @@ class DriverController {
         </button>
       </div>
     `;
+
+    // Initialize interactive Leaflet map with Start and Destination marked
+    this.initActiveRouteMap(order);
+  }
+
+  // Render Leaflet Route Map with both points marked (Inicio a Destino)
+  initActiveRouteMap(order) {
+    const mapContainer = document.getElementById('driver-route-map');
+    if (!mapContainer || typeof L === 'undefined') return;
+
+    if (this.routeMap) {
+      try {
+        this.routeMap.remove();
+      } catch(e) {}
+      this.routeMap = null;
+    }
+
+    const dDetails = order.deliveryDetails || {};
+    const isRide = order.orderType === 'ride' || order.serviceType === 'ride';
+    const originName = isRide ? (dDetails.origin || 'Punto de Recogida') : (order.establishmentName || 'Restaurante / Negocio');
+    const destName = isRide ? (dDetails.destination || dDetails.address || 'Destino') : (dDetails.address || 'Dirección de Entrega');
+
+    // Parse coordinates or provide sensible regional defaults
+    let oLat = parseFloat(dDetails.originLat || dDetails.latitude);
+    let oLng = parseFloat(dDetails.originLng || dDetails.longitude);
+    let dLat = parseFloat(dDetails.destLat);
+    let dLng = parseFloat(dDetails.destLng);
+
+    if ((isNaN(oLat) || oLat === 0) && this.currentLat) {
+      oLat = this.currentLat;
+      oLng = this.currentLng;
+    }
+
+    // Default regional coordinates (San Cristóbal central zone)
+    if (isNaN(oLat) || oLat === 0) {
+      oLat = 7.7669;
+      oLng = -72.2250;
+    }
+    if (isNaN(dLat) || dLat === 0) {
+      dLat = oLat + 0.0120;
+      dLng = oLng + 0.0110;
+    }
+
+    const originCoords = [oLat, oLng];
+    const destCoords = [dLat, dLng];
+
+    try {
+      const map = L.map('driver-route-map', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView(originCoords, 14);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(map);
+
+      // Custom Origin Pin (Green 🟢)
+      const originIcon = L.divIcon({
+        className: 'custom-map-marker marker-origin',
+        html: `
+          <div class="marker-pulse-wrapper">
+            <div class="marker-bubble origin-bubble">🟢 Recogida</div>
+            <div class="marker-icon-pin">📍</div>
+          </div>
+        `,
+        iconSize: [60, 50],
+        iconAnchor: [30, 46],
+        popupAnchor: [0, -45]
+      });
+
+      // Custom Destination Pin (Red 🏁)
+      const destIcon = L.divIcon({
+        className: 'custom-map-marker marker-dest',
+        html: `
+          <div class="marker-pulse-wrapper">
+            <div class="marker-bubble dest-bubble">🏁 Destino</div>
+            <div class="marker-icon-pin">📍</div>
+          </div>
+        `,
+        iconSize: [60, 50],
+        iconAnchor: [30, 46],
+        popupAnchor: [0, -45]
+      });
+
+      // Add markers
+      const markerOrigin = L.marker(originCoords, { icon: originIcon }).addTo(map);
+      markerOrigin.bindPopup(`<strong>🟢 Punto de Recogida:</strong><br>${this.escapeHtml(originName)}`);
+
+      const markerDest = L.marker(destCoords, { icon: destIcon }).addTo(map);
+      markerDest.bindPopup(`<strong>🏁 Punto de Destino:</strong><br>${this.escapeHtml(destName)}`);
+
+      // Add connecting route polyline
+      L.polyline([originCoords, destCoords], {
+        color: '#10B981',
+        weight: 5,
+        opacity: 0.9,
+        dashArray: '8, 8'
+      }).addTo(map);
+
+      // Fit bounds so both points are visible
+      const bounds = L.latLngBounds([originCoords, destCoords]);
+      map.fitBounds(bounds, { padding: [45, 45], maxZoom: 16 });
+
+      this.routeMap = map;
+
+      // Invalidate size in next ticks to ensure smooth rendering
+      setTimeout(() => {
+        if (this.routeMap) {
+          this.routeMap.invalidateSize();
+          this.routeMap.fitBounds(bounds, { padding: [45, 45], maxZoom: 16 });
+        }
+      }, 250);
+      setTimeout(() => {
+        if (this.routeMap) this.routeMap.invalidateSize();
+      }, 600);
+
+    } catch(err) {
+      console.warn('Error initializing active route map:', err);
+    }
   }
 
   async completeOrder(orderId) {

@@ -154,15 +154,18 @@ body.driver-body {
   transform: rotate(180deg);
 }
 
-/* App Header & Switch */
+/* App Header & Switch - Lowered below notch */
 .driver-header {
   background: #111827;
   border-bottom: 1px solid #1F2937;
-  padding: 14px 16px;
+  padding-top: max(env(safe-area-inset-top, 46px), 46px);
+  padding-bottom: 14px;
+  padding-left: 16px;
+  padding-right: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  sticky: top;
+  position: sticky;
   top: 0;
   z-index: 100;
 }
@@ -527,6 +530,165 @@ input:checked + .slider-3d:before {
   background: rgba(16, 185, 129, 0.1);
   padding: 4px 10px;
   border-radius: 10px;
+}
+
+/* Dismiss / Cancel Button on Service Card */
+.btn-dismiss-card {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #FCA5A5;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-dismiss-card:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #EF4444;
+  color: #FFF;
+}
+
+.btn-dismiss-card:active {
+  transform: scale(0.95);
+}
+
+.btn-restore-card {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93C5FD;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-restore-card:hover {
+  background: rgba(59, 130, 246, 0.3);
+  color: #FFF;
+}
+
+/* Dismissed & Folded Grey State ("se recoge y se queda gris como deshabilitada") */
+.service-request-card.service-card-dismissed {
+  background: #141A28 !important;
+  border: 1px dashed #475569 !important;
+  box-shadow: none !important;
+  opacity: 0.65 !important;
+  filter: grayscale(0.85);
+  padding: 9px 12px !important;
+  transform: none !important;
+  transition: all 0.2s ease;
+}
+
+.service-request-card.service-card-dismissed:hover {
+  opacity: 0.85 !important;
+}
+
+.service-request-card.service-card-dismissed .service-route-box,
+.service-request-card.service-card-dismissed .service-details-row,
+.service-request-card.service-card-dismissed .btn-take-service {
+  display: none !important;
+}
+
+.service-request-card.service-card-dismissed .service-card-top {
+  margin-bottom: 0 !important;
+}
+
+.service-request-card.service-card-dismissed .service-type-badge {
+  background: rgba(148, 163, 184, 0.15);
+  border-color: #475569;
+  color: #94A3B8;
+  font-size: 11px;
+}
+
+/* Map Link Action Buttons (Solves "los botones de ver en el mapa no funciona") */
+.btn-mini-map-action {
+  background: rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  color: #60A5FA;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+  margin-left: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-mini-map-action:hover {
+  background: rgba(59, 130, 246, 0.35);
+  color: #FFF;
+}
+
+.btn-mini-map-action:active {
+  transform: scale(0.95);
+}
+
+/* Interactive Route Map ("al darle click en tomar servicio salga el mapa con los dos puntos marcados de inicio a destino") */
+.driver-route-map {
+  width: 100%;
+  height: 260px;
+  border-radius: 16px;
+  border: 2px solid #10B981;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  overflow: hidden;
+  background: #0B0F19;
+}
+
+.custom-map-marker {
+  background: transparent;
+  border: none;
+}
+
+.marker-pulse-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.marker-bubble {
+  font-size: 10.5px;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 8px;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+  margin-bottom: -4px;
+}
+
+.marker-bubble.origin-bubble {
+  background: #10B981;
+  color: #FFFFFF;
+  border: 1px solid #34D399;
+}
+
+.marker-bubble.dest-bubble {
+  background: #EF4444;
+  color: #FFFFFF;
+  border: 1px solid #F87171;
+}
+
+.marker-icon-pin {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
 }
 
 .service-route-box {
