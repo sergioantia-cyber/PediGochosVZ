@@ -9,8 +9,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="icon" type="image/png" href="/images/logo-pedigochos.png">
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
-  <link rel="stylesheet" href="/css/common.css?v=225">
-  <link rel="stylesheet" href="/css/marketplace.css?v=225">
+  <link rel="stylesheet" href="/css/common.css?v=231">
+  <link rel="stylesheet" href="/css/marketplace.css?v=231">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
@@ -18,6 +18,19 @@
   <!-- Offline Status Banner -->
   <div id="offline-banner" style="display: none; background: #E11D48; color: #ffffff; text-align: center; padding: 8px 12px; font-size: 12px; font-weight: 800; position: sticky; top: 0; z-index: 99999;">
     📴 Modo Sin Conexión - Tus pedidos se guardarán localmente y se sincronizarán automáticamente al conectar.
+  </div>
+
+  <!-- Live Customer Order Process Alert Banner -->
+  <div id="customer-order-alert-banner" class="customer-order-banner" style="display: none;" onclick="MarketplaceApp.onCustomerAlertBannerClick(event)">
+    <div class="banner-icon-badge" id="banner-status-icon">👨‍🍳</div>
+    <div class="banner-body">
+      <div class="banner-header-row">
+        <span class="banner-title" id="banner-status-title">¡Pedido Aceptado!</span>
+        <span class="banner-time-badge" id="banner-status-time">Ahora</span>
+      </div>
+      <p class="banner-desc" id="banner-status-desc">El comercio ha aceptado tu pedido y comenzó su preparación.</p>
+    </div>
+    <button type="button" class="banner-close-btn" onclick="event.stopPropagation(); MarketplaceApp.dismissCustomerAlertBanner();" title="Cerrar">✕</button>
   </div>
 
   <!-- App Header (Rapi Gochos Style) -->
@@ -52,11 +65,6 @@
           📋 <span>Mis Pedidos</span>
         </button>
 
-        <!-- Ride Hailing (Moto Taxi / Carro) Button -->
-        <button type="button" id="header-ride-btn" onclick="MarketplaceApp.openRideModal()" title="Pedir Moto Taxi o Auto" class="btn-ride-header">
-          🛵 <span>Pedir Móvil</span>
-        </button>
-
         <!-- Top Back Button -->
         <button class="btn-top-header" onclick="MarketplaceApp.handleNavBack()" title="Volver / Atrás">
           <span>⬅</span> <span>Atrás</span>
@@ -67,6 +75,11 @@
           <span>🛒</span>
           <span id="header-cart-badge-count">0</span>
           <span id="header-cart-badge-total">$0</span>
+        </button>
+
+        <!-- Header S.O.S Button (Appears when viewing a category or store) -->
+        <button type="button" id="header-sos-btn" class="btn-sos-header hidden" onclick="MarketplaceApp.toggleSosMenu()" title="Emergencias y Auxilio Vial S.O.S">
+          🚨 <span>S.O.S</span>
         </button>
         
         <div id="auth-status-container">
@@ -164,19 +177,19 @@
             </div>
           </div>
 
-          <!-- Mercados (Horizontal Card 2) -->
-          <div class="category-card-delivercity card-mercados" data-category="mercados" onclick="MarketplaceApp.selectCategory('mercados')">
+          <!-- Servicios (Horizontal Card 2) -->
+          <div class="category-card-delivercity card-servicios" data-category="servicios" onclick="MarketplaceApp.selectCategory('servicios')">
             <div class="category-overlay-dark"></div>
-            <div class="category-card-bg" style="background-image: url('/images/pack_frutas.jpg');"></div>
+            <div class="category-card-bg" style="background-image: url('/images/servicios.jpg'); background-color: #EA580C;"></div>
             <div class="category-card-content">
-              <h4>🛒 Mercados</h4>
+              <h4>🛵 Servicios</h4>
             </div>
           </div>
 
           <!-- Ferreterías (Horizontal Card 3) -->
           <div class="category-card-delivercity card-ferreterias" data-category="ferreterias" onclick="MarketplaceApp.selectCategory('ferreterias')">
             <div class="category-overlay-dark"></div>
-            <div class="category-card-bg" style="background-image: url('/images/destornilladores.jpg'); background-color: #B8860B;"></div>
+            <div class="category-card-bg" style="background-image: url('/images/ferreteria.jpg'); background-color: #B8860B;"></div>
             <div class="category-card-content">
               <h4>🛠️ Ferreterías</h4>
             </div>
@@ -184,22 +197,22 @@
         </div>
       </section>
 
-      <!-- Ride Service Promotion Banner -->
-      <div class="ride-promo-card" onclick="MarketplaceApp.openRideModal()" style="background: linear-gradient(135deg, #1E222D 0%, #252A38 100%); border: 1.5px solid rgba(255, 107, 0, 0.35); border-radius: 18px; padding: 14px 16px; margin: 16px 0 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,0.25); transition: transform 0.2s, box-shadow 0.2s;">
-        <div style="display: flex; align-items: center; gap: 12px;">
+      <!-- Ride Service Promotion Banner (Solo aparece tras ser aceptado el pedido por el comercio) -->
+      <div id="ride-promo-card" class="ride-promo-card" onclick="MarketplaceApp.onRidePromoCardClick(event)" style="display: none; background: linear-gradient(135deg, #1E222D 0%, #252A38 100%); border: 1.5px solid rgba(255, 107, 0, 0.4); border-radius: 18px; padding: 14px 16px; margin: 16px 0 20px 0; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,0.3); position: relative; user-select: none; touch-action: pan-y;">
+        <div style="display: flex; align-items: center; gap: 12px; pointer-events: none; flex: 1; min-width: 0;">
           <div style="width: 46px; height: 46px; border-radius: 14px; background: rgba(255, 107, 0, 0.15); border: 1.5px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; box-shadow: 0 0 14px rgba(255, 107, 0, 0.35);">
             🛵
           </div>
-          <div>
-            <h4 style="margin: 0 0 2px 0; font-size: 14px; font-weight: 900; color: #FFFFFF; display: flex; align-items: center; gap: 6px;">
-              ¿Necesitas trasladarte? <span style="font-size: 10px; background: #FF6B00; color: #FFF; padding: 1px 7px; border-radius: 8px; font-weight: 800;">EN VIVO</span>
+          <div style="flex: 1; min-width: 0;">
+            <h4 style="margin: 0 0 2px 0; font-size: 14px; font-weight: 900; color: #FFFFFF;">
+              ¿Necesitas trasladarte?
             </h4>
             <p style="margin: 0; font-size: 11.5px; color: #94A3B8; line-height: 1.3;">
               Pide tu <strong>Moto Taxi</strong>, <strong>Auto</strong> o <strong>Lujo</strong> con tarifa calculada por GPS.
             </p>
           </div>
         </div>
-        <button type="button" style="background: linear-gradient(135deg, #FF6B00 0%, #E05A00 100%); color: #FFF; border: none; padding: 8px 14px; border-radius: 12px; font-weight: 900; font-size: 12px; white-space: nowrap; cursor: pointer; box-shadow: 0 3px 12px rgba(255, 107, 0, 0.35); pointer-events: none;">
+        <button type="button" class="btn-pedir-ride" style="background: linear-gradient(135deg, #FF6B00 0%, #E05A00 100%); color: #FFF; border: none; padding: 9px 16px; border-radius: 12px; font-weight: 900; font-size: 12.5px; white-space: nowrap; cursor: pointer; box-shadow: 0 3px 12px rgba(255, 107, 0, 0.35); pointer-events: none; flex-shrink: 0;">
           Pedir ➔
         </button>
       </div>
@@ -1166,10 +1179,10 @@
 
         <!-- Step 2: Destination -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 12px;">
-          <label style="font-size: 12px; font-weight: 800; color: #FF6B00; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-            <span>🏁</span> ¿A dónde vas? (Destino) *
+          <label style="font-size: 12.5px; font-weight: 900; color: #FF6B00; display: flex; align-items: center; gap: 5px; margin-bottom: 6px;">
+            <span>🏁</span> Destino *
           </label>
-          <input type="text" id="ride-dest-input" required placeholder="Escribe tu destino o toca en el mapa..." oninput="MarketplaceApp.onRideDestInput(this.value)" style="width: 100%; padding: 9px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12.5px; box-sizing: border-box;">
+          <input type="text" id="ride-dest-input" required placeholder="Escribe tu destino (se detectará en el mapa)..." oninput="MarketplaceApp.onRideDestInput(this.value)" style="width: 100%; padding: 9px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12.5px; box-sizing: border-box;">
           
           <!-- Quick Destination Chips -->
           <div style="display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px 0; -webkit-overflow-scrolling: touch;" class="premium-scroll">
@@ -1250,19 +1263,658 @@
     </div>
   </div>
 
+  <!-- Floating Stacked Action Buttons (Bottom-Left: S.O.S on top, Services on bottom) -->
+  <div class="floating-left-actions-container">
+    
+    <!-- Top Button: S.O.S Emergencias (Arriba del de servicios) -->
+    <button type="button" id="floating-sos-btn" class="floating-fab-btn fab-sos" onclick="MarketplaceApp.toggleSosMenu()" title="Centro de Emergencias y Auxilio Vial S.O.S">
+      <span class="sos-halo-pulse"></span>
+      <span class="fab-inner-content">
+        <span class="fab-icon">🚨</span>
+        <span class="fab-label">S.O.S</span>
+      </span>
+    </button>
+
+    <!-- Bottom Button: Menú de Servicios (Abajo a la izquierda) -->
+    <button type="button" id="floating-services-btn" class="floating-fab-btn fab-services" onclick="MarketplaceApp.toggleServicesMenu()" title="Menú de Todos los Servicios">
+      <span class="fab-inner-content">
+        <span class="fab-icon">🛵</span>
+        <span class="fab-label">SERVICIOS</span>
+      </span>
+    </button>
+
+  </div>
+
+  <!-- ========================================================
+       MODAL: MENÚ DESPLEGABLE DE LA IZQUIERDA (SERVICIOS Y MOVILIDAD)
+       ======================================================== -->
+  <div id="services-menu-modal" class="services-drawer-overlay" onclick="if(event.target === this) MarketplaceApp.closeServicesMenu();">
+    <div class="services-drawer-content">
+      
+      <!-- Drawer Header -->
+      <div style="padding: 18px 18px 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #FF6B00 0%, #D95300 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 0 14px rgba(255, 107, 0, 0.4); flex-shrink: 0;">
+            🛵
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 16.5px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">PediGochos</h3>
+            <span style="font-size: 11px; color: #FF6B00; font-weight: 800; letter-spacing: 0.3px;">SERVICIOS & MENÚ</span>
+          </div>
+        </div>
+        <button type="button" onclick="MarketplaceApp.closeServicesMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #CBD5E1; border-radius: 50%; width: 34px; height: 34px; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+
+      <!-- Drawer Scrollable Body -->
+      <div style="padding: 14px 14px 28px 14px; display: flex; flex-direction: column; gap: 14px;">
+
+        <!-- Categoría Desplegable Principal: Movilidad 🚗 -->
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1.5px solid rgba(255, 107, 0, 0.4); border-radius: 18px; padding: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.35);">
+          
+          <div class="drawer-movilidad-header" onclick="MarketplaceApp.toggleMovilidadAccordion()" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 4px 2px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255, 107, 0, 0.2); border: 1.5px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                🧭
+              </div>
+              <div>
+                <h4 style="margin: 0; font-size: 15px; font-weight: 900; color: #FFF; display: flex; align-items: center; gap: 6px;">
+                  Movilidad 🚗
+                </h4>
+                <span style="font-size: 10.5px; color: #FDBA74; font-weight: 700;">Toca para desplegar tipos de vehículo</span>
+              </div>
+            </div>
+            <span id="movilidad-accordion-arrow" style="font-size: 12px; color: #FF6B00; font-weight: 900; transition: transform 0.25s;">▼</span>
+          </div>
+
+          <!-- Tipos de vehículos desplegados: Moto, Auto, Auto de Lujo -->
+          <div id="drawer-movilidad-subitems" style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            
+            <!-- 1. Moto -->
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openRideModal('moto');" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255, 107, 0, 0.15); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                  🛵
+                </div>
+                <div>
+                  <div style="font-size: 13.5px; font-weight: 900; color: #FFF;">Moto</div>
+                  <div style="font-size: 11px; color: #94A3B8;">Moto Taxi • Rápido y económico</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; font-weight: 900; color: #FF6B00; background: rgba(255, 107, 0, 0.15); padding: 4px 10px; border-radius: 10px; white-space: nowrap;">
+                Pedir ➔
+              </span>
+            </div>
+
+            <!-- 2. Auto -->
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openRideModal('auto');" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                  🚗
+                </div>
+                <div>
+                  <div style="font-size: 13.5px; font-weight: 900; color: #FFF;">Auto</div>
+                  <div style="font-size: 11px; color: #94A3B8;">Auto Estándar • Hasta 4 personas</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; font-weight: 900; color: #3B82F6; background: rgba(59, 130, 246, 0.15); padding: 4px 10px; border-radius: 10px; white-space: nowrap;">
+                Pedir ➔
+              </span>
+            </div>
+
+            <!-- 3. Auto de Lujo -->
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openRideModal('lujo');" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                  ✨
+                </div>
+                <div>
+                  <div style="font-size: 13.5px; font-weight: 900; color: #FFF;">Auto de Lujo</div>
+                  <div style="font-size: 11px; color: #94A3B8;">Vehículo Premium • Con A/C</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; font-weight: 900; color: #F59E0B; background: rgba(245, 158, 11, 0.15); padding: 4px 10px; border-radius: 10px; white-space: nowrap;">
+                Pedir ➔
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Servicio 2: Cauchera Móvil 24H -->
+        <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openCaucheraModal();" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 12px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(239, 68, 68, 0.2); border: 1px solid #EF4444; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+              🛞
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 900; color: #FFF;">Cauchera Móvil 24H</div>
+              <div style="font-size: 10.5px; color: #FCA5A5;">Montallantas El Cachu • Auxilio Vial</div>
+            </div>
+          </div>
+          <span style="font-size: 10.5px; font-weight: 900; color: #EF4444; background: rgba(239, 68, 68, 0.15); padding: 4px 8px; border-radius: 8px;">
+            Auxilio ➔
+          </span>
+        </div>
+
+        <!-- Categorías de Comercio -->
+        <div>
+          <div style="font-size: 11.5px; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding-left: 2px;">
+            Categorías
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('comidas');" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; cursor: pointer;">
+              <div style="font-size: 22px; margin-bottom: 2px;">🍔</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Restaurantes</div>
+            </div>
+
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('farmacias');" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; cursor: pointer;">
+              <div style="font-size: 22px; margin-bottom: 2px;">💊</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Farmacias</div>
+            </div>
+
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('servicios');" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; cursor: pointer;">
+              <div style="font-size: 22px; margin-bottom: 2px;">🛵</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Servicios</div>
+            </div>
+
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('ferreterias');" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; cursor: pointer;">
+              <div style="font-size: 22px; margin-bottom: 2px;">🛠️</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Ferreterías</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Accesos Rápidos y Ayudas -->
+        <div>
+          <div style="font-size: 11.5px; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding-left: 2px;">
+            Accesos Rápidos
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.toggleSosMenu();" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">🚨</span>
+                <div>
+                  <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Emergencias S.O.S</div>
+                  <div style="font-size: 10px; color: #FCA5A5;">Números de auxilio VEN / COL</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; color: #EF4444; font-weight: 900;">Ver ➔</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openUserOrdersModal();" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">📋</span>
+                <span style="font-size: 12px; font-weight: 800; color: #FFF;">Mis Pedidos</span>
+              </div>
+
+              <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.openGochoPointsModal();" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">⭐</span>
+                <span style="font-size: 12px; font-weight: 800; color: #FFF;">GochoPoints</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: MENÚ DE BURBUJAS DE SERVICIOS Y EMERGENCIAS S.O.S
+       ======================================================== -->
+  <div id="sos-menu-modal" class="modal-overlay" onclick="if(event.target === this) MarketplaceApp.closeSosMenu();" style="display: none; align-items: flex-end; justify-content: center; z-index: 999999; backdrop-filter: blur(10px); background: rgba(5, 7, 15, 0.85);">
+    <div class="sos-sheet-container" style="width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; background: linear-gradient(180deg, #1A1E29 0%, #0F121C 100%); border-top-left-radius: 28px; border-top-right-radius: 28px; border-top: 2.5px solid #EF4444; box-shadow: 0 -10px 40px rgba(239, 68, 68, 0.35); padding: 20px 18px 28px 18px; color: #FFF; animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+      
+      <!-- Sheet Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="sos-pulse-badge">
+            <span style="font-size: 20px;">🚨</span>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 17.5px; font-weight: 900; color: #FFF; letter-spacing: 0.3px;">CENTRO DE AYUDAS S.O.S</h3>
+            <p style="margin: 2px 0 0 0; font-size: 11.5px; color: #FCA5A5;">Auxilio vial 24H, cauchera y números oficiales de emergencia</p>
+          </div>
+        </div>
+        <button type="button" onclick="MarketplaceApp.closeSosMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #CBD5E1; border-radius: 50%; width: 32px; height: 32px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+
+      <!-- Bubble Grid of Emergency Services -->
+      <div class="sos-bubbles-grid" style="display: flex; flex-direction: column; gap: 12px;">
+        
+        <!-- Bubble 1: Cauchera Móvil 24H (Montallantas El Cachu) -->
+        <div class="sos-bubble-card bubble-cauchera-main" onclick="MarketplaceApp.openCaucheraModal()" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.05) 100%); border: 1.5px solid #EF4444; border-radius: 20px; padding: 14px 16px; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 18px rgba(239, 68, 68, 0.2);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 44px; height: 44px; border-radius: 14px; background: #EF4444; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 0 14px rgba(239, 68, 68, 0.5);">
+                🛞
+              </div>
+              <div>
+                <h4 style="margin: 0; font-size: 15px; font-weight: 900; color: #FFF; display: flex; align-items: center; gap: 6px;">
+                  Cauchera Móvil 24H <span style="font-size: 10px; background: #EF4444; color: #FFF; padding: 2px 7px; border-radius: 10px; font-weight: 900;">DOMICILIOS</span>
+                </h4>
+                <div style="font-size: 12px; color: #FCD34D; font-weight: 800; margin-top: 1px;">MONTALLANTAS EL CACHU</div>
+              </div>
+            </div>
+            <span style="background: #EF4444; color: #FFF; font-size: 12px; font-weight: 900; padding: 6px 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);">
+              Solicitar ➔
+            </span>
+          </div>
+          <p style="margin: 0; font-size: 11.5px; color: #E2E8F0; line-height: 1.4;">
+            Despinche a domicilio, parches fríos y vulcanizados para motos, carros particulares y carga pesada las 24 horas del día.
+          </p>
+        </div>
+
+        <!-- Subgrid: Emergencias Venezuela & Colombia -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <!-- Bubble 2: Directorio Venezuela -->
+          <div class="sos-bubble-card" onclick="MarketplaceApp.openEmergencyNumbersModal('venezuela')" style="background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(59, 130, 246, 0.4); border-radius: 18px; padding: 12px; cursor: pointer; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <span style="font-size: 10.5px; background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.4); padding: 1px 7px; border-radius: 8px; font-weight: 800;">🇻🇪 VENEZUELA</span>
+              <span style="font-size: 18px;">🚨</span>
+            </div>
+            <div style="font-size: 22px; font-weight: 900; color: #FFF; margin-bottom: 2px;">911</div>
+            <div style="font-size: 12px; font-weight: 800; color: #E2E8F0;">Emergencias VEN</div>
+            <div style="font-size: 10.5px; color: #94A3B8; margin-top: 2px;">Bomberos, PoliTáchira, Protección Civil y Hospital</div>
+            <div style="margin-top: 8px; font-size: 11px; font-weight: 800; color: #38BDF8; display: flex; align-items: center; gap: 2px;">
+              Ver Números ➔
+            </div>
+          </div>
+
+          <!-- Bubble 3: Directorio Colombia -->
+          <div class="sos-bubble-card" onclick="MarketplaceApp.openEmergencyNumbersModal('colombia')" style="background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: 18px; padding: 12px; cursor: pointer; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <span style="font-size: 10.5px; background: rgba(245, 158, 11, 0.2); color: #FCD34D; border: 1px solid rgba(245, 158, 11, 0.4); padding: 1px 7px; border-radius: 8px; font-weight: 800;">🇨🇴 COLOMBIA</span>
+              <span style="font-size: 18px;">🚓</span>
+            </div>
+            <div style="font-size: 22px; font-weight: 900; color: #FFF; margin-bottom: 2px;">123</div>
+            <div style="font-size: 12px; font-weight: 800; color: #E2E8F0;">Líneas Cúcuta</div>
+            <div style="font-size: 10.5px; color: #94A3B8; margin-top: 2px;">Policía, Bomberos 119, Cruz Roja y Tránsito #767</div>
+            <div style="margin-top: 8px; font-size: 11px; font-weight: 800; color: #FCD34D; display: flex; align-items: center; gap: 2px;">
+              Ver Números ➔
+            </div>
+          </div>
+        </div>
+
+        <!-- Bubble 4: Quedaste a Pie / Moto Taxi SOS -->
+        <div class="sos-bubble-card" onclick="MarketplaceApp.closeSosMenu(); MarketplaceApp.openRideModal();" style="background: rgba(255, 107, 0, 0.08); border: 1.5px solid rgba(255, 107, 0, 0.35); border-radius: 18px; padding: 12px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 26px;">🛵</span>
+            <div>
+              <div style="font-size: 13.5px; font-weight: 900; color: #FFF;">¿Quedaste varado o a pie?</div>
+              <div style="font-size: 11.5px; color: #CBD5E1;">Pide una Moto Taxi o Auto con GPS en minutos</div>
+            </div>
+          </div>
+          <span style="font-size: 11.5px; font-weight: 900; color: #FF6B00; background: rgba(255, 107, 0, 0.15); padding: 5px 10px; border-radius: 10px; white-space: nowrap;">
+            Pedir Móvil ➔
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Quick Emergency Calling Row (Solo números de emergencia) -->
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.12);">
+        <div style="font-size: 11px; font-weight: 800; color: #94A3B8; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">
+          Líneas de Emergencia Directas
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <a href="tel:911" class="btn-quick-sos-dial" style="background: rgba(239, 68, 68, 0.2); border: 1.5px solid #EF4444; color: #FCA5A5; flex: 1; text-align: center; padding: 11px 10px; border-radius: 14px; text-decoration: none; font-size: 12.5px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);">
+            🚨 911 (VEN)
+          </a>
+          <a href="tel:123" class="btn-quick-sos-dial" style="background: rgba(59, 130, 246, 0.2); border: 1.5px solid #3B82F6; color: #93C5FD; flex: 1; text-align: center; padding: 11px 10px; border-radius: 14px; text-decoration: none; font-size: 12.5px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);">
+            🚓 123 (COL)
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: DIRECTORIO DE NÚMEROS DE EMERGENCIA (VEN & COL)
+       ======================================================== -->
+  <div id="emergency-numbers-modal" class="modal-overlay" onclick="if(event.target === this) MarketplaceApp.closeEmergencyNumbersModal();" style="display: none; z-index: 999999; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+    <div class="modal-content" style="max-width: 480px; width: 94%; max-height: 90vh; overflow-y: auto; background: #141824; border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 24px; padding: 20px 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); color: #FFF; position: relative;">
+      
+      <!-- Close Button -->
+      <button type="button" class="btn-close" onclick="MarketplaceApp.closeEmergencyNumbersModal()" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.08); border: none; color: #FFF; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: 800;">✕</button>
+
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 16px;">
+        <span style="font-size: 36px; display: block; margin-bottom: 4px;">🚨</span>
+        <h3 style="font-size: 18px; font-weight: 900; margin: 0 0 4px 0; color: #FFF;">Líneas Oficiales de Emergencia</h3>
+        <p style="font-size: 12px; color: #94A3B8; margin: 0;">Presiona cualquier número para llamar directamente desde tu teléfono</p>
+      </div>
+
+      <!-- Country Selector Tabs (Venezuela / Colombia) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 14px;">
+        <button type="button" id="tab-btn-emergency-ve" onclick="MarketplaceApp.switchEmergencyCountry('venezuela')" class="btn-filter-pill active" style="padding: 10px; font-size: 12.5px; font-weight: 800; border-radius: 11px; border: none; cursor: pointer;">
+          🇻🇪 Venezuela (Táchira)
+        </button>
+        <button type="button" id="tab-btn-emergency-co" onclick="MarketplaceApp.switchEmergencyCountry('colombia')" class="btn-filter-pill" style="padding: 10px; font-size: 12.5px; font-weight: 800; border-radius: 11px; border: none; cursor: pointer;">
+          🇨🇴 Colombia (Cúcuta)
+        </button>
+      </div>
+
+      <!-- Country 1: Venezuela -->
+      <div id="emergency-country-venezuela" style="display: flex; flex-direction: column; gap: 10px;">
+        
+        <div class="emergency-number-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #F87171;">CENTRAL NACIONAL UNIFICADA</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">🚨 Emergencias Venezuela (911)</div>
+            <div style="font-size: 11px; color: #CBD5E1;">Atención integral inmediata</div>
+          </div>
+          <a href="tel:911" class="btn-primary" style="background: #EF4444; color: #FFF; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+            📞 Llamar 911
+          </a>
+        </div>
+
+        <div class="emergency-number-card" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #F59E0B;">SAN ANTONIO DEL TÁCHIRA</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">🚒 Bomberos San Antonio</div>
+            <div style="font-size: 11px; color: #CBD5E1;">0276-7712300 / 0800-BOMBERO</div>
+          </div>
+          <a href="tel:02767712300" class="btn-primary" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #F59E0B; color: #FCD34D; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none;">
+            📞 Llamar
+          </a>
+        </div>
+
+        <div class="emergency-number-card" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #38BDF8;">ESTADO TÁCHIRA</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">🛡️ Protección Civil Táchira</div>
+            <div style="font-size: 11px; color: #CBD5E1;">0800-7248224 / 0276-3532322</div>
+          </div>
+          <a href="tel:08007248224" class="btn-primary" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38BDF8; color: #7DD3FC; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none;">
+            📞 Llamar
+          </a>
+        </div>
+
+        <div class="emergency-number-card" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #34D399;">SEGURIDAD CIUDADANA</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">👮 Policía del Estado / PNB</div>
+            <div style="font-size: 11px; color: #CBD5E1;">0276-7711414</div>
+          </div>
+          <a href="tel:02767711414" class="btn-primary" style="background: rgba(52, 211, 153, 0.2); border: 1px solid #34D399; color: #6EE7B7; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none;">
+            📞 Llamar
+          </a>
+        </div>
+
+        <div class="emergency-number-card" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #F43F5E;">SALUD & AMBULANCIAS</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">🏥 Hospital Dr. Samuel Darío Maldonado</div>
+            <div style="font-size: 11px; color: #CBD5E1;">0276-7711311 (San Antonio)</div>
+          </div>
+          <a href="tel:02767711311" class="btn-primary" style="background: rgba(244, 63, 94, 0.2); border: 1px solid #F43F5E; color: #FDA4AF; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none;">
+            📞 Llamar
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Country 2: Colombia -->
+      <div id="emergency-country-colombia" style="display: none; flex-direction: column; gap: 10px;">
+        
+        <div class="emergency-number-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #60A5FA;">LÍNEA NACIONAL ÚNICA</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">🚓 Policía Nacional de Colombia (123)</div>
+            <div style="font-size: 11px; color: #CBD5E1;">Emergencias generales</div>
+          </div>
+          <a href="tel:123" class="btn-primary" style="background: #3B82F6; color: #FFF; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none;">
+            📞 Llamar 123
+          </a>
+        </div>
+
+        <div class="emergency-number-card" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #EF4444;">NORTE DE SANTANDER</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">🚒 Bomberos Cúcuta (119)</div>
+            <div style="font-size: 11px; color: #CBD5E1;">037-5712222 / 119</div>
+          </div>
+          <a href="tel:119" class="btn-primary" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #EF4444; color: #FCA5A5; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none;">
+            📞 Llamar 119
+          </a>
+        </div>
+
+        <div class="emergency-number-card" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #10B981;">SALUD & AMBULANCIAS</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">🚑 Cruz Roja & CRUE (132 / 125)</div>
+            <div style="font-size: 11px; color: #CBD5E1;">Atención prehospitalaria</div>
+          </div>
+          <a href="tel:132" class="btn-primary" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981; color: #6EE7B7; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none;">
+            📞 Llamar 132
+          </a>
+        </div>
+
+        <div class="emergency-number-card" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #F59E0B;">VÍAS & CARRETERAS</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">🛣️ Policía de Tránsito (#767)</div>
+            <div style="font-size: 11px; color: #CBD5E1;">Auxilio vial en carreteras de Colombia</div>
+          </div>
+          <a href="tel:#767" class="btn-primary" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #F59E0B; color: #FCD34D; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none;">
+            📞 #767
+          </a>
+        </div>
+
+        <div class="emergency-number-card" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #C084FC;">SEGURIDAD & ANTIEXTORSIÓN</div>
+            <div style="font-size: 14px; font-weight: 900; color: #FFF;">🛡️ GAULA Policía (165)</div>
+            <div style="font-size: 11px; color: #CBD5E1;">Línea directa antiextorsión</div>
+          </div>
+          <a href="tel:165" class="btn-primary" style="background: rgba(192, 132, 252, 0.2); border: 1px solid #C084FC; color: #E9D5FF; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; text-decoration: none;">
+            📞 165
+          </a>
+        </div>
+
+      </div>
+
+      <button type="button" onclick="MarketplaceApp.closeEmergencyNumbersModal()" style="width: 100%; background: transparent; color: #94A3B8; border: none; padding: 12px 8px 4px 8px; font-size: 12px; cursor: pointer; margin-top: 8px;">
+        Cerrar Directorio
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: CAUCHERA MÓVIL 24H (MONTALLANTAS EL CACHU)
+       ======================================================== -->
+  <div id="cauchera-modal" class="modal-overlay" onclick="if(event.target === this) MarketplaceApp.closeCaucheraModal();" style="display: none; z-index: 999999; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+    <div class="modal-content cauchera-modal-content" style="max-width: 490px; width: 94%; max-height: 90vh; overflow-y: auto; background: #161A26; border: 2px solid #EF4444; border-radius: 24px; padding: 20px 18px; box-shadow: 0 20px 60px rgba(239, 68, 68, 0.4); color: #FFF; position: relative;">
+      
+      <!-- Close Button -->
+      <button type="button" class="btn-close" onclick="MarketplaceApp.closeCaucheraModal()" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.08); border: none; color: #FFF; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: 800;">✕</button>
+
+      <!-- Banner Header -->
+      <div style="background: linear-gradient(135deg, #B91C1C 0%, #7F1D1D 100%); border-radius: 18px; padding: 16px; text-align: center; margin-bottom: 16px; border: 1px solid rgba(239, 68, 68, 0.5); box-shadow: 0 4px 16px rgba(185, 28, 28, 0.4);">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px;">
+          <span style="font-size: 26px;">🛞</span>
+          <h3 style="font-size: 19px; font-weight: 900; color: #FFF; margin: 0; letter-spacing: 0.5px;">MONTALLANTAS EL CACHU</h3>
+        </div>
+        <div style="font-size: 12px; font-weight: 900; color: #FCD34D; letter-spacing: 0.5px;">
+          ⚡ SERVICIO LAS 24 HORAS · DOMICILIOS EN EL LUGAR ⚡
+        </div>
+        <div style="font-size: 11px; color: #E2E8F0; margin-top: 4px;">
+          Reparación todo tipo de llantas · Vulcanización · Parches fríos y calientes
+        </div>
+      </div>
+
+      <!-- Dynamic Night Surcharge Banner -->
+      <div id="cauchera-night-rate-banner" style="margin-bottom: 14px; border-radius: 12px; padding: 8px 12px; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: space-between;">
+        <!-- Filled dynamically by JavaScript -->
+      </div>
+
+      <!-- Form Container -->
+      <form id="cauchera-request-form" onsubmit="event.preventDefault(); MarketplaceApp.submitCaucheraRequest();">
+        
+        <!-- Step 1: Vehicle Type Selector -->
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 12px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 8px;">
+            1️⃣ ¿Qué vehículo necesita auxilio? *
+          </label>
+          <div class="cauchera-vehicle-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+            
+            <div class="cauchera-v-card active" id="cauchera-v-moto" onclick="MarketplaceApp.selectCaucheraVehicle('moto')">
+              <span class="v-emoji" style="font-size: 24px;">🛵</span>
+              <span class="v-title" style="font-size: 11.5px; font-weight: 800; display: block;">Moto</span>
+              <span class="v-rate" style="font-size: 10px; color: #34D399; font-weight: 800;">$10.000</span>
+            </div>
+
+            <div class="cauchera-v-card" id="cauchera-v-carro" onclick="MarketplaceApp.selectCaucheraVehicle('carro')">
+              <span class="v-emoji" style="font-size: 24px;">🚗</span>
+              <span class="v-title" style="font-size: 11.5px; font-weight: 800; display: block;">Carro</span>
+              <span class="v-rate" style="font-size: 10px; color: #34D399; font-weight: 800;">$15.000</span>
+            </div>
+
+            <div class="cauchera-v-card" id="cauchera-v-camioneta" onclick="MarketplaceApp.selectCaucheraVehicle('camioneta')">
+              <span class="v-emoji" style="font-size: 24px;">🚙</span>
+              <span class="v-title" style="font-size: 11.5px; font-weight: 800; display: block;">4x4</span>
+              <span class="v-rate" style="font-size: 10px; color: #34D399; font-weight: 800;">$20.000</span>
+            </div>
+
+            <div class="cauchera-v-card" id="cauchera-v-camion" onclick="MarketplaceApp.selectCaucheraVehicle('camion')">
+              <span class="v-emoji" style="font-size: 24px;">🚚</span>
+              <span class="v-title" style="font-size: 11.5px; font-weight: 800; display: block;">Camión</span>
+              <span class="v-rate" style="font-size: 10px; color: #34D399; font-weight: 800;">$30.000</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Step 2: Repair Service Type -->
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 12px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 8px;">
+            2️⃣ Tipo de Reparación / Avería *
+          </label>
+          <div class="cauchera-service-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            
+            <div class="cauchera-s-card active" id="cauchera-s-frio" onclick="MarketplaceApp.selectCaucheraService('frio')">
+              <div style="font-weight: 800; font-size: 12.5px; color: #FFF;">❄️ Parche Frío</div>
+              <div style="font-size: 10.5px; color: #94A3B8;">Reparación estándar rápida</div>
+              <div style="font-size: 11px; font-weight: 800; color: #34D399; margin-top: 2px;">Incluido base</div>
+            </div>
+
+            <div class="cauchera-s-card" id="cauchera-s-caliente" onclick="MarketplaceApp.selectCaucheraService('caliente')">
+              <div style="font-weight: 800; font-size: 12.5px; color: #FFF;">🔥 Vulcanizado</div>
+              <div style="font-size: 10.5px; color: #94A3B8;">Parche caliente térmico</div>
+              <div style="font-size: 11px; font-weight: 800; color: #FCD34D; margin-top: 2px;">+ $5.000 COP</div>
+            </div>
+
+            <div class="cauchera-s-card" id="cauchera-s-aire" onclick="MarketplaceApp.selectCaucheraService('aire')">
+              <div style="font-weight: 800; font-size: 12.5px; color: #FFF;">💨 Carga de Aire</div>
+              <div style="font-size: 10.5px; color: #94A3B8;">Calibración y revisión</div>
+              <div style="font-size: 11px; font-weight: 800; color: #FCD34D; margin-top: 2px;">+ $2.000 COP</div>
+            </div>
+
+            <div class="cauchera-s-card" id="cauchera-s-camara" onclick="MarketplaceApp.selectCaucheraService('camara')">
+              <div style="font-weight: 800; font-size: 12.5px; color: #FFF;">🔩 Con Neumático</div>
+              <div style="font-size: 10.5px; color: #94A3B8;">Reparación de cámara</div>
+              <div style="font-size: 11px; font-weight: 800; color: #FCD34D; margin-top: 2px;">+ $3.000 COP</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Step 3: Location / GPS Detection -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <label style="font-size: 12px; font-weight: 800; color: #EF4444; display: flex; align-items: center; gap: 4px;">
+              <span>📍</span> 3️⃣ ¿Dónde estás varado? *
+            </label>
+            <button type="button" onclick="MarketplaceApp.captureCaucheraGps()" style="background: rgba(239, 68, 68, 0.2); color: #FCA5A5; border: 1px solid #EF4444; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+              <span>📡</span> Capturar mi GPS
+            </button>
+          </div>
+          <input type="text" id="cauchera-location-input" required placeholder="Obteniendo coordenadas GPS..." style="width: 100%; padding: 9px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12.5px; box-sizing: border-box;">
+          
+          <div style="margin-top: 8px;">
+            <input type="text" id="cauchera-reference-input" required placeholder="Punto de referencia exacto (ej. Frente a la estación de servicio, calle 3...)" style="width: 100%; padding: 8px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12px; box-sizing: border-box;">
+          </div>
+          
+          <div id="cauchera-gps-coords-badge" style="font-size: 10.5px; color: #6EE7B7; margin-top: 6px; display: flex; align-items: center; gap: 4px;">
+            <span>📡 GPS: </span><span id="cauchera-gps-coords-text">Esperando captura de satélite...</span>
+          </div>
+        </div>
+
+        <!-- Step 4: Customer Details -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+          <div>
+            <label style="font-size: 11px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 3px;">👤 Tu Nombre *</label>
+            <input type="text" id="cauchera-customer-name" required placeholder="Ej. Carlos Mendoza" style="width: 100%; padding: 8px 10px; border-radius: 9px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12px; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 3px;">📱 Tu WhatsApp *</label>
+            <input type="tel" id="cauchera-customer-phone" required placeholder="Ej. 0414... / 320..." style="width: 100%; padding: 8px 10px; border-radius: 9px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12px; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <!-- Price Summary Breakdown -->
+        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 12px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: #CBD5E1; margin-bottom: 4px;">
+            <span>Tarifa Base Reparación:</span>
+            <span id="cauchera-calc-base" style="font-weight: 800; color: #FFF;">$10.000 COP</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: #CBD5E1; margin-bottom: 4px;">
+            <span>Tipo de Parche / Trabajo:</span>
+            <span id="cauchera-calc-service" style="font-weight: 800; color: #FFF;">$0 COP</span>
+          </div>
+          <div id="cauchera-night-row" style="display: flex; justify-content: space-between; font-size: 12px; color: #C084FC; margin-bottom: 4px;">
+            <span>Recargo Nocturno 24H:</span>
+            <span id="cauchera-calc-night" style="font-weight: 800;">$0 COP</span>
+          </div>
+          <div style="border-top: 1px solid rgba(255,255,255,0.12); padding-top: 6px; margin-top: 4px; display: flex; justify-content: space-between; font-size: 14px; font-weight: 900;">
+            <span style="color: #FFF;">TOTAL ESTIMADO:</span>
+            <span id="cauchera-calc-total" style="color: #10B981; font-size: 16px;">$10.000 COP</span>
+          </div>
+        </div>
+
+        <!-- Submit to WhatsApp Button -->
+        <button type="submit" id="btn-submit-cauchera-wa" style="width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: #FFF; border: none; padding: 14px; border-radius: 14px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 18px rgba(37, 211, 102, 0.4); touch-action: manipulation; transition: transform 0.2s;">
+          <span>💬</span> <span id="btn-submit-cauchera-text">Solicitar Auxilio por WhatsApp ($10.000 COP)</span>
+        </button>
+
+        <!-- Direct Phone Call Backup -->
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+          <a href="tel:+584245516340" style="flex: 1; background: rgba(239, 68, 68, 0.15); border: 1px solid #EF4444; color: #FCA5A5; padding: 8px; border-radius: 10px; text-decoration: none; font-size: 11.5px; font-weight: 800; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            📞 Llamar (+58 424 5516340)
+          </a>
+          <a href="tel:3004113009" style="flex: 1; background: rgba(59, 130, 246, 0.15); border: 1px solid #3B82F6; color: #93C5FD; padding: 8px; border-radius: 10px; text-decoration: none; font-size: 11.5px; font-weight: 800; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            📞 Línea Col (300 4113009)
+          </a>
+        </div>
+
+        <button type="button" onclick="MarketplaceApp.closeCaucheraModal()" style="width: 100%; background: transparent; color: #94A3B8; border: none; padding: 10px 8px 4px 8px; font-size: 12px; cursor: pointer; margin-top: 4px;">
+          Cancelar
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div id="toast" class="toast hidden">Mensaje de notificación</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/supabase-helper.js?v=217"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="/js/qrcode.min.js?v=225"></script>
-  <script src="/js/sound.js?v=217"></script>
-  <script src="/js/marketplace.js?v=225"></script>
+  <script src="/js/qrcode.min.js?v=231"></script>
+  <script src="/js/sound.js?v=231"></script>
+  <script src="/js/marketplace.js?v=231"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=217').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=231').then((reg) => {
           reg.update();
         }).catch(() => {});
       });

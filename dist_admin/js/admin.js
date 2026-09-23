@@ -4264,9 +4264,9 @@ class AdminController {
   }
 
   playOrderNotification(order) {
-    // 1. Play persistent scandalous audio alarm for 20 seconds
+    // 1. Play persistent scandalous audio alarm & continuous vibration loop for up to 120 seconds
     if (typeof Sound !== 'undefined') {
-      Sound.startPersistentOrderAlarm(20);
+      Sound.startPersistentOrderAlarm(120);
     }
 
     const isCauchera = this.isCaucheraOrder(order);

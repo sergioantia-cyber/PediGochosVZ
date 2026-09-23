@@ -86,6 +86,14 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         startBackgroundOrderService();
+
+        // Silence ringing alarm and continuous background vibration when user opens the app
+        try {
+            Intent stopIntent = new Intent(this, OrderNotificationService.class);
+            stopIntent.setAction(OrderNotificationService.ACTION_STOP_ALARM);
+            startService(stopIntent);
+        } catch (Exception ignored) {}
+
         handleIncomingNotificationIntent(getIntent());
     }
 

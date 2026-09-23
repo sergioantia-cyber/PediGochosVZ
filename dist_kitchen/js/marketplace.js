@@ -29,6 +29,7 @@
 const CATEGORY_EMOJIS = {
   comidas: ['🍔', '🍕', '🌭', '🥤', '🍲', '🌯', '🫓', '🌽', '🍞', '🥖', '🍣', '🌮', '🍜', '🍰', '☕'],
   farmacias: ['💊', '🩹', '🧪', '🧼', '🧴', '🩺'],
+  servicios: ['🛵', '🛞', '🚗', '🚕', '🔧', '🚨', '⛽'],
   mercados: ['🛒', '🍎', '🥛', '🍞', '🥩', '🧀', '🍌'],
   ferreterias: ['🛠️', '🔨', '🔩', '🔧', '🪚', '🧰', '📐']
 };
@@ -36,8 +37,9 @@ const CATEGORY_EMOJIS = {
 const DEFAULT_IMAGES = {
   comidas: '/images/burger_royale.jpg',
   farmacias: '/images/vitamina_c.jpg',
+  servicios: '/images/servicios.jpg',
   mercados: '/images/pack_frutas.jpg',
-  ferreterias: '/images/pack_frutas.jpg' // Falls back gracefully
+  ferreterias: '/images/ferreteria.jpg'
 };
 
 class MarketplaceController {
@@ -174,6 +176,9 @@ class MarketplaceController {
       }
     });
 
+    // Initialize floating bubbles (visible on home) and header SOS (hidden on home)
+    this.updateFloatingAndHeaderSos(false);
+
     this.renderEstablishments();
     this.updateCartBadge();
     await this.checkSupabaseSession();
@@ -182,6 +187,8 @@ class MarketplaceController {
     this.initPushNotifications();
     this.initOfflineSync();
     this.checkFirstTimeWelcome();
+    this.checkRidePromoVisibility();
+    this.startActiveOrdersPolling();
 
     // Auto-open store if scanned via QR or visited via direct link
     if (storeParam && Array.isArray(this.establishments) && this.establishments.length > 0) {
@@ -255,13 +262,15 @@ class MarketplaceController {
           }
           if (data.type === 'ORDER_UPDATED' && data.order) {
             const currentOrders = this.getUserOrdersHistory();
-            const exists = currentOrders.some(o => String(o.id) === String(data.order.id));
-            if (exists) {
+            const existingOrder = currentOrders.find(o => String(o.id) === String(data.order.id));
+            if (existingOrder) {
+              const oldStatus = existingOrder.status;
               this.saveUserOrderToHistory(data.order);
               const modal = document.getElementById('user-orders-modal');
               if (modal && modal.classList.contains('active')) {
                 this.renderUserOrdersList();
               }
+              this.handleCustomerOrderStatusUpdate(data.order, oldStatus);
             }
           }
         } catch (e) {
@@ -526,7 +535,35 @@ class MarketplaceController {
       }
     });
 
+    // Category selected -> Hide floating bubbles (Services and SOS) and show header SOS button
+    this.updateFloatingAndHeaderSos(true);
+
     this.renderEstablishments();
+  }
+
+  updateFloatingAndHeaderSos(isInSubCategoryOrStore) {
+    const floatingContainer = document.querySelector('.floating-left-actions-container');
+    const headerSosBtn = document.getElementById('header-sos-btn');
+
+    if (isInSubCategoryOrStore) {
+      if (floatingContainer) {
+        floatingContainer.classList.add('hidden');
+        floatingContainer.style.setProperty('display', 'none', 'important');
+      }
+      if (headerSosBtn) {
+        headerSosBtn.classList.remove('hidden');
+        headerSosBtn.style.removeProperty('display');
+      }
+    } else {
+      if (floatingContainer) {
+        floatingContainer.classList.remove('hidden');
+        floatingContainer.style.removeProperty('display');
+      }
+      if (headerSosBtn) {
+        headerSosBtn.classList.add('hidden');
+        headerSosBtn.style.setProperty('display', 'none', 'important');
+      }
+    }
   }
 
   showFoodCategoriesGrid() {
@@ -562,6 +599,9 @@ class MarketplaceController {
     document.documentElement.style.setProperty('--primary', '#FF5E3A');
     document.documentElement.style.setProperty('--primary-hover', '#E04A27');
     
+    // Back to root home -> Show floating bubbles and hide header SOS button
+    this.updateFloatingAndHeaderSos(false);
+
     this.renderEstablishments();
     this.setActiveMobileTab('home');
     this.closeAllModals();
@@ -596,6 +636,9 @@ class MarketplaceController {
     if (pushState) {
       window.history.pushState({ view: 'establishment', estId: estId }, '');
     }
+
+    // Inside establishment -> Hide floating bubbles and show header SOS button
+    this.updateFloatingAndHeaderSos(true);
 
     // Apply custom accent theme color
     if (est.themeColor) {
@@ -643,6 +686,7 @@ class MarketplaceController {
     const categoryEmojis = {
       comidas: '🍔 Comida',
       farmacias: '💊 Farmacia',
+      servicios: '🛵 Servicio',
       mercados: '🛒 Mercado',
       ferreterias: '🛠️ Ferretería'
     };
@@ -866,6 +910,102 @@ class MarketplaceController {
     const titleEl = document.getElementById('establishments-title');
     if (titleEl) titleEl.innerHTML = displayTitle;
 
+    // Special dedicated rendering for Servicios category (Cauchera 24/7 & PediGochos Móvil)
+    if (this.currentCategory === 'servicios' && !filtered) {
+      const allRestHeader = document.getElementById('all-restaurants-header');
+      const allRestTitle = document.getElementById('all-restaurants-title-text');
+      if (allRestHeader) allRestHeader.style.display = 'block';
+      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (2)';
+
+      const promoSection = document.getElementById('daily-promotions-section');
+      if (promoSection) {
+        promoSection.style.display = 'none';
+        promoSection.classList.add('hidden');
+      }
+
+      const container = document.getElementById('food-type-filters-container');
+      if (container) container.style.display = 'none';
+
+      const featSection = document.getElementById('featured-carousel-section');
+      if (featSection) {
+        featSection.style.display = 'none';
+        featSection.classList.add('hidden');
+      }
+
+      grid.innerHTML = `
+        <!-- Cauchera Móvil 24/7 -->
+        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openCaucheraModal()" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1.5px solid rgba(239, 68, 68, 0.45); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(239, 68, 68, 0.18); border: 2px solid #EF4444; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);">
+              🛞
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  Montallantas El Cachu
+                </h4>
+                <span style="background: #EF4444; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                  🔴 24/7 ACTIVO
+                </span>
+              </div>
+              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
+                Cauchera Móvil a Domicilio. Despinche y auxilio para motos, autos y camionetas con GPS.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 10px; font-weight: 800; color: #FCD34D; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 6px;">
+                  ⭐ 5.0 • Auxilio Vial Inmediato
+                </span>
+                <span style="font-size: 11px; font-weight: 900; color: #EF4444; background: rgba(239, 68, 68, 0.18); border: 1px solid #EF4444; padding: 3px 10px; border-radius: 10px;">
+                  Solicitar Auxilio ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PediGochos Móvil (Vehículos de Diferentes Gamas) -->
+        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openRideModal()" style="background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1.5px solid rgba(255, 107, 0, 0.45); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(255, 107, 0, 0.18); border: 2px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(255, 107, 0, 0.4);">
+              🛵
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  PediGochos Móvil
+                </h4>
+                <span style="background: #FF6B00; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                  ⚡ EN VIVO
+                </span>
+              </div>
+              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
+                Vehículos de diferentes gamas: <strong>Moto Taxi</strong>, <strong>Auto</strong> y <strong>Lujo</strong>. Tarifa automática por GPS.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 10px; font-weight: 800; color: #60A5FA; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 6px;">
+                  ⭐ 4.9 • Transporte Seguro
+                </span>
+                <span style="font-size: 11px; font-weight: 900; color: #FF6B00; background: rgba(255, 107, 0, 0.18); border: 1px solid #FF6B00; padding: 3px 10px; border-radius: 10px;">
+                  Pedir Móvil ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invite to Register Another Service -->
+        <div style="grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
+          <p style="font-size: 12px; color: #94A3B8; margin: 0 0 10px 0;">
+            ¿Ofreces un servicio técnico, grúa, cerrajería o profesional en San Antonio?
+          </p>
+          <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer;">
+            ➕ Solicitar Registro de Servicio
+          </button>
+        </div>
+      `;
+      return;
+    }
+
     // Get session seed for fair play rotation (Strictly exclude disabled establishments from ANY list)
     const baseList = filtered ? filtered.filter(e => !e.disabled) : this.establishments;
     const rawList = baseList.filter(e => {
@@ -924,6 +1064,7 @@ class MarketplaceController {
       const categoryEmoji = {
         'comidas': '🍔',
         'farmacias': '💊',
+        'servicios': '🛵',
         'mercados': '🛒',
         'ferreterias': '🛠️'
       }[this.currentCategory] || '🏪';
@@ -5857,16 +5998,361 @@ class MarketplaceController {
           navigator.serviceWorker.ready.then(registration => {
             registration.showNotification(title, {
               body: body,
-              icon: '/images/burger_royale.jpg',
+              icon: '/images/logo-pedigochos.png',
+              badge: '/images/logo-pedigochos.png',
               vibrate: [200, 100, 200]
             });
           });
         } else {
-          new Notification(title, { body: body, icon: '/images/burger_royale.jpg' });
+          new Notification(title, { body: body, icon: '/images/logo-pedigochos.png' });
         }
       } catch(e) {
         console.warn('Local push notification fallback:', e);
       }
+    }
+  }
+
+  // ========================================================
+  // CUSTOMER ORDER STATUS NOTIFICATIONS & RIDE PROMO LOGIC
+  // ========================================================
+
+  handleCustomerOrderStatusUpdate(order, previousStatus = null) {
+    if (!order) return;
+    const newStatus = String(order.status || '').trim();
+    if (!newStatus || newStatus === previousStatus) return;
+
+    console.log(`🔔 Customer order status transition: #${order.id} ${previousStatus || 'inicial'} -> ${newStatus}`);
+
+    const est = this.establishments.find(e => String(e.id) === String(order.establishmentId || order.establishment_id));
+    const estName = est ? est.name : (order.establishmentName || 'Restaurante');
+    const orderIdShort = String(order.id).slice(-4);
+
+    let title = '';
+    let body = '';
+    let icon = '🔔';
+    let statusClass = 'status-default';
+
+    switch (newStatus) {
+      case 'Preparando':
+      case 'Aceptado':
+        title = `👨‍🍳 ¡Pedido Aceptado! (#${orderIdShort})`;
+        body = `El restaurante ${estName} ha aceptado tu pedido y comenzó su preparación en cocina.`;
+        icon = '👨‍🍳';
+        statusClass = 'status-preparando';
+        // Show "¿Necesitas trasladarte?" promo notification banner
+        this.showRidePromoNotification();
+        break;
+
+      case 'Listo':
+        title = `📦 ¡Tu Pedido está Listo! (#${orderIdShort})`;
+        body = order.orderType === 'mesa'
+          ? `Tu pedido en ${estName} ya está servido en tu mesa. ¡Buen provecho!`
+          : `El pedido en ${estName} está empacado y listo para despacho o retiro.`;
+        icon = '📦';
+        statusClass = 'status-listo';
+        break;
+
+      case 'En Camino':
+        const driverName = order.driver && order.driver.name ? order.driver.name : null;
+        title = `🛵 ¡Tu Pedido va en Camino! (#${orderIdShort})`;
+        body = driverName
+          ? `${driverName} va en ruta hacia tu dirección con tu pedido de ${estName}.`
+          : `Tu domiciliario va en camino hacia tu dirección con tu pedido de ${estName}.`;
+        icon = '🛵';
+        statusClass = 'status-en-camino';
+        break;
+
+      case 'Entregado':
+      case 'completed':
+        title = `🎉 ¡Pedido Entregado! (#${orderIdShort})`;
+        body = `Tu pedido de ${estName} fue entregado con éxito. ¡Gracias por preferir PediGochos!`;
+        icon = '🎉';
+        statusClass = 'status-entregado';
+        this.checkRidePromoVisibility();
+        break;
+
+      case 'Cancelado':
+      case 'cancelled':
+        const reason = order.cancelReason ? ` (${order.cancelReason})` : '';
+        title = `⚠️ Pedido Cancelado (#${orderIdShort})`;
+        body = `Tu pedido en ${estName} fue cancelado${reason}.`;
+        icon = '⚠️';
+        statusClass = 'status-cancelado';
+        this.checkRidePromoVisibility();
+        break;
+
+      default:
+        title = `📋 Pedido Actualizado (#${orderIdShort})`;
+        body = `Tu pedido en ${estName} cambió a: ${newStatus}`;
+        icon = '📋';
+        statusClass = 'status-default';
+        break;
+    }
+
+    // 1. Play synthesized Web Audio chime
+    if (window.Sound && typeof window.Sound.playCustomerStatusChime === 'function') {
+      window.Sound.playCustomerStatusChime(newStatus);
+    } else if (window.Sound && typeof window.Sound.playBell === 'function') {
+      window.Sound.playBell();
+    }
+
+    // 2. Mobile haptic vibration
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        if (newStatus === 'En Camino') navigator.vibrate([100, 60, 100, 60, 200]);
+        else if (newStatus === 'Entregado') navigator.vibrate([100, 50, 100, 50, 250]);
+        else if (newStatus === 'Cancelado') navigator.vibrate([300, 100, 300]);
+        else navigator.vibrate([150, 80, 150]);
+      } catch (e) {}
+    }
+
+    // 3. Web Push / Native OS notification
+    this.sendPushNotification(title, body);
+
+    // 4. In-App Floating notification banner
+    this.showCustomerAlertBanner({
+      title,
+      body,
+      icon,
+      statusClass,
+      orderId: order.id
+    });
+  }
+
+  showCustomerAlertBanner({ title, body, icon, statusClass, orderId }) {
+    const banner = document.getElementById('customer-order-alert-banner');
+    if (!banner) return;
+
+    const iconEl = document.getElementById('banner-status-icon');
+    const titleEl = document.getElementById('banner-status-title');
+    const descEl = document.getElementById('banner-status-desc');
+    const timeEl = document.getElementById('banner-status-time');
+
+    if (iconEl) iconEl.innerText = icon || '🔔';
+    if (titleEl) titleEl.innerText = title;
+    if (descEl) descEl.innerText = body;
+    if (timeEl) timeEl.innerText = 'Ahora';
+
+    banner.className = `customer-order-banner show ${statusClass}`;
+    banner.style.display = 'flex';
+    banner.dataset.orderId = orderId;
+
+    if (this._customerAlertBannerTimeout) {
+      clearTimeout(this._customerAlertBannerTimeout);
+    }
+
+    // Auto-dismiss after 8.5 seconds
+    this._customerAlertBannerTimeout = setTimeout(() => {
+      this.dismissCustomerAlertBanner();
+    }, 8500);
+  }
+
+  dismissCustomerAlertBanner() {
+    const banner = document.getElementById('customer-order-alert-banner');
+    if (!banner) return;
+    banner.classList.remove('show');
+    setTimeout(() => {
+      if (!banner.classList.contains('show')) {
+        banner.style.display = 'none';
+      }
+    }, 420);
+  }
+
+  onCustomerAlertBannerClick(event) {
+    this.dismissCustomerAlertBanner();
+    this.openUserOrdersModal();
+  }
+
+  // Ride Promotion Card Visibility & Swipe to Dismiss Handlers
+  checkRidePromoVisibility() {
+    const card = document.getElementById('ride-promo-card');
+    if (!card) return;
+
+    if (sessionStorage.getItem('ride_promo_dismissed') === 'true') {
+      card.style.display = 'none';
+      return;
+    }
+
+    const orders = this.getUserOrdersHistory();
+    // Only display if merchant has accepted the order (Preparando, Aceptado, Listo, En Camino)
+    const hasAcceptedOrder = orders.some(o => {
+      const s = String(o.status || '').trim();
+      return s === 'Preparando' || s === 'Aceptado' || s === 'Listo' || s === 'En Camino';
+    });
+
+    if (hasAcceptedOrder) {
+      card.style.display = 'flex';
+      this.initRidePromoSwipe();
+    } else {
+      card.style.display = 'none';
+    }
+  }
+
+  showRidePromoNotification() {
+    sessionStorage.removeItem('ride_promo_dismissed');
+    const card = document.getElementById('ride-promo-card');
+    if (!card) return;
+
+    card.style.display = 'flex';
+    card.style.transform = 'translateX(0)';
+    card.style.opacity = '0';
+    card.style.transition = 'opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+    setTimeout(() => {
+      card.style.opacity = '1';
+    }, 20);
+    this.initRidePromoSwipe();
+  }
+
+  initRidePromoSwipe() {
+    const card = document.getElementById('ride-promo-card');
+    if (!card || this._ridePromoSwipeInitialized) return;
+
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let isSwiping = false;
+    let isHorizontal = null;
+    let isMouseDown = false;
+
+    const onStart = (clientX, clientY) => {
+      startX = clientX;
+      startY = clientY;
+      currentX = 0;
+      isSwiping = false;
+      isHorizontal = null;
+      card.style.transition = 'none';
+    };
+
+    const onMove = (clientX, clientY, e) => {
+      const deltaX = clientX - startX;
+      const deltaY = clientY - startY;
+
+      if (isHorizontal === null) {
+        if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+          isHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
+        }
+      }
+
+      if (isHorizontal) {
+        // Only allow sliding to the left
+        if (deltaX < 0) {
+          if (e && e.cancelable) e.preventDefault();
+          this._isRidePromoSwiping = true;
+          isSwiping = true;
+          currentX = deltaX;
+          card.style.transform = `translateX(${deltaX}px)`;
+          const opacity = Math.max(0, 1 - Math.abs(deltaX) / (card.offsetWidth * 0.75));
+          card.style.opacity = opacity;
+        } else {
+          // Resist swipe to the right
+          card.style.transform = `translateX(${deltaX * 0.15}px)`;
+        }
+      }
+    };
+
+    const onEnd = () => {
+      if (isSwiping && currentX < -65) {
+        // Disappear smoothly to the left
+        card.style.transition = 'transform 0.28s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.28s ease';
+        card.style.transform = 'translateX(-120%)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          card.style.display = 'none';
+          card.style.transform = '';
+          card.style.opacity = '';
+          sessionStorage.setItem('ride_promo_dismissed', 'true');
+          this._isRidePromoSwiping = false;
+        }, 300);
+      } else {
+        // Snap back
+        card.style.transition = 'transform 0.22s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.22s ease';
+        card.style.transform = 'translateX(0)';
+        card.style.opacity = '1';
+        setTimeout(() => {
+          this._isRidePromoSwiping = false;
+        }, 80);
+      }
+      isSwiping = false;
+    };
+
+    card.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length === 1) {
+        onStart(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    card.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches.length === 1) {
+        onMove(e.touches[0].clientX, e.touches[0].clientY, e);
+      }
+    }, { passive: false });
+
+    card.addEventListener('touchend', () => {
+      onEnd();
+    });
+
+    card.addEventListener('mousedown', (e) => {
+      isMouseDown = true;
+      onStart(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isMouseDown) return;
+      onMove(e.clientX, e.clientY, e);
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isMouseDown) {
+        isMouseDown = false;
+        onEnd();
+      }
+    });
+
+    this._ridePromoSwipeInitialized = true;
+  }
+
+  onRidePromoCardClick(event) {
+    if (this._isRidePromoSwiping) return;
+    this.openRideModal();
+  }
+
+  // Active Orders Polling Fallback
+  startActiveOrdersPolling() {
+    if (this._activeOrdersPollingInterval) return;
+    this._activeOrdersPollingInterval = setInterval(() => {
+      this.pollActiveUserOrders();
+    }, 9000);
+  }
+
+  async pollActiveUserOrders() {
+    const localOrders = this.getUserOrdersHistory();
+    const activeOrders = localOrders.filter(o => {
+      const s = String(o.status || '').trim();
+      return s !== 'Entregado' && s !== 'completed' && s !== 'Cancelado' && s !== 'cancelled';
+    });
+
+    if (activeOrders.length === 0) return;
+
+    try {
+      const res = await fetch('/api/orders');
+      if (!res.ok) return;
+      const serverOrders = await res.json();
+      if (!Array.isArray(serverOrders)) return;
+
+      activeOrders.forEach(localOrd => {
+        const fresh = serverOrders.find(s => String(s.id) === String(localOrd.id));
+        if (fresh && String(fresh.status).trim() !== String(localOrd.status).trim()) {
+          const oldStatus = localOrd.status;
+          this.saveUserOrderToHistory(fresh);
+          this.handleCustomerOrderStatusUpdate(fresh, oldStatus);
+          const modal = document.getElementById('user-orders-modal');
+          if (modal && modal.classList.contains('active')) {
+            this.renderUserOrdersList();
+          }
+        }
+      });
+    } catch (e) {
+      // silent
     }
   }
 
@@ -6555,6 +7041,7 @@ class MarketplaceController {
       if (catInput) {
         const catMap = {
           'farmacias': 'Farmacia / Medicamentos',
+          'servicios': 'Servicio Técnico / Auxilio',
           'mercados': 'Mercado / Víveres',
           'ferreterias': 'Ferretería / Herramientas',
           'comidas': 'Restaurante / Comidas'
@@ -6834,9 +7321,13 @@ class MarketplaceController {
   // RIDE HAILING (MOTO TAXI, AUTO, LUJO) LOGIC
   // ==========================================
 
-  openRideModal() {
+  openRideModal(vehicleType = null) {
     const modal = document.getElementById('ride-modal');
     if (!modal) return;
+
+    if (vehicleType) {
+      this.selectedVehicle = vehicleType;
+    }
 
     modal.style.display = 'flex';
     modal.classList.add('open');
@@ -7008,21 +7499,92 @@ class MarketplaceController {
   }
 
   onRideDestInput(val) {
+    const text = (val || '').trim();
     if (!this.rideDestination) {
       this.rideDestination = {};
     }
-    this.rideDestination.address = val;
-    if (!this.rideDestination.lat && this.rideOrigin && this.rideOrigin.lat) {
-      const estimatedDist = 2.5;
-      this.rideDistanceKm = estimatedDist;
-      this.calculateRideFares(estimatedDist);
+    this.rideDestination.address = text;
+
+    if (!text || text.length < 2) {
+      return;
     }
+
+    const norm = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    // 1. Comprehensive Local Landmarks & Sectors Recognition for San Antonio / Ureña / Frontera
+    const localPlaces = [
+      { keys: ['terminal', 'expreso', 'bus'], name: 'Terminal de Pasajeros', lat: 7.8180, lng: -72.4410 },
+      { keys: ['puente', 'bolivar', 'simon bolivar', 'frontera', 'aduana', 'seniat', 'migracion', 'la linea'], name: 'Puente Internacional Simón Bolívar', lat: 7.8285, lng: -72.4542 },
+      { keys: ['plaza bolivar', 'plaza', 'centro', 'alcaldia', 'banco', 'comercio'], name: 'Plaza Bolívar / Centro', lat: 7.8145, lng: -72.4455 },
+      { keys: ['hospital', 'cdi', 'ambulatorio', 'seguro', 'medico', 'clinica', 'salud'], name: 'Hospital Dr. Samuel Darío Maldonado', lat: 7.8120, lng: -72.4430 },
+      { keys: ['urena', 'pedro maria urena'], name: 'Ureña / Centro', lat: 7.9192, lng: -72.4468 },
+      { keys: ['tienditas', 'atanasio girardot'], name: 'Puente Atanasio Girardot (Tienditas)', lat: 7.8680, lng: -72.4560 },
+      { keys: ['aeropuerto', 'pista', 'avion'], name: 'Aeropuerto Juan Vicente Gómez', lat: 7.8398, lng: -72.4402 },
+      { keys: ['palotal'], name: 'Palotal', lat: 7.8020, lng: -72.4460 },
+      { keys: ['llano', 'el llano'], name: 'Barrio El Llano', lat: 7.8115, lng: -72.4490 },
+      { keys: ['peracal', 'alcabala'], name: 'Alcabala de Peracal', lat: 7.8290, lng: -72.4210 },
+      { keys: ['libertadores', '5 de julio', 'miranda', 'obrero'], name: 'Sector Libertadores / Obrero', lat: 7.8170, lng: -72.4480 },
+      { keys: ['cementerio'], name: 'Cementerio Municipal', lat: 7.8090, lng: -72.4415 }
+    ];
+
+    // Check street grid numbers: "calle 4", "carrera 6", etc.
+    const calleMatch = norm.match(/calle\s*(\d+)/i);
+    const carreraMatch = norm.match(/carrera\s*(\d+)/i);
+
+    const match = localPlaces.find(p => p.keys.some(k => norm.includes(k)));
+
+    if (match) {
+      this.setRideDestination(match.lat, match.lng, text, false);
+      return;
+    }
+
+    if (calleMatch || carreraMatch) {
+      const calleNum = calleMatch ? parseInt(calleMatch[1]) : 4;
+      const carreraNum = carreraMatch ? parseInt(carreraMatch[1]) : 6;
+      // San Antonio del Táchira street grid coordinate mapping
+      const baseLat = 7.8145 - ((calleNum - 4) * 0.0009);
+      const baseLng = -72.4455 + ((carreraNum - 6) * 0.0009);
+      this.setRideDestination(baseLat, baseLng, text, false);
+      return;
+    }
+
+    // 2. Debounced Online OpenStreetMap Nominatim Geocoding for anywhere else
+    clearTimeout(this._destGeocodeTimer);
+    this._destGeocodeTimer = setTimeout(() => {
+      if (!this.rideLeafMap) return;
+      const query = encodeURIComponent(text + ', San Antonio del Táchira, Venezuela');
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`)
+        .then(res => res.json())
+        .then(results => {
+          if (results && results.length > 0) {
+            const foundLat = parseFloat(results[0].lat);
+            const foundLng = parseFloat(results[0].lon);
+            if (!isNaN(foundLat) && !isNaN(foundLng)) {
+              this.setRideDestination(foundLat, foundLng, text, false);
+            }
+          } else {
+            // If not found online, offset gently from origin to visually mark destination on map
+            if (this.rideOrigin && this.rideOrigin.lat) {
+              const fallbackLat = this.rideOrigin.lat + 0.012;
+              const fallbackLng = this.rideOrigin.lng + 0.008;
+              this.setRideDestination(fallbackLat, fallbackLng, text, false);
+            }
+          }
+        })
+        .catch(() => {
+          if (this.rideOrigin && this.rideOrigin.lat) {
+            const fallbackLat = this.rideOrigin.lat + 0.012;
+            const fallbackLng = this.rideOrigin.lng + 0.008;
+            this.setRideDestination(fallbackLat, fallbackLng, text, false);
+          }
+        });
+    }, 450);
   }
 
-  setRideDestination(lat, lng, addressName) {
+  setRideDestination(lat, lng, addressName, updateInput = true) {
     this.rideDestination = { lat, lng, address: addressName };
     const destInp = document.getElementById('ride-dest-input');
-    if (destInp) destInp.value = addressName;
+    if (destInp && updateInput) destInp.value = addressName;
 
     if (this.rideLeafMap && typeof L !== 'undefined') {
       const destIcon = L.divIcon({
@@ -7041,7 +7603,7 @@ class MarketplaceController {
         this.rideDestMarker = L.marker([lat, lng], { icon: destIcon, draggable: true }).addTo(this.rideLeafMap);
         this.rideDestMarker.on('dragend', (e) => {
           const newPos = e.target.getLatLng();
-          this.setRideDestination(newPos.lat, newPos.lng, `Destino ajustado (${newPos.lat.toFixed(4)}, ${newPos.lng.toFixed(4)})`);
+          this.setRideDestination(newPos.lat, newPos.lng, `Destino ajustado (${newPos.lat.toFixed(4)}, ${newPos.lng.toFixed(4)})`, true);
         });
       }
       this.updateRideRoute();
@@ -7182,6 +7744,11 @@ class MarketplaceController {
     } catch (e) {}
 
     const vType = this.selectedVehicle || 'moto';
+    const vehicleNames = {
+      moto: 'Moto Taxi',
+      auto: 'Auto Estándar',
+      lujo: 'Auto de Lujo'
+    };
     const vehicleLabels = {
       moto: '🛵 *MOTO TAXI* (Rápido y económico)',
       auto: '🚗 *AUTO ESTÁNDAR* (Hasta 4 personas)',
@@ -7191,22 +7758,49 @@ class MarketplaceController {
     const fare = (this.rideFares && this.rideFares[vType]) ? this.rideFares[vType] : 4000;
     const formattedFare = `$${fare.toLocaleString('es-CO')} COP`;
 
-    const originLink = (this.rideOrigin && this.rideOrigin.lat && this.rideOrigin.lng)
-      ? `https://www.google.com/maps?q=${this.rideOrigin.lat},${this.rideOrigin.lng}`
-      : 'Ubicación aproximada';
+    // Guarantee destination coordinates and Google Maps GPS link
+    let destLat = this.rideDestination?.lat;
+    let destLng = this.rideDestination?.lng;
 
-    const destLink = (this.rideDestination && this.rideDestination.lat && this.rideDestination.lng)
-      ? `https://www.google.com/maps?q=${this.rideDestination.lat},${this.rideDestination.lng}`
-      : destAddress;
+    if (!destLat || !destLng) {
+      const valLower = (destAddress || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const landmarks = [
+        { keys: ['terminal'], lat: 7.8180, lng: -72.4410 },
+        { keys: ['puente', 'bolivar', 'simon', 'aduana'], lat: 7.8285, lng: -72.4542 },
+        { keys: ['plaza', 'centro', 'alcaldia'], lat: 7.8145, lng: -72.4455 },
+        { keys: ['urena', 'tienditas'], lat: 7.9192, lng: -72.4468 },
+        { keys: ['hospital', 'ambulatorio', 'cdi'], lat: 7.8120, lng: -72.4430 },
+        { keys: ['aeropuerto'], lat: 7.8398, lng: -72.4402 }
+      ];
+      const match = landmarks.find(l => l.keys.some(k => valLower.includes(k)));
+      if (match) {
+        destLat = match.lat;
+        destLng = match.lng;
+      } else if (this.rideOrigin && this.rideOrigin.lat) {
+        destLat = this.rideOrigin.lat + 0.012;
+        destLng = this.rideOrigin.lng + 0.008;
+      } else {
+        destLat = 7.8145;
+        destLng = -72.4455;
+      }
+      this.rideDestination = { lat: destLat, lng: destLng, address: destAddress };
+    }
+
+    const originLat = (this.rideOrigin && this.rideOrigin.lat) ? this.rideOrigin.lat : 7.8145;
+    const originLng = (this.rideOrigin && this.rideOrigin.lng) ? this.rideOrigin.lng : -72.4455;
+    const originLink = `https://www.google.com/maps?q=${originLat},${originLng}`;
+    const destLink = `https://www.google.com/maps?q=${destLat},${destLng}`;
+    const destCoordsStr = `${destLat.toFixed(5)}, ${destLng.toFixed(5)}`;
 
     const message = `🚖 *¡SOLICITUD DE VEHÍCULO - PEDIGOCHOS!* 🚖\n\n` +
       `👤 *Cliente:* ${customerName}\n` +
       `📱 *Teléfono:* ${customerPhone}\n` +
       `🛞 *Tipo de Servicio:* ${vehicleTitle}\n\n` +
       `🟢 *Punto de Recogida (Origen):*\n${originAddress}\n` +
-      (originLink.startsWith('http') ? `🔗 Ver en Mapa: ${originLink}\n\n` : `\n`) +
-      `🏁 *Destino:*\n${destAddress}\n` +
-      (destLink.startsWith('http') ? `🔗 Ver en Mapa: ${destLink}\n\n` : `\n`) +
+      `📍 *GPS Origen:* ${originLink}\n\n` +
+      `🏁 *Destino Solicitado:*\n${destAddress}\n` +
+      `📍 *GPS Destino:* ${destLink}\n` +
+      `🌐 *Coordenadas Destino:* (${destCoordsStr})\n\n` +
       `📏 *Distancia Estimada:* ${this.rideDistanceKm || 1} km\n` +
       `💰 *Tarifa Estimada:* ${formattedFare}\n` +
       (notes ? `📝 *Referencia del Encuentro:* ${notes}\n\n` : `\n`) +
@@ -7240,10 +7834,10 @@ class MarketplaceController {
           address: `${originAddress} ➡️ ${destAddress}`,
           origin: originAddress,
           destination: destAddress,
-          originLat: (this.rideOrigin && this.rideOrigin.lat) || null,
-          originLng: (this.rideOrigin && this.rideOrigin.lng) || null,
-          destLat: (this.rideDestination && this.rideDestination.lat) || null,
-          destLng: (this.rideDestination && this.rideDestination.lng) || null,
+          originLat: originLat,
+          originLng: originLng,
+          destLat: destLat,
+          destLng: destLng,
           distanceKm: this.rideDistanceKm || 1,
           notes: notes,
           serviceType: 'ride',
@@ -7273,6 +7867,454 @@ class MarketplaceController {
     window.open(waUrl, '_blank');
     this.showToast('🚀 Solicitud enviada por WhatsApp');
     this.closeRideModal();
+  }
+
+  // ========================================================
+  // SERVICES MENU MODAL METHODS
+  // ========================================================
+
+  toggleServicesMenu(force = null) {
+    const modal = document.getElementById('services-menu-modal');
+    if (!modal) return;
+    const isVisible = modal.classList.contains('open') || modal.style.display === 'flex';
+    const show = force !== null ? force : !isVisible;
+    if (show) {
+      this.closeSosMenu();
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.classList.add('open');
+      }, 10);
+    } else {
+      modal.classList.remove('open');
+      setTimeout(() => {
+        if (!modal.classList.contains('open')) {
+          modal.style.display = 'none';
+        }
+      }, 280);
+    }
+  }
+
+  closeServicesMenu() {
+    this.toggleServicesMenu(false);
+  }
+
+  toggleMovilidadAccordion() {
+    const subitems = document.getElementById('drawer-movilidad-subitems');
+    const arrow = document.getElementById('movilidad-accordion-arrow');
+    if (!subitems) return;
+    const isHidden = subitems.style.display === 'none';
+    subitems.style.display = isHidden ? 'flex' : 'none';
+    if (arrow) {
+      arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+    }
+  }
+
+  // ========================================================
+  // S.O.S EMERGENCY & 24H MOBILE CAUCHERA METHODS
+  // ========================================================
+
+  toggleSosMenu(force = null) {
+    const modal = document.getElementById('sos-menu-modal');
+    if (!modal) return;
+    const isVisible = modal.classList.contains('open') || modal.classList.contains('active') || (modal.style.display === 'flex' && modal.style.opacity !== '0');
+    const show = force !== null ? force : !isVisible;
+    if (show) {
+      this.closeServicesMenu();
+      modal.style.display = 'flex';
+      modal.classList.add('open', 'active');
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+      modal.style.pointerEvents = 'auto';
+    } else {
+      this.closeSosMenu();
+    }
+  }
+
+  closeSosMenu() {
+    const modal = document.getElementById('sos-menu-modal');
+    if (modal) {
+      modal.classList.remove('open', 'active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
+  }
+
+  openEmergencyNumbersModal(country = 'venezuela') {
+    this.closeSosMenu();
+    const modal = document.getElementById('emergency-numbers-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('open', 'active');
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+      modal.style.pointerEvents = 'auto';
+      this.switchEmergencyCountry(country);
+    }
+  }
+
+  closeEmergencyNumbersModal() {
+    const modal = document.getElementById('emergency-numbers-modal');
+    if (modal) {
+      modal.classList.remove('open', 'active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
+  }
+
+  switchEmergencyCountry(country) {
+    const tabVe = document.getElementById('tab-btn-emergency-ve');
+    const tabCo = document.getElementById('tab-btn-emergency-co');
+    const contVe = document.getElementById('emergency-country-venezuela');
+    const contCo = document.getElementById('emergency-country-colombia');
+
+    if (country === 'venezuela') {
+      if (tabVe) tabVe.classList.add('active');
+      if (tabCo) tabCo.classList.remove('active');
+      if (contVe) contVe.style.display = 'flex';
+      if (contCo) contCo.style.display = 'none';
+    } else {
+      if (tabCo) tabCo.classList.add('active');
+      if (tabVe) tabVe.classList.remove('active');
+      if (contCo) contCo.style.display = 'flex';
+      if (contVe) contVe.style.display = 'none';
+    }
+  }
+
+  openCaucheraModal() {
+    this.closeSosMenu();
+    const modal = document.getElementById('cauchera-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    modal.classList.add('open', 'active');
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
+
+    this.caucheraVehicle = this.caucheraVehicle || 'moto';
+    this.caucheraService = this.caucheraService || 'frio';
+
+    // Pre-fill user data if available
+    const savedName = localStorage.getItem('customer_name') || localStorage.getItem('pedigochos_user_name') || '';
+    const savedPhone = localStorage.getItem('customer_phone') || localStorage.getItem('pedigochos_user_phone') || '';
+    const nameInp = document.getElementById('cauchera-customer-name');
+    const phoneInp = document.getElementById('cauchera-customer-phone');
+    if (nameInp && !nameInp.value && savedName) nameInp.value = savedName;
+    if (phoneInp && !phoneInp.value && savedPhone) phoneInp.value = savedPhone;
+
+    // Check night tariff
+    this.updateCaucheraNightBanner();
+    this.updateCaucheraPricing();
+
+    // Auto capture GPS if not yet captured
+    const locInp = document.getElementById('cauchera-location-input');
+    if (!locInp || !locInp.value || locInp.value.includes('Obteniendo')) {
+      this.captureCaucheraGps();
+    }
+  }
+
+  closeCaucheraModal() {
+    const modal = document.getElementById('cauchera-modal');
+    if (modal) {
+      modal.classList.remove('open', 'active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
+  }
+
+  isNightRateActive() {
+    const currentHour = new Date().getHours();
+    return currentHour >= 20 || currentHour < 6; // 8:00 PM to 6:00 AM
+  }
+
+  updateCaucheraNightBanner() {
+    const banner = document.getElementById('cauchera-night-rate-banner');
+    if (!banner) return;
+    const isNight = this.isNightRateActive();
+
+    if (isNight) {
+      banner.style.background = 'linear-gradient(135deg, rgba(147, 51, 234, 0.25) 0%, rgba(109, 40, 217, 0.15) 100%)';
+      banner.style.border = '1px solid #9333EA';
+      banner.style.color = '#E9D5FF';
+      banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🌙</span>
+          <span>Tarifa Nocturna Activa (8:00 PM - 6:00 AM)</span>
+        </div>
+        <span style="background: #9333EA; color: #FFF; padding: 2px 8px; border-radius: 8px; font-size: 10.5px; font-weight: 900;">+$5.000 COP</span>
+      `;
+    } else {
+      banner.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)';
+      banner.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+      banner.style.color = '#A7F3D0';
+      banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">☀️</span>
+          <span>Tarifa Diurna Regular (Sin recargos adicionales)</span>
+        </div>
+        <span style="background: rgba(16, 185, 129, 0.3); color: #10B981; padding: 2px 8px; border-radius: 8px; font-size: 10.5px; font-weight: 900;">Tarifa Estándar</span>
+      `;
+    }
+  }
+
+  selectCaucheraVehicle(vType) {
+    this.caucheraVehicle = vType;
+    ['moto', 'carro', 'camioneta', 'camion'].forEach(t => {
+      const card = document.getElementById(`cauchera-v-${t}`);
+      if (card) {
+        if (t === vType) card.classList.add('active');
+        else card.classList.remove('active');
+      }
+    });
+    this.updateCaucheraPricing();
+  }
+
+  selectCaucheraService(sKey) {
+    this.caucheraService = sKey;
+    ['frio', 'caliente', 'aire', 'camara'].forEach(s => {
+      const card = document.getElementById(`cauchera-s-${s}`);
+      if (card) {
+        if (s === sKey) card.classList.add('active');
+        else card.classList.remove('active');
+      }
+    });
+    this.updateCaucheraPricing();
+  }
+
+  updateCaucheraPricing() {
+    const vType = this.caucheraVehicle || 'moto';
+    const sKey = this.caucheraService || 'frio';
+
+    const basePrices = {
+      moto: 10000,
+      carro: 15000,
+      camioneta: 20000,
+      camion: 30000
+    };
+
+    const serviceExtras = {
+      frio: 0,
+      caliente: 5000,
+      aire: 2000,
+      camara: 3000
+    };
+
+    const isNight = this.isNightRateActive();
+    const nightSurcharge = isNight ? 5000 : 0;
+
+    const base = basePrices[vType] || 10000;
+    const serviceExtra = serviceExtras[sKey] || 0;
+    const total = base + serviceExtra + nightSurcharge;
+
+    this.caucheraTotal = total;
+    this.caucheraNightSurcharge = nightSurcharge;
+
+    const baseEl = document.getElementById('cauchera-calc-base');
+    const servEl = document.getElementById('cauchera-calc-service');
+    const nightEl = document.getElementById('cauchera-calc-night');
+    const totalEl = document.getElementById('cauchera-calc-total');
+    const btnText = document.getElementById('btn-submit-cauchera-text');
+
+    if (baseEl) baseEl.innerText = `$${base.toLocaleString('es-CO')} COP`;
+    if (servEl) servEl.innerText = `+$${serviceExtra.toLocaleString('es-CO')} COP`;
+    if (nightEl) nightEl.innerText = isNight ? `+$${nightSurcharge.toLocaleString('es-CO')} COP` : '$0 COP';
+    if (totalEl) totalEl.innerText = `$${total.toLocaleString('es-CO')} COP`;
+    if (btnText) btnText.innerText = `Solicitar Auxilio por WhatsApp ($${total.toLocaleString('es-CO')} COP)`;
+  }
+
+  captureCaucheraGps() {
+    const locInp = document.getElementById('cauchera-location-input');
+    const coordsText = document.getElementById('cauchera-gps-coords-text');
+
+    if (locInp) locInp.placeholder = '📡 Localizando satélites GPS...';
+    if (coordsText) coordsText.innerText = 'Detectando ubicación satelital...';
+
+    if (!('geolocation' in navigator)) {
+      if (locInp) locInp.value = 'San Antonio del Táchira (Ubicación manual)';
+      if (coordsText) coordsText.innerText = 'GPS no disponible en navegador';
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        this.caucheraGps = { lat, lng };
+
+        if (coordsText) {
+          coordsText.innerText = `${lat.toFixed(5)}, ${lng.toFixed(5)} (Precisión: ±${Math.round(pos.coords.accuracy)}m)`;
+        }
+
+        // Reverse geocoding via OpenStreetMap Nominatim
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+          .then(r => r.json())
+          .then(data => {
+            const display = data.display_name ? data.display_name.split(',').slice(0, 3).join(',') : `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            if (locInp) locInp.value = display;
+            this.caucheraGps.address = display;
+          })
+          .catch(() => {
+            if (locInp) locInp.value = `Ubicación GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            this.caucheraGps.address = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+          });
+      },
+      (err) => {
+        console.warn('Cauchera GPS detection error:', err);
+        if (locInp) locInp.placeholder = 'Escribe tu dirección o ubicación...';
+        if (coordsText) coordsText.innerText = 'Permiso de ubicación denegado. Escribe tu referencia.';
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 }
+    );
+  }
+
+  submitCaucheraRequest() {
+    const nameInp = document.getElementById('cauchera-customer-name');
+    const phoneInp = document.getElementById('cauchera-customer-phone');
+    const locInp = document.getElementById('cauchera-location-input');
+    const refInp = document.getElementById('cauchera-reference-input');
+
+    const customerName = nameInp ? nameInp.value.trim() : '';
+    const customerPhone = phoneInp ? phoneInp.value.trim() : '';
+    const location = locInp ? locInp.value.trim() : '';
+    const reference = refInp ? refInp.value.trim() : '';
+
+    if (!customerName) {
+      alert('⚠️ Por favor ingresa tu nombre.');
+      if (nameInp) nameInp.focus();
+      return;
+    }
+    if (!customerPhone || customerPhone.length < 7) {
+      alert('⚠️ Por favor ingresa un número de teléfono / WhatsApp válido.');
+      if (phoneInp) phoneInp.focus();
+      return;
+    }
+    if (!location) {
+      alert('⚠️ Por favor indica o captura tu ubicación donde estás varado.');
+      if (locInp) locInp.focus();
+      return;
+    }
+
+    // Save for next time
+    localStorage.setItem('customer_name', customerName);
+    localStorage.setItem('customer_phone', customerPhone);
+    localStorage.setItem('pedigochos_user_name', customerName);
+    localStorage.setItem('pedigochos_user_phone', customerPhone);
+
+    const vType = this.caucheraVehicle || 'moto';
+    const sKey = this.caucheraService || 'frio';
+    const vNames = {
+      moto: '🛵 Moto',
+      carro: '🚗 Carro Particular',
+      camioneta: '🚙 Camioneta / 4x4',
+      camion: '🚚 Camión / Carga Pesada'
+    };
+    const sNames = {
+      frio: '❄️ Parche Frío (Estándar)',
+      caliente: '🔥 Vulcanizado / Parche Caliente',
+      aire: '💨 Carga de Aire / Calibración',
+      camara: '🔩 Reparación con Cámara / Neumático'
+    };
+
+    const vLabel = vNames[vType] || vType;
+    const sLabel = sNames[sKey] || sKey;
+    const isNight = this.isNightRateActive();
+    const total = this.caucheraTotal || 10000;
+    const totalFormatted = `$${Math.round(total).toLocaleString('es-CO')} COP`;
+
+    const gpsLat = this.caucheraGps?.lat;
+    const gpsLng = this.caucheraGps?.lng;
+    const mapLink = (gpsLat && gpsLng) ? `https://www.google.com/maps?q=${gpsLat},${gpsLng}` : '';
+
+    // Construct WhatsApp message
+    let waMessage = `🛞 *¡SOLICITUD DE CAUCHERA MÓVIL 24H - PEDIGOCHOS!* 🛞\n`;
+    waMessage += `🏪 *Montallantas El Cachu*\n\n`;
+    waMessage += `👤 *Conductor / Cliente:* ${customerName}\n`;
+    waMessage += `📱 *WhatsApp:* ${customerPhone}\n\n`;
+    waMessage += `🚗 *Vehículo:* ${vLabel}\n`;
+    waMessage += `🔧 *Trabajo Solicitado:* ${sLabel}\n`;
+    if (isNight) {
+      waMessage += `🌙 *Tarifa:* Horario Nocturno 24H (+$5.000 COP incluido)\n`;
+    } else {
+      waMessage += `☀️ *Tarifa:* Diurna Regular\n`;
+    }
+    waMessage += `\n📍 *Lugar donde estoy varado:* ${location}\n`;
+    if (reference) {
+      waMessage += `📝 *Punto de Referencia:* ${reference}\n`;
+    }
+    if (mapLink) {
+      waMessage += `🗺️ *Ubicación GPS en vivo:* ${mapLink}\n`;
+    }
+    waMessage += `\n💰 *VALOR TOTAL ESTIMADO:* ${totalFormatted}\n`;
+    waMessage += `💳 *Métodos de pago:* Efectivo COP / Bolívares / Pago Móvil / Nequi / Bancolombia\n\n`;
+    waMessage += `_Por favor confírmenme si un mecánico móvil viene en camino hacia mi ubicación. ¡Gracias!_`;
+
+    // Persist order on backend
+    try {
+      const payload = {
+        orderType: 'cauchera',
+        serviceType: 'cauchera',
+        establishmentId: 'montallantas-el-cachu',
+        establishmentName: 'Montallantas El Cachu 24H',
+        customerName: customerName,
+        customerPhone: customerPhone,
+        total: total,
+        nightSurcharge: isNight ? 5000 : 0,
+        vehicleType: vType,
+        items: [{
+          id: `cauchera-${vType}-${sKey}`,
+          name: `${vLabel} - ${sLabel}`,
+          price: total,
+          quantity: 1
+        }],
+        serviceDetails: {
+          vehicleType: vType,
+          serviceKey: sKey,
+          serviceTitle: `${vLabel} (${sLabel})`,
+          hasNightSurcharge: isNight,
+          nightSurchargeAmount: isNight ? 5000 : 0
+        },
+        deliveryDetails: {
+          name: customerName,
+          phone: customerPhone,
+          address: location,
+          reference: reference,
+          latitude: gpsLat,
+          longitude: gpsLng,
+          serviceType: 'cauchera',
+          vehicleType: vType
+        }
+      };
+
+      fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(r => r.json()).then(created => {
+        console.log('✅ Cauchera mobile order registered on backend:', created?.id);
+        if (created && created.id) {
+          const userOrders = JSON.parse(localStorage.getItem('pedigochos_user_orders') || '[]');
+          userOrders.push(created.id);
+          localStorage.setItem('pedigochos_user_orders', JSON.stringify(userOrders));
+        }
+      }).catch(err => {
+        console.warn('Could not persist cauchera order on backend:', err);
+      });
+    } catch(e) {
+      console.warn('Error constructing cauchera payload:', e);
+    }
+
+    // Open WhatsApp to Montallantas El Cachu (+58 424 5516340)
+    const targetWa = '584245516340';
+    const waUrl = `https://wa.me/${targetWa}?text=${encodeURIComponent(waMessage)}`;
+    window.open(waUrl, '_blank');
+
+    this.showToast('🚀 Solicitud de auxilio enviada a Montallantas El Cachu');
+    this.closeCaucheraModal();
   }
 }
 

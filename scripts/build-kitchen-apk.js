@@ -60,20 +60,23 @@ const env = {
 const gradlewPath = path.join(rootDir, 'android', 'gradlew.bat');
 execSync(`"${gradlewPath}" assembleDebug`, { stdio: 'inherit', cwd: path.join(rootDir, 'android'), env });
 
-console.log('📦 [5/5] Exportando PediGochos-Cocina.apk...');
+console.log('📦 [5/5] Exportando APKs de Cocina / Dueño...');
 const apkSrc = path.join(rootDir, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-const apkDestProject = path.join(rootDir, 'PediGochos-Cocina.apk');
 const userDesktop = path.join(process.env.USERPROFILE || 'C:\\Users\\DerEine', 'Desktop');
-const apkDestDesktop = path.join(userDesktop, 'PediGochos-Cocina.apk');
 
 if (fs.existsSync(apkSrc)) {
-  fs.copyFileSync(apkSrc, apkDestProject);
-  try {
-    fs.copyFileSync(apkSrc, apkDestDesktop);
-    console.log(`✅ APK exportado exitosamente a:\n   - ${apkDestDesktop}\n   - ${apkDestProject}`);
-  } catch (err) {
-    console.log(`✅ APK exportado a: ${apkDestProject}`);
-  }
+  const targets = [
+    path.join(rootDir, 'PediGochos-Cocina.apk'),
+    path.join(rootDir, 'PediGochos-Duenio.apk'),
+    path.join(userDesktop, 'PediGochos-Cocina.apk'),
+    path.join(userDesktop, 'PediGochos-Duenio.apk')
+  ];
+  targets.forEach(tgt => {
+    try {
+      fs.copyFileSync(apkSrc, tgt);
+      console.log(`✅ APK exportado exitosamente a: ${tgt}`);
+    } catch (e) {}
+  });
 } else {
   console.error('❌ Error: No se encontró el APK generado en ' + apkSrc);
 }

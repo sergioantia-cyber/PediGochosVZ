@@ -4,6 +4,8 @@ class SoundManager {
     this.ctx = null;
     this.compressor = null;
     this.isPlayingAlarm = false;
+    this.isVibrating = false;
+    this.vibrationInterval = null;
     this.alarmInterval = null;
     this.alarmTimeout = null;
     this.lastStartedAt = 0;
@@ -130,8 +132,46 @@ class SoundManager {
     }
   }
 
-  // Starts an insistent, penetrating alarm loop until cook acknowledges / accepts order
-  startPersistentOrderAlarm(durationSeconds = 60) {
+  // Starts a continuous, uninterrupted aggressive vibration loop until stopped
+  startContinuousVibration() {
+    if (typeof navigator === 'undefined' || !navigator.vibrate) return;
+    this.stopContinuousVibration();
+    this.isVibrating = true;
+
+    // Pattern: 1200ms intense vibration, 200ms pause, 1200ms intense vibration, 200ms pause, 1500ms continuous vibration, 400ms pause
+    // Total cycle length: 4500ms
+    const intensePattern = [1200, 200, 1200, 200, 1500, 400];
+
+    const runVibrate = () => {
+      if (!this.isVibrating) return;
+      try {
+        navigator.vibrate(intensePattern);
+      } catch (e) {
+        console.warn('Vibration API error:', e);
+      }
+    };
+
+    runVibrate();
+    // Continuous loop: re-trigger pattern immediately every 4.5 seconds
+    this.vibrationInterval = setInterval(runVibrate, 4500);
+  }
+
+  // Immediately halts any active vibration loop
+  stopContinuousVibration() {
+    this.isVibrating = false;
+    if (this.vibrationInterval) {
+      clearInterval(this.vibrationInterval);
+      this.vibrationInterval = null;
+    }
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(0);
+      } catch(e) {}
+    }
+  }
+
+  // Starts an insistent, penetrating alarm & continuous vibration loop until cook acknowledges / accepts order
+  startPersistentOrderAlarm(durationSeconds = 120) {
     try {
       this.init();
       this.lastStartedAt = Date.now();
@@ -148,7 +188,10 @@ class SoundManager {
 
       this.isPlayingAlarm = true;
 
-      // Play first burst immediately
+      // 1. Start continuous uninterrupted aggressive vibration
+      this.startContinuousVibration();
+
+      // 2. Play first burst immediately
       this.playLoudAlarmBurst();
 
       // Repeat burst every 2.5 seconds insistently
@@ -161,10 +204,12 @@ class SoundManager {
         }
       }, 2500);
 
-      // Timeout after 60 seconds if not stopped manually
-      this.alarmTimeout = setTimeout(() => {
-        this.stopAlarm();
-      }, durationSeconds * 1000);
+      // Timeout after durationSeconds (default 120s = 2 minutes) if not stopped manually
+      if (durationSeconds > 0) {
+        this.alarmTimeout = setTimeout(() => {
+          this.stopAlarm();
+        }, durationSeconds * 1000);
+      }
 
       // Notify UI listeners
       this.onAlarmStartListeners.forEach(cb => {
@@ -184,9 +229,12 @@ class SoundManager {
     }
   }
 
-  // Immediately silences the alarm
+  // Immediately silences the alarm and stops continuous vibration
   stopAlarm() {
     this.isPlayingAlarm = false;
+
+    // Immediately stop continuous vibration loop
+    this.stopContinuousVibration();
 
     if (this.alarmInterval) {
       clearInterval(this.alarmInterval);
@@ -205,11 +253,6 @@ class SoundManager {
       } catch(e) {}
     });
     this.activeOscillators = [];
-
-    // Stop vibration
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      try { navigator.vibrate(0); } catch(e) {}
-    }
 
     // Notify UI listeners
     this.onAlarmStopListeners.forEach(cb => {

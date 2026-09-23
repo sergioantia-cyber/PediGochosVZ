@@ -1,4 +1,5 @@
 // Driver Application Logic (driver.js)
+// Dedicated portal for Domiciliario Yoxman with Group Chat, Service Dispatch & Daily Finance Table
 
 // Universal Capacitor / Native Android API proxy
 (function() {
@@ -29,72 +30,114 @@
 class DriverController {
   constructor() {
     this.driver = null;
-    this.activeTab = 'available';
-    this.availableOrders = [];
+    this.activeTab = 'chat';
+    this.chatMessages = [];
     this.activeOrder = null;
-    this.watchId = null;
+    this.knownMessageIds = new Set();
+    this.knownOrderIds = new Set();
     this.pollingTimer = null;
+    this.chatPollingTimer = null;
+    this.watchId = null;
+    this.wakeLock = null;
+    this.isFirstLoad = true;
+    this.ws = null;
   }
 
   init() {
+    this.requestWakeLock();
+    this.setupAudioUnlock();
     this.checkLocalSession();
+  }
+
+  setupAudioUnlock() {
+    const unlock = () => {
+      if (typeof Sound !== 'undefined') {
+        Sound.init();
+      }
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('touchstart', unlock);
+    };
+    document.addEventListener('click', unlock, { once: true });
+    document.addEventListener('touchstart', unlock, { once: true });
+  }
+
+  async requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        if (!this.wakeLock || this.wakeLock.released) {
+          this.wakeLock = await navigator.wakeLock.request('screen');
+        }
+      }
+    } catch(err) {
+      console.warn('Wake Lock notice:', err);
+    }
   }
 
   checkLocalSession() {
     try {
-      const savedDriver = JSON.parse(localStorage.getItem('pedigochos_active_driver') || 'null');
-      if (savedDriver && savedDriver.phone) {
-        this.driver = savedDriver;
-        document.getElementById('driver-login-gate').classList.add('hidden');
-        this.updateProfileUI();
-        this.startDriverServices();
-      } else {
-        document.getElementById('driver-login-gate').classList.remove('hidden');
+      const saved = JSON.parse(localStorage.getItem('pedigochos_active_driver') || 'null');
+      if (saved && (saved.username === 'yoxman' || saved.id === 'drv-yoxman' || saved.phone === 'yoxman' || saved.name === 'Yoxman')) {
+        this.driver = saved;
+        // Lock name strictly to Yoxman
+        this.driver.name = 'Yoxman';
+        this.driver.isLockedName = true;
+        this.onSessionAuthenticated();
+        return;
       }
+      // Show login gate if no session
+      this.showLoginGate();
     } catch(e) {
-      document.getElementById('driver-login-gate').classList.remove('hidden');
+      this.showLoginGate();
     }
   }
 
-  quickLoginDefaultDriver() {
-    const phoneInput = document.getElementById('driver-input-phone');
-    const keyInput = document.getElementById('driver-input-key');
-    if (phoneInput) phoneInput.value = '+573227949751';
-    if (keyInput) keyInput.value = 'GOCHO-8821';
-    this.loginDriver();
+  showLoginGate() {
+    const gate = document.getElementById('driver-login-gate');
+    if (gate) {
+      gate.classList.remove('hidden');
+      gate.style.display = 'flex';
+    }
+    const uInp = document.getElementById('driver-input-username');
+    const pInp = document.getElementById('driver-input-password');
+    if (uInp && !uInp.value) uInp.value = 'yoxman';
+    if (pInp && !pInp.value) pInp.value = '12345@';
   }
 
   async loginDriver() {
-    const phone = document.getElementById('driver-input-phone').value.trim();
-    const key = document.getElementById('driver-input-key').value.trim().toUpperCase();
+    const uInp = document.getElementById('driver-input-username');
+    const pInp = document.getElementById('driver-input-password');
     const errEl = document.getElementById('driver-login-error');
 
-    if (!phone || !key) {
+    const username = (uInp ? uInp.value : '').trim();
+    const password = (pInp ? pInp.value : '').trim();
+
+    if (!username || !password) {
       if (errEl) {
-        errEl.innerText = '⚠️ Ingresa tu número de teléfono y clave privada.';
+        errEl.innerText = '⚠️ Ingresa usuario y clave.';
         errEl.classList.remove('hidden');
       }
       return;
     }
 
     try {
-      // Register or verify driver with server
-      const res = await fetch('/api/drivers/register', {
+      const res = await fetch('/api/driver/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'Repartidor ' + phone.slice(-4), phone, linkKey: key })
+        body: JSON.stringify({ username, password })
       });
 
       if (res.ok) {
-        const driverData = await res.json();
-        this.driver = driverData;
-        localStorage.setItem('pedigochos_active_driver', JSON.stringify(driverData));
-        document.getElementById('driver-login-gate').classList.add('hidden');
-        this.updateProfileUI();
-        this.startDriverServices();
+        const data = await res.json();
+        this.driver = data.driver;
+        // Guarantee locked name
+        this.driver.name = 'Yoxman';
+        this.driver.isLockedName = true;
+        localStorage.setItem('pedigochos_active_driver', JSON.stringify(this.driver));
+        this.onSessionAuthenticated();
       } else {
+        const errData = await res.json().catch(() => ({}));
         if (errEl) {
-          errEl.innerText = '⚠️ Clave de repartidor o teléfono incorrectos.';
+          errEl.innerText = errData.error || '⚠️ Credenciales incorrectas. Verifica usuario y clave.';
           errEl.classList.remove('hidden');
         }
       }
@@ -107,12 +150,34 @@ class DriverController {
     }
   }
 
+  onSessionAuthenticated() {
+    const gate = document.getElementById('driver-login-gate');
+    if (gate) {
+      gate.classList.add('hidden');
+      gate.style.display = 'none';
+    }
+
+    this.updateProfileUI();
+    this.startDriverServices();
+    this.initWebSocket();
+  }
+
+  logout() {
+    if (!confirm('¿Deseas cerrar tu sesión de repartidor?')) return;
+    localStorage.removeItem('pedigochos_active_driver');
+    this.driver = null;
+    if (this.pollingTimer) clearInterval(this.pollingTimer);
+    if (this.chatPollingTimer) clearInterval(this.chatPollingTimer);
+    if (this.watchId) navigator.geolocation.clearWatch(this.watchId);
+    this.showLoginGate();
+  }
+
   updateProfileUI() {
     if (!this.driver) return;
     const nameEl = document.getElementById('driver-profile-name');
     const phoneEl = document.getElementById('driver-profile-phone');
-    if (nameEl) nameEl.innerText = this.driver.name || 'Repartidor Gocho';
-    if (phoneEl) phoneEl.innerText = `📱 ${this.driver.phone} • ${this.driver.vehicleType || 'Moto 🛵'}`;
+    if (nameEl) nameEl.innerText = 'Yoxman';
+    if (phoneEl) phoneEl.innerText = `Repartidor Oficial • ${this.driver.vehicleType || 'Moto 🛵'}`;
   }
 
   startDriverServices() {
@@ -121,14 +186,21 @@ class DriverController {
     if (toggle) toggle.checked = true;
     this.toggleDutyStatus(true);
 
-    // 2. Start REST Polling every 4s for new orders
-    this.loadAvailableOrders();
+    // 2. Start Group Chat Polling (every 3 seconds)
+    this.loadChatMessages();
+    if (this.chatPollingTimer) clearInterval(this.chatPollingTimer);
+    this.chatPollingTimer = setInterval(() => {
+      this.loadChatMessages();
+    }, 3000);
+
+    // 3. Start Orders Polling (every 4 seconds)
+    this.checkActiveOrders();
     if (this.pollingTimer) clearInterval(this.pollingTimer);
     this.pollingTimer = setInterval(() => {
-      this.loadAvailableOrders();
+      this.checkActiveOrders();
     }, 4000);
 
-    // 3. Start Live GPS Location Watcher
+    // 4. Start Live GPS Watcher
     this.startGPSWatcher();
   }
 
@@ -136,10 +208,10 @@ class DriverController {
     const badge = document.getElementById('duty-status-badge');
     if (badge) {
       if (isOnline) {
-        badge.innerText = '🟢 En Servicio (Disponible)';
+        badge.innerText = '🟢 En Línea';
         badge.className = 'duty-badge badge-online';
       } else {
-        badge.innerText = '🔴 Fuera de Servicio';
+        badge.innerText = '🔴 Fuera';
         badge.className = 'duty-badge badge-offline';
       }
     }
@@ -147,98 +219,213 @@ class DriverController {
 
   switchTab(tabName) {
     this.activeTab = tabName;
-    ['available', 'active', 'earnings'].forEach(t => {
+    ['chat', 'active', 'history'].forEach(t => {
       const btn = document.getElementById(`tab-btn-${t}`);
       const view = document.getElementById(`tab-view-${t}`);
       if (btn) btn.classList.toggle('active', t === tabName);
       if (view) view.classList.toggle('hidden', t !== tabName);
     });
 
-    if (tabName === 'available') this.loadAvailableOrders();
+    if (tabName === 'chat') {
+      this.loadChatMessages();
+      this.scrollChatToBottom();
+    }
     if (tabName === 'active') this.renderActiveOrderTab();
-    if (tabName === 'earnings') this.renderEarningsTab();
+    if (tabName === 'history') this.loadDailyHistory();
   }
 
-  async loadAvailableOrders() {
-    if (!this.driver) return;
+  // ==========================================
+  // GROUP CHAT & INCOMING SERVICE REQUESTS
+  // ==========================================
+  async loadChatMessages() {
     try {
-      const res = await fetch('/api/driver/orders');
+      const res = await fetch('/api/driver/chat');
       if (!res.ok) return;
-      const orders = await res.json();
+      const messages = await res.json();
+      if (!Array.isArray(messages)) return;
 
-      // Separate orders assigned to THIS driver vs unassigned orders
-      const assigned = orders.find(o => o.driver && (o.driver.phone === this.driver.phone || o.driver.id === this.driver.id) && o.status === 'En Camino');
-      if (assigned) {
-        this.activeOrder = assigned;
+      // Check for newly arrived available service requests to sound loud alarm
+      const newServiceRequests = messages.filter(m => m.type === 'service_request' && m.status === 'Disponible');
+      const hasBrandNew = newServiceRequests.some(r => !this.knownMessageIds.has(r.id));
+
+      if (hasBrandNew && !this.isFirstLoad) {
+        if (typeof Sound !== 'undefined') {
+          Sound.playLoudAlarmBurst();
+        }
+        if (navigator.vibrate) {
+          navigator.vibrate([0, 800, 300, 800, 300, 1000]);
+        }
       }
 
-      this.availableOrders = orders.filter(o => o.status === 'Listo' || o.status === 'Preparando');
+      messages.forEach(m => this.knownMessageIds.add(m.id));
+      this.isFirstLoad = false;
+      this.chatMessages = messages;
 
-      const badge = document.getElementById('badge-available-count');
-      if (badge) badge.innerText = this.availableOrders.length;
-
-      this.renderAvailableOrdersList();
+      this.renderChatFeed();
     } catch(e) {
-      console.warn('Error loading available orders for driver:', e);
+      console.warn('Error fetching driver chat:', e);
     }
   }
 
-  renderAvailableOrdersList() {
-    const container = document.getElementById('available-orders-list');
-    if (!container) return;
+  renderChatFeed() {
+    const feed = document.getElementById('driver-chat-feed');
+    if (!feed) return;
 
-    if (this.availableOrders.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state-card">
-          <span class="empty-icon">📦</span>
-          <h3>Sin Pedidos Pendientes</h3>
-          <p>No hay encomiendas listas para recoger en este momento. Mantente disponible.</p>
+    if (this.chatMessages.length === 0) {
+      feed.innerHTML = `
+        <div class="empty-state-card" style="margin-top: 10px; padding: 24px;">
+          <span class="empty-icon">💬</span>
+          <h3 style="font-size: 15px; margin: 0 0 6px 0;">Chat Grupal Conectado</h3>
+          <p style="font-size: 12px; color: #94A3B8; margin: 0;">Esperando solicitudes de carreras y pedidos en tiempo real...</p>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = this.availableOrders.map(order => {
-      const deliveryFee = order.deliveryDetails?.deliveryFee || 0;
-      const custAddress = order.deliveryDetails?.address || 'Dirección de entrega';
-      const custName = order.customerName || 'Cliente';
+    const html = this.chatMessages.map(msg => {
+      const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
+      if (msg.type === 'service_request') {
+        const isRide = msg.serviceType === 'ride';
+        const isLujo = msg.vehicleType === 'lujo';
+        const isTaken = msg.status === 'Tomado';
+        const isEntregado = msg.status === 'Entregado';
+        const takenByMe = isTaken && (msg.takenBy === 'Yoxman' || msg.takenBy === this.driver?.name);
+
+        const gmapsOriginUrl = (msg.originLat && msg.originLng)
+          ? `https://www.google.com/maps?q=${msg.originLat},${msg.originLng}`
+          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(msg.origin)}`;
+
+        const gmapsDestUrl = (msg.destLat && msg.destLng)
+          ? `https://www.google.com/maps?q=${msg.destLat},${msg.destLng}`
+          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(msg.destination)}`;
+
+        return `
+          <div class="service-request-card ${isTaken ? 'taken' : ''} ${isLujo ? 'ride-lujo' : ''}">
+            <div class="service-card-top">
+              <span class="service-type-badge ${isLujo ? 'lujo' : ''}">
+                ${isRide ? '🚖 TRASLADO MÓVIL' : '📦 ENCOMIENDA DELIVERY'} • ${msg.vehicleLabel || 'Moto Taxi'}
+              </span>
+              <span class="service-price-pill">${msg.fareFormatted || `$${msg.fare} COP`}</span>
+            </div>
+
+            <!-- Route Details -->
+            <div class="service-route-box">
+              <div class="route-step">
+                <span class="route-icon" style="color: #10B981;">🟢</span>
+                <div class="route-text">
+                  <strong>Recogida (Origen):</strong>
+                  <span>${msg.origin || 'Ubicación GPS'}</span>
+                  <a href="${gmapsOriginUrl}" target="_blank" style="color: #60A5FA; font-size: 11px; margin-left: 6px; text-decoration: underline;">Ver mapa</a>
+                </div>
+              </div>
+
+              <div class="route-step" style="margin-top: 6px;">
+                <span class="route-icon" style="color: #EF4444;">🏁</span>
+                <div class="route-text">
+                  <strong>Destino (Llegada):</strong>
+                  <span>${msg.destination || 'Dirección de entrega'}</span>
+                  <a href="${gmapsDestUrl}" target="_blank" style="color: #60A5FA; font-size: 11px; margin-left: 6px; text-decoration: underline;">Ver mapa</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Info Bar -->
+            <div class="service-details-row">
+              <span>📏 <strong>${msg.distanceKm || 1} km</strong> estimados</span>
+              <span>👤 Cliente: <strong>${msg.customerName || 'Cliente'}</strong></span>
+              <span style="color: #94A3B8;">⏰ ${timeStr}</span>
+            </div>
+
+            <!-- Clickable Action Button -->
+            ${!isTaken && !isEntregado ? `
+              <button type="button" class="btn-take-service" onclick="DriverApp.takeService('${msg.orderId}')">
+                🛵 TOMAR SERVICIO / ACEPTAR CARRERA
+              </button>
+            ` : takenByMe ? `
+              <button type="button" class="btn-take-service" onclick="DriverApp.switchTab('active')" style="background: linear-gradient(180deg, #059669 0%, #047857 100%);">
+                🛵 VER MI SERVICIO ACTIVO EN CURSO
+              </button>
+            ` : `
+              <div class="btn-take-service disabled">
+                🔒 Tomado por ${msg.takenBy || 'otro repartidor'}
+              </div>
+            `}
+          </div>
+        `;
+      }
+
+      // Regular text chat message
+      const isSelf = msg.senderName === 'Yoxman' || msg.senderName === this.driver?.name;
       return `
-        <div class="order-card-3d">
-          <div class="card-header-bar">
-            <span class="card-shop-name">🏪 ${order.establishmentName || 'Restaurante'}</span>
-            <span class="card-fee-badge">💰 Delivery: $${parseFloat(deliveryFee).toFixed(2)}</span>
+        <div class="chat-bubble-msg ${isSelf ? 'self' : ''}">
+          <div class="chat-sender-name">
+            <span>${msg.senderName || 'Repartidor'}</span>
+            <span class="chat-time-tag">${timeStr}</span>
           </div>
-
-          <div class="order-info-line">
-            <span>👤 Cliente:</span> <strong>${custName}</strong>
-          </div>
-          <div class="order-info-line">
-            <span>📍 Entrega:</span> <span>${custAddress}</span>
-          </div>
-          <div class="order-info-line">
-            <span>🛍️ Items:</span> <span>${order.items?.length || 0} producto(s)</span>
-          </div>
-
-          <button type="button" class="btn-3d btn-3d-emerald" onclick="DriverApp.acceptOrder('${order.id}')" style="width: 100%; margin-top: 12px; font-size: 13.5px; padding: 12px;">
-            🛵 Aceptar Encomienda y Tomar Carrera
-          </button>
+          <div class="chat-body-text">${this.escapeHtml(msg.text || '')}</div>
         </div>
       `;
     }).join('');
+
+    const isAtBottom = feed.scrollHeight - feed.scrollTop <= feed.clientHeight + 100;
+    feed.innerHTML = html;
+    if (isAtBottom) {
+      feed.scrollTop = feed.scrollHeight;
+    }
   }
 
-  async acceptOrder(orderId) {
-    if (!this.driver) return;
+  scrollChatToBottom() {
+    const feed = document.getElementById('driver-chat-feed');
+    if (feed) {
+      setTimeout(() => { feed.scrollTop = feed.scrollHeight; }, 100);
+    }
+  }
+
+  async sendChatMessage() {
+    const inp = document.getElementById('driver-chat-input');
+    if (!inp) return;
+    const text = inp.value.trim();
+    if (!text) return;
+
+    try {
+      inp.value = '';
+      const res = await fetch('/api/driver/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: 'Yoxman',
+          senderPhone: this.driver?.phone || 'yoxman',
+          text: text
+        })
+      });
+
+      if (res.ok) {
+        const msg = await res.json();
+        this.chatMessages.push(msg);
+        this.renderChatFeed();
+        this.scrollChatToBottom();
+      }
+    } catch(e) {
+      console.error('Error sending chat message:', e);
+    }
+  }
+
+  // ==========================================
+  // TAKE & ACCEPT SERVICE
+  // ==========================================
+  async takeService(orderId) {
+    if (!orderId) return;
+
     try {
       const res = await fetch('/api/driver/accept-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId,
-          driverId: this.driver.id,
-          driverName: this.driver.name,
-          driverPhone: this.driver.phone
+          orderId: orderId,
+          driverId: this.driver?.id || 'drv-yoxman',
+          driverName: 'Yoxman',
+          driverPhone: this.driver?.phone || 'yoxman'
         })
       });
 
@@ -246,14 +433,56 @@ class DriverController {
         const data = await res.json();
         this.activeOrder = data.order;
         if (typeof Sound !== 'undefined') Sound.playBell();
+        if (navigator.vibrate) navigator.vibrate([0, 500, 150, 500]);
+        
+        // Update local message state
+        const chatCard = this.chatMessages.find(m => m.orderId === orderId);
+        if (chatCard) {
+          chatCard.status = 'Tomado';
+          chatCard.takenBy = 'Yoxman';
+          this.renderChatFeed();
+        }
+
+        // Switch directly to active order detail tab
         this.switchTab('active');
       } else {
-        alert('Este pedido ya fue tomado por otro repartidor.');
-        this.loadAvailableOrders();
+        alert('Este servicio ya fue tomado por otro compañero repartidor.');
+        this.loadChatMessages();
       }
     } catch(e) {
       console.error(e);
-      alert('Error de conexión al aceptar el pedido.');
+      alert('Error de conexión al tomar el servicio.');
+    }
+  }
+
+  // ==========================================
+  // ACTIVE ORDER VIEW & CUSTOMER DETAILS
+  // ==========================================
+  async checkActiveOrders() {
+    try {
+      const res = await fetch('/api/driver/orders');
+      if (!res.ok) return;
+      const orders = await res.json();
+      if (!Array.isArray(orders)) return;
+
+      const myActive = orders.find(o => 
+        o.driver && 
+        (o.driver.name === 'Yoxman' || o.driver.id === this.driver?.id) && 
+        o.status === 'En Camino'
+      );
+
+      if (myActive) {
+        this.activeOrder = myActive;
+        if (this.activeTab === 'active') this.renderActiveOrderTab();
+      } else if (this.activeOrder && this.activeOrder.status === 'En Camino') {
+        const fresh = orders.find(o => o.id === this.activeOrder.id);
+        if (!fresh || fresh.status === 'Entregado') {
+          this.activeOrder = null;
+          if (this.activeTab === 'active') this.renderActiveOrderTab();
+        }
+      }
+    } catch(e) {
+      console.warn('Check active orders notice:', e);
     }
   }
 
@@ -271,108 +500,137 @@ class DriverController {
     if (detailsCard) detailsCard.classList.remove('hidden');
 
     const order = this.activeOrder;
-    const estName = order.establishmentName || 'Restaurante';
-    const custName = order.customerName || 'Cliente';
-    const custPhone = order.deliveryDetails?.phone || '';
-    const custAddress = order.deliveryDetails?.address || 'Dirección de Entrega';
-    const deliveryFee = order.deliveryDetails?.deliveryFee || 0;
+    const isRide = order.orderType === 'ride' || order.serviceType === 'ride';
+    const dDetails = order.deliveryDetails || {};
 
-    const gmapsStoreUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(estName)}`;
-    const hasGps = Boolean(order.deliveryDetails?.latitude && order.deliveryDetails?.longitude);
-    const gmapsCustUrl = hasGps
-      ? `https://www.google.com/maps/search/?api=1&query=${order.deliveryDetails.latitude},${order.deliveryDetails.longitude}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(custAddress)}`;
+    const custName = order.customerName || dDetails.name || 'Cliente';
+    const custPhone = order.customerPhone || dDetails.phone || '';
+    const originAddr = isRide ? (dDetails.origin || 'Ubicación GPS') : (order.establishmentName || 'Restaurante');
+    const destAddr = isRide ? (dDetails.destination || dDetails.address || 'Destino') : (dDetails.address || 'Dirección de Entrega');
+    
+    // GPS Links
+    const originLat = dDetails.originLat || dDetails.latitude;
+    const originLng = dDetails.originLng || dDetails.longitude;
+    const destLat = dDetails.destLat;
+    const destLng = dDetails.destLng;
 
-    const wazeCustUrl = hasGps
-      ? `https://waze.com/ul?ll=${order.deliveryDetails.latitude},${order.deliveryDetails.longitude}&navigate=yes`
-      : `https://waze.com/ul?q=${encodeURIComponent(custAddress)}&navigate=yes`;
+    const gmapsOrigin = (originLat && originLng)
+      ? `https://www.google.com/maps?q=${originLat},${originLng}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(originAddr)}`;
 
-    const whatsappUrl = custPhone ? `https://wa.me/${custPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hola ' + custName + ', soy tu repartidor de Pedi Gochos 🛵. Voy en camino con tu pedido.')}` : '#';
+    const gmapsDest = (destLat && destLng)
+      ? `https://www.google.com/maps?q=${destLat},${destLng}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destAddr)}`;
 
+    const wazeDest = (destLat && destLng)
+      ? `https://waze.com/ul?ll=${destLat},${destLng}&navigate=yes`
+      : `https://waze.com/ul?q=${encodeURIComponent(destAddr)}&navigate=yes`;
+
+    // Pricing calculation
     const totalCop = Math.round(order.total < 1000 ? order.total * 1000 : order.total);
     const totalBs = (totalCop / 100).toFixed(2);
     const totalUsd = (totalCop / 4000).toFixed(2);
 
+    const whatsappGreeting = encodeURIComponent(`Hola ${custName}, soy Yoxman de PediGochos 🛵. Ya tomé tu servicio y voy en camino hacia tu ubicación.`);
+    const cleanPhone = custPhone ? custPhone.replace(/\D/g, '') : '';
+    const whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${whatsappGreeting}` : '#';
+
     detailsCard.innerHTML = `
-      <div class="order-card-3d" style="border: 2px solid #10B981;">
-        <div class="card-header-bar">
+      <div class="order-card-3d" style="border: 2px solid #10B981; padding: 18px;">
+        <div class="card-header-bar" style="margin-bottom: 14px;">
           <div>
-            <span class="card-shop-name">🛵 Pedido #${order.id.slice(-4)}</span>
-            <span style="display: block; font-size: 11px; color: #10B981; font-weight: 800;">EN CAMINO A ENTREGA</span>
+            <span class="card-shop-name" style="font-size: 16px;">🛵 ${isRide ? 'Carrera Móvil' : 'Encomienda'} #${order.id.slice(-5)}</span>
+            <span style="display: block; font-size: 11.5px; color: #10B981; font-weight: 800; margin-top: 2px;">🟢 EN SERVICIO ACTIVO</span>
           </div>
-          <span class="card-fee-badge" style="font-size: 14px;">💰 Ganancia: $${parseFloat(deliveryFee).toFixed(2)}</span>
+          <span class="card-fee-badge" style="font-size: 14px;">💰 $${totalCop.toLocaleString('de-DE')} COP</span>
         </div>
 
-        <!-- Store Pickup Section -->
-        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08);">
-          <strong style="color: #FF5E3A; font-size: 13px; display: block; margin-bottom: 4px;">🏪 1. Recoger en Local:</strong>
-          <span style="font-size: 14px; font-weight: 800; color: #FFF;">${estName}</span>
-          <a href="${gmapsStoreUrl}" target="_blank" class="btn-3d btn-3d-blue" style="margin-top: 8px; width: 100%; font-size: 12px; padding: 8px;">
-            🗺️ Navegar al Restaurante (Google Maps)
-          </a>
+        <!-- 1. Customer Details & Direct Contact -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 12px;">
+          <span style="font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 800; display: block; margin-bottom: 6px;">👤 Datos del Cliente</span>
+          <div style="font-size: 16px; font-weight: 900; color: #FFF; margin-bottom: 2px;">${custName}</div>
+          <div style="font-size: 13px; color: #CBD5E1; margin-bottom: 12px;">📱 ${custPhone || 'Sin teléfono especificado'}</div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            ${custPhone ? `
+              <a href="tel:${custPhone}" class="btn-3d btn-3d-emerald" style="font-size: 12.5px; padding: 10px;">
+                📞 Llamar Cliente
+              </a>
+              <a href="${whatsappUrl}" target="_blank" class="btn-3d" style="background: #25D366; color: #FFF; font-size: 12.5px; padding: 10px; font-weight: 800;">
+                💬 WhatsApp
+              </a>
+            ` : `<div style="grid-column: span 2; font-size: 12px; color: #94A3B8;">Sin número de contacto directo</div>`}
+          </div>
         </div>
 
-        <!-- Payment & Change Section -->
-        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-          <strong style="color: #10B981; font-size: 13px; display: block; margin-bottom: 4px;">💵 Cobro en Destino:</strong>
-          <div style="font-size: 16px; font-weight: 900; color: #FFF;">Total: $${totalCop.toLocaleString('de-DE')} COP</div>
+        <!-- 2. Route & Navigation GPS -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 12px;">
+          <span style="font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 800; display: block; margin-bottom: 8px;">📍 Ruta de Recogida y Destino</span>
+          
+          <div style="margin-bottom: 10px;">
+            <span style="color: #10B981; font-weight: 800; font-size: 12px;">🟢 1. Punto de Recogida:</span>
+            <div style="font-size: 13.5px; color: #FFF; font-weight: 700; margin: 2px 0 4px 0;">${originAddr}</div>
+            <a href="${gmapsOrigin}" target="_blank" class="btn-3d btn-3d-blue" style="font-size: 11.5px; padding: 6px 10px; display: inline-flex;">
+              📍 Navegar al Origen (Google Maps)
+            </a>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 8px 0;">
+
+          <div>
+            <span style="color: #EF4444; font-weight: 800; font-size: 12px;">🏁 2. Punto de Destino:</span>
+            <div style="font-size: 13.5px; color: #FFF; font-weight: 700; margin: 2px 0 6px 0;">${destAddr}</div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <a href="${gmapsDest}" target="_blank" class="btn-3d btn-3d-blue" style="font-size: 11.5px; padding: 8px;">
+                📍 Google Maps
+              </a>
+              <a href="${wazeDest}" target="_blank" class="btn-3d" style="background: #33CCFF; color: #000; font-weight: 900; font-size: 11.5px; padding: 8px;">
+                🗺️ Waze GPS
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Payment & Money Details -->
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+          <span style="font-size: 11px; text-transform: uppercase; color: #10B981; font-weight: 800; display: block; margin-bottom: 4px;">💵 Cobro en Destino</span>
+          <div style="font-size: 18px; font-weight: 900; color: #FFF;">Total: $${totalCop.toLocaleString('de-DE')} COP</div>
           <div style="display: flex; gap: 8px; font-size: 11.5px; color: #CBD5E1; margin-top: 4px;">
             <span>🇻🇪 Bs. ${totalBs}</span>
             <span>•</span>
             <span>💵 $${totalUsd} USD</span>
           </div>
           <div style="font-size: 12.5px; font-weight: 800; color: #34D399; margin-top: 6px;">
-            ${order.paymentMethod === 'Transferencia' ? '📲 Transferencia / Pago Móvil (Ya Pagado)' : `💵 Efectivo: ${order.paymentNotes || 'Monto exacto'}`}
+            ${order.paymentMethod === 'Transferencia' ? '📲 Pagado por Transferencia / Pago Móvil' : `💵 Efectivo: ${order.paymentNotes || 'Monto exacto'}`}
           </div>
         </div>
 
-        <!-- Customer Delivery Section -->
-        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
-          <strong style="color: #10B981; font-size: 13px; display: block; margin-bottom: 4px;">🏠 2. Entregar a Cliente:</strong>
-          <div style="font-size: 14px; font-weight: 800; color: #FFF; margin-bottom: 4px;">${custName}</div>
-          <div style="font-size: 12.5px; color: #CBD5E1; margin-bottom: 10px;">📍 ${custAddress}</div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-            <a href="tel:${custPhone}" class="btn-3d btn-3d-emerald" style="font-size: 12px; padding: 8px;">
-              📞 Llamar Cliente
-            </a>
-            <a href="${whatsappUrl}" target="_blank" class="btn-3d btn-3d-emerald" style="font-size: 12px; padding: 8px; background: #25D366; box-shadow: 0 5px 0 #1B9A4A;">
-              💬 WhatsApp
-            </a>
-          </div>
-
-          <!-- Dual GPS Navigation Buttons -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <a href="${gmapsCustUrl}" target="_blank" class="btn-3d btn-3d-blue" style="font-size: 12px; padding: 8px;">
-              📍 Google Maps
-            </a>
-            <a href="${wazeCustUrl}" target="_blank" class="btn-3d btn-3d-blue" style="font-size: 12px; padding: 8px; background: #33CCFF; box-shadow: 0 5px 0 #0099CC; color: #000; font-weight: 900;">
-              🗺️ Waze GPS
-            </a>
-          </div>
-        </div>
-
-        <!-- Complete Delivery Action Button -->
+        <!-- 4. Complete Action Button -->
         <button type="button" class="btn-3d btn-3d-emerald" onclick="DriverApp.completeOrder('${order.id}')" style="width: 100%; font-size: 15px; padding: 16px; background: linear-gradient(180deg, #059669 0%, #047857 100%);">
-          ✅ Confirmar Entrega Realizada al Cliente
+          ✅ Confirmar Entrega Realizada / Carrera Finalizada
         </button>
       </div>
     `;
   }
 
   async completeOrder(orderId) {
-    if (!confirm('¿Confirmas que has entregado el pedido al cliente correctamente?')) return;
+    if (!confirm('¿Confirmas que has completado el servicio y entregado al cliente exitosamente?')) return;
+
     try {
       const res = await fetch('/api/driver/complete-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, driverPhone: this.driver?.phone })
+        body: JSON.stringify({
+          orderId: orderId,
+          driverPhone: this.driver?.phone || 'yoxman'
+        })
       });
 
       if (res.ok) {
-        alert('🎉 ¡Excelente trabajo! Entrega completada con éxito.');
+        alert('🎉 ¡Excelente trabajo Yoxman! Servicio completado con éxito.');
         this.activeOrder = null;
-        this.switchTab('available');
+        this.switchTab('history');
       }
     } catch(e) {
       console.error(e);
@@ -380,67 +638,189 @@ class DriverController {
     }
   }
 
-  renderEarningsTab() {
-    // Calculate total delivered orders and earnings from server / orders list
-    fetch('/api/orders')
-      .then(res => res.json())
-      .then(orders => {
-        const completed = orders.filter(o => o.status === 'Entregado' && o.driver && (o.driver.phone === this.driver?.phone || o.driver.id === this.driver?.id));
-        const totalEarnings = completed.reduce((sum, o) => sum + (parseFloat(o.deliveryDetails?.deliveryFee) || 0), 0);
+  // ==========================================
+  // DAILY DELIVERIES TABLE & FINANCES
+  // ==========================================
+  async loadDailyHistory() {
+    try {
+      const res = await fetch('/api/orders');
+      if (!res.ok) return;
+      const orders = await res.json();
+      if (!Array.isArray(orders)) return;
 
-        const earningsEl = document.getElementById('driver-today-earnings');
-        const countEl = document.getElementById('driver-today-deliveries-count');
+      const todayStr = new Date().toISOString().slice(0, 10);
+      
+      // Filter orders belonging to Yoxman of today
+      const todayOrders = orders.filter(o => {
+        const isToday = (o.createdAt || '').startsWith(todayStr);
+        const isYoxman = o.driver && (o.driver.name === 'Yoxman' || o.driver.id === 'drv-yoxman' || o.driver.id === this.driver?.id);
+        return isToday && isYoxman;
+      });
 
-        if (earningsEl) earningsEl.innerText = `$${totalEarnings.toFixed(2)} USD`;
-        if (countEl) countEl.innerText = `${completed.length} Envíos Realizados`;
+      // Calculate finances
+      let totalGananciasCop = 0;
+      let totalCashCop = 0;
+      let totalTransferCop = 0;
 
-        const historyContainer = document.getElementById('driver-history-list');
-        if (historyContainer) {
-          if (completed.length === 0) {
-            historyContainer.innerHTML = `<div class="empty-state-card"><p>Aún no has completado entregas hoy.</p></div>`;
+      todayOrders.forEach(o => {
+        if (o.status === 'Entregado' || o.status === 'En Camino') {
+          const isRide = o.orderType === 'ride' || o.serviceType === 'ride';
+          let fare = 0;
+          if (isRide) {
+            fare = Math.round(o.total < 1000 ? o.total * 1000 : o.total);
           } else {
-            historyContainer.innerHTML = completed.map(o => `
-              <div class="order-card-3d" style="padding: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <div>
-                    <strong style="color: #FFF; font-size: 14px;">🏪 ${o.establishmentName}</strong>
-                    <span style="display: block; font-size: 11px; color: #94A3B8;">Cliente: ${o.customerName}</span>
-                  </div>
-                  <span style="color: #10B981; font-weight: 800; font-size: 14px;">+$${parseFloat(o.deliveryDetails?.deliveryFee || 0).toFixed(2)}</span>
-                </div>
-              </div>
-            `).join('');
+            const fee = parseFloat(o.deliveryDetails?.deliveryFee || 0);
+            fare = Math.round(fee > 0 ? (fee < 100 ? fee * 4000 : fee) : 4000);
+          }
+          totalGananciasCop += fare;
+
+          if (o.paymentMethod === 'Transferencia') {
+            totalTransferCop += fare;
+          } else {
+            totalCashCop += fare;
           }
         }
-      })
-      .catch(err => console.error(err));
+      });
+
+      const totalGananciasUsd = (totalGananciasCop / 4000).toFixed(2);
+
+      // Update UI cards
+      const earnCopEl = document.getElementById('fin-today-earnings');
+      const earnUsdEl = document.getElementById('fin-today-usd');
+      const countEl = document.getElementById('fin-today-count');
+      const cashEl = document.getElementById('fin-today-cash');
+      const transferEl = document.getElementById('fin-today-transfers');
+
+      if (earnCopEl) earnCopEl.innerText = `$${totalGananciasCop.toLocaleString('de-DE')} COP`;
+      if (earnUsdEl) earnUsdEl.innerText = `≈ $${totalGananciasUsd} USD`;
+      if (countEl) countEl.innerText = todayOrders.filter(o => o.status === 'Entregado').length;
+      if (cashEl) cashEl.innerText = `$${totalCashCop.toLocaleString('de-DE')} COP`;
+      if (transferEl) transferEl.innerText = `$${totalTransferCop.toLocaleString('de-DE')} COP`;
+
+      // Render Table rows
+      const tbody = document.getElementById('daily-orders-table-body');
+      if (!tbody) return;
+
+      if (todayOrders.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: #94A3B8; padding: 28px;">
+              Aún no has completado servicios hoy. ¡Toma carreras en el chat grupal para empezar!
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      todayOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      tbody.innerHTML = todayOrders.map(o => {
+        const time = o.createdAt ? new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+        const isRide = o.orderType === 'ride' || o.serviceType === 'ride';
+        const typeLabel = isRide ? `🚖 ${o.vehicleType || 'Móvil'}` : `📦 Delivery`;
+        const cust = o.customerName || 'Cliente';
+        const dDetails = o.deliveryDetails || {};
+        const origin = isRide ? (dDetails.origin || 'GPS') : (o.establishmentName || 'Restaurante');
+        const dest = isRide ? (dDetails.destination || dDetails.address || '') : (dDetails.address || '');
+        const route = `${origin} ➡️ ${dest}`;
+        const km = `${dDetails.distanceKm || 1} km`;
+
+        let fare = 0;
+        if (isRide) {
+          fare = Math.round(o.total < 1000 ? o.total * 1000 : o.total);
+        } else {
+          const fee = parseFloat(dDetails.deliveryFee || 0);
+          fare = Math.round(fee > 0 ? (fee < 100 ? fee * 4000 : fee) : 4000);
+        }
+
+        const isEntregado = o.status === 'Entregado';
+        const badgeClass = isEntregado ? 'badge-status-completed' : 'badge-status-active';
+        const statusText = isEntregado ? '✅ Entregado' : '🛵 En Camino';
+
+        return `
+          <tr>
+            <td style="font-weight: 700; color: #94A3B8;">${time}</td>
+            <td><strong style="color: #FFF;">${typeLabel}</strong></td>
+            <td>${cust}</td>
+            <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${route}">${route}</td>
+            <td>${km}</td>
+            <td style="color: #10B981; font-weight: 900;">$${fare.toLocaleString('de-DE')}</td>
+            <td><span class="badge-status ${badgeClass}">${statusText}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+    } catch(e) {
+      console.error('Error loading daily history:', e);
+    }
   }
 
+  // ==========================================
+  // GPS & WEBSOCKET SYNC
+  // ==========================================
   startGPSWatcher() {
     if ('geolocation' in navigator) {
       this.watchId = navigator.geolocation.watchPosition((pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
 
-        if (this.driver && this.driver.phone) {
-          fetch('/api/driver/location', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              driverPhone: this.driver.phone,
-              latitude: lat,
-              longitude: lng
-            })
-          }).catch(e => console.warn('GPS broadcast error:', e));
-        }
+        fetch('/api/driver/location', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            driverPhone: 'yoxman',
+            latitude: lat,
+            longitude: lng
+          })
+        }).catch(() => {});
       }, (err) => {
-        console.warn('Geolocation watch position warning:', err);
+        console.warn('GPS watch warning:', err);
       }, {
         enableHighAccuracy: true,
         maximumAge: 5000,
         timeout: 10000
       });
     }
+  }
+
+  initWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let host = window.location.host;
+    if (window.location.origin.includes('localhost') && window.location.port !== '3000') {
+      host = 'pedigochos.onrender.com';
+    }
+    const wsUrl = `${protocol}//${host}`;
+
+    try {
+      this.ws = new WebSocket(wsUrl);
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'DRIVER_CHAT_MESSAGE') {
+            this.loadChatMessages();
+          } else if (data.type === 'DRIVER_CHAT_UPDATE') {
+            this.loadChatMessages();
+          } else if (data.type === 'GLOBAL_NEW_ORDER') {
+            this.loadChatMessages();
+          }
+        } catch(e) {}
+      };
+      this.ws.onclose = () => {
+        setTimeout(() => this.initWebSocket(), 5000);
+      };
+    } catch(e) {
+      console.warn('WS connection notice:', e);
+    }
+  }
+
+  escapeHtml(str) {
+    return str.replace(/[&<>'"]/g, tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag));
   }
 }
 

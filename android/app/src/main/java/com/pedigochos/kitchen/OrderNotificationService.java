@@ -40,11 +40,16 @@ public class OrderNotificationService extends Service {
     private static final int FOREGROUND_NOTIFICATION_ID = 1001;
     private static final String ORDERS_API_URL = "https://pedigochos.onrender.com/api/orders";
 
+    public static final String ACTION_STOP_ALARM = "com.pedigochos.kitchen.ACTION_STOP_ALARM";
+
     private ScheduledExecutorService scheduler;
     private PowerManager.WakeLock wakeLock;
     private final Set<String> knownOrderIds = new HashSet<>();
     private boolean isFirstFetch = true;
     private Ringtone activeRingtone;
+    private Vibrator activeVibrator;
+    private Runnable vibrationStopRunnable;
+    private Runnable ringtoneStopRunnable;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @Override
@@ -74,6 +79,14 @@ public class OrderNotificationService extends Service {
         if (wakeLock != null && !wakeLock.isHeld()) {
             wakeLock.acquire();
         }
+
+        if (intent != null && ACTION_STOP_ALARM.equals(intent.getAction())) {
+            Log.d(TAG, "🔕 ACTION_STOP_ALARM recibido: deteniendo alarma y vibración continua");
+            stopRingtone();
+            stopContinuousVibration();
+            return START_STICKY;
+        }
+
         return START_STICKY; // Tell Android to automatically resurrect service if killed
     }
 
@@ -114,6 +127,7 @@ public class OrderNotificationService extends Service {
             wakeLock.release();
         }
         stopRingtone();
+        stopContinuousVibration();
     }
 
     @Override
@@ -351,8 +365,8 @@ public class OrderNotificationService extends Service {
                     // 2. Play Alarm Sound
                     playLoudAlarmSound();
 
-                    // 3. Vibrate Phone
-                    vibratePhone();
+                    // 3. Start Continuous Uninterrupted Vibration Loop
+                    startContinuousVibration();
 
                     // 4. Show Heads-Up Alert Notification with direct establishment target
                     String estId = order.optString("establishmentId", order.optString("establishment_id", ""));
@@ -408,13 +422,14 @@ public class OrderNotificationService extends Service {
                 }
                 activeRingtone.play();
 
-                // Stop ringtone automatically after 14 seconds
-                mainHandler.postDelayed(new Runnable() {
+                // Stop ringtone automatically after 60 seconds if unattended
+                ringtoneStopRunnable = new Runnable() {
                     @Override
                     public void run() {
                         stopRingtone();
                     }
-                }, 14000);
+                };
+                mainHandler.postDelayed(ringtoneStopRunnable, 60000);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error playing alarm ringtone: " + e.getMessage());
@@ -422,6 +437,10 @@ public class OrderNotificationService extends Service {
     }
 
     private void stopRingtone() {
+        if (ringtoneStopRunnable != null) {
+            mainHandler.removeCallbacks(ringtoneStopRunnable);
+            ringtoneStopRunnable = null;
+        }
         if (activeRingtone != null && activeRingtone.isPlaying()) {
             try {
                 activeRingtone.stop();
@@ -430,19 +449,56 @@ public class OrderNotificationService extends Service {
         }
     }
 
-    private void vibratePhone() {
+    private void startContinuousVibration() {
         try {
+            stopContinuousVibration();
             Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             if (v != null && v.hasVibrator()) {
-                long[] pattern = new long[]{0, 800, 300, 800, 300, 1000};
+                activeVibrator = v;
+                // Vibration pattern: [delay, vibrate, pause, vibrate, pause, vibrate, pause]
+                // 0ms delay, 1200ms intense, 200ms pause, 1200ms intense, 200ms pause, 1500ms continuous, 400ms pause
+                long[] pattern = new long[]{0, 1200, 200, 1200, 200, 1500, 400};
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    v.vibrate(VibrationEffect.createWaveform(pattern, -1));
+                    // repeat: 0 -> repeat indefinitely from index 0 until cancelled
+                    v.vibrate(VibrationEffect.createWaveform(pattern, 0));
                 } else {
-                    v.vibrate(pattern, -1);
+                    // repeat: 0 -> repeat indefinitely
+                    v.vibrate(pattern, 0);
+                }
+                Log.d(TAG, "📳 Bucle de vibración continua e ininterrumpida activado.");
+
+                // Auto-stop continuous vibration after 120 seconds if unattended
+                vibrationStopRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        stopContinuousVibration();
+                    }
+                };
+                mainHandler.postDelayed(vibrationStopRunnable, 120000);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Continuous vibration error: " + e.getMessage());
+        }
+    }
+
+    private void stopContinuousVibration() {
+        try {
+            if (vibrationStopRunnable != null) {
+                mainHandler.removeCallbacks(vibrationStopRunnable);
+                vibrationStopRunnable = null;
+            }
+            if (activeVibrator != null) {
+                activeVibrator.cancel();
+                activeVibrator = null;
+                Log.d(TAG, "📴 Vibración continua detenida.");
+            } else {
+                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                if (v != null) {
+                    v.cancel();
                 }
             }
         } catch (Exception e) {
-            Log.w(TAG, "Vibration notice: " + e.getMessage());
+            Log.w(TAG, "Stop vibration error: " + e.getMessage());
         }
     }
 
@@ -470,6 +526,26 @@ public class OrderNotificationService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
 
+            // DeleteIntent: Stops continuous vibration when user swipes notification away
+            Intent deleteIntent = new Intent(this, OrderNotificationService.class);
+            deleteIntent.setAction(ACTION_STOP_ALARM);
+            PendingIntent deletePendingIntent = PendingIntent.getService(
+                this,
+                1002,
+                deleteIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+            );
+
+            // Silence Action: Direct button on notification to stop ringing and continuous vibration
+            Intent silenceIntent = new Intent(this, OrderNotificationService.class);
+            silenceIntent.setAction(ACTION_STOP_ALARM);
+            PendingIntent silencePendingIntent = PendingIntent.getService(
+                this,
+                1003,
+                silenceIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+            );
+
             boolean isDriver = getPackageName().contains("driver");
             String title = isDriver ? "🛵 ¡NUEVA ENCOMIENDA DISPONIBLE!" : "🚨 ¡NUEVO PEDIDO RECIBIDO!";
             String contentText = isDriver 
@@ -477,7 +553,7 @@ public class OrderNotificationService extends Service {
                 : "🛒 " + customer + " en " + restaurant + " - Total: $" + String.format("%.2f", total);
             String bigText = isDriver
                 ? "🛵 ¡Nueva encomienda lista para reparto!\n🏪 Local: " + restaurant + "\n👤 Cliente: " + customer + "\n👉 Toca aquí para abrir PediGochos Repartidor y tomar la entrega."
-                : "🛒 Cliente: " + customer + "\n🏪 Local: " + restaurant + "\n💵 Total: $" + String.format("%.2f", total) + "\n\n👉 Toca aquí para ver los detalles del restaurante.";
+                : "🛒 Cliente: " + customer + "\n🏪 Local: " + restaurant + "\n💵 Total: $" + String.format("%.2f", total) + "\n\n👉 Toca aquí para ver los pedidos en cocina.";
 
             NotificationCompat.Builder alert = new NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
@@ -489,6 +565,8 @@ public class OrderNotificationService extends Service {
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setFullScreenIntent(pendingIntent, true)
                 .setContentIntent(pendingIntent)
+                .setDeleteIntent(deletePendingIntent)
+                .addAction(android.R.drawable.ic_lock_silent_mode, "🔕 Silenciar Alarma y Vibración", silencePendingIntent)
                 .setAutoCancel(true);
 
             nm.notify((int) System.currentTimeMillis(), alert.build());

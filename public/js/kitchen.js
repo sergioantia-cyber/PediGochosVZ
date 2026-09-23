@@ -119,11 +119,11 @@ class KitchenController {
             <span class="alarm-siren-icon">🚨</span>
             <div class="alarm-banner-text">
               <div class="alarm-title">¡NUEVO PEDIDO ENTRANTE! <span class="alarm-order-code"></span></div>
-              <div class="alarm-subtitle">Toca la pantalla o abre la app para apagar la alarma sonora</div>
+              <div class="alarm-subtitle">Toca la pantalla o abre la app para apagar la alarma y vibración continua</div>
             </div>
           </div>
           <button class="alarm-btn-silence" onclick="event.stopPropagation(); if(window.Sound) Sound.stopAlarm(); KitchenApp.hideAlarmBanner();">
-            🔕 Silenciar Alarma
+            🔕 Silenciar Alarma y Vibración
           </button>
         </div>
       `;
@@ -190,7 +190,7 @@ class KitchenController {
           console.log('🚨 [REST Polling] ¡Nuevos pedidos detectados en tiempo real!', activeNewOrders);
           const orderCode = activeNewOrders[0].deliveryDetails?.code || activeNewOrders[0].id.slice(-4);
           if (typeof Sound !== 'undefined') {
-            Sound.startPersistentOrderAlarm(20);
+            Sound.startPersistentOrderAlarm(120);
           }
           this.showAlarmBanner(orderCode);
           this.showToast(`🚨 ¡NUEVO PEDIDO RECIBIDO! #${orderCode}`);
@@ -608,7 +608,7 @@ class KitchenController {
             this.renderOrders();
             const orderCode = data.order.deliveryDetails?.code || data.order.id.slice(-4);
             if (typeof Sound !== 'undefined') {
-              Sound.startPersistentOrderAlarm(20);
+              Sound.startPersistentOrderAlarm(120);
             }
             this.showAlarmBanner(orderCode);
             this.showToast(`🚨 ¡NUEVO PEDIDO RECIBIDO! #${orderCode}`);
@@ -804,6 +804,12 @@ class KitchenController {
   }
 
   async updateOrderStatus(orderId, nextStatus, driver = null) {
+    // Silence alarm and stop continuous vibration immediately when action is taken
+    if (typeof Sound !== 'undefined' && Sound.isPlayingAlarm) {
+      Sound.stopAlarm();
+    }
+    this.hideAlarmBanner();
+
     // 1. Local update
     const ord = (this.orders || []).find(o => String(o.id) === String(orderId));
     if (ord) {

@@ -1,7 +1,7 @@
 {
-  "appId": "com.pedigochos.driver",
-  "appName": "PediGochos Repartidor",
-  "webDir": "dist_driver",
+  "appId": "com.pedigochos.kitchen",
+  "appName": "PediGochos Cocina",
+  "webDir": "dist_kitchen",
   "bundledWebRuntime": false,
   "server": {
     "cleartext": true,

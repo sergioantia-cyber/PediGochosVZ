@@ -86,7 +86,8 @@ self.addEventListener('push', (event) => {
     body: data.body,
     icon: data.icon || '/images/burger_royale.jpg',
     badge: '/images/burger_royale.jpg',
-    vibrate: [200, 100, 200],
+    vibrate: [1000, 250, 1000, 250, 1500, 400],
+    requireInteraction: true,
     data: { url: data.url || '/' },
     actions: [
       { action: 'open', title: 'Ver Pedido 📱' }

@@ -4,6 +4,8 @@ class SoundManager {
     this.ctx = null;
     this.compressor = null;
     this.isPlayingAlarm = false;
+    this.isVibrating = false;
+    this.vibrationInterval = null;
     this.alarmInterval = null;
     this.alarmTimeout = null;
     this.lastStartedAt = 0;
@@ -130,8 +132,46 @@ class SoundManager {
     }
   }
 
-  // Starts an insistent, penetrating alarm loop until cook acknowledges / accepts order
-  startPersistentOrderAlarm(durationSeconds = 60) {
+  // Starts a continuous, uninterrupted aggressive vibration loop until stopped
+  startContinuousVibration() {
+    if (typeof navigator === 'undefined' || !navigator.vibrate) return;
+    this.stopContinuousVibration();
+    this.isVibrating = true;
+
+    // Pattern: 1200ms intense vibration, 200ms pause, 1200ms intense vibration, 200ms pause, 1500ms continuous vibration, 400ms pause
+    // Total cycle length: 4500ms
+    const intensePattern = [1200, 200, 1200, 200, 1500, 400];
+
+    const runVibrate = () => {
+      if (!this.isVibrating) return;
+      try {
+        navigator.vibrate(intensePattern);
+      } catch (e) {
+        console.warn('Vibration API error:', e);
+      }
+    };
+
+    runVibrate();
+    // Continuous loop: re-trigger pattern immediately every 4.5 seconds
+    this.vibrationInterval = setInterval(runVibrate, 4500);
+  }
+
+  // Immediately halts any active vibration loop
+  stopContinuousVibration() {
+    this.isVibrating = false;
+    if (this.vibrationInterval) {
+      clearInterval(this.vibrationInterval);
+      this.vibrationInterval = null;
+    }
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(0);
+      } catch(e) {}
+    }
+  }
+
+  // Starts an insistent, penetrating alarm & continuous vibration loop until cook acknowledges / accepts order
+  startPersistentOrderAlarm(durationSeconds = 120) {
     try {
       this.init();
       this.lastStartedAt = Date.now();
@@ -148,7 +188,10 @@ class SoundManager {
 
       this.isPlayingAlarm = true;
 
-      // Play first burst immediately
+      // 1. Start continuous uninterrupted aggressive vibration
+      this.startContinuousVibration();
+
+      // 2. Play first burst immediately
       this.playLoudAlarmBurst();
 
       // Repeat burst every 2.5 seconds insistently
@@ -161,10 +204,12 @@ class SoundManager {
         }
       }, 2500);
 
-      // Timeout after 60 seconds if not stopped manually
-      this.alarmTimeout = setTimeout(() => {
-        this.stopAlarm();
-      }, durationSeconds * 1000);
+      // Timeout after durationSeconds (default 120s = 2 minutes) if not stopped manually
+      if (durationSeconds > 0) {
+        this.alarmTimeout = setTimeout(() => {
+          this.stopAlarm();
+        }, durationSeconds * 1000);
+      }
 
       // Notify UI listeners
       this.onAlarmStartListeners.forEach(cb => {
@@ -184,9 +229,12 @@ class SoundManager {
     }
   }
 
-  // Immediately silences the alarm
+  // Immediately silences the alarm and stops continuous vibration
   stopAlarm() {
     this.isPlayingAlarm = false;
+
+    // Immediately stop continuous vibration loop
+    this.stopContinuousVibration();
 
     if (this.alarmInterval) {
       clearInterval(this.alarmInterval);
@@ -205,11 +253,6 @@ class SoundManager {
       } catch(e) {}
     });
     this.activeOscillators = [];
-
-    // Stop vibration
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      try { navigator.vibrate(0); } catch(e) {}
-    }
 
     // Notify UI listeners
     this.onAlarmStopListeners.forEach(cb => {
@@ -259,6 +302,66 @@ class SoundManager {
   // Synthesizes a loud, distinctive multi-tone order alarm sequence for Owners
   playOrderAlarm() {
     this.startPersistentOrderAlarm(10);
+  }
+
+  // Synthesizes pleasant, distinctive audio chimes for customer order status changes
+  playCustomerStatusChime(status) {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+
+      const dest = this.getDestination() || this.ctx.destination;
+      const now = this.ctx.currentTime;
+
+      const playTone = (freq, startTime, duration, vol = 0.35, type = 'sine') => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.001, startTime);
+        gain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(dest);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+
+      const s = String(status || '').trim();
+      if (s === 'Preparando' || s === 'Aceptado') {
+        // Uplifting ascending chime (C5 -> E5 -> G5)
+        playTone(523.25, now, 0.35, 0.35);
+        playTone(659.25, now + 0.14, 0.40, 0.38);
+        playTone(783.99, now + 0.28, 0.80, 0.42);
+      } else if (s === 'Listo') {
+        // Double crisp bell chime (A5 -> D6)
+        playTone(880.00, now, 0.30, 0.38);
+        playTone(1174.66, now + 0.15, 0.70, 0.42);
+      } else if (s === 'En Camino') {
+        // Dynamic transport rhythm
+        playTone(440.00, now, 0.18, 0.32);
+        playTone(554.37, now + 0.12, 0.20, 0.36);
+        playTone(659.25, now + 0.24, 0.25, 0.40);
+        playTone(880.00, now + 0.36, 0.75, 0.45);
+      } else if (s === 'Entregado' || s === 'completed') {
+        // Celebration fanfare (C5 -> E5 -> G5 -> C6)
+        playTone(523.25, now, 0.18, 0.35);
+        playTone(659.25, now + 0.12, 0.18, 0.38);
+        playTone(783.99, now + 0.24, 0.22, 0.40);
+        playTone(1046.50, now + 0.36, 0.90, 0.46);
+      } else if (s === 'Cancelado' || s === 'cancelled') {
+        // Descending alert
+        playTone(440, now, 0.25, 0.35, 'triangle');
+        playTone(330, now + 0.18, 0.55, 0.30, 'triangle');
+      } else {
+        this.playBell();
+      }
+    } catch (e) {
+      console.warn('Customer sound chime notice:', e);
+    }
   }
 }
 
