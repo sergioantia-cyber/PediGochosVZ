@@ -56,6 +56,7 @@ class AdminController {
     this.ordersFilter = 'all'; // 'all' | 'restaurant' | 'ride'
     this.ordersSearchTerm = '';
     this.isAuthenticated = false;
+    this.platformSettings = null;
 
     // Clear any stale cached establishments - server is authoritative
     try {
@@ -218,6 +219,9 @@ class AdminController {
 
     // Start 3.5-second REST polling fallback for live order detection across all stores
     this.startOrdersPolling();
+
+    // Load active exchange rates and rain mode settings
+    this.loadPlatformSettings();
 
     // Permanent persistent auto-login (NEVER logs out, never shows login screen)
     this.isAuthenticated = true;
@@ -538,6 +542,198 @@ class AdminController {
       }
     } catch(e) {
       console.warn('Admin orders polling error:', e);
+    }
+  }
+
+  playOrderNotification(order) {
+    if (!order) return;
+    const isRide = order.serviceType === 'ride' || order.serviceType === 'mototaxi' || order.type === 'ride' || Boolean(order.vehicleType) || (order.serviceName && order.serviceName.toLowerCase().includes('moto')) || (order.serviceName && order.serviceName.toLowerCase().includes('carrera'));
+    const isParcel = order.serviceType === 'parcel' || order.type === 'parcel' || (order.serviceName && order.serviceName.toLowerCase().includes('encomienda'));
+
+    if (window.Sound) {
+      if (isRide) {
+        Sound.playRideOrderSound();
+      } else if (isParcel) {
+        Sound.playParcelOrderSound();
+      } else {
+        Sound.playFoodOrderSound();
+      }
+      setTimeout(() => {
+        if (window.Sound && !Sound.isPlayingAlarm) {
+          Sound.startPersistentOrderAlarm(6);
+        }
+      }, 1200);
+    }
+
+    const orderCode = order.dailyNumber || order.code || (order.id ? String(order.id).slice(-4) : '');
+    const storeName = isRide ? (order.serviceName || 'PediGochos Móvil') : (isParcel ? 'Servicio Encomienda' : (order.establishmentName || order.storeName || null));
+    this.showAlarmBanner(orderCode, storeName, order.establishmentId || order.storeId, order.id, isRide);
+  }
+
+  async loadPlatformSettings() {
+    try {
+      const res = await fetch('/api/platform-settings');
+      if (res.ok) {
+        this.platformSettings = await res.json();
+        this.updateHeaderSettingsUI();
+      }
+    } catch (err) {
+      console.warn('Error loading platform settings in admin:', err);
+    }
+  }
+
+  updateHeaderSettingsUI() {
+    if (!this.platformSettings) return;
+
+    // 1. Tasa de cambio en cabecera
+    const ratesTextEl = document.getElementById('header-rates-text');
+    if (ratesTextEl && this.platformSettings.exchangeRates) {
+      const { copUsd, bsUsd } = this.platformSettings.exchangeRates;
+      const copFormatted = copUsd ? `$${Number(copUsd).toLocaleString('es-CO')}` : '$4.100';
+      const bsFormatted = bsUsd ? `${bsUsd} Bs` : '135 Bs';
+      ratesTextEl.textContent = `Tasa: ${copFormatted} COP | ${bsFormatted}`;
+    }
+
+    // 2. Modo Lluvia en cabecera
+    const rainBtn = document.getElementById('btn-header-rain-mode');
+    const rainTextEl = document.getElementById('header-rain-text');
+    const rainIconEl = document.getElementById('header-rain-icon');
+    if (rainBtn && rainTextEl) {
+      if (this.platformSettings.rainMode) {
+        rainBtn.style.background = 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)';
+        rainBtn.style.color = '#FFFFFF';
+        rainBtn.style.borderColor = '#60A5FA';
+        rainBtn.style.boxShadow = '0 0 14px rgba(37, 99, 235, 0.6)';
+        if (rainIconEl) rainIconEl.textContent = '🌧️';
+        rainTextEl.textContent = 'Modo Lluvia: ACTIVO (+25m)';
+      } else {
+        rainBtn.style.background = 'rgba(59, 130, 246, 0.15)';
+        rainBtn.style.color = '#60A5FA';
+        rainBtn.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+        rainBtn.style.boxShadow = 'none';
+        if (rainIconEl) rainIconEl.textContent = '☀️';
+        rainTextEl.textContent = 'Modo Lluvia: OFF';
+      }
+    }
+  }
+
+  openExchangeRateModal() {
+    const modal = document.getElementById('admin-exchange-rate-modal');
+    if (!modal) return;
+
+    const copInput = document.getElementById('input-rate-cop-usd');
+    const bsInput = document.getElementById('input-rate-bs-usd');
+    const rates = this.platformSettings?.exchangeRates || { copUsd: 4100, bsUsd: 135 };
+
+    if (copInput) copInput.value = rates.copUsd || 4100;
+    if (bsInput) bsInput.value = rates.bsUsd || 135;
+
+    this.recalcRateEquivalent();
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+
+  closeExchangeRateModal() {
+    const modal = document.getElementById('admin-exchange-rate-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+  }
+
+  recalcRateEquivalent() {
+    const copInput = document.getElementById('input-rate-cop-usd');
+    const bsInput = document.getElementById('input-rate-bs-usd');
+    const previewEl = document.getElementById('rate-equivalent-preview');
+    if (!copInput || !bsInput || !previewEl) return;
+
+    const cop = parseFloat(copInput.value) || 0;
+    const bs = parseFloat(bsInput.value) || 0;
+
+    if (cop > 0 && bs > 0) {
+      const copPerBs = (cop / bs).toFixed(2);
+      previewEl.innerHTML = `1 Bs ≈ <strong>$${copPerBs} COP</strong> &nbsp;|&nbsp; 1 USD = $${cop.toLocaleString('es-CO')} COP = ${bs} Bs`;
+    } else {
+      previewEl.textContent = 'Ingresa valores válidos para calcular equivalencia.';
+    }
+  }
+
+  async saveExchangeRates() {
+    const copInput = document.getElementById('input-rate-cop-usd');
+    const bsInput = document.getElementById('input-rate-bs-usd');
+    if (!copInput || !bsInput) return;
+
+    const copUsd = parseFloat(copInput.value);
+    const bsUsd = parseFloat(bsInput.value);
+
+    if (!copUsd || copUsd <= 0 || !bsUsd || bsUsd <= 0) {
+      alert('Por favor ingresa valores válidos mayores a cero.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/platform-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exchangeRates: { copUsd, bsUsd }
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.settings) {
+          this.platformSettings = data.settings;
+          this.updateHeaderSettingsUI();
+        }
+        this.closeExchangeRateModal();
+        this.showToast('✅ Tasa de cambio actualizada y transmitida a clientes y domiciliarios');
+      } else {
+        alert('Error al guardar la tasa de cambio');
+      }
+    } catch (err) {
+      console.error('Error saving exchange rates:', err);
+      alert('Error de conexión al guardar tasa de cambio');
+    }
+  }
+
+  async toggleRainMode() {
+    const currentState = Boolean(this.platformSettings?.rainMode);
+    const newState = !currentState;
+
+    try {
+      const res = await fetch('/api/platform-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rainMode: newState })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.settings) {
+          this.platformSettings = data.settings;
+          this.updateHeaderSettingsUI();
+        }
+        this.showToast(newState ? '🌧️ Modo Lluvia / Alta Demanda ACTIVO (+25m)' : '☀️ Modo Lluvia DESACTIVADO');
+      }
+    } catch (err) {
+      console.error('Error toggling rain mode:', err);
+    }
+  }
+
+  openSoundChannelsModal() {
+    const modal = document.getElementById('admin-sound-channels-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+  }
+
+  closeSoundChannelsModal() {
+    const modal = document.getElementById('admin-sound-channels-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
     }
   }
 
@@ -4219,6 +4415,11 @@ class AdminController {
 
           this.renderTable();
           this.playOrderNotification(order);
+        }
+
+        if (data.type === 'PLATFORM_SETTINGS_UPDATE' && data.settings) {
+          this.platformSettings = data.settings;
+          this.updateHeaderSettingsUI();
         }
       } catch (err) {
         console.error('Error parsing WS message in admin:', err);

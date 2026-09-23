@@ -299,6 +299,165 @@ class SoundManager {
     }
   }
 
+  // 🍔 Sound Channel 1: Food / Restaurant Order (Cash Register "Cha-ching" + Chef's Bell)
+  playFoodOrderSound() {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+
+      const dest = this.getDestination() || this.ctx.destination;
+      const now = this.ctx.currentTime;
+
+      // 1. Cha-ching coin register slide
+      const oscCoin1 = this.ctx.createOscillator();
+      const gainCoin1 = this.ctx.createGain();
+      oscCoin1.type = 'triangle';
+      oscCoin1.frequency.setValueAtTime(1900, now);
+      oscCoin1.frequency.exponentialRampToValueAtTime(3200, now + 0.12);
+      gainCoin1.gain.setValueAtTime(0.001, now);
+      gainCoin1.gain.linearRampToValueAtTime(0.45, now + 0.02);
+      gainCoin1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      oscCoin1.connect(gainCoin1);
+      gainCoin1.connect(dest);
+      oscCoin1.start(now);
+      oscCoin1.stop(now + 0.25);
+
+      // 2. High chime resonance
+      const oscCoin2 = this.ctx.createOscillator();
+      const gainCoin2 = this.ctx.createGain();
+      oscCoin2.type = 'sine';
+      oscCoin2.frequency.setValueAtTime(3600, now + 0.08);
+      gainCoin2.gain.setValueAtTime(0.001, now + 0.08);
+      gainCoin2.gain.linearRampToValueAtTime(0.50, now + 0.10);
+      gainCoin2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+      oscCoin2.connect(gainCoin2);
+      gainCoin2.connect(dest);
+      oscCoin2.start(now + 0.08);
+      oscCoin2.stop(now + 0.65);
+
+      // 3. Chef's double bell ring (C6 & E6)
+      const oscBell = this.ctx.createOscillator();
+      const gainBell = this.ctx.createGain();
+      oscBell.type = 'sine';
+      oscBell.frequency.setValueAtTime(1046.50, now + 0.20);
+      gainBell.gain.setValueAtTime(0.001, now + 0.20);
+      gainBell.gain.linearRampToValueAtTime(0.40, now + 0.22);
+      gainBell.gain.exponentialRampToValueAtTime(0.001, now + 1.10);
+      oscBell.connect(gainBell);
+      gainBell.connect(dest);
+      oscBell.start(now + 0.20);
+      oscBell.stop(now + 1.10);
+
+      // Mobile vibration pattern: short happy pulses
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([100, 60, 100, 60, 250]);
+      }
+    } catch (e) {
+      console.warn('playFoodOrderSound error:', e);
+    }
+  }
+
+  // 🛵 Sound Channel 2: Vehicle Ride / Mototaxi Request (Acoustic horn "Beep-Beep" + Rev)
+  playRideOrderSound() {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+
+      const dest = this.getDestination() || this.ctx.destination;
+      const now = this.ctx.currentTime;
+
+      // Play double horn pulse (440Hz + 554Hz)
+      const playHornBeep = (startTime, duration) => {
+        [440, 554.37].forEach(f => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(f, startTime);
+          osc.frequency.linearRampToValueAtTime(f * 1.04, startTime + duration); // Doppler effect
+
+          gain.gain.setValueAtTime(0.001, startTime);
+          gain.gain.linearRampToValueAtTime(0.35, startTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+          osc.connect(gain);
+          gain.connect(dest);
+          osc.start(startTime);
+          osc.stop(startTime + duration);
+        });
+      };
+
+      // Beep 1
+      playHornBeep(now, 0.16);
+      // Beep 2
+      playHornBeep(now + 0.22, 0.28);
+
+      // Low engine rev acoustic undertone
+      const oscRev = this.ctx.createOscillator();
+      const gainRev = this.ctx.createGain();
+      oscRev.type = 'triangle';
+      oscRev.frequency.setValueAtTime(110, now);
+      oscRev.frequency.exponentialRampToValueAtTime(220, now + 0.50);
+      gainRev.gain.setValueAtTime(0.001, now);
+      gainRev.gain.linearRampToValueAtTime(0.25, now + 0.10);
+      gainRev.gain.exponentialRampToValueAtTime(0.001, now + 0.60);
+      oscRev.connect(gainRev);
+      gainRev.connect(dest);
+      oscRev.start(now);
+      oscRev.stop(now + 0.60);
+
+      // Mobile vibration pattern: double horn vibration
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([160, 70, 260]);
+      }
+    } catch(e) {
+      console.warn('playRideOrderSound error:', e);
+    }
+  }
+
+  // 📦 Sound Channel 3: Parcel / Delivery Logistics (Crisp Dual-Chime)
+  playParcelOrderSound() {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+
+      const dest = this.getDestination() || this.ctx.destination;
+      const now = this.ctx.currentTime;
+
+      // Two-tone logistics chime (A5 -> E6)
+      const playTone = (freq, startTime, duration) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.001, startTime);
+        gain.gain.linearRampToValueAtTime(0.40, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(dest);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+
+      playTone(880, now, 0.35);
+      playTone(1318.51, now + 0.15, 0.85);
+
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([120, 50, 180]);
+      }
+    } catch(e) {
+      console.warn('playParcelOrderSound error:', e);
+    }
+  }
+
   // Synthesizes a loud, distinctive multi-tone order alarm sequence for Owners
   playOrderAlarm() {
     this.startPersistentOrderAlarm(10);

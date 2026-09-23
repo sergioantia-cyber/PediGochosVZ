@@ -2358,6 +2358,80 @@ app.post('/api/driver/location', (req, res) => {
   res.json({ success: true, latitude, longitude });
 });
 
+// ==========================================
+// PLATFORM SETTINGS (EXCHANGE RATES & RAIN MODE)
+// ==========================================
+const PLATFORM_SETTINGS_FILE = path.join(__dirname, 'platform_settings.json');
+
+function readPlatformSettings() {
+  const defaultSettings = {
+    rates: {
+      copPerUsd: 4100,
+      bsPerUsd: 135,
+      copPerBs: 30.37
+    },
+    rainMode: false,
+    rainExtraTimeMin: 25,
+    rainExtraFeeCop: 1500,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    if (fs.existsSync(PLATFORM_SETTINGS_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(PLATFORM_SETTINGS_FILE, 'utf8'));
+      return { ...defaultSettings, ...parsed, rates: { ...defaultSettings.rates, ...(parsed.rates || {}) } };
+    }
+  } catch(e) {
+    console.error('Error reading platform_settings.json:', e);
+  }
+  return defaultSettings;
+}
+
+function writePlatformSettings(settings) {
+  try {
+    fs.writeFileSync(PLATFORM_SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing platform_settings.json:', e);
+  }
+}
+
+app.get('/api/platform-settings', (req, res) => {
+  res.json(readPlatformSettings());
+});
+
+app.post('/api/platform-settings', (req, res) => {
+  const current = readPlatformSettings();
+  const updated = {
+    ...current,
+    ...req.body,
+    rates: {
+      ...current.rates,
+      ...(req.body.rates || {})
+    },
+    updatedAt: new Date().toISOString()
+  };
+
+  // Recompute copPerBs if copPerUsd and bsPerUsd are provided
+  if (updated.rates.copPerUsd && updated.rates.bsPerUsd && updated.rates.bsPerUsd > 0) {
+    updated.rates.copPerBs = parseFloat((updated.rates.copPerUsd / updated.rates.bsPerUsd).toFixed(2));
+  }
+
+  writePlatformSettings(updated);
+
+  // Broadcast settings update to all connected WebSocket clients
+  const payload = JSON.stringify({
+    type: 'PLATFORM_SETTINGS_UPDATE',
+    settings: updated
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) {
+      c.send(payload);
+    }
+  });
+
+  res.json({ success: true, settings: updated });
+});
+
 // Fallback for SPA routing (if any) or simple index.html
 app.get('*', (req, res, next) => {
   // If request is for api, skip to next route handler (standard Express)
