@@ -84,10 +84,35 @@
     <main id="tab-view-chat" class="tab-content active">
       <div class="driver-chat-container">
         <div class="driver-chat-header">
-          <h3>💬 Chat Grupal de Domiciliarios</h3>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 style="margin: 0; font-size: 15px;">💬 Chat Grupal</h3>
+            <button type="button" id="btn-voice-toggle" class="voice-toggle-btn" onclick="DriverApp.toggleVoiceAlerts()" title="Activar/Desactivar lectura por voz de carreras">
+              <span id="voice-icon">🔊</span>
+              <span id="voice-label">Voz Activa</span>
+            </button>
+          </div>
           <span style="font-size: 11px; color: #10B981; font-weight: 800; display: flex; align-items: center; gap: 4px;">
             <span class="green-pulse-dot" style="width: 8px; height: 8px;"></span> EN LÍNEA
           </span>
+        </div>
+
+        <!-- Chat Quick Filter Pills -->
+        <div class="chat-filters-bar" id="chat-filters-bar">
+          <button type="button" class="chat-filter-btn active" data-filter="all" onclick="DriverApp.setChatFilter('all')">
+            🔘 Todos <span class="chat-filter-badge" id="filter-count-all">0</span>
+          </button>
+          <button type="button" class="chat-filter-btn" data-filter="ride" onclick="DriverApp.setChatFilter('ride')">
+            🛵 Carreras <span class="chat-filter-badge" id="filter-count-ride">0</span>
+          </button>
+          <button type="button" class="chat-filter-btn" data-filter="food" onclick="DriverApp.setChatFilter('food')">
+            🍔 Comida <span class="chat-filter-badge" id="filter-count-food">0</span>
+          </button>
+          <button type="button" class="chat-filter-btn" data-filter="parcel" onclick="DriverApp.setChatFilter('parcel')">
+            📦 Encomiendas <span class="chat-filter-badge" id="filter-count-parcel">0</span>
+          </button>
+          <button type="button" class="chat-filter-btn" data-filter="messages" onclick="DriverApp.setChatFilter('messages')">
+            💬 Mensajes <span class="chat-filter-badge" id="filter-count-messages">0</span>
+          </button>
         </div>
 
         <!-- Chat messages & Interactive Service Cards Feed -->
@@ -169,12 +194,13 @@
                 <th>Ruta (Origen ➡️ Destino)</th>
                 <th>Km</th>
                 <th>Ganancia</th>
+                <th>Foto</th>
                 <th>Estado</th>
               </tr>
             </thead>
             <tbody id="daily-orders-table-body">
               <tr>
-                <td colspan="7" style="text-align: center; color: #94A3B8; padding: 24px;">Cargando tabla de domicilios...</td>
+                <td colspan="8" style="text-align: center; color: #94A3B8; padding: 24px;">Cargando tabla de domicilios...</td>
               </tr>
             </tbody>
           </table>
@@ -184,7 +210,20 @@
 
   </div>
 
+  <!-- Modal for viewing saved proof photo -->
+  <div id="modal-view-proof-photo" class="driver-gate-overlay hidden" onclick="DriverApp.closeProofPhotoModal()">
+    <div class="driver-gate-card" style="max-width: 480px; padding: 20px;" onclick="event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="margin: 0; font-size: 16px; color: #FFF; font-weight: 800;">📸 Comprobante de Entrega</h3>
+        <button type="button" class="btn-remove-photo" style="position: static; font-size: 12px; padding: 5px 12px;" onclick="DriverApp.closeProofPhotoModal()">✕ Cerrar</button>
+      </div>
+      <div style="border-radius: 14px; overflow: hidden; background: #000; border: 1px solid #334155; text-align: center;">
+        <img id="modal-proof-img" src="" alt="Comprobante" style="width: 100%; height: auto; max-height: 380px; object-fit: contain; display: block;">
+      </div>
+    </div>
+  </div>
+
   <script src="/js/sound.js?v=83"></script>
-  <script src="/js/driver.js?v=200"></script>
+  <script src="/js/driver.js?v=210"></script>
 </body>
 </html>
