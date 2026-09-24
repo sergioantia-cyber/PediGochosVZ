@@ -57,6 +57,10 @@ class AdminController {
     this.ordersSearchTerm = '';
     this.isAuthenticated = false;
     this.platformSettings = null;
+    this.driverChatMessages = [];
+    this.driverChatFilter = 'all';
+    this.driverChatUnreadCount = 0;
+    this.isDriverChatModalOpen = false;
 
     // Clear any stale cached establishments - server is authoritative
     try {
@@ -222,6 +226,10 @@ class AdminController {
 
     // Load active exchange rates and rain mode settings
     this.loadPlatformSettings();
+
+    // Load live driver group chat and start polling fallback
+    this.loadDriverChat();
+    this.startDriverChatPolling();
 
     // Permanent persistent auto-login (NEVER logs out, never shows login screen)
     this.isAuthenticated = true;
@@ -734,6 +742,292 @@ class AdminController {
     if (modal) {
       modal.classList.add('hidden');
       modal.style.display = 'none';
+    }
+  }
+
+  startDriverChatPolling() {
+    if (this.driverChatPollTimer) clearInterval(this.driverChatPollTimer);
+    this.driverChatPollTimer = setInterval(() => {
+      if (this.isAuthenticated) this.loadDriverChat(true);
+    }, 4500);
+  }
+
+  async loadDriverChat(silent = false) {
+    try {
+      const res = await fetch('/api/driver/chat');
+      if (!res.ok) return;
+      const msgs = await res.json();
+      if (!Array.isArray(msgs)) return;
+
+      const prevCount = this.driverChatMessages.length;
+      this.driverChatMessages = msgs;
+      this.renderDriverChat();
+
+      if (!silent && msgs.length > prevCount && prevCount > 0) {
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsg && lastMsg.senderRole !== 'owner') {
+          if (!this.isDriverChatModalOpen) {
+            this.driverChatUnreadCount += (msgs.length - prevCount);
+            this.updateDriverChatUnreadUI();
+          }
+        }
+      }
+    } catch(e) {
+      if (!silent) console.warn('Error loading driver chat:', e);
+    }
+  }
+
+  handleIncomingDriverChatMessage(msg) {
+    if (!msg) return;
+    const exists = this.driverChatMessages.some(m => m.id === msg.id);
+    if (!exists) {
+      this.driverChatMessages.push(msg);
+      if (msg.senderRole !== 'owner') {
+        if (!this.isDriverChatModalOpen) {
+          this.driverChatUnreadCount++;
+          this.updateDriverChatUnreadUI();
+        }
+        if (window.Sound && typeof Sound.playParcelOrderSound === 'function') {
+          Sound.playParcelOrderSound();
+        }
+      }
+      this.renderDriverChat();
+      this.scrollDriverChatToBottom();
+    }
+  }
+
+  updateDriverChatUnreadUI() {
+    const badge = document.getElementById('admin-chat-unread-badge');
+    if (badge) {
+      if (this.driverChatUnreadCount > 0) {
+        badge.innerText = this.driverChatUnreadCount;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }
+
+  setDriverChatFilter(filter) {
+    this.driverChatFilter = filter;
+    document.querySelectorAll('.chat-filter-btn').forEach(btn => {
+      if (btn.dataset.filter === filter) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    this.renderDriverChat();
+  }
+
+  renderDriverChat() {
+    const feeds = [
+      document.getElementById('admin-driver-chat-feed'),
+      document.getElementById('admin-driver-chat-modal-feed')
+    ].filter(Boolean);
+
+    if (feeds.length === 0) return;
+
+    let countAll = 0, countRide = 0, countFood = 0, countParcel = 0, countMessages = 0;
+    this.driverChatMessages.forEach(m => {
+      countAll++;
+      if (m.type === 'service_request') {
+        const isRide = m.serviceType === 'ride';
+        const isParcel = m.serviceType === 'parcel' || m.serviceType === 'encomienda' || m.vehicleType === 'encomienda';
+        if (isRide) countRide++;
+        else if (isParcel) countParcel++;
+        else countFood++;
+      } else {
+        countMessages++;
+      }
+    });
+
+    ['', '-modal'].forEach(p => {
+      const elAll = document.getElementById(`admin-chat${p}-count-all`);
+      const elRide = document.getElementById(`admin-chat${p}-count-ride`);
+      const elFood = document.getElementById(`admin-chat${p}-count-food`);
+      const elParcel = document.getElementById(`admin-chat${p}-count-parcel`);
+      const elMessages = document.getElementById(`admin-chat${p}-count-messages`);
+      if (elAll) elAll.innerText = countAll;
+      if (elRide) elRide.innerText = countRide;
+      if (elFood) elFood.innerText = countFood;
+      if (elParcel) elParcel.innerText = countParcel;
+      if (elMessages) elMessages.innerText = countMessages;
+    });
+
+    const visibleMessages = this.driverChatMessages.filter(msg => {
+      if (this.driverChatFilter === 'all') return true;
+      if (this.driverChatFilter === 'messages') return msg.type !== 'service_request';
+      if (msg.type !== 'service_request') return false;
+      const isRide = msg.serviceType === 'ride';
+      const isParcel = msg.serviceType === 'parcel' || msg.serviceType === 'encomienda' || msg.vehicleType === 'encomienda';
+      if (this.driverChatFilter === 'ride') return isRide;
+      if (this.driverChatFilter === 'parcel') return isParcel;
+      if (this.driverChatFilter === 'food') return !isRide && !isParcel;
+      return true;
+    });
+
+    if (visibleMessages.length === 0) {
+      const emptyHtml = `
+        <div style="text-align: center; color: #94A3B8; padding: 36px 12px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 6px;">💬</span>
+          <p style="margin: 0; font-size: 13px; font-weight: 700;">No hay elementos para este filtro en el chat.</p>
+        </div>
+      `;
+      feeds.forEach(f => f.innerHTML = emptyHtml);
+      return;
+    }
+
+    const html = visibleMessages.map(msg => {
+      const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+      if (msg.type === 'service_request') {
+        const isRide = msg.serviceType === 'ride';
+        const isLujo = msg.vehicleType === 'lujo';
+        const isTaken = msg.status === 'Tomado';
+        const isEntregado = msg.status === 'Entregado';
+        const safeOrigin = this.escapeHtml(msg.origin || 'Ubicación GPS');
+        const safeDest = this.escapeHtml(msg.destination || 'Dirección de entrega');
+        const originMap = (msg.originLat && msg.originLng) ? `https://www.google.com/maps?q=${msg.originLat},${msg.originLng}` : null;
+        const destMap = (msg.destLat && msg.destLng) ? `https://www.google.com/maps?q=${msg.destLat},${msg.destLng}` : null;
+
+        return `
+          <div class="service-request-card ${isTaken ? 'taken' : ''} ${isLujo ? 'ride-lujo' : ''}" style="margin-bottom: 10px;">
+            <div class="service-card-top">
+              <span class="service-type-badge ${isLujo ? 'lujo' : ''}">
+                ${isRide ? '🚖 TRASLADO MÓVIL' : '📦 ENCOMIENDA DELIVERY'} • ${this.escapeHtml(msg.vehicleLabel || 'Moto Taxi')}
+              </span>
+              <span class="service-price-pill">${msg.fareFormatted || `$${msg.fare} COP`}</span>
+            </div>
+
+            <div class="service-route-box">
+              <div class="route-step">
+                <span class="route-icon" style="color: #10B981;">🟢</span>
+                <div class="route-text" style="flex: 1;">
+                  <strong>Recogida (Origen):</strong>
+                  <span>${safeOrigin}</span>
+                  ${originMap ? `<a href="${originMap}" target="_blank" class="btn-mini-map-action" style="text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">🗺️ Mapa</a>` : ''}
+                </div>
+              </div>
+
+              <div class="route-step" style="margin-top: 6px;">
+                <span class="route-icon" style="color: #EF4444;">🏁</span>
+                <div class="route-text" style="flex: 1;">
+                  <strong>Destino (Llegada):</strong>
+                  <span>${safeDest}</span>
+                  ${destMap ? `<a href="${destMap}" target="_blank" class="btn-mini-map-action" style="text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">🗺️ Mapa</a>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="service-details-row" style="margin-top: 8px;">
+              <span>📏 <strong>${msg.distanceKm || 1} km</strong></span>
+              <span>👤 <strong>${this.escapeHtml(msg.customerName || 'Cliente')}</strong></span>
+              <span style="color: #94A3B8; margin-left: auto;">⏰ ${timeStr}</span>
+            </div>
+
+            <div style="margin-top: 10px; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-align: center; background: ${isTaken ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)'}; color: ${isTaken ? '#34D399' : '#FBBF24'}; border: 1px solid ${isTaken ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'};">
+              ${isTaken ? `🛵 Tomado por ${this.escapeHtml(msg.takenBy || 'Repartidor')}` : isEntregado ? '✅ Servicio Finalizado / Entregado' : '🟡 En espera de repartidor'}
+            </div>
+          </div>
+        `;
+      }
+
+      // Regular text chat message
+      const isOwner = msg.senderRole === 'owner';
+      return `
+        <div class="chat-bubble-msg ${isOwner ? 'self owner-msg' : ''}" style="margin-bottom: 8px;">
+          <div class="chat-sender-name">
+            <span style="${isOwner ? 'color: #FCD34D; font-weight: 900;' : 'color: #34D399; font-weight: 800;'}">
+              ${isOwner ? '👑 Dueño / Central' : '🛵 ' + this.escapeHtml(msg.senderName || 'Repartidor')}
+            </span>
+            <span class="chat-time-tag">${timeStr}</span>
+          </div>
+          <div class="chat-body-text">${this.escapeHtml(msg.text || '')}</div>
+        </div>
+      `;
+    }).join('');
+
+    feeds.forEach(feed => {
+      const isAtBottom = feed.scrollHeight - feed.scrollTop <= feed.clientHeight + 100;
+      feed.innerHTML = html;
+      if (isAtBottom) {
+        feed.scrollTop = feed.scrollHeight;
+      }
+    });
+  }
+
+  scrollDriverChatToBottom() {
+    setTimeout(() => {
+      const feeds = [
+        document.getElementById('admin-driver-chat-feed'),
+        document.getElementById('admin-driver-chat-modal-feed')
+      ].filter(Boolean);
+      feeds.forEach(f => f.scrollTop = f.scrollHeight);
+    }, 100);
+  }
+
+  async sendDriverChatMessage(fromModal = false) {
+    const inputId = fromModal ? 'admin-driver-chat-modal-input' : 'admin-driver-chat-input';
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    const text = inp.value.trim();
+    if (!text) return;
+
+    try {
+      inp.value = '';
+      const otherInput = document.getElementById(fromModal ? 'admin-driver-chat-input' : 'admin-driver-chat-modal-input');
+      if (otherInput) otherInput.value = '';
+
+      const res = await fetch('/api/driver/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: '👑 Dueño / Central',
+          senderPhone: 'owner',
+          senderRole: 'owner',
+          text: text
+        })
+      });
+
+      if (res.ok) {
+        const newMsg = await res.json();
+        this.driverChatMessages.push(newMsg);
+        this.renderDriverChat();
+        this.scrollDriverChatToBottom();
+      }
+    } catch(e) {
+      console.error('Error sending driver chat message from admin:', e);
+      alert('Error de conexión al enviar mensaje al chat de domiciliarios.');
+    }
+  }
+
+  openDriverChatModal() {
+    const modal = document.getElementById('admin-driver-chat-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    this.isDriverChatModalOpen = true;
+    this.driverChatUnreadCount = 0;
+    this.updateDriverChatUnreadUI();
+    this.renderDriverChat();
+    this.scrollDriverChatToBottom();
+  }
+
+  closeDriverChatModal() {
+    const modal = document.getElementById('admin-driver-chat-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+    this.isDriverChatModalOpen = false;
+  }
+
+  toggleDriverChatModal() {
+    if (this.isDriverChatModalOpen) {
+      this.closeDriverChatModal();
+    } else {
+      this.openDriverChatModal();
     }
   }
 
@@ -4415,11 +4709,20 @@ class AdminController {
 
           this.renderTable();
           this.playOrderNotification(order);
+          this.loadDriverChat(true);
         }
 
         if (data.type === 'PLATFORM_SETTINGS_UPDATE' && data.settings) {
           this.platformSettings = data.settings;
           this.updateHeaderSettingsUI();
+        }
+
+        if (data.type === 'DRIVER_CHAT_MESSAGE' && data.message) {
+          this.handleIncomingDriverChatMessage(data.message);
+        }
+
+        if (data.type === 'DRIVER_CHAT_UPDATE' || data.type === 'ORDER_STATUS_UPDATE') {
+          this.loadDriverChat(true);
         }
       } catch (err) {
         console.error('Error parsing WS message in admin:', err);

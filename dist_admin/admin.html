@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/css/common.css?v=226">
   <link rel="stylesheet" href="/css/admin.css?v=226">
   <link rel="stylesheet" href="/css/kitchen.css?v=226">
+  <link rel="stylesheet" href="/css/driver.css?v=226">
   <link rel="stylesheet" href="/css/menu-builder.css?v=226">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -111,6 +112,11 @@
           <button type="button" id="btn-header-rain-mode" class="btn-logout" onclick="AdminApp.toggleRainMode()" style="background: rgba(59, 130, 246, 0.15); color: #60A5FA; font-weight: 800; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.3s ease;" title="Activar/Desactivar Modo Lluvia o Alta Demanda">
             <span id="header-rain-icon">🌧️</span>
             <span id="header-rain-text">Modo Lluvia: OFF</span>
+          </button>
+          <button type="button" id="btn-header-driver-chat" class="btn-logout" onclick="AdminApp.toggleDriverChatModal()" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; font-weight: 800; border: 1px solid #10B981; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35); position: relative;" title="Abrir Chat en Vivo de Domiciliarios y Repartidores">
+            <span>💬</span>
+            <span id="btn-header-chat-text">Chat Domicilios</span>
+            <span id="admin-chat-unread-badge" style="display: none; background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
           </button>
           <button type="button" class="btn-logout" onclick="AdminApp.openSoundChannelsModal()" style="background: rgba(168, 85, 247, 0.15); color: #C084FC; font-weight: 800; border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="Probar canales de sonido diferenciados (Comida, Mototaxi, Encomienda, Sirena)">
             <span>🎵</span>
@@ -352,6 +358,63 @@
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- Card: Chat de Domiciliarios en Vivo (Interacción directa Dueño - Repartidores) -->
+        <div class="admin-card" id="admin-driver-chat-card" style="margin-bottom: 24px; border: 1.5px solid rgba(16, 185, 129, 0.4); background: linear-gradient(135deg, #131E2C 0%, #0F172A 100%); border-radius: 18px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); color: #fff;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 22px;">💬</span>
+                <h3 style="margin: 0; color: #FFF; font-size: 17px; font-weight: 900;">Chat de Domiciliarios & Repartidores</h3>
+                <span class="live-active-light-badge" style="padding: 3px 8px; font-size: 10px; background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3);" title="Conexión bidireccional en tiempo real">
+                  <span class="green-pulse-dot"></span> EN VIVO
+                </span>
+              </div>
+              <p class="card-subtitle" style="margin: 4px 0 0 0; font-size: 12px; color: #94A3B8;">
+                Canal grupal sincronizado en tiempo real con <strong>Yoxman</strong> y todos los domiciliarios. Puedes enviar instrucciones o anuncios directos.
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button type="button" onclick="AdminApp.toggleDriverChatModal()" style="background: rgba(255,255,255,0.08); color: #CBD5E1; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                🗖 Pantalla Completa
+              </button>
+            </div>
+          </div>
+
+          <!-- Chat Quick Filter Pills -->
+          <div class="chat-filters-bar" style="margin-bottom: 12px; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;">
+            <button type="button" class="chat-filter-btn active" data-filter="all" onclick="AdminApp.setDriverChatFilter('all')">
+              🔘 Todos <span class="chat-filter-badge" id="admin-chat-count-all">0</span>
+            </button>
+            <button type="button" class="chat-filter-btn" data-filter="ride" onclick="AdminApp.setDriverChatFilter('ride')">
+              🛵 Carreras <span class="chat-filter-badge" id="admin-chat-count-ride">0</span>
+            </button>
+            <button type="button" class="chat-filter-btn" data-filter="food" onclick="AdminApp.setDriverChatFilter('food')">
+              🍔 Comida <span class="chat-filter-badge" id="admin-chat-count-food">0</span>
+            </button>
+            <button type="button" class="chat-filter-btn" data-filter="parcel" onclick="AdminApp.setDriverChatFilter('parcel')">
+              📦 Encomiendas <span class="chat-filter-badge" id="admin-chat-count-parcel">0</span>
+            </button>
+            <button type="button" class="chat-filter-btn" data-filter="messages" onclick="AdminApp.setDriverChatFilter('messages')">
+              💬 Mensajes <span class="chat-filter-badge" id="admin-chat-count-messages">0</span>
+            </button>
+          </div>
+
+          <!-- Chat Feed Container -->
+          <div id="admin-driver-chat-feed" class="driver-chat-feed premium-scroll" style="height: 380px; max-height: 480px; background: #0B1120; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; overflow-y: auto;">
+            <div style="text-align: center; color: #94A3B8; padding: 30px 10px;">
+              <p style="margin-top: 10px; font-size: 12.5px;">⏳ Conectando con el chat de domiciliarios...</p>
+            </div>
+          </div>
+
+          <!-- Chat Input Bar -->
+          <form class="driver-chat-input-bar" onsubmit="event.preventDefault(); AdminApp.sendDriverChatMessage(false);" style="margin-top: 12px; background: #161F33; border-radius: 12px; padding: 8px 12px; display: flex; gap: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <input type="text" id="admin-driver-chat-input" placeholder="Escribe un mensaje al grupo de domiciliarios como Dueño..." autocomplete="off" style="flex: 1; background: transparent; border: none; color: #FFF; font-size: 13px; outline: none;">
+            <button type="submit" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">
+              <span>👑</span> Enviar
+            </button>
+          </form>
         </div>
 
         <div class="admin-card">
@@ -2740,6 +2803,58 @@
       <div style="text-align: right;">
         <button type="button" onclick="AdminApp.closeSoundChannelsModal()" style="padding: 9px 18px; background: #334155; color: #FFF; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Cerrar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: Chat de Domiciliarios & Repartidores (Ventana Modal Completa) -->
+  <div id="admin-driver-chat-modal" class="login-gate-overlay hidden" style="display: none;" onclick="AdminApp.closeDriverChatModal()">
+    <div class="login-gate-card" style="max-width: 580px; width: 95%; text-align: left; padding: 20px; display: flex; flex-direction: column; max-height: 90vh;" onclick="event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 24px;">💬</span>
+          <div>
+            <h3 style="margin: 0; font-size: 16px; color: #FFF; font-weight: 900;">Chat Grupal de Domiciliarios</h3>
+            <span style="font-size: 11px; color: #10B981; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+              <span class="green-pulse-dot" style="width: 7px; height: 7px;"></span> CONECTADO EN VIVO
+            </span>
+          </div>
+        </div>
+        <button type="button" onclick="AdminApp.closeDriverChatModal()" style="background: rgba(255,255,255,0.08); border: none; color: #94A3B8; font-size: 16px; cursor: pointer; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+
+      <!-- Modal Chat Filters Bar -->
+      <div class="chat-filters-bar" style="margin-bottom: 10px; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;">
+        <button type="button" class="chat-filter-btn active" data-filter="all" onclick="AdminApp.setDriverChatFilter('all')">
+          🔘 Todos <span class="chat-filter-badge" id="admin-chat-modal-count-all">0</span>
+        </button>
+        <button type="button" class="chat-filter-btn" data-filter="ride" onclick="AdminApp.setDriverChatFilter('ride')">
+          🛵 Carreras <span class="chat-filter-badge" id="admin-chat-modal-count-ride">0</span>
+        </button>
+        <button type="button" class="chat-filter-btn" data-filter="food" onclick="AdminApp.setDriverChatFilter('food')">
+          🍔 Comida <span class="chat-filter-badge" id="admin-chat-modal-count-food">0</span>
+        </button>
+        <button type="button" class="chat-filter-btn" data-filter="parcel" onclick="AdminApp.setDriverChatFilter('parcel')">
+          📦 Encomiendas <span class="chat-filter-badge" id="admin-chat-modal-count-parcel">0</span>
+        </button>
+        <button type="button" class="chat-filter-btn" data-filter="messages" onclick="AdminApp.setDriverChatFilter('messages')">
+          💬 Mensajes <span class="chat-filter-badge" id="admin-chat-modal-count-messages">0</span>
+        </button>
+      </div>
+
+      <!-- Modal Chat Feed -->
+      <div id="admin-driver-chat-modal-feed" class="driver-chat-feed premium-scroll" style="flex: 1; min-height: 320px; max-height: 55vh; background: #0B1120; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; overflow-y: auto;">
+        <div style="text-align: center; color: #94A3B8; padding: 30px 10px;">
+          <p style="margin-top: 10px; font-size: 12.5px;">⏳ Conectando con el chat de domiciliarios...</p>
+        </div>
+      </div>
+
+      <!-- Modal Chat Input Bar -->
+      <form class="driver-chat-input-bar" onsubmit="event.preventDefault(); AdminApp.sendDriverChatMessage(true);" style="margin-top: 12px; background: #161F33; border-radius: 12px; padding: 8px 12px; display: flex; gap: 8px; border: 1px solid rgba(255,255,255,0.1);">
+        <input type="text" id="admin-driver-chat-modal-input" placeholder="Escribe un mensaje al grupo de domiciliarios como Dueño..." autocomplete="off" style="flex: 1; background: transparent; border: none; color: #FFF; font-size: 13px; outline: none;">
+        <button type="submit" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">
+          <span>👑</span> Enviar
+        </button>
+      </form>
     </div>
   </div>
 

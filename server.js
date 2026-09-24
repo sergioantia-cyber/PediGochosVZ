@@ -2167,18 +2167,21 @@ app.get('/api/driver/chat', (req, res) => {
 
 // POST send message into driver group chat
 app.post('/api/driver/chat', (req, res) => {
-  const { senderName, senderPhone, text } = req.body;
+  const { senderName, senderPhone, text, senderRole } = req.body;
   if (!text || !String(text).trim()) {
     return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
   }
+
+  const role = senderRole === 'owner' ? 'owner' : 'driver';
+  const name = senderName || (role === 'owner' ? '👑 Dueño / Central' : 'Repartidor');
 
   const msgs = readDriverChat();
   const newMsg = {
     id: 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
     type: 'chat_message',
-    senderName: senderName || 'Repartidor',
+    senderName: name,
     senderPhone: senderPhone || '',
-    senderRole: 'driver',
+    senderRole: role,
     text: String(text).trim(),
     timestamp: new Date().toISOString()
   };
