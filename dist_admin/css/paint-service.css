@@ -740,11 +740,11 @@
 .paint-models-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  max-height: 250px;
+  gap: 10px;
+  max-height: 310px;
   overflow-y: auto;
   padding-right: 4px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 @media (min-width: 520px) {
@@ -757,55 +757,127 @@
   background: #0F172A;
   border: 1.5px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 10px;
+  padding: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   text-align: left;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  overflow: hidden;
 }
 
 .paint-model-card:hover {
   border-color: rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.05);
+  background: rgba(239, 68, 68, 0.08);
+  transform: translateY(-2px);
 }
 
 .paint-model-card.selected {
   border-color: #EF4444;
-  background: rgba(239, 68, 68, 0.15);
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.16);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
+  transform: translateY(-2px);
+}
+
+.paint-model-img-wrapper {
+  width: 100%;
+  height: 84px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #070B12;
+  position: relative;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paint-model-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.paint-model-card:hover .paint-model-img,
+.paint-model-card.selected .paint-model-img {
+  transform: scale(1.06);
+}
+
+.paint-model-fallback-icon {
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
 }
 
 .paint-model-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 10px;
+  right: 10px;
   background: linear-gradient(135deg, #F59E0B, #EF4444);
   color: #FFF;
-  font-size: 8.5px;
+  font-size: 8px;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.paint-model-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .paint-model-name {
   font-size: 11.5px;
   font-weight: 800;
   color: #FFF;
-  display: block;
-  margin-top: 2px;
   line-height: 1.25;
 }
 
 .paint-model-brand {
   font-size: 9.5px;
   color: #94A3B8;
-  display: block;
   margin-top: 2px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.paint-selected-summary-bar {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.paint-selected-thumb-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0B0F17;
+  border: 1.5px solid rgba(239, 68, 68, 0.45);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paint-selected-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Step 2: Car Schematic Piece Selector */
