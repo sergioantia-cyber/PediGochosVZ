@@ -2706,7 +2706,8 @@ app.get('/api/paint-services/quotes/:id', (req, res) => {
 // POST new paint quote
 app.post('/api/paint-services/quotes', (req, res) => {
   const body = req.body || {};
-  if (!body.vehicleType || !body.clientName) {
+  const cName = body.clientName || body.customerName;
+  if (!body.vehicleType || !cName) {
     return res.status(400).json({ error: 'Datos incompletos de vehículo o cliente' });
   }
 
@@ -2719,18 +2720,23 @@ app.post('/api/paint-services/quotes', (req, res) => {
     chatId: chatId,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    clientName: body.clientName || 'Cliente',
-    clientPhone: body.clientPhone || '',
+    clientName: cName,
+    customerName: cName,
+    clientPhone: body.clientPhone || body.customerPhone || '',
+    customerPhone: body.clientPhone || body.customerPhone || '',
     clientLocation: body.clientLocation || 'San Antonio del Táchira',
-    vehicleType: body.vehicleType || 'sedan',
+    vehicleType: body.vehicleType || 'moto',
     vehicleModel: body.vehicleModel || 'Vehículo Particular',
     serviceType: body.serviceType || 'pieza',
     serviceName: body.serviceName || 'Latonería y Pintura',
-    finishType: body.finishType || 'brillante',
-    finishName: body.finishName || 'Brillante Estándar al Horno',
-    parts: Array.isArray(body.parts) && body.parts.length > 0 ? body.parts : ['Piezas Seleccionadas'],
-    hasBodywork: Boolean(body.hasBodywork),
-    estimatedPriceRange: body.estimatedPriceRange || { minUsd: 50, maxUsd: 80 },
+    finishType: body.finishType || 'bicapa',
+    finishName: body.finishName || 'Bicapa Poliuretano',
+    parts: Array.isArray(body.parts) && body.parts.length > 0 ? body.parts : (Array.isArray(body.selectedPieces) ? body.selectedPieces : ['Piezas Seleccionadas']),
+    selectedPieces: Array.isArray(body.selectedPieces) ? body.selectedPieces : (Array.isArray(body.parts) ? body.parts : []),
+    hasBodywork: Boolean(body.hasBodywork || body.hasLatoneria),
+    latoneriaSeverity: body.latoneriaSeverity || 'leve',
+    estimatedPriceRange: body.estimatedPriceRange || { minUsd: 45, maxUsd: 75 },
+    estimatedRangeUsd: body.estimatedRangeUsd || `${body.estimatedPriceRange?.minUsd || 45} - ${body.estimatedPriceRange?.maxUsd || 75}`,
     agreedPrice: null,
     urgency: body.urgency || 'semana',
     targetDate: body.targetDate || '',

@@ -695,6 +695,119 @@
   color: #94A3B8;
 }
 
+/* Brand Filter Chips for Vehicle Wizard */
+.paint-brand-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 2px 8px 2px;
+  margin: 12px 0 10px 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.paint-brand-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.paint-brand-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94A3B8;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.paint-brand-chip:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFF;
+}
+
+.paint-brand-chip.active {
+  background: #EF4444;
+  border-color: #EF4444;
+  color: #FFF;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Vehicle Models Grid */
+.paint-models-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 520px) {
+  .paint-models-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.paint-model-card {
+  background: #0F172A;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.paint-model-card:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.paint-model-card.selected {
+  border-color: #EF4444;
+  background: rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+}
+
+.paint-model-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: linear-gradient(135deg, #F59E0B, #EF4444);
+  color: #FFF;
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.paint-model-name {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #FFF;
+  display: block;
+  margin-top: 2px;
+  line-height: 1.25;
+}
+
+.paint-model-brand {
+  font-size: 9.5px;
+  color: #94A3B8;
+  display: block;
+  margin-top: 2px;
+}
+
 /* Step 2: Car Schematic Piece Selector */
 .paint-schematic-wrap {
   background: #1E293B;
@@ -737,17 +850,23 @@
 
 /* Pieces quick chips */
 .paint-pieces-chips {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
   gap: 8px;
-  justify-content: center;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 480px) {
+  .paint-pieces-chips {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .paint-piece-chip {
   background: #0F172A;
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #CBD5E1;
-  padding: 6px 12px;
+  padding: 8px 12px;
   border-radius: 12px;
   font-size: 11.5px;
   font-weight: 700;
@@ -755,7 +874,8 @@
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  text-align: left;
 }
 
 .paint-piece-chip:hover {
@@ -768,6 +888,39 @@
   border-color: #EF4444;
   color: #FFF;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.paint-piece-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.paint-piece-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.paint-piece-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.paint-piece-tag {
+  font-size: 9.5px;
+  color: #38BDF8;
+  font-weight: 600;
+}
+
+.paint-piece-chip.selected .paint-piece-tag {
+  color: #FEF08A;
+}
+
+.paint-piece-check {
+  font-size: 12px;
+  font-weight: 900;
+  margin-left: 4px;
 }
 
 /* Latonería toggle & severity */
