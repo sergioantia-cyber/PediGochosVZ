@@ -4178,5 +4178,118 @@ body {
   border-color: rgba(255, 107, 0, 0.6);
 }
 
+/* ==========================================================================
+   Merchant Diagnostic Test & Custom Template Generator Wizard
+   ========================================================================== */
+.merchant-diag-modal-content {
+  max-width: 580px;
+  width: 94%;
+  max-height: 90vh;
+  background: #0f172a;
+  border: 1.5px solid rgba(255, 107, 0, 0.45);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.85);
+  color: #FFF;
+  position: relative;
+  animation: diagSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes diagSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.merchant-diag-header {
+  padding: 18px 20px 14px 20px;
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+.merchant-diag-step-bar {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.merchant-diag-step-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B00 0%, #F59E0B 100%);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.merchant-diag-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.merchant-diag-footer {
+  padding: 14px 20px;
+  background: rgba(15, 23, 42, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  gap: 10px;
+}
+
+.merchant-choice-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
+}
+
+.merchant-choice-card:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(255, 107, 0, 0.5);
+}
+
+.merchant-choice-card.selected {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%);
+  border-color: #FF6B00;
+  box-shadow: 0 4px 14px rgba(255, 107, 0, 0.25);
+}
+
+.merchant-attr-checkbox {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.merchant-attr-checkbox.selected {
+  background: rgba(255, 107, 0, 0.12);
+  border-color: #FF6B00;
+}
+
+.merchant-template-sheet {
+  background: #090d16;
+  border: 1.5px solid rgba(255, 107, 0, 0.4);
+  border-radius: 16px;
+  padding: 16px;
+  font-family: inherit;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
 
 

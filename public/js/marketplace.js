@@ -84,6 +84,10 @@ class MarketplaceController {
     this.rideOriginMarker = null;
     this.rideDestMarker = null;
     this.rideRouteLine = null;
+
+    // Merchant Diagnostic Wizard State
+    this.merchantWizardStep = 1;
+    this.merchantData = this.getDefaultMerchantData();
   }
 
   async forceCleanUpdate() {
@@ -7321,25 +7325,59 @@ class MarketplaceController {
     if (modal) modal.classList.remove('active');
   }
 
+  getDefaultMerchantData() {
+    return {
+      businessName: '',
+      contactName: '',
+      phone: '',
+      city: 'San Cristóbal',
+      address: '',
+      businessModel: 'custom_craft', // 'custom_craft' | 'food' | 'retail' | 'service'
+      productAttributes: {
+        photo: true,
+        size: true,
+        customName: true,
+        customNumber: true,
+        colors: true,
+        extras: true,
+        leadTimeDays: true,
+        variantsStock: false,
+        tableIngredients: false
+      },
+      pricingModel: 'range', // 'fixed' | 'range' | 'custom_quote'
+      sampleProduct: 'Piñata Número Temática Personalizada',
+      prepTime: 'order_days', // 'immediate' | 'same_day' | 'order_days'
+      deliveryMethod: 'pedigochos', // 'pedigochos' | 'own_delivery' | 'pickup'
+      currencies: ['COP', 'USD', 'BS'],
+      generatedTemplate: ''
+    };
+  }
+
   openMerchantRegistrationModal(category = '') {
     const modal = document.getElementById('merchant-register-modal');
     if (modal) {
       modal.style.display = 'flex';
       modal.classList.add('active');
     }
+
+    if (!this.merchantData) {
+      this.merchantData = this.getDefaultMerchantData();
+    }
+
     if (category) {
-      const catInput = document.getElementById('reg-merchant-category');
-      if (catInput) {
-        const catMap = {
-          'farmacias': 'Farmacia / Medicamentos',
-          'servicios': 'Servicio Técnico / Auxilio',
-          'mercados': 'Mercado / Víveres',
-          'ferreterias': 'Ferretería / Herramientas',
-          'comidas': 'Restaurante / Comidas'
-        };
-        catInput.value = catMap[category] || this.capitalize(category);
+      if (category === 'comidas') {
+        this.selectMerchantBusinessModel('food', false);
+      } else if (category === 'servicios') {
+        this.selectMerchantBusinessModel('service', false);
+      } else if (['mercados', 'ferreterias', 'farmacias'].includes(category)) {
+        this.selectMerchantBusinessModel('retail', false);
+      } else {
+        this.selectMerchantBusinessModel('custom_craft', false);
       }
     }
+
+    this.merchantWizardStep = 1;
+    this.renderMerchantStep();
   }
 
   closeMerchantRegistrationModal() {
@@ -7350,36 +7388,809 @@ class MarketplaceController {
     }
   }
 
-  sendMerchantRegistrationWhatsApp() {
-    const nameInput = document.getElementById('reg-merchant-name');
-    const locInput = document.getElementById('reg-merchant-location');
-    const catInput = document.getElementById('reg-merchant-category');
-    const phoneInput = document.getElementById('reg-merchant-phone');
+  syncCurrentStepInputs() {
+    if (!this.merchantData) this.merchantData = this.getDefaultMerchantData();
 
-    const name = nameInput ? nameInput.value.trim() : '';
-    const location = locInput ? locInput.value.trim() : '';
-    const category = catInput ? catInput.value.trim() : '';
-    const phone = phoneInput ? phoneInput.value.trim() : '';
+    if (this.merchantWizardStep === 1) {
+      const nameInput = document.getElementById('diag-merchant-name');
+      const contactInput = document.getElementById('diag-contact-name');
+      const phoneInput = document.getElementById('diag-merchant-phone');
+      const cityInput = document.getElementById('diag-merchant-city');
+      const addrInput = document.getElementById('diag-merchant-address');
 
-    if (!name || !location || !phone) {
-      this.showToast('⚠️ Por favor completa los campos obligatorios.');
+      if (nameInput) this.merchantData.businessName = nameInput.value.trim();
+      if (contactInput) this.merchantData.contactName = contactInput.value.trim();
+      if (phoneInput) this.merchantData.phone = phoneInput.value.trim();
+      if (cityInput) this.merchantData.city = cityInput.value.trim();
+      if (addrInput) this.merchantData.address = addrInput.value.trim();
+    } else if (this.merchantWizardStep === 3) {
+      const sampleInput = document.getElementById('diag-sample-product');
+      if (sampleInput) this.merchantData.sampleProduct = sampleInput.value.trim();
+    }
+  }
+
+  nextMerchantStep() {
+    this.syncCurrentStepInputs();
+
+    if (this.merchantWizardStep === 1) {
+      if (!this.merchantData.businessName || !this.merchantData.phone) {
+        this.showToast('⚠️ Por favor ingresa el Nombre de tu Negocio y tu WhatsApp de contacto.');
+        return;
+      }
+    }
+
+    if (this.merchantWizardStep < 5) {
+      this.merchantWizardStep++;
+      this.renderMerchantStep();
+    } else {
+      this.sendMerchantRegistrationWhatsApp();
+    }
+  }
+
+  prevMerchantStep() {
+    this.syncCurrentStepInputs();
+    if (this.merchantWizardStep > 1) {
+      this.merchantWizardStep--;
+      this.renderMerchantStep();
+    } else {
+      this.closeMerchantRegistrationModal();
+    }
+  }
+
+  selectMerchantBusinessModel(modelKey, shouldRender = true) {
+    if (!this.merchantData) this.merchantData = this.getDefaultMerchantData();
+    this.merchantData.businessModel = modelKey;
+
+    if (modelKey === 'custom_craft') {
+      // Por encargo / Piñatas / Repostería / Resina
+      this.merchantData.productAttributes = {
+        photo: true,
+        size: true,
+        customName: true,
+        customNumber: true,
+        colors: true,
+        extras: true,
+        leadTimeDays: true,
+        variantsStock: false,
+        tableIngredients: false
+      };
+      this.merchantData.pricingModel = 'range';
+      this.merchantData.prepTime = 'order_days';
+      if (!this.merchantData.sampleProduct || this.merchantData.sampleProduct.includes('Hamburguesa')) {
+        this.merchantData.sampleProduct = 'Piñata Número Temática Personalizada';
+      }
+    } else if (modelKey === 'food') {
+      // Gastronomía / Restaurantes
+      this.merchantData.productAttributes = {
+        photo: true,
+        size: false,
+        customName: false,
+        customNumber: false,
+        colors: false,
+        extras: true,
+        leadTimeDays: false,
+        variantsStock: false,
+        tableIngredients: true
+      };
+      this.merchantData.pricingModel = 'fixed';
+      this.merchantData.prepTime = 'immediate';
+      this.merchantData.sampleProduct = 'Combo Especial Burger + Papas y Bebida';
+    } else if (modelKey === 'retail') {
+      // Tiendas físicas / Stock directo
+      this.merchantData.productAttributes = {
+        photo: true,
+        size: false,
+        customName: false,
+        customNumber: false,
+        colors: false,
+        extras: false,
+        leadTimeDays: false,
+        variantsStock: true,
+        tableIngredients: false
+      };
+      this.merchantData.pricingModel = 'fixed';
+      this.merchantData.prepTime = 'same_day';
+      this.merchantData.sampleProduct = 'Zapatillas Deportivas Talla 38-42';
+    } else if (modelKey === 'service') {
+      // Servicios técnicos / Auxilio vial / Latonería
+      this.merchantData.productAttributes = {
+        photo: true,
+        size: false,
+        customName: false,
+        customNumber: false,
+        colors: false,
+        extras: true,
+        leadTimeDays: false,
+        variantsStock: false,
+        tableIngredients: false
+      };
+      this.merchantData.pricingModel = 'custom_quote';
+      this.merchantData.prepTime = 'immediate';
+      this.merchantData.sampleProduct = 'Cotización Latonería y Pintura / Pieza';
+    }
+
+    if (shouldRender) {
+      this.renderMerchantStep();
+    }
+  }
+
+  toggleMerchantProductAttr(attrKey) {
+    if (!this.merchantData) this.merchantData = this.getDefaultMerchantData();
+    this.merchantData.productAttributes[attrKey] = !this.merchantData.productAttributes[attrKey];
+    this.renderMerchantStep();
+  }
+
+  setMerchantPricingModel(model) {
+    if (!this.merchantData) this.merchantData = this.getDefaultMerchantData();
+    this.merchantData.pricingModel = model;
+    this.renderMerchantStep();
+  }
+
+  setMerchantPrepTime(time) {
+    if (!this.merchantData) this.merchantData = this.getDefaultMerchantData();
+    this.merchantData.prepTime = time;
+    this.renderMerchantStep();
+  }
+
+  setMerchantDelivery(method) {
+    if (!this.merchantData) this.merchantData = this.getDefaultMerchantData();
+    this.merchantData.deliveryMethod = method;
+    this.renderMerchantStep();
+  }
+
+  toggleMerchantCurrency(curr) {
+    if (!this.merchantData) this.merchantData = this.getDefaultMerchantData();
+    const currs = this.merchantData.currencies || [];
+    const idx = currs.indexOf(curr);
+    if (idx >= 0) {
+      if (currs.length > 1) currs.splice(idx, 1);
+    } else {
+      currs.push(curr);
+    }
+    this.merchantData.currencies = currs;
+    this.renderMerchantStep();
+  }
+
+  generateMerchantTemplate() {
+    const d = this.merchantData || this.getDefaultMerchantData();
+    const modelLabels = {
+      custom_craft: 'Por Encargo, Artesanías & Personalizados (Ej: Piñatas, Resina, Repostería)',
+      food: 'Gastronomía & Comida Preparada (Restaurantes, Pizzerías, Hamburguesas)',
+      retail: 'Retail, Moda & Stock Físico (Ropa, Calzado, Ferretería, Supermercado)',
+      service: 'Servicios Técnicos & Auxilio (Mecánica, Latonería, Cerrajería, Grúas)'
+    };
+
+    const panelTypes = {
+      custom_craft: 'Panel de Personalización por Encargo (Foto + Nombre + Tamaño + Extras + Anticipación)',
+      food: 'Panel Menú Gastronómico & Comanda Cocina (KDS + Combos + Ingredientes)',
+      retail: 'Panel Retail & Control de Inventario (Variantes + Tallas + Stock en Vivo)',
+      service: 'Panel Despacho de Servicios & Geocasting (Ubicación GPS + Fotos de Daño)'
+    };
+
+    const activeAttrs = [];
+    if (d.productAttributes.photo) activeAttrs.push('Foto obligatoria de referencia');
+    if (d.productAttributes.size) activeAttrs.push('Tamaño / Medidas / Dimensiones (ej. Pequeña, Mediana, Grande)');
+    if (d.productAttributes.customName) activeAttrs.push('Nombre o dedicatoria personalizada');
+    if (d.productAttributes.customNumber) activeAttrs.push('Número / Motivo temático');
+    if (d.productAttributes.colors) activeAttrs.push('Colores / Acabados');
+    if (d.productAttributes.extras) activeAttrs.push('Extras / Rellenos / Adicionales opcionales');
+    if (d.productAttributes.leadTimeDays) activeAttrs.push('Fecha / Días de anticipación requeridos');
+    if (d.productAttributes.variantsStock) activeAttrs.push('Tallas / Variantes con control de stock');
+    if (d.productAttributes.tableIngredients) activeAttrs.push('Selección de salsas / ingredientes');
+
+    const prepLabels = {
+      immediate: 'Inmediato (15 - 45 min)',
+      same_day: 'Mismo día (1 - 4 horas)',
+      order_days: 'Por encargo programado (2 a 5 días)'
+    };
+
+    const deliveryLabels = {
+      pedigochos: 'Red de Domiciliarios PediGochos (Motorizados de la app)',
+      own_delivery: 'Repartidores propios del comercio',
+      pickup: 'Retiro en tienda física / Taller'
+    };
+
+    const pricingLabels = {
+      fixed: 'Precio Fijo Directo en Menú',
+      range: 'Precio Base Referencial + Rango según Tamaño',
+      custom_quote: 'Cotización Personalizada Previa por Chat'
+    };
+
+    const template = 
+`📋 *FICHA TÉCNICA & FIT PERSONALIZADO PEDIGOCHOS* 🚀
+========================================
+🏢 *Comercio:* ${d.businessName || 'Comercio Registrado'}
+👤 *Responsable:* ${d.contactName || 'Encargado'}
+📱 *WhatsApp:* ${d.phone}
+📍 *Ciudad / Zona:* ${d.city || 'San Cristóbal'} ${d.address ? ' - ' + d.address : ''}
+🏷️ *Rubro / Modelo:* ${modelLabels[d.businessModel] || d.businessModel}
+
+⚙️ *TIPO DE PANEL ASIGNADO:*
+👉 ${panelTypes[d.businessModel] || 'Panel Estándar PediGochos'}
+
+📦 *CAMPOS REQUERIDOS PARA VENDER CADA PRODUCTO:*
+${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
+
+💰 *MODALIDAD DE PRECIO:*
+  • ${pricingLabels[d.pricingModel] || d.pricingModel}
+
+⏱️ *TIEMPO DE PREPARACIÓN / ELABORACIÓN:*
+  • ${prepLabels[d.prepTime] || d.prepTime}
+
+🛵 *LOGÍSTICA DE DESPACHO:*
+  • ${deliveryLabels[d.deliveryMethod] || d.deliveryMethod}
+
+💵 *MONEDAS ACEPTADAS:*
+  • ${(d.currencies || ['COP', 'USD']).join(', ')}
+
+🌟 *PRODUCTO ESTRELLA DE EJEMPLO:*
+  • "${d.sampleProduct || 'Producto Principal'}"
+========================================
+✨ Generado automáticamente por el Test Diagnóstico de PediGochos`;
+
+    return template;
+  }
+
+  renderMerchantStep() {
+    const d = this.merchantData || this.getDefaultMerchantData();
+    const container = document.getElementById('merchant-diag-body-content');
+    const label = document.getElementById('merchant-diag-step-label');
+    const fill = document.getElementById('merchant-diag-progress-fill');
+    const btnBack = document.getElementById('btn-merchant-diag-back');
+    const btnNext = document.getElementById('btn-merchant-diag-next');
+
+    if (!container) return;
+
+    if (fill) fill.style.width = `${(this.merchantWizardStep / 5) * 100}%`;
+
+    // Footer buttons configuration
+    if (btnBack) {
+      if (this.merchantWizardStep === 1) {
+        btnBack.textContent = 'Cancelar';
+        btnBack.onclick = () => this.closeMerchantRegistrationModal();
+      } else {
+        btnBack.textContent = '← Volver';
+        btnBack.onclick = () => this.prevMerchantStep();
+      }
+    }
+
+    if (btnNext) {
+      if (this.merchantWizardStep < 5) {
+        btnNext.innerHTML = '<span>Continuar</span> <span>➔</span>';
+        btnNext.style.background = 'linear-gradient(135deg, #FF6B00 0%, #EA580C 100%)';
+        btnNext.onclick = () => this.nextMerchantStep();
+      } else {
+        btnNext.innerHTML = '<span>📲 Enviar a WhatsApp (+57 322 794 9751)</span> <span>🚀</span>';
+        btnNext.style.background = 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
+        btnNext.onclick = () => this.sendMerchantRegistrationWhatsApp();
+      }
+    }
+
+    // Step 1: Identidad & Contacto
+    if (this.merchantWizardStep === 1) {
+      if (label) label.textContent = 'Paso 1 de 5: Datos de tu Negocio & Contacto';
+      container.innerHTML = `
+        <div style="margin-bottom: 16px;">
+          <h4 style="color: #FFF; font-size: 15px; font-weight: 800; margin: 0 0 4px 0;">¡Inicia el Registro de tu Comercio!</h4>
+          <p style="color: #94A3B8; font-size: 12px; margin: 0; line-height: 1.4;">
+            Responde este breve test diagnóstico para diseñar la ficha técnica y el panel exacto que necesita tu negocio para vender en PediGochos.
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 800; display: block; margin-bottom: 5px;">Nombre Comercial de tu Negocio / Tienda *</label>
+            <input type="text" id="diag-merchant-name" value="${d.businessName || ''}" placeholder="Ej: Piñatas Creativas Gochas / Burger Express" style="width: 100%; background: #0F172A; border: 1.5px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px 12px; border-radius: 10px; font-size: 13px; box-sizing: border-box;">
+          </div>
+
+          <div>
+            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 800; display: block; margin-bottom: 5px;">Nombre del Encargado o Propietario</label>
+            <input type="text" id="diag-contact-name" value="${d.contactName || ''}" placeholder="Ej: Sergio Antía / María Gómez" style="width: 100%; background: #0F172A; border: 1.5px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px 12px; border-radius: 10px; font-size: 13px; box-sizing: border-box;">
+          </div>
+
+          <div>
+            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 800; display: block; margin-bottom: 5px;">WhatsApp Oficial para Pedidos & Comandas *</label>
+            <input type="tel" id="diag-merchant-phone" value="${d.phone || ''}" placeholder="Ej: +57 322 794 9751 o +58 414 1234567" style="width: 100%; background: #0F172A; border: 1.5px solid #FF6B00; color: #FFF; padding: 10px 12px; border-radius: 10px; font-size: 13px; box-sizing: border-box;">
+            <span style="font-size: 10px; color: #FDA4AF; display: block; margin-top: 3px;">A este número te llegarán las notificaciones automáticas de pedidos.</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 800; display: block; margin-bottom: 5px;">Ciudad / Zona *</label>
+              <select id="diag-merchant-city" style="width: 100%; background: #0F172A; border: 1.5px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; box-sizing: border-box;">
+                <option value="San Cristóbal" ${d.city === 'San Cristóbal' ? 'selected' : ''}>San Cristóbal</option>
+                <option value="Táriba" ${d.city === 'Táriba' ? 'selected' : ''}>Táriba</option>
+                <option value="San Antonio del Táchira" ${d.city === 'San Antonio del Táchira' ? 'selected' : ''}>San Antonio del Táchira</option>
+                <option value="Ureña" ${d.city === 'Ureña' ? 'selected' : ''}>Ureña</option>
+                <option value="Cúcuta" ${d.city === 'Cúcuta' ? 'selected' : ''}>Cúcuta (Colombia)</option>
+                <option value="Otra Zona" ${d.city === 'Otra Zona' ? 'selected' : ''}>Otra Zona</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 800; display: block; margin-bottom: 5px;">Sector o Dirección</label>
+              <input type="text" id="diag-merchant-address" value="${d.address || ''}" placeholder="Ej: Barrio Obrero / Centro" style="width: 100%; background: #0F172A; border: 1.5px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; box-sizing: border-box;">
+            </div>
+          </div>
+        </div>
+      `;
       return;
     }
 
-    const message = 
-      `👋 *¡Hola PediGochos! Quiero Inscribir mi Comercio / Negocio GRATIS* 🏪🚀\n\n` +
-      `🏢 *Nombre del Comercio:* ${name}\n` +
-      `📍 *Ubicación / Ciudad:* ${location}\n` +
-      `🏷️ *Categoría / Rubro:* ${category || 'Comercio General'}\n` +
-      `📱 *WhatsApp de Contacto:* ${phone}\n\n` +
-      `¿Podrían indicarme los pasos para registrar nuestros productos y activar nuestro catálogo virtual y pedidos directos? 🙏✨`;
+    // Step 2: Modelo & Rubro de Negocio
+    if (this.merchantWizardStep === 2) {
+      if (label) label.textContent = 'Paso 2 de 5: Modelo & Rubro de tu Negocio';
+      container.innerHTML = `
+        <div style="margin-bottom: 14px;">
+          <h4 style="color: #FFF; font-size: 15px; font-weight: 800; margin: 0 0 4px 0;">¿Cuál es la naturaleza de tus ventas?</h4>
+          <p style="color: #94A3B8; font-size: 12px; margin: 0; line-height: 1.4;">
+            Selecciona la opción que mejor describe tu modelo comercial. Esto determinará el flujo de pedidos y el panel a medida:
+          </p>
+        </div>
 
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          
+          <!-- Opción 1: Por Encargo / Artesanías / Piñatas -->
+          <div class="merchant-choice-card ${d.businessModel === 'custom_craft' ? 'selected' : ''}" onclick="MarketplaceApp.selectMerchantBusinessModel('custom_craft')">
+            <span style="font-size: 26px;">🪅</span>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <strong style="color: #FFF; font-size: 13.5px;">Por Encargo, Artesanías & Personalizados</strong>
+                ${d.businessModel === 'custom_craft' ? '<span style="color: #FF6B00; font-weight: 900; font-size: 16px;">✓</span>' : ''}
+              </div>
+              <p style="color: #FDA4AF; font-size: 11px; margin: 2px 0 4px 0; font-weight: 700;">Piñatas a medida, repostería temática, resina epóxica, souvenirs, manualidades.</p>
+              <span style="color: #94A3B8; font-size: 11px; line-height: 1.3; display: block;">
+                ✨ Requiere: <strong>Foto de referencia + Medidas/Tamaño + Nombre personalizado + Días de anticipación</strong>.
+              </span>
+            </div>
+          </div>
+
+          <!-- Opción 2: Gastronomía & Comidas -->
+          <div class="merchant-choice-card ${d.businessModel === 'food' ? 'selected' : ''}" onclick="MarketplaceApp.selectMerchantBusinessModel('food')">
+            <span style="font-size: 26px;">🍔</span>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <strong style="color: #FFF; font-size: 13.5px;">Gastronomía & Comida Preparada</strong>
+                ${d.businessModel === 'food' ? '<span style="color: #FF6B00; font-weight: 900; font-size: 16px;">✓</span>' : ''}
+              </div>
+              <p style="color: #FCD34D; font-size: 11px; margin: 2px 0 4px 0; font-weight: 700;">Restaurantes, hamburgueserías, pizzerías, comida rápida, cafeterías.</p>
+              <span style="color: #94A3B8; font-size: 11px; line-height: 1.3; display: block;">
+                ⚡ Requiere: <strong>Comanda digital para cocina (KDS) + Selección de salsas/combos + Despacho rápido (20-40 min)</strong>.
+              </span>
+            </div>
+          </div>
+
+          <!-- Opción 3: Retail & Stock Físico -->
+          <div class="merchant-choice-card ${d.businessModel === 'retail' ? 'selected' : ''}" onclick="MarketplaceApp.selectMerchantBusinessModel('retail')">
+            <span style="font-size: 26px;">👗</span>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <strong style="color: #FFF; font-size: 13.5px;">Retail, Moda & Stock Físico</strong>
+                ${d.businessModel === 'retail' ? '<span style="color: #FF6B00; font-weight: 900; font-size: 16px;">✓</span>' : ''}
+              </div>
+              <p style="color: #93C5FD; font-size: 11px; margin: 2px 0 4px 0; font-weight: 700;">Tiendas de ropa, calzado, ferreterías, repuestos, cosméticos, minimercados.</p>
+              <span style="color: #94A3B8; font-size: 11px; line-height: 1.3; display: block;">
+                📦 Requiere: <strong>Control de inventario + Selección de tallas/colores + Despacho en el día</strong>.
+              </span>
+            </div>
+          </div>
+
+          <!-- Opción 4: Servicios Técnicos & Auxilio -->
+          <div class="merchant-choice-card ${d.businessModel === 'service' ? 'selected' : ''}" onclick="MarketplaceApp.selectMerchantBusinessModel('service')">
+            <span style="font-size: 26px;">🔧</span>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <strong style="color: #FFF; font-size: 13.5px;">Servicios Técnicos & Auxilio Inmediato</strong>
+                ${d.businessModel === 'service' ? '<span style="color: #FF6B00; font-weight: 900; font-size: 16px;">✓</span>' : ''}
+              </div>
+              <p style="color: #A7F3D0; font-size: 11px; margin: 2px 0 4px 0; font-weight: 700;">Latonería y pintura, mecánica automotriz, auxilio vial, cerrajería, plomería.</p>
+              <span style="color: #94A3B8; font-size: 11px; line-height: 1.3; display: block;">
+                🚨 Requiere: <strong>Subida de foto del vehículo/daño + Ubicación GPS en tiempo real + Cotización por chat</strong>.
+              </span>
+            </div>
+          </div>
+
+        </div>
+      `;
+      return;
+    }
+
+    // Step 3: Ficha Técnica & Atributos del Producto
+    if (this.merchantWizardStep === 3) {
+      if (label) label.textContent = 'Paso 3 de 5: Ficha Técnica (¿Qué necesitas para vender?)';
+      const attrs = d.productAttributes || {};
+      container.innerHTML = `
+        <div style="margin-bottom: 12px;">
+          <h4 style="color: #FFF; font-size: 15px; font-weight: 800; margin: 0 0 4px 0;">Configura los atributos de tus productos</h4>
+          <p style="color: #94A3B8; font-size: 12px; margin: 0; line-height: 1.4;">
+            Marca qué información obligatoria u opcional debe proporcionar el cliente al comprar en tu tienda:
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
+          
+          <div class="merchant-attr-checkbox ${attrs.photo ? 'selected' : ''}" onclick="MarketplaceApp.toggleMerchantProductAttr('photo')">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>📸</span>
+              <div>
+                <strong style="color: #FFF; font-size: 12.5px;">Foto de Referencia Obligatoria</strong>
+                <span style="display: block; font-size: 10.5px; color: #94A3B8;">El cliente debe adjuntar una imagen del modelo o daño que desea cotizar</span>
+              </div>
+            </div>
+            <input type="checkbox" ${attrs.photo ? 'checked' : ''} style="pointer-events: none; accent-color: #FF6B00;">
+          </div>
+
+          <div class="merchant-attr-checkbox ${attrs.size ? 'selected' : ''}" onclick="MarketplaceApp.toggleMerchantProductAttr('size')">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>📏</span>
+              <div>
+                <strong style="color: #FFF; font-size: 12.5px;">Tamaño, Dimensiones o Medidas</strong>
+                <span style="display: block; font-size: 10.5px; color: #94A3B8;">Selección de medidas (ej: Pequeña 50cm, Mediana 80cm, Grande 1m+)</span>
+              </div>
+            </div>
+            <input type="checkbox" ${attrs.size ? 'checked' : ''} style="pointer-events: none; accent-color: #FF6B00;">
+          </div>
+
+          <div class="merchant-attr-checkbox ${attrs.customName ? 'selected' : ''}" onclick="MarketplaceApp.toggleMerchantProductAttr('customName')">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>✍️</span>
+              <div>
+                <strong style="color: #FFF; font-size: 12.5px;">Nombre o Texto Personalizado</strong>
+                <span style="display: block; font-size: 10.5px; color: #94A3B8;">Campo de texto para dedicatorias, nombres del cumpleañero, etc.</span>
+              </div>
+            </div>
+            <input type="checkbox" ${attrs.customName ? 'checked' : ''} style="pointer-events: none; accent-color: #FF6B00;">
+          </div>
+
+          <div class="merchant-attr-checkbox ${attrs.customNumber ? 'selected' : ''}" onclick="MarketplaceApp.toggleMerchantProductAttr('customNumber')">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>🔢</span>
+              <div>
+                <strong style="color: #FFF; font-size: 12.5px;">Número o Edad Temática</strong>
+                <span style="display: block; font-size: 10.5px; color: #94A3B8;">Selector de número temático para piñatas o aniversarios (1-99)</span>
+              </div>
+            </div>
+            <input type="checkbox" ${attrs.customNumber ? 'checked' : ''} style="pointer-events: none; accent-color: #FF6B00;">
+          </div>
+
+          <div class="merchant-attr-checkbox ${attrs.extras ? 'selected' : ''}" onclick="MarketplaceApp.toggleMerchantProductAttr('extras')">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>🎁</span>
+              <div>
+                <strong style="color: #FFF; font-size: 12.5px;">Extras, Rellenos o Adiciones Opcionales</strong>
+                <span style="display: block; font-size: 10.5px; color: #94A3B8;">Palo decorado, antifaz, relleno de golosinas, salsas extra, etc.</span>
+              </div>
+            </div>
+            <input type="checkbox" ${attrs.extras ? 'checked' : ''} style="pointer-events: none; accent-color: #FF6B00;">
+          </div>
+
+          <div class="merchant-attr-checkbox ${attrs.leadTimeDays ? 'selected' : ''}" onclick="MarketplaceApp.toggleMerchantProductAttr('leadTimeDays')">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>📅</span>
+              <div>
+                <strong style="color: #FFF; font-size: 12.5px;">Días de Anticipación Requeridos</strong>
+                <span style="display: block; font-size: 10.5px; color: #94A3B8;">El cliente debe elegir la fecha de entrega con margen mínimo de elaboración</span>
+              </div>
+            </div>
+            <input type="checkbox" ${attrs.leadTimeDays ? 'checked' : ''} style="pointer-events: none; accent-color: #FF6B00;">
+          </div>
+
+          <div class="merchant-attr-checkbox ${attrs.variantsStock ? 'selected' : ''}" onclick="MarketplaceApp.toggleMerchantProductAttr('variantsStock')">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>🏷️</span>
+              <div>
+                <strong style="color: #FFF; font-size: 12.5px;">Tallas & Control de Stock Físico</strong>
+                <span style="display: block; font-size: 10.5px; color: #94A3B8;">Variantes de tallas (S, M, L / 38, 40) con descuento automático de inventario</span>
+              </div>
+            </div>
+            <input type="checkbox" ${attrs.variantsStock ? 'checked' : ''} style="pointer-events: none; accent-color: #FF6B00;">
+          </div>
+
+        </div>
+
+        <!-- Modalidad de Precio -->
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+          <label style="font-size: 11.5px; color: #FCD34D; font-weight: 800; display: block; margin-bottom: 8px;">💰 Modalidad de Precios:</label>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+              <input type="radio" name="diag-pricing" value="fixed" ${d.pricingModel === 'fixed' ? 'checked' : ''} onchange="MarketplaceApp.setMerchantPricingModel('fixed')" style="accent-color: #FF6B00;">
+              <span><strong>Precio Fijo Directo:</strong> Cada producto tiene su precio exacto para compra inmediata.</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+              <input type="radio" name="diag-pricing" value="range" ${d.pricingModel === 'range' ? 'checked' : ''} onchange="MarketplaceApp.setMerchantPricingModel('range')" style="accent-color: #FF6B00;">
+              <span><strong>Precio Referencial + Rango:</strong> El precio varía según el tamaño o personalización elegida.</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+              <input type="radio" name="diag-pricing" value="custom_quote" ${d.pricingModel === 'custom_quote' ? 'checked' : ''} onchange="MarketplaceApp.setMerchantPricingModel('custom_quote')" style="accent-color: #FF6B00;">
+              <span><strong>Cotización por Chat / WhatsApp:</strong> Se calcula tras revisar las fotos y requerimientos del cliente.</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 800; display: block; margin-bottom: 5px;">Menciona un producto estrella de tu negocio:</label>
+          <input type="text" id="diag-sample-product" value="${d.sampleProduct || ''}" placeholder="Ej: Piñata de Número 3D / Torta Temática / Combo Doble" style="width: 100%; background: #0F172A; border: 1.5px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; box-sizing: border-box;">
+        </div>
+      `;
+      return;
+    }
+
+    // Step 4: Logística, Tiempos & Monedas
+    if (this.merchantWizardStep === 4) {
+      if (label) label.textContent = 'Paso 4 de 5: Tiempos de Entrega, Logística & Monedas';
+      const currs = d.currencies || [];
+      container.innerHTML = `
+        <div style="margin-bottom: 12px;">
+          <h4 style="color: #FFF; font-size: 15px; font-weight: 800; margin: 0 0 4px 0;">¿Cómo opera tu logística y pagos?</h4>
+          <p style="color: #94A3B8; font-size: 12px; margin: 0; line-height: 1.4;">
+            Define cómo gestionarás la preparación, los envíos a los clientes y las monedas que aceptas:
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          
+          <!-- Tiempos de preparación -->
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px;">
+            <label style="font-size: 11.5px; color: #FDA4AF; font-weight: 800; display: block; margin-bottom: 8px;">⏱️ Tiempos de Preparación / Elaboración:</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+              <button type="button" onclick="MarketplaceApp.setMerchantPrepTime('immediate')" style="background: ${d.prepTime === 'immediate' ? '#FF6B00' : 'rgba(255,255,255,0.06)'}; border: 1px solid ${d.prepTime === 'immediate' ? '#FF6B00' : 'rgba(255,255,255,0.1)'}; color: #FFF; padding: 8px 6px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                ⚡ 15-45 min (Inmediato)
+              </button>
+              <button type="button" onclick="MarketplaceApp.setMerchantPrepTime('same_day')" style="background: ${d.prepTime === 'same_day' ? '#FF6B00' : 'rgba(255,255,255,0.06)'}; border: 1px solid ${d.prepTime === 'same_day' ? '#FF6B00' : 'rgba(255,255,255,0.1)'}; color: #FFF; padding: 8px 6px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                ⏱️ 1-4 horas (Mismo día)
+              </button>
+              <button type="button" onclick="MarketplaceApp.setMerchantPrepTime('order_days')" style="background: ${d.prepTime === 'order_days' ? '#FF6B00' : 'rgba(255,255,255,0.06)'}; border: 1px solid ${d.prepTime === 'order_days' ? '#FF6B00' : 'rgba(255,255,255,0.1)'}; color: #FFF; padding: 8px 6px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                📅 2 a 5 días (Por Encargo)
+              </button>
+            </div>
+          </div>
+
+          <!-- Logística de Despacho -->
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px;">
+            <label style="font-size: 11.5px; color: #93C5FD; font-weight: 800; display: block; margin-bottom: 8px;">🛵 Modalidad de Entrega al Cliente:</label>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+                <input type="radio" name="diag-delivery" value="pedigochos" ${d.deliveryMethod === 'pedigochos' ? 'checked' : ''} onchange="MarketplaceApp.setMerchantDelivery('pedigochos')" style="accent-color: #FF6B00;">
+                <span><strong>Red de Domiciliarios PediGochos:</strong> Los motorizados oficiales de la app retiran en tu local y entregan con rastreo en vivo.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+                <input type="radio" name="diag-delivery" value="own_delivery" ${d.deliveryMethod === 'own_delivery' ? 'checked' : ''} onchange="MarketplaceApp.setMerchantDelivery('own_delivery')" style="accent-color: #FF6B00;">
+                <span><strong>Repartidores Propios:</strong> Tu negocio tiene su propio personal de entrega.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+                <input type="radio" name="diag-delivery" value="pickup" ${d.deliveryMethod === 'pickup' ? 'checked' : ''} onchange="MarketplaceApp.setMerchantDelivery('pickup')" style="accent-color: #FF6B00;">
+                <span><strong>Retiro en Taller / Local Físico:</strong> El cliente busca su encargo en tu ubicación.</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Monedas Aceptadas -->
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px;">
+            <label style="font-size: 11.5px; color: #6EE7B7; font-weight: 800; display: block; margin-bottom: 8px;">💵 Monedas & Métodos que aceptas:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+                <input type="checkbox" ${currs.includes('COP') ? 'checked' : ''} onchange="MarketplaceApp.toggleMerchantCurrency('COP')" style="accent-color: #FF6B00;">
+                <span>🇨🇴 Pesos Colombianos (COP)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+                <input type="checkbox" ${currs.includes('USD') ? 'checked' : ''} onchange="MarketplaceApp.toggleMerchantCurrency('USD')" style="accent-color: #FF6B00;">
+                <span>💵 Dólares en Efectivo (USD)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+                <input type="checkbox" ${currs.includes('BS') ? 'checked' : ''} onchange="MarketplaceApp.toggleMerchantCurrency('BS')" style="accent-color: #FF6B00;">
+                <span>🇻🇪 Bolívares / Pago Móvil (Bs)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #CBD5E1; cursor: pointer;">
+                <input type="checkbox" ${currs.includes('ZELLE_BINANCE') ? 'checked' : ''} onchange="MarketplaceApp.toggleMerchantCurrency('ZELLE_BINANCE')" style="accent-color: #FF6B00;">
+                <span>⚡ Zelle / Binance USDT</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+      `;
+      return;
+    }
+
+    // Step 5: Fit Personalizado & Plantilla Generada
+    if (this.merchantWizardStep === 5) {
+      if (label) label.textContent = 'Paso 5 de 5: Tu Fit Personalizado & Plantilla Lista';
+      const template = this.generateMerchantTemplate();
+      const modelNames = {
+        custom_craft: 'Por Encargo & Artesanías (Piñatas / Resina / Repostería)',
+        food: 'Gastronomía & Restaurante',
+        retail: 'Retail & Stock Físico',
+        service: 'Servicios Técnicos & Auxilio'
+      };
+
+      const panelBadge = {
+        custom_craft: 'Panel de Personalización por Encargo (Foto + Nombre + Tamaño + Extras)',
+        food: 'Panel Gastronómico & Comanda KDS',
+        retail: 'Panel Retail & Control de Inventario',
+        service: 'Panel Despacho de Servicios & Geocasting'
+      };
+
+      const attrs = d.productAttributes || {};
+      const activeAttrTags = [];
+      if (attrs.photo) activeAttrTags.push('📸 Foto Obligatoria');
+      if (attrs.size) activeAttrTags.push('📏 Tamaño / Medidas');
+      if (attrs.customName) activeAttrTags.push('✍️ Nombre Personalizado');
+      if (attrs.customNumber) activeAttrTags.push('🔢 Número / Motivo');
+      if (attrs.extras) activeAttrTags.push('🎁 Extras / Relleno');
+      if (attrs.leadTimeDays) activeAttrTags.push('📅 Días Anticipación');
+      if (attrs.variantsStock) activeAttrTags.push('🏷️ Control Stock / Tallas');
+      if (attrs.tableIngredients) activeAttrTags.push('🍔 Salsas / Ingredientes');
+
+      container.innerHTML = `
+        <div style="margin-bottom: 12px; text-align: center;">
+          <span style="font-size: 32px; display: block; margin-bottom: 4px;">🎉🚀</span>
+          <h4 style="color: #FFF; font-size: 16px; font-weight: 900; margin: 0 0 4px 0;">¡Plantilla & Fit Personalizado Generado con Éxito!</h4>
+          <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; color: #6EE7B7; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; display: inline-block;">
+            Fit Optimizado para: ${d.businessName || 'Tu Negocio'}
+          </span>
+        </div>
+
+        <!-- Technical Specification Card -->
+        <div class="merchant-template-sheet" style="margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 10px;">
+            <div>
+              <strong style="color: #FFF; font-size: 14px; display: block;">${d.businessName || 'Comercio Registrado'}</strong>
+              <span style="color: #FDA4AF; font-size: 11px;">${modelNames[d.businessModel] || d.businessModel}</span>
+            </div>
+            <span style="background: #FF6B00; color: #FFF; font-size: 10.5px; font-weight: 900; padding: 2px 8px; border-radius: 6px;">
+              ${d.city || 'San Cristóbal'}
+            </span>
+          </div>
+
+          <div style="margin-bottom: 10px;">
+            <span style="font-size: 10.5px; color: #94A3B8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px;">Panel Recomendado:</span>
+            <div style="background: rgba(255, 107, 0, 0.15); border: 1px solid #FF6B00; border-radius: 8px; padding: 8px 10px; color: #FFA94D; font-size: 12px; font-weight: 800;">
+              ⚙️ ${panelBadge[d.businessModel] || 'Panel PediGochos'}
+            </div>
+          </div>
+
+          <div style="margin-bottom: 10px;">
+            <span style="font-size: 10.5px; color: #94A3B8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 6px;">Campos para Vender Cada Producto:</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+              ${activeAttrTags.map(tag => `
+                <span style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+                  ${tag}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; color: #CBD5E1; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px;">
+            <div><strong>⏱️ Tiempo:</strong> ${d.prepTime === 'order_days' ? '2 a 5 días' : d.prepTime === 'same_day' ? '1 a 4 horas' : '15-45 min'}</div>
+            <div><strong>🛵 Entrega:</strong> ${d.deliveryMethod === 'pedigochos' ? 'PediGochos Moto' : d.deliveryMethod === 'own_delivery' ? 'Propio' : 'Retiro'}</div>
+            <div><strong>💰 Precio:</strong> ${d.pricingModel === 'range' ? 'Base + Tamaño' : d.pricingModel === 'fixed' ? 'Fijo' : 'Cotización'}</div>
+            <div><strong>💵 Monedas:</strong> ${(d.currencies || ['COP', 'USD']).join(', ')}</div>
+          </div>
+
+          <div>
+            <span style="font-size: 10px; color: #94A3B8; font-weight: 800; display: block; margin-bottom: 4px;">Esquema de Plantilla Técnica:</span>
+            <pre style="background: #050811; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px; font-size: 10.5px; color: #38BDF8; max-height: 110px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; margin: 0;">${template}</pre>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; gap: 8px;">
+            <button type="button" onclick="MarketplaceApp.saveMerchantRegistrationToSystem()" style="flex: 1; background: #2563EB; color: #FFF; border: none; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);">
+              <span>💾</span>
+              <span>Guardar en Plataforma</span>
+            </button>
+            <button type="button" onclick="MarketplaceApp.copyMerchantTemplateToClipboard()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span>📋</span>
+              <span>Copiar Ficha</span>
+            </button>
+          </div>
+
+          <div style="font-size: 11px; color: #94A3B8; text-align: center; margin-top: 4px;">
+            Al presionar <strong>"Enviar a WhatsApp"</strong> abajo, se abrirá el chat oficial de soporte con tu ficha técnica completa para activar tu tienda.
+          </div>
+        </div>
+      `;
+      return;
+    }
+  }
+
+  async saveMerchantRegistrationToSystem() {
+    this.syncCurrentStepInputs();
+    const d = this.merchantData || this.getDefaultMerchantData();
+
+    if (!d.businessName || !d.phone) {
+      this.showToast('⚠️ Por favor completa el nombre del comercio y WhatsApp.');
+      return;
+    }
+
+    const templateText = this.generateMerchantTemplate();
+
+    const payload = {
+      businessName: d.businessName,
+      contactName: d.contactName || '',
+      phone: d.phone,
+      city: d.city || 'San Cristóbal',
+      address: d.address || '',
+      businessModel: d.businessModel,
+      productAttributes: d.productAttributes,
+      pricingModel: d.pricingModel,
+      sampleProduct: d.sampleProduct,
+      prepTime: d.prepTime,
+      deliveryMethod: d.deliveryMethod,
+      currencies: d.currencies,
+      templateText: templateText
+    };
+
+    try {
+      this.showToast('⏳ Registrando comercio en el sistema PediGochos...');
+      const res = await fetch('/api/merchants/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast('✅ ¡Comercio registrado exitosamente! La administración lo revisará.');
+      } else {
+        this.showToast(data.error || 'No se pudo guardar la solicitud.');
+      }
+    } catch(e) {
+      console.warn('Error saving merchant registration lead:', e);
+      this.showToast('✅ Solicitud guardada localmente.');
+    }
+  }
+
+  copyMerchantTemplateToClipboard() {
+    const template = this.generateMerchantTemplate();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(template).then(() => {
+        this.showToast('📋 ¡Ficha técnica copiada al portapapeles!');
+      }).catch(() => {
+        this.fallbackCopyText(template);
+      });
+    } else {
+      this.fallbackCopyText(template);
+    }
+  }
+
+  fallbackCopyText(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      this.showToast('📋 ¡Ficha técnica copiada al portapapeles!');
+    } catch(err) {
+      this.showToast('⚠️ No se pudo copiar automáticamente.');
+    }
+    document.body.removeChild(textArea);
+  }
+
+  async sendMerchantRegistrationWhatsApp() {
+    this.syncCurrentStepInputs();
+    const d = this.merchantData || this.getDefaultMerchantData();
+
+    if (!d.businessName || !d.phone) {
+      this.showToast('⚠️ Por favor completa el nombre del comercio y WhatsApp.');
+      this.merchantWizardStep = 1;
+      this.renderMerchantStep();
+      return;
+    }
+
+    // Auto-save to platform first
+    await this.saveMerchantRegistrationToSystem();
+
+    const template = this.generateMerchantTemplate();
     const supportPhone = '573227949751';
-    const waUrl = `https://wa.me/${supportPhone}?text=${encodeURIComponent(message)}`;
+    const waUrl = `https://wa.me/${supportPhone}?text=${encodeURIComponent(template)}`;
 
     window.open(waUrl, '_blank');
     this.closeMerchantRegistrationModal();
-    this.showToast('✅ Solicitud lista para enviar por WhatsApp');
+    this.showToast('✅ ¡Abriendo WhatsApp con tu Ficha Técnica!');
   }
 
   getAppOfficialUrl() {

@@ -4744,6 +4744,11 @@ class AdminController {
         if (data.type === 'PINATA_QUOTE_NEW' || data.type === 'PINATA_QUOTE_UPDATE' || data.type === 'PINATA_QUOTE_MESSAGE' || data.type === 'PINATA_CATALOG_UPDATE') {
           this.handlePinatasWsEvent(data);
         }
+
+        // Real-time Merchant Registration Leads
+        if (data.type === 'MERCHANT_LEAD_NEW') {
+          this.handleMerchantLeadWs(data);
+        }
       } catch (err) {
         console.error('Error parsing WS message in admin:', err);
       }
@@ -8398,6 +8403,269 @@ class AdminController {
       this.loadQuoteChatMessages();
     } catch (e) {
       alert('Error enviando mensaje.');
+    }
+  }
+
+  // ==========================================
+  // Merchant Registration Leads & Custom Fit Management
+  // ==========================================
+  handleMerchantLeadWs(data) {
+    const badge = document.getElementById('admin-merchant-leads-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (typeof Sound !== 'undefined' && Sound.playNotification) {
+      Sound.playNotification();
+    }
+    const modal = document.getElementById('admin-merchant-leads-modal');
+    if (modal && modal.style.display !== 'none') {
+      this.loadMerchantLeads();
+    }
+  }
+
+  async openMerchantLeadsModal() {
+    const modal = document.getElementById('admin-merchant-leads-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+    }
+    const badge = document.getElementById('admin-merchant-leads-badge');
+    if (badge) {
+      badge.textContent = '0';
+      badge.style.display = 'none';
+    }
+    await this.loadMerchantLeads();
+  }
+
+  closeMerchantLeadsModal() {
+    const modal = document.getElementById('admin-merchant-leads-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+    }
+  }
+
+  async loadMerchantLeads() {
+    try {
+      const res = await fetch('/api/merchants/leads');
+      const leads = await res.json();
+      this.merchantLeadsList = Array.isArray(leads) ? leads : [];
+      this.updateLeadFilterCounts();
+      this.renderMerchantLeads();
+    } catch(e) {
+      console.warn('Error loading merchant leads in admin:', e);
+      const container = document.getElementById('admin-merchant-leads-list');
+      if (container) {
+        container.innerHTML = '<div style="text-align: center; color: #F87171; padding: 20px;">Error al cargar leads de comercios.</div>';
+      }
+    }
+  }
+
+  updateLeadFilterCounts() {
+    const leads = this.merchantLeadsList || [];
+    const all = leads.length;
+    const newCount = leads.filter(l => !l.status || l.status === 'new').length;
+    const contacted = leads.filter(l => l.status === 'contacted').length;
+    const active = leads.filter(l => l.status === 'active').length;
+
+    const elAll = document.getElementById('leads-count-all');
+    const elNew = document.getElementById('leads-count-new');
+    const elContacted = document.getElementById('leads-count-contacted');
+    const elActive = document.getElementById('leads-count-active');
+
+    if (elAll) elAll.textContent = all;
+    if (elNew) elNew.textContent = newCount;
+    if (elContacted) elContacted.textContent = contacted;
+    if (elActive) elActive.textContent = active;
+  }
+
+  filterMerchantLeads(filter, btnEl) {
+    this.activeLeadFilter = filter;
+    document.querySelectorAll('.btn-filter-lead').forEach(btn => {
+      btn.style.background = 'transparent';
+      btn.style.borderColor = 'rgba(255,255,255,0.15)';
+      btn.style.color = '#94A3B8';
+    });
+    if (btnEl) {
+      btnEl.style.background = 'rgba(255, 107, 0, 0.2)';
+      btnEl.style.borderColor = '#FF6B00';
+      btnEl.style.color = '#FFF';
+    }
+    this.renderMerchantLeads();
+  }
+
+  renderMerchantLeads() {
+    const container = document.getElementById('admin-merchant-leads-list');
+    if (!container) return;
+
+    let leads = this.merchantLeadsList || [];
+    const filter = this.activeLeadFilter || 'all';
+
+    if (filter === 'new') {
+      leads = leads.filter(l => !l.status || l.status === 'new');
+    } else if (filter === 'contacted') {
+      leads = leads.filter(l => l.status === 'contacted');
+    } else if (filter === 'active') {
+      leads = leads.filter(l => l.status === 'active');
+    }
+
+    if (!leads.length) {
+      container.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">🏪</span>
+          <p style="margin: 0; font-size: 13px;">No hay leads de comercios en este filtro.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const modelLabels = {
+      custom_craft: '🪅 Por Encargo / Artesanías (Piñatas, Resina, Repostería)',
+      food: '🍔 Gastronomía & Restaurante',
+      retail: '👗 Retail & Stock Físico',
+      service: '🔧 Servicios Técnicos & Auxilio'
+    };
+
+    container.innerHTML = leads.map(lead => {
+      const attrs = lead.productAttributes || {};
+      const attrPills = [];
+      if (attrs.photo) attrPills.push('📸 Foto Obligatoria');
+      if (attrs.size) attrPills.push('📏 Tamaño / Medidas');
+      if (attrs.customName) attrPills.push('✍️ Nombre Personalizado');
+      if (attrs.customNumber) attrPills.push('🔢 Número / Edad');
+      if (attrs.extras) attrPills.push('🎁 Extras / Rellenos');
+      if (attrs.leadTimeDays) attrPills.push('📅 Anticipación');
+      if (attrs.variantsStock) attrPills.push('🏷️ Variantes / Stock');
+      if (attrs.tableIngredients) attrPills.push('🍔 Ingredientes / Salsas');
+
+      const statusMap = {
+        new: { text: 'Nuevo Lead', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)' },
+        contacted: { text: 'Contactado', color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.15)' },
+        active: { text: 'Tienda Creada / Activo', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' }
+      };
+      const st = statusMap[lead.status || 'new'] || statusMap.new;
+
+      const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+      const waMsg = encodeURIComponent(`Hola ${lead.contactName || lead.businessName}, te escribimos desde la Administración de PediGochos respecto a tu solicitud de registro de comercio. ¡Ya tenemos lista la plantilla técnica de tu tienda!`);
+      const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${waMsg}` : '#';
+
+      return `
+        <div style="background: #172033; border: 1.5px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <!-- Top Row: Name, Status, Date -->
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h4 style="margin: 0; font-size: 15px; font-weight: 900; color: #FFF;">${lead.businessName || 'Comercio Sin Nombre'}</h4>
+                <span style="background: ${st.bg}; color: ${st.color}; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; border: 1px solid ${st.color};">
+                  ${st.text}
+                </span>
+              </div>
+              <span style="font-size: 11.5px; color: #FDA4AF; font-weight: 700;">${modelLabels[lead.businessModel] || lead.businessModel}</span>
+            </div>
+
+            <div style="text-align: right;">
+              <span style="font-size: 10.5px; color: #94A3B8;">${lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() + ' ' + new Date(lead.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+              <div style="font-size: 11px; color: #CBD5E1; font-weight: 700; margin-top: 2px;">📍 ${lead.city || 'San Cristóbal'} ${lead.address ? '• ' + lead.address : ''}</div>
+            </div>
+          </div>
+
+          <!-- Middle Row: Contact & Attributes -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: rgba(0,0,0,0.25); border-radius: 10px; padding: 10px 12px; font-size: 11.5px; color: #CBD5E1;">
+            <div>
+              <strong style="color: #FFF; display: block; margin-bottom: 2px;">👤 Contacto:</strong>
+              <span>${lead.contactName || 'No indicado'}</span>
+            </div>
+            <div>
+              <strong style="color: #FFF; display: block; margin-bottom: 2px;">📱 WhatsApp:</strong>
+              <a href="${waLink}" target="_blank" style="color: #34D399; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                <span>💬</span> ${lead.phone || 'Sin número'}
+              </a>
+            </div>
+            <div>
+              <strong style="color: #FFF; display: block; margin-bottom: 2px;">⏱️ Tiempos & Despacho:</strong>
+              <span>${lead.prepTime === 'order_days' ? '2-5 días' : lead.prepTime === 'same_day' ? '1-4h' : '15-45m'} • ${lead.deliveryMethod === 'pedigochos' ? 'PediGochos' : 'Propio'}</span>
+            </div>
+            <div>
+              <strong style="color: #FFF; display: block; margin-bottom: 2px;">🌟 Producto Estrella:</strong>
+              <span style="color: #FCD34D;">${lead.sampleProduct || 'No especificado'}</span>
+            </div>
+          </div>
+
+          <!-- Attributes Pills -->
+          <div>
+            <span style="font-size: 10.5px; color: #94A3B8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 5px;">Atributos Requeridos para su Fit Personalizado:</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${attrPills.map(p => `<span style="background: rgba(255, 107, 0, 0.15); border: 1px solid rgba(255, 107, 0, 0.35); color: #FFA94D; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px;">${p}</span>`).join('')}
+            </div>
+          </div>
+
+          <!-- Bottom Actions Bar -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; color: #94A3B8;">Cambiar Estado:</span>
+              <select onchange="AdminApp.updateMerchantLeadStatus('${lead.id}', this.value)" style="background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 4px 8px; border-radius: 6px; font-size: 11px;">
+                <option value="new" ${lead.status === 'new' ? 'selected' : ''}>Nuevo</option>
+                <option value="contacted" ${lead.status === 'contacted' ? 'selected' : ''}>Contactado</option>
+                <option value="active" ${lead.status === 'active' ? 'selected' : ''}>Activado en App</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <a href="${waLink}" target="_blank" style="background: #10B981; color: #FFF; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                <span>💬</span> Chatear WhatsApp
+              </a>
+              <button type="button" onclick="AdminApp.copyLeadFitTemplate('${lead.id}')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                <span>📋</span> Copiar Fit
+              </button>
+              ${lead.businessModel === 'custom_craft' ? `
+                <button type="button" onclick="AdminApp.closeMerchantLeadsModal(); AdminApp.openPinatasAdminModal(); AdminApp.switchPinatasAdminTab('inventory');" style="background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%); color: #FFF; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                  <span>🪅</span> Ver Inventario Piñatas
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async updateMerchantLeadStatus(leadId, status) {
+    try {
+      const res = await fetch(`/api/merchants/leads/${leadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const lead = (this.merchantLeadsList || []).find(l => l.id === leadId);
+        if (lead) lead.status = status;
+        this.updateLeadFilterCounts();
+        this.renderMerchantLeads();
+      } else {
+        alert(data.error || 'No se pudo actualizar el estado.');
+      }
+    } catch(e) {
+      alert('Error de conexión actualizando estado.');
+    }
+  }
+
+  copyLeadFitTemplate(leadId) {
+    const lead = (this.merchantLeadsList || []).find(l => l.id === leadId);
+    if (!lead || !lead.templateText) {
+      alert('No hay plantilla técnica generada para este lead.');
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lead.templateText).then(() => {
+        alert('📋 ¡Ficha técnica copiada al portapapeles!');
+      }).catch(() => {
+        alert('No se pudo copiar automáticamente.');
+      });
+    } else {
+      alert('Portapapeles no soportado.');
     }
   }
 }

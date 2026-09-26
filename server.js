@@ -4411,6 +4411,124 @@ app.get('/api/pinata-services/stats', (req, res) => {
   });
 });
 
+/* ==========================================================================
+   REGISTRO DE COMERCIOS - TEST DIAGNÓSTICO & PLANTILLAS PERSONALIZADAS
+   ========================================================================== */
+const MERCHANT_LEADS_FILE = path.join(__dirname, 'merchant_leads.json');
+
+function readMerchantLeads() {
+  try {
+    if (fs.existsSync(MERCHANT_LEADS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(MERCHANT_LEADS_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch(e) {
+    console.warn('Error reading merchant_leads.json:', e);
+  }
+  return [
+    {
+      id: 'LEAD-101',
+      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+      businessName: 'Dulces & Detalles La Villa',
+      ownerName: 'Carolina Rivas',
+      phone: '3227949751',
+      city: 'San Antonio del Táchira',
+      businessModel: 'artesanal',
+      modelLabel: 'Personalizado / Por Encargo (A Medida)',
+      productAttributes: ['Foto obligatoria', 'Tamaño / Medidas', 'Nombre grabado / dedicatoria', 'Extras / Empaque de regalo'],
+      pricingModel: 'quote_chat',
+      pricingLabel: 'Presupuesto Referencial + Confirmación en Chat',
+      prepTime: '2 a 4 días hábiles',
+      deliveryMethod: 'Red Domiciliarios PediGochos',
+      paymentMethods: ['Pesos COP', 'Bolívares Pago Móvil', 'USD Efectivo'],
+      generatedTemplate: {
+        recommendedLayout: 'Módulo de Servicios & Pedidos A Medida',
+        productFields: ['Foto de Referencia', 'Nombre', 'Tamaño', 'Dedicatoria', 'Extras', 'Fecha de Entrega'],
+        salesChannel: 'Ficha Interactiva + Chat Integrado'
+      },
+      status: 'Pendiente de Contacto'
+    }
+  ];
+}
+
+function writeMerchantLeads(data) {
+  try {
+    fs.writeFileSync(MERCHANT_LEADS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing merchant_leads.json:', e);
+  }
+}
+
+if (!fs.existsSync(MERCHANT_LEADS_FILE)) {
+  writeMerchantLeads(readMerchantLeads());
+}
+
+// GET all merchant registration leads
+app.get('/api/merchants/leads', (req, res) => {
+  const leads = readMerchantLeads();
+  leads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  res.json(leads);
+});
+
+// POST new merchant registration test submission & template
+app.post('/api/merchants/register', (req, res) => {
+  const body = req.body || {};
+  if (!body.businessName || !body.phone) {
+    return res.status(400).json({ error: 'Nombre del negocio y teléfono son obligatorios' });
+  }
+
+  const leads = readMerchantLeads();
+  const newLead = {
+    id: 'LEAD-' + Date.now(),
+    createdAt: new Date().toISOString(),
+    businessName: body.businessName.trim(),
+    ownerName: (body.ownerName || '').trim(),
+    phone: body.phone.trim(),
+    city: body.city || 'San Antonio del Táchira',
+    businessModel: body.businessModel || 'artesanal',
+    modelLabel: body.modelLabel || 'Personalizado / Por Encargo',
+    productAttributes: Array.isArray(body.productAttributes) ? body.productAttributes : [],
+    pricingModel: body.pricingModel || 'quote_chat',
+    pricingLabel: body.pricingLabel || 'Presupuesto Referencial + Chat',
+    prepTime: body.prepTime || 'programado',
+    deliveryMethod: body.deliveryMethod || 'pedigochos_delivery',
+    paymentMethods: Array.isArray(body.paymentMethods) ? body.paymentMethods : ['COP', 'Bs', 'USD'],
+    generatedTemplate: body.generatedTemplate || null,
+    status: 'Pendiente de Contacto',
+    notes: body.notes || ''
+  };
+
+  leads.unshift(newLead);
+  writeMerchantLeads(leads);
+
+  // Broadcast WebSocket notification to Admin
+  const payload = JSON.stringify({
+    type: 'MERCHANT_LEAD_NEW',
+    lead: newLead
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, lead: newLead });
+});
+
+// PUT / Update merchant lead status
+app.put('/api/merchants/leads/:id', (req, res) => {
+  const { id } = req.params;
+  const { status, notes } = req.body || {};
+  const leads = readMerchantLeads();
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return res.status(404).json({ error: 'Lead no encontrado' });
+
+  if (status) lead.status = status;
+  if (notes !== undefined) lead.notes = notes;
+  lead.updatedAt = new Date().toISOString();
+
+  writeMerchantLeads(leads);
+  res.json({ success: true, lead });
+});
+
 // Fallback for SPA routing (if any) or simple index.html
 app.get('*', (req, res, next) => {
   // If request is for api, skip to next route handler (standard Express)
