@@ -910,12 +910,12 @@ class MarketplaceController {
     const titleEl = document.getElementById('establishments-title');
     if (titleEl) titleEl.innerHTML = displayTitle;
 
-    // Special dedicated rendering for Servicios category (Cauchera 24/7 & PediGochos Móvil)
+    // Special dedicated rendering for Servicios category (Cauchera 24/7, PediGochos Móvil, Pintura, 3D Lab & ShelliArt Resina)
     if (this.currentCategory === 'servicios' && !filtered) {
       const allRestHeader = document.getElementById('all-restaurants-header');
       const allRestTitle = document.getElementById('all-restaurants-title-text');
       if (allRestHeader) allRestHeader.style.display = 'block';
-      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (4)';
+      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (5)';
 
       const promoSection = document.getElementById('daily-promotions-section');
       if (promoSection) {
@@ -934,28 +934,28 @@ class MarketplaceController {
 
       grid.innerHTML = `
         <!-- Cauchera Móvil 24/7 -->
-        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openCaucheraModal()" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1.5px solid rgba(239, 68, 68, 0.45); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
-          <div style="display: flex; gap: 14px; align-items: center;">
-            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(239, 68, 68, 0.18); border: 2px solid #EF4444; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);">
+        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openCaucheraModal()" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(239, 68, 68, 0.5); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(239, 68, 68, 0.22); border: 2px solid #EF4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.45);">
               🛞
             </div>
             <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
-                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
                   Montallantas El Cachu
                 </h4>
-                <span style="background: #EF4444; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                <span class="service-card-badge" style="background: #EF4444; color: #FFF; box-shadow: 0 2px 8px rgba(239,68,68,0.4);">
                   🔴 24/7 ACTIVO
                 </span>
               </div>
-              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
-                Cauchera Móvil a Domicilio. Despinche y auxilio para motos, autos y camionetas con GPS.
+              <p class="service-card-desc">
+                Cauchera Móvil a Domicilio. Despinche y auxilio vial para motos, autos y camionetas con GPS.
               </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
-                <span style="font-size: 10px; font-weight: 800; color: #FCD34D; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 6px;">
-                  ⭐ 5.0 • Auxilio Vial Inmediato
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); padding: 3px 9px; border-radius: 8px;">
+                  ⭐ 5.0 • Auxilio Inmediato
                 </span>
-                <span style="font-size: 11px; font-weight: 900; color: #EF4444; background: rgba(239, 68, 68, 0.18); border: 1px solid #EF4444; padding: 3px 10px; border-radius: 10px;">
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); border: 1px solid #EF4444; box-shadow: 0 3px 10px rgba(239,68,68,0.35);">
                   Solicitar Auxilio ➔
                 </span>
               </div>
@@ -964,28 +964,28 @@ class MarketplaceController {
         </div>
 
         <!-- PediGochos Móvil (Vehículos de Diferentes Gamas) -->
-        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openRideModal()" style="background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1.5px solid rgba(255, 107, 0, 0.45); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
-          <div style="display: flex; gap: 14px; align-items: center;">
-            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(255, 107, 0, 0.18); border: 2px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(255, 107, 0, 0.4);">
+        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openRideModal()" style="background: linear-gradient(135deg, rgba(255, 107, 0, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(255, 107, 0, 0.5); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(255, 107, 0, 0.22); border: 2px solid #FF6B00; box-shadow: 0 0 20px rgba(255, 107, 0, 0.45);">
               🛵
             </div>
             <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
-                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
                   PediGochos Móvil
                 </h4>
-                <span style="background: #FF6B00; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                <span class="service-card-badge" style="background: #FF6B00; color: #FFF; box-shadow: 0 2px 8px rgba(255,107,0,0.4);">
                   ⚡ EN VIVO
                 </span>
               </div>
-              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
+              <p class="service-card-desc">
                 Vehículos de diferentes gamas: <strong>Moto Taxi</strong>, <strong>Auto</strong> y <strong>Lujo</strong>. Tarifa automática por GPS.
               </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
-                <span style="font-size: 10px; font-weight: 800; color: #60A5FA; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #60A5FA; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); padding: 3px 9px; border-radius: 8px;">
                   ⭐ 4.9 • Transporte Seguro
                 </span>
-                <span style="font-size: 11px; font-weight: 900; color: #FF6B00; background: rgba(255, 107, 0, 0.18); border: 1px solid #FF6B00; padding: 3px 10px; border-radius: 10px;">
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); border: 1px solid #FF6B00; box-shadow: 0 3px 10px rgba(255,107,0,0.35);">
                   Pedir Móvil ➔
                 </span>
               </div>
@@ -994,28 +994,28 @@ class MarketplaceController {
         </div>
 
         <!-- Pintura y Latonería Automotriz ("Pinta tu Vehículo") -->
-        <div class="est-row-card service-row-card" onclick="PaintServiceApp ? PaintServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(30, 41, 59, 0.8) 100%); border: 1.5px solid rgba(239, 68, 68, 0.5); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
-          <div style="display: flex; gap: 14px; align-items: center;">
-            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(239, 68, 68, 0.2); border: 2px solid #EF4444; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);">
+        <div class="est-row-card service-row-card" onclick="PaintServiceApp ? PaintServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(234, 88, 12, 0.55); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(234, 88, 12, 0.22); border: 2px solid #EA580C; box-shadow: 0 0 20px rgba(234, 88, 12, 0.45);">
               🎨
             </div>
             <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
-                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
                   Pintura y Latonería Automotriz
                 </h4>
-                <span style="background: #EF4444; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                <span class="service-card-badge" style="background: #EA580C; color: #FFF; box-shadow: 0 2px 8px rgba(234,88,12,0.4);">
                   🔥 AL HORNO
                 </span>
               </div>
-              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
+              <p class="service-card-desc">
                 Pinta tu auto o piezas con secado al horno, sacado de golpes y cotizador inteligente en San Antonio.
               </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
-                <span style="font-size: 10px; font-weight: 800; color: #FCA5A5; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 8px; border-radius: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #FDBA74; background: rgba(234, 88, 12, 0.16); border: 1px solid rgba(234, 88, 12, 0.35); padding: 3px 9px; border-radius: 8px;">
                   ⭐ 4.9 • Garantía de Color
                 </span>
-                <span style="font-size: 11px; font-weight: 900; color: #EF4444; background: rgba(239, 68, 68, 0.2); border: 1px solid #EF4444; padding: 3px 10px; border-radius: 10px;">
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%); border: 1px solid #EA580C; box-shadow: 0 3px 10px rgba(234,88,12,0.35);">
                   Cotizar Auto ➔
                 </span>
               </div>
@@ -1024,29 +1024,59 @@ class MarketplaceController {
         </div>
 
         <!-- Impresión 3D & Prototipado ("PediGochos 3D Lab") -->
-        <div class="est-row-card service-row-card" onclick="Print3DServiceApp ? Print3DServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(30, 41, 59, 0.8) 100%); border: 1.5px solid rgba(99, 102, 241, 0.5); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
-          <div style="display: flex; gap: 14px; align-items: center;">
-            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(99, 102, 241, 0.2); border: 2px solid #6366F1; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(99, 102, 241, 0.45);">
+        <div class="est-row-card service-row-card" onclick="Print3DServiceApp ? Print3DServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(99, 102, 241, 0.55); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(99, 102, 241, 0.22); border: 2px solid #6366F1; box-shadow: 0 0 20px rgba(99, 102, 241, 0.45);">
               🖨️
             </div>
             <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
-                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
                   PediGochos 3D Lab
                 </h4>
-                <span style="background: #6366F1; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                <span class="service-card-badge" style="background: #6366F1; color: #FFF; box-shadow: 0 2px 8px rgba(99,102,241,0.4);">
                   🔄 VISOR 3D 360°
                 </span>
               </div>
-              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
+              <p class="service-card-desc">
                 Impresión 3D de coleccionables, repuestos automotrices, llaveros y prototipado con cotización inmediata.
               </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
-                <span style="font-size: 10px; font-weight: 800; color: #A5B4FC; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); padding: 2px 8px; border-radius: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #A5B4FC; background: rgba(99, 102, 241, 0.16); border: 1px solid rgba(99, 102, 241, 0.35); padding: 3px 9px; border-radius: 8px;">
                   ⭐ 5.0 • PLA • Resina • PETG
                 </span>
-                <span style="font-size: 11px; font-weight: 900; color: #818CF8; background: rgba(99, 102, 241, 0.2); border: 1px solid #6366F1; padding: 3px 10px; border-radius: 10px;">
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); border: 1px solid #6366F1; box-shadow: 0 3px 10px rgba(99,102,241,0.35);">
                   Explorar 3D ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Llaveros en Resina Personalizados ("ShelliArt Resina") -->
+        <div class="est-row-card service-row-card" onclick="ResinServiceApp ? ResinServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(236, 72, 153, 0.55); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(236, 72, 153, 0.22); border: 2px solid #EC4899; box-shadow: 0 0 20px rgba(236, 72, 153, 0.45);">
+              ✨
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
+                  Llaveros en Resina Personalizados
+                </h4>
+                <span class="service-card-badge" style="background: #EC4899; color: #FFF; box-shadow: 0 2px 8px rgba(236,72,153,0.4);">
+                  💎 SHELLIART A-Z
+                </span>
+              </div>
+              <p class="service-card-desc">
+                Diseña tu llavero personalizado con letras A-Z, hojilla de oro 24K, borlas, glitter y pigmentos cristalinos.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #FBCFE8; background: rgba(236, 72, 153, 0.16); border: 1px solid rgba(236, 72, 153, 0.35); padding: 3px 9px; border-radius: 8px;">
+                  ⭐ 5.0 • Pan de Oro • Borlas • Dijes
+                </span>
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%); border: 1px solid #EC4899; box-shadow: 0 3px 10px rgba(236,72,153,0.35);">
+                  Personalizar ➔
                 </span>
               </div>
             </div>
@@ -1190,25 +1220,25 @@ class MarketplaceController {
       const totalRev = est.totalReviews !== undefined ? est.totalReviews : Math.floor(10 + Math.random() * 25);
 
       card.innerHTML = `
-        <div class="est-row-img-wrapper" style="width: 88px; height: 88px; min-width: 88px; min-height: 88px; max-width: 88px; max-height: 88px; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #141721; border: 1.5px solid rgba(255,255,255,0.1); position: relative; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+        <div class="est-row-img-wrapper">
           ${imgHTML}
-          <div class="est-row-img-placeholder hidden" style="font-size: 32px;">${est.logo || '🏪'}</div>
+          <div class="est-row-img-placeholder hidden">${est.logo || '🏪'}</div>
           ${closedBadge}
           ${highTrafficBadge}
         </div>
-        <div class="est-row-info" style="display: flex; flex-direction: column; justify-content: center; gap: 4px; flex: 1; min-width: 0;">
-          <div class="est-row-header-flex" style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-            <h4 style="font-size: 15.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">${est.name}</h4>
-            <div class="est-row-rating" onclick="event.stopPropagation(); MarketplaceApp.openReviewsListModal('${est.id}')" style="font-size: 11px; font-weight: 800; color: #FFCC00; background: rgba(255, 204, 0, 0.15); border: 1px solid rgba(255, 204, 0, 0.3); padding: 2px 7px; border-radius: 8px; flex-shrink: 0; cursor: pointer;">
+        <div class="est-row-info">
+          <div class="est-row-header-flex">
+            <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">${est.name}</h4>
+            <div class="est-row-rating" onclick="event.stopPropagation(); MarketplaceApp.openReviewsListModal('${est.id}')" style="cursor: pointer;">
               ⭐ ${ratingVal} (${totalRev})
             </div>
           </div>
-          <div class="est-row-desc" style="font-size: 13.5px; color: #CBD5E1; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal;">
+          <div class="est-row-desc">
             ${this.capitalize(est.category)} • ${est.description.split('.')[0] || est.description}
           </div>
-          <div class="est-row-details-row" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-top: 2px;">
+          <div class="est-row-details-row">
             <span style="color: #94A3B8; font-weight: 700; display: flex; align-items: center; gap: 4px;">${deliveryTimeStr}</span>
-            <span class="free-delivery" style="background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid #3B82F6; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 800;">${isOpen ? '🚲 ' + this.formatPesos(est.delivery_fee || 5000) : '🔴 Cerrado'}</span>
+            <span class="free-delivery" style="background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid #3B82F6; padding: 1.5px 6px; border-radius: 6px; font-weight: 800;">${isOpen ? '🚲 ' + this.formatPesos(est.delivery_fee || 5000) : '🔴 Cerrado'}</span>
           </div>
         </div>
       `;
