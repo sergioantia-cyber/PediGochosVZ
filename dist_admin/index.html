@@ -122,15 +122,20 @@
             <span>🎵</span>
             <span>Sonidos</span>
           </button>
-          <button type="button" id="btn-header-paint-services" class="btn-logout" onclick="AdminApp.openPaintAdminModal()" style="background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #ffffff; font-weight: 800; border: 1px solid #EF4444; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35); position: relative;" title="Cotizaciones y Chat de Pintura Automotriz">
+          <button type="button" id="btn-header-paint-services" class="btn-logout" onclick="AdminApp.openPaintAdminModal()" style="background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #ffffff; font-weight: 800; border: 1px solid #EF4444; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35); position: relative;" title="Cotizaciones y Chat de Latonería y Pintura">
             <span>🎨</span>
-            <span>Pintura Auto</span>
+            <span>Latonería y Pintura</span>
             <span id="admin-paint-badge" style="display: none; background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
           </button>
           <button type="button" id="btn-header-print3d-services" class="btn-logout" onclick="AdminApp.openPrint3DAdminModal()" style="background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%); color: #ffffff; font-weight: 800; border: 1px solid #6366F1; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35); position: relative;" title="Cotizaciones y Pedidos 3D Lab">
             <span>🖨️</span>
             <span>3D Lab</span>
             <span id="admin-print3d-badge" style="display: none; background: #6366F1; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
+          </button>
+          <button type="button" id="btn-header-resin-services" class="btn-logout" onclick="AdminApp.openResinAdminModal()" style="background: linear-gradient(135deg, #DB2777 0%, #9D174D 100%); color: #ffffff; font-weight: 800; border: 1px solid #F472B6; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(219, 39, 119, 0.35); position: relative;" title="Pedidos y Fichas Técnicas: ShelliArt Resina">
+            <span>✨</span>
+            <span>ShelliArt Resina</span>
+            <span id="admin-resin-badge" style="display: none; background: #F472B6; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
           </button>
           <button class="btn-logout" onclick="AdminApp.forceCleanUpdate()" style="background-color: rgba(239, 68, 68, 0.15); color: #F87171; font-weight: 800; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer;" title="Limpiar caché y forzar descarga de la última versión">⚡ Forzar Actualización</button>
           <button class="btn-logout" onclick="AdminApp.openPaymentMethodsModal()" style="background-color: #0F766E; color: #5EEAD4; font-weight: 800; border: 1px solid #14B8A6; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer;" title="Configurar cuentas de pago bancarias y códigos QR">💳 Cuentas & QR</button>
@@ -318,7 +323,7 @@
               </p>
             </div>
 
-            <!-- Filtros: Todos / Restaurantes / Vehículos / Cauchera -->
+            <!-- Filtros: Todos / Restaurantes / Vehículos / Cauchera / Resina / Pintura / 3D -->
             <div style="display: flex; gap: 6px; flex-wrap: wrap;" class="order-filter-pill-group">
               <button type="button" class="btn-filter-pill active" id="filter-pill-all" onclick="AdminApp.setOrdersFilter('all')">
                 🌟 Todos (<span id="filter-count-all">0</span>)
@@ -330,7 +335,16 @@
                 🛵 Vehículos (<span id="filter-count-ride">0</span>)
               </button>
               <button type="button" class="btn-filter-pill pill-cauchera" id="filter-pill-cauchera" onclick="AdminApp.setOrdersFilter('cauchera')">
-                🛞 Cauchera 24H (<span id="filter-count-cauchera">0</span>)
+                🛞 Cauchera Cachu (<span id="filter-count-cauchera">0</span>)
+              </button>
+              <button type="button" class="btn-filter-pill pill-resin" id="filter-pill-resin" onclick="AdminApp.setOrdersFilter('resin')" style="border-color: rgba(244, 114, 182, 0.4); color: #F472B6;">
+                ✨ Resina (<span id="filter-count-resin">0</span>)
+              </button>
+              <button type="button" class="btn-filter-pill pill-paint" id="filter-pill-paint" onclick="AdminApp.setOrdersFilter('paint')" style="border-color: rgba(245, 158, 11, 0.4); color: #F59E0B;">
+                🎨 Latonería y Pintura (<span id="filter-count-paint">0</span>)
+              </button>
+              <button type="button" class="btn-filter-pill pill-print3d" id="filter-pill-print3d" onclick="AdminApp.setOrdersFilter('print3d')" style="border-color: rgba(56, 189, 248, 0.4); color: #38BDF8;">
+                🖨️ 3D Lab (<span id="filter-count-print3d">0</span>)
               </button>
             </div>
           </div>
@@ -341,7 +355,8 @@
             <div style="display: flex; gap: 8px; align-items: center; font-size: 11.5px; font-weight: 800; flex-wrap: wrap;">
               <span id="badge-stat-restaurants" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid rgba(255, 107, 0, 0.3); padding: 4px 10px; border-radius: 12px;">🍔 Restaurantes: 0</span>
               <span id="badge-stat-rides" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 12px;">🛵 Vehículos: 0</span>
-              <span id="badge-stat-cauchera" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 12px;">🛞 Cauchera 24H: 0</span>
+              <span id="badge-stat-cauchera" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 12px;">🛞 Cauchera: 0</span>
+              <span id="badge-stat-resin" style="background: rgba(244, 114, 182, 0.15); color: #F472B6; border: 1px solid rgba(244, 114, 182, 0.3); padding: 4px 10px; border-radius: 12px;">✨ Resina: 0</span>
             </div>
           </div>
 
@@ -2948,6 +2963,48 @@
       <!-- Feed / List -->
       <div id="admin-print3d-quotes-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;">
         <div style="text-align: center; color: #94A3B8; padding: 30px;">⏳ Cargando pedidos 3D...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin ShelliArt Resina Monitoring Modal -->
+  <div id="admin-resin-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;">
+    <div style="background: #0F131F; border: 1.5px solid rgba(244, 114, 182, 0.4); border-radius: 20px; width: 100%; max-width: 920px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+      <!-- Header -->
+      <div style="padding: 16px 20px; background: linear-gradient(135deg, #831843 0%, #500724 100%); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 22px;">✨</span>
+          <div>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #FFF;">Control de Pedidos: ShelliArt Resina</h3>
+            <span style="font-size: 11px; color: #FBCFE8;">Llaveros de Letras Personalizados, Pan de Oro, Borlas & Glitter</span>
+          </div>
+        </div>
+        <button type="button" onclick="AdminApp.closeResinAdminModal()" style="background: rgba(255,255,255,0.1); border: none; color: #94A3B8; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div style="padding: 16px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: rgba(15, 19, 31, 0.95); border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #94A3B8; font-weight: 800; text-transform: uppercase;">TOTAL ORDENES</span>
+          <div id="admin-resin-kpi-total" style="font-size: 18px; font-weight: 900; color: #FFF; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #FCD34D; font-weight: 800; text-transform: uppercase;">EN CONVERSACIÓN</span>
+          <div id="admin-resin-kpi-chat" style="font-size: 18px; font-weight: 900; color: #F59E0B; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(244, 114, 182, 0.15); border: 1px solid rgba(244, 114, 182, 0.4); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #FBCFE8; font-weight: 800; text-transform: uppercase;">EN CURADO UV</span>
+          <div id="admin-resin-kpi-curing" style="font-size: 18px; font-weight: 900; color: #F472B6; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #6EE7B7; font-weight: 800; text-transform: uppercase;">ENTREGADOS</span>
+          <div id="admin-resin-kpi-done" style="font-size: 18px; font-weight: 900; color: #10B981; margin-top: 2px;">0</div>
+        </div>
+      </div>
+
+      <!-- Feed / List -->
+      <div id="admin-resin-quotes-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;">
+        <div style="text-align: center; color: #94A3B8; padding: 30px;">⏳ Cargando pedidos de resina...</div>
       </div>
     </div>
   </div>

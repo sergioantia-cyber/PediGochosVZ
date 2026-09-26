@@ -518,31 +518,33 @@
 
 .categories-grid-delivercity {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  grid-template-rows: 64px 64px 64px;
-  gap: 8px;
+  grid-template-columns: 1.35fr 1fr;
+  grid-template-rows: 78px 78px 78px;
+  gap: 12px;
 }
 
 .category-card-delivercity {
   position: relative;
-  border-radius: 12px;
+  border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
-  background-color: #E2E8F0;
+  background-color: #1E293B;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .category-card-delivercity:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .category-card-delivercity.active {
-  box-shadow: 0 0 0 2.5px var(--primary), 0 8px 16px rgba(255, 107, 0, 0.25);
+  box-shadow: 0 0 0 2.5px var(--primary), 0 8px 20px rgba(255, 107, 0, 0.35);
 }
 
 .category-card-bg {
@@ -558,7 +560,7 @@
 }
 
 .category-card-delivercity:hover .category-card-bg {
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
 
 .category-overlay-dark {
@@ -567,7 +569,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.25) 55%, transparent 100%);
+  background: linear-gradient(to top, rgba(10, 15, 26, 0.92) 0%, rgba(10, 15, 26, 0.45) 55%, rgba(0, 0, 0, 0.2) 100%);
   z-index: 2;
 }
 
@@ -582,45 +584,166 @@
 }
 
 .category-card-content h4 {
-  font-size: 12.5px;
-  font-weight: 900;
+  font-size: 14px;
+  font-weight: 800;
   margin: 0;
-  line-height: 1.15;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  line-height: 1.2;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
   letter-spacing: -0.2px;
-}
-
-.card-restaurantes .category-card-content h4 {
-  font-size: 16px;
 }
 
 .category-card-content p {
   font-size: 10px;
-  color: #F1F5F9;
-  margin-top: 1px;
-  font-weight: 700;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  color: #CBD5E1;
+  margin: 2px 0 0 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
+/* ==========================================================================
+   Hero Restaurantes Card - Standout Dominant Bento Box
+   ========================================================================== */
 .card-restaurantes {
-  grid-row: 1 / 4;
-  grid-column: 1 / 2;
+  grid-row: 1 / span 3 !important;
+  grid-column: 1 / 2 !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  border: 1.5px solid rgba(255, 107, 0, 0.45) !important;
+  box-shadow: 0 6px 24px rgba(255, 107, 0, 0.22), 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+  background: #181C26;
 }
 
+.card-restaurantes:hover {
+  border-color: #FF6B00 !important;
+  box-shadow: 0 10px 32px rgba(255, 107, 0, 0.38), 0 6px 20px rgba(0, 0, 0, 0.7) !important;
+  transform: translateY(-3px) scale(1.01);
+}
+
+.card-restaurantes .category-overlay-dark {
+  background: linear-gradient(to top, rgba(10, 15, 26, 0.98) 0%, rgba(10, 15, 26, 0.55) 45%, rgba(0, 0, 0, 0.2) 100%) !important;
+}
+
+.card-restaurantes .category-hero-top-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.badge-fire {
+  background: linear-gradient(135deg, #FF6B00 0%, #EF4444 100%);
+  color: #FFFFFF;
+  font-size: 9.5px;
+  font-weight: 900;
+  padding: 4px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+  text-transform: uppercase;
+}
+
+.badge-delivery {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FCD34D;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.content-restaurantes {
+  position: absolute;
+  bottom: 14px !important;
+  left: 14px !important;
+  right: 14px !important;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cat-pill-highlight {
+  font-size: 10px;
+  font-weight: 800;
+  color: #FFA500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.card-restaurantes .category-card-content h4 {
+  font-size: 21px !important;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin: 0;
+  line-height: 1.15;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  letter-spacing: -0.3px;
+}
+
+.card-restaurantes .category-card-content p {
+  font-size: 11.5px !important;
+  color: #E2E8F0;
+  margin: 2px 0 6px 0;
+  line-height: 1.35;
+  font-weight: 500;
+  white-space: normal !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.cat-action-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.cat-action-text {
+  font-size: 11px;
+  font-weight: 800;
+  color: #FF8A00;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.cat-action-arrow {
+  color: #FF8A00;
+  font-size: 12px;
+  font-weight: 900;
+  transition: transform 0.2s ease;
+}
+
+.card-restaurantes:hover .cat-action-arrow {
+  transform: translateX(4px);
+}
+
+/* Secondary Cards (Farmacias, Servicios, Ferreterías) */
 .card-farmacias {
-  grid-row: 1 / 2;
-  grid-column: 2 / 3;
+  grid-row: 1 / 2 !important;
+  grid-column: 2 / 3 !important;
 }
 
-.card-mercados,
 .card-servicios {
-  grid-row: 2 / 3;
-  grid-column: 2 / 3;
+  grid-row: 2 / 3 !important;
+  grid-column: 2 / 3 !important;
 }
 
 .card-ferreterias {
-  grid-row: 3 / 4;
-  grid-column: 2 / 3;
+  grid-row: 3 / 4 !important;
+  grid-column: 2 / 3 !important;
 }
 
 /* Section Headers - Compact */
@@ -759,48 +882,42 @@
 .establishments-list-delivercity {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  gap: 10px;
 }
 
+/* Establecimientos compactos (menos grandes que las categorías superiores) */
 .est-row-card {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   background: #242936;
-  border-radius: 16px;
-  padding: 12px 14px;
+  border-radius: 12px;
+  padding: 8px 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
   position: relative;
   overflow: hidden;
-}
-
-.est-row-card.service-row-card {
-  display: block;
-}
-
-.est-row-card.service-row-card > div {
-  width: 100%;
+  min-height: 68px;
 }
 
 .est-row-card:hover {
   transform: translateY(-2px);
   background: #2B3141;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 16px rgba(255, 107, 0, 0.2);
-  border-color: rgba(255, 107, 0, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 12px rgba(255, 107, 0, 0.15);
+  border-color: rgba(255, 107, 0, 0.35);
 }
 
 .est-row-img-wrapper {
-  width: 90px;
-  height: 90px;
-  min-width: 90px;
-  min-height: 90px;
-  max-width: 90px;
-  max-height: 90px;
-  border-radius: 14px;
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  min-height: 62px;
+  max-width: 62px;
+  max-height: 62px;
+  border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
   background-color: #141721;
@@ -808,8 +925,8 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .est-row-img-wrapper img,
@@ -817,7 +934,7 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
-  padding: 4px;
+  padding: 3px;
   box-sizing: border-box;
   background-color: transparent;
   transition: transform 0.3s ease;
@@ -825,11 +942,11 @@
 
 .est-row-card:hover .est-row-img-wrapper img,
 .est-row-card:hover .est-row-img {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
 .est-row-img-placeholder {
-  font-size: 34px;
+  font-size: 26px;
 }
 
 .est-row-info {
@@ -839,14 +956,14 @@
   justify-content: center;
   min-width: 0;
   margin-top: 0;
-  gap: 4px;
+  gap: 3px;
 }
 
 .est-row-desc {
-  font-size: 13.5px;
-  color: #CBD5E1;
+  font-size: 11.5px;
+  color: #94A3B8;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -859,11 +976,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .est-row-header-flex h4 {
-  font-size: 15px;
+  font-size: 13.5px;
   font-weight: 800;
   color: #FFFFFF;
   margin: 0;
@@ -876,8 +993,93 @@
 .est-row-rating {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   background-color: rgba(255, 170, 0, 0.14);
+  padding: 1.5px 6px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 800;
+  color: #FFAA00;
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  flex-shrink: 0;
+}
+
+/* ========================================================
+   CUADROS DONDE APARECEN LOS SERVICIOS (GRANDES Y DESTACADOS)
+   ======================================================== */
+.est-row-card.service-row-card {
+  display: block !important;
+  width: 100% !important;
+  padding: 18px 20px !important;
+  border-radius: 20px !important;
+  margin-bottom: 14px !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease !important;
+  min-height: auto !important;
+}
+
+.est-row-card.service-row-card > div {
+  width: 100% !important;
+}
+
+.est-row-card.service-row-card:hover {
+  transform: translateY(-3px) scale(1.008) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45) !important;
+}
+
+.service-card-main-flex {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.service-card-icon-box {
+  width: 80px !important;
+  height: 80px !important;
+  min-width: 80px !important;
+  min-height: 80px !important;
+  border-radius: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 40px !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
+}
+
+.service-card-title {
+  font-size: 17.5px !important;
+  font-weight: 900 !important;
+  color: #FFFFFF !important;
+  margin: 0 !important;
+  letter-spacing: -0.2px;
+}
+
+.service-card-desc {
+  font-size: 13.5px !important;
+  color: #E2E8F0 !important;
+  margin: 4px 0 8px 0 !important;
+  line-height: 1.45 !important;
+  font-weight: 500 !important;
+}
+
+.service-card-badge {
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  padding: 3px 8px !important;
+  border-radius: 8px !important;
+  letter-spacing: 0.2px;
+}
+
+.service-card-cta-btn {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  padding: 6px 14px !important;
+  border-radius: 12px !important;
+  cursor: pointer;
+  white-space: nowrap;
+}
   padding: 2px 8px;
   border-radius: var(--radius-full);
   font-size: 11px;
@@ -1907,36 +2109,64 @@ body {
     gap: 8px;
   }
 
-  /* Asymmetrical Categories Grid (Restaurantes, Farmacias, Mercados, Ferreterías) */
+  /* Asymmetrical Categories Grid (Restaurantes, Farmacias, Servicios, Ferreterías) */
   .categories-section {
     margin-bottom: 14px !important;
   }
 
   .categories-grid-delivercity {
-    grid-template-rows: 52px 52px 52px !important;
-    gap: 6px !important;
+    grid-template-columns: 1.25fr 1fr !important;
+    grid-template-rows: 70px 70px 70px !important;
+    gap: 8px !important;
   }
 
   .category-card-delivercity {
-    border-radius: 10px !important;
+    border-radius: 14px !important;
+  }
+
+  .card-restaurantes {
+    grid-row: 1 / span 3 !important;
+    grid-column: 1 / 2 !important;
+    height: 100% !important;
+    min-height: 100% !important;
   }
 
   .card-restaurantes .category-card-content h4 {
-    font-size: 14px !important;
+    font-size: 18px !important;
+  }
+
+  .card-restaurantes .category-card-content p {
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+  }
+
+  .card-farmacias {
+    grid-row: 1 / 2 !important;
+    grid-column: 2 / 3 !important;
+  }
+
+  .card-servicios {
+    grid-row: 2 / 3 !important;
+    grid-column: 2 / 3 !important;
+  }
+
+  .card-ferreterias {
+    grid-row: 3 / 4 !important;
+    grid-column: 2 / 3 !important;
   }
 
   .category-card-content h4 {
-    font-size: 11.5px !important;
+    font-size: 13.5px !important;
   }
 
   .category-card-content p {
-    font-size: 8.5px !important;
+    font-size: 9.5px !important;
   }
 
   .category-card-content {
-    bottom: 6px !important;
-    left: 8px !important;
-    right: 8px !important;
+    bottom: 8px !important;
+    left: 10px !important;
+    right: 10px !important;
   }
 
   /* Horizontal Category Chips Swiper */
@@ -2015,20 +2245,21 @@ body {
 
   .est-row-card {
     flex-direction: row !important;
-    padding: 10px 12px !important;
-    gap: 12px !important;
-    border-radius: 14px !important;
+    padding: 8px 10px !important;
+    gap: 10px !important;
+    border-radius: 12px !important;
     align-items: center !important;
+    min-height: 64px !important;
   }
 
   .est-row-img-wrapper {
-    width: 86px !important;
-    height: 86px !important;
-    min-width: 86px !important;
-    min-height: 86px !important;
-    max-width: 86px !important;
-    max-height: 86px !important;
-    border-radius: 12px !important;
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    min-height: 58px !important;
+    max-width: 58px !important;
+    max-height: 58px !important;
+    border-radius: 10px !important;
   }
 
   .est-row-img-wrapper img,
@@ -2036,18 +2267,52 @@ body {
     width: 100% !important;
     height: 100% !important;
     object-fit: contain !important;
-    padding: 3px !important;
+    padding: 2.5px !important;
   }
 
   .est-row-header-flex h4 {
-    font-size: 15px !important;
-    font-weight: 900 !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
   }
 
   .est-row-desc {
-    font-size: 13px !important;
-    line-height: 1.35 !important;
-    color: #CBD5E1 !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    color: #94A3B8 !important;
+  }
+
+  .est-row-details-row {
+    font-size: 10px !important;
+  }
+
+  /* Los cuadros de servicios en mobile deben ser grandes y legibles */
+  .est-row-card.service-row-card {
+    display: block !important;
+    padding: 16px !important;
+    border-radius: 18px !important;
+    min-height: auto !important;
+  }
+
+  .est-row-card.service-row-card .service-card-icon-box {
+    width: 72px !important;
+    height: 72px !important;
+    min-width: 72px !important;
+    min-height: 72px !important;
+    font-size: 36px !important;
+    border-radius: 16px !important;
+  }
+
+  .est-row-card.service-row-card .service-card-title {
+    font-size: 16px !important;
+  }
+
+  .est-row-card.service-row-card .service-card-desc {
+    font-size: 12.5px !important;
+  }
+
+  .est-row-card.service-row-card .service-card-cta-btn {
+    font-size: 12px !important;
+    padding: 5px 12px !important;
   }
 
   .products-grid {

@@ -96,9 +96,10 @@ const ServicePartnerApp = {
           wsCatalogUpdate: 'PAINT_CATALOG_UPDATE',
           roleName: 'Latonería y Pintura',
           presets: [
-            "👋 ¡Hola! ¿Podrías traernos el vehículo para chequearlo en persona?",
-            "🎨 Igualamos el tono exacto con tu código VIN computarizado.",
-            "🔧 Ofrecemos secado al horno y 2 años de garantía de brillo.",
+            "👋 ¡Hola! Recibimos tu cotización. ¿Podrías traernos el vehículo para chequearlo?",
+            "✨ Aplicamos Barniz DuPont / Glasurit de Gama Alta con secado al horno.",
+            "💎 Proceso de pulitura 3M (Lijas 1500 a 5000 + Robin + Symplex Piraña + Cerámica).",
+            "🎨 Igualamos el tono exacto con fórmula computarizada bicapa poliéster.",
             "💰 Presupuesto cerrado: podemos ajustar el precio acordado en el sistema.",
             "📅 Cita confirmada para recepción del vehículo en taller."
           ]
@@ -446,8 +447,16 @@ const ServicePartnerApp = {
           <span class="sp-spec-val">${partsText}</span>
         </div>
         <div>
-          <span class="sp-spec-label">ACABADO</span>
-          <span class="sp-spec-val">${q.finishName || 'Estándar'}</span>
+          <span class="sp-spec-label">PINTURA</span>
+          <span class="sp-spec-val" style="color: #38BDF8;">🎨 ${q.paintQualityName || q.finishName || 'Poliéster y Tintas'}</span>
+        </div>
+        <div>
+          <span class="sp-spec-label">BARNIZ</span>
+          <span class="sp-spec-val" style="color: #C084FC;">✨ ${q.varnishName || 'DuPont (Gama Alta A)'}</span>
+        </div>
+        <div>
+          <span class="sp-spec-label">PULITURA</span>
+          <span class="sp-spec-val" style="color: #FBBF24;">💎 ${q.polishingTier || 'Solo Gama Alta (3M / Cerámica)'}</span>
         </div>
         <div>
           <span class="sp-spec-label">LATONERÍA</span>
@@ -455,7 +464,7 @@ const ServicePartnerApp = {
         </div>
         <div>
           <span class="sp-spec-label">PRESUPUESTO</span>
-          <span class="sp-spec-val" style="color: #38BDF8;">${priceText}</span>
+          <span class="sp-spec-val" style="color: #34D399; font-weight: 800;">${priceText}</span>
         </div>
       `;
     } else if (is3d) {

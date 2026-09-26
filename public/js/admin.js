@@ -7585,7 +7585,9 @@ class AdminController {
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; font-size: 11.5px; color: #CBD5E1; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 10px;">
             <div><strong>Vehículo:</strong> ${(q.vehicleType || '').toUpperCase()}</div>
-            <div><strong>Acabado:</strong> ${(q.finishType || 'Bicapa').toUpperCase()}</div>
+            <div><strong>Pintura:</strong> <span style="color: #38BDF8;">🎨 ${q.paintQualityName || (q.finishType || 'Bicapa').toUpperCase()}</span></div>
+            <div><strong>Barniz:</strong> <span style="color: #C084FC;">✨ ${q.varnishName || 'DuPont (Gama Alta A)'}</span></div>
+            <div><strong>Pulitura:</strong> <span style="color: #FBBF24;">💎 ${q.polishingTier || 'Solo Gama Alta (3M / Cerámica)'}</span></div>
             <div><strong>Piezas:</strong> ${piecesStr}</div>
             <div><strong>Latonería:</strong> ${q.hasLatoneria ? (q.latoneriaSeverity || 'Leve').toUpperCase() : 'NO'}</div>
             <div><strong>Estimado / Final:</strong> <span style="color: #10B981; font-weight: 800;">${q.finalPrice ? `$${q.finalPrice} USD` : `$${q.estimatedRangeUsd} USD`}</span></div>

@@ -88,6 +88,9 @@ const PaintServiceApp = {
     hasLatoneria: false,
     latoneriaSeverity: 'leve',
     finishType: 'bicapa',
+    paintQuality: 'alta', // 'alta' (Poliéster y Tintas), 'media' (Acrílico), 'baja' (Laca)
+    varnishQuality: 'alta_a', // 'alta_a' (Gama Alta A), 'media_b' (Gama Media B), 'baja_c' (Gama Baja C)
+    varnishBrand: 'dupont', // 'dupont', 'glazury', 'pintuco', 'roberlo', 'gricoa'
     photos: [],
     urgency: 'estandar',
     date: '',
@@ -387,6 +390,113 @@ const PaintServiceApp = {
       if (set[key]) return set[key].name;
     }
     return key;
+  },
+
+  // Calidades de Pintura Base
+  paintQualities: [
+    {
+      id: 'alta',
+      name: 'Poliéster y Tintas',
+      tier: 'Gama Alta',
+      badge: 'Brillo y Cobertura Suprema',
+      desc: 'Bicapa/Tricapa poliéster de máxima resistencia, pigmentación pura, tintas concentradas y alta estabilidad UV.',
+      multiplier: 1.15,
+      icon: '✨'
+    },
+    {
+      id: 'media',
+      name: 'Acrílico Automotriz',
+      tier: 'Gama Media',
+      badge: 'Estándar Balanceado',
+      desc: 'Pintura acrílica automotriz de secado al horno, duradera y de excelente rendimiento comercial.',
+      multiplier: 1.0,
+      icon: '🎨'
+    },
+    {
+      id: 'baja',
+      name: 'Laca Tradicional',
+      tier: 'Gama Baja',
+      badge: 'Económica',
+      desc: 'Laca nitrocelulosa tradicional para presupuestos accesibles o retoques puntuales.',
+      multiplier: 0.88,
+      icon: '🖌️'
+    }
+  ],
+
+  // Calidades de Barniz Transparente (Clear Coat)
+  varnishCategories: [
+    {
+      id: 'alta_a',
+      tier: 'Gama Alta A',
+      badge: '⭐ Acabado Show Car / Filtro UV Superior',
+      desc: 'Transparente de poliuretano de alta densidad, efecto espejo profundo y máxima dureza contra arañazos.',
+      multiplier: 1.25,
+      brands: [
+        { id: 'dupont', name: 'DuPont', sub: 'CromaClear / Standox Ultra' },
+        { id: 'glazury', name: 'Glasurit (Glazury)', sub: 'Basf 923 Premium Clear' }
+      ]
+    },
+    {
+      id: 'media_b',
+      tier: 'Gama Media B',
+      badge: 'Protección Comercial Garantizada',
+      desc: 'Transparente 2K de gran nivelación, excelente brillo y curado uniforme para uso diario.',
+      multiplier: 1.0,
+      brands: [
+        { id: 'pintuco', name: 'Pintuco', sub: 'Poliuretano 2K Automotriz' },
+        { id: 'roberlo', name: 'Roberlo', sub: 'Kronox 610 / Unix 150' }
+      ]
+    },
+    {
+      id: 'baja_c',
+      tier: 'Gama Baja C',
+      badge: 'Opción Económica',
+      desc: 'Barniz transparente directo tradicional para trabajos económicos.',
+      multiplier: 0.85,
+      brands: [
+        { id: 'gricoa', name: 'Gricoa', sub: 'Transparente Estándar' }
+      ]
+    }
+  ],
+
+  // Materiales de Pulitura Exclusivos (Solo se maneja Gama Alta)
+  polishingMaterials: [
+    { name: 'Lijas 1500, 2000, 3000, 5000 3M', desc: 'Asentado micrométrico al agua (Trizact) para eliminar piel de naranja', icon: '📄' },
+    { name: 'Robin 3M', desc: 'Pasta de corte rápido para desbaste fino y remoción de micro-rayas', icon: '🧴' },
+    { name: 'Symplex Piraña', desc: 'Compuesto de pulido y abrillantado de corte medio y brillo espejo', icon: '🦈' },
+    { name: 'Cerámica (Sellado)', desc: 'Sellador cerámico que sella el barniz, aporta repelencia hidrofóbica y acabado vitrificado', icon: '💎' }
+  ],
+
+  getCurrentPaintQualityObj() {
+    return this.paintQualities.find(p => p.id === this.wizardState.paintQuality) || this.paintQualities[0];
+  },
+
+  getCurrentVarnishTierObj() {
+    return this.varnishCategories.find(v => v.id === this.wizardState.varnishQuality) || this.varnishCategories[0];
+  },
+
+  getCurrentVarnishBrandObj() {
+    const tier = this.getCurrentVarnishTierObj();
+    return tier.brands.find(b => b.id === this.wizardState.varnishBrand) || tier.brands[0];
+  },
+
+  selectPaintQuality(qualityId) {
+    this.wizardState.paintQuality = qualityId;
+    this.renderQuoterStep();
+  },
+
+  selectVarnishTier(tierId) {
+    this.wizardState.varnishQuality = tierId;
+    const tier = this.varnishCategories.find(v => v.id === tierId);
+    if (tier && tier.brands && tier.brands.length > 0) {
+      this.wizardState.varnishBrand = tier.brands[0].id;
+    }
+    this.renderQuoterStep();
+  },
+
+  selectVarnishBrand(brandId) {
+    this.wizardState.varnishBrand = brandId;
+    this.renderQuoterStep();
   },
 
   getFinishName(finishKey) {
@@ -958,30 +1068,90 @@ const PaintServiceApp = {
           ` : ''}
         </div>
 
-        <!-- Finish Type -->
-        <div>
-          <strong style="color: #FFF; font-size: 13px;">Tipo de Acabado / Barniz:</strong>
-          <div class="paint-finish-grid">
-            <div class="paint-finish-card ${this.wizardState.finishType === 'monocapa' ? 'selected' : ''}" onclick="PaintServiceApp.selectFinish('monocapa')">
-              <div class="paint-finish-swatch" style="background: #3B82F6;"></div>
-              <strong style="color: #FFF; font-size: 11px; display: block;">Monocapa</strong>
-              <span style="color: #94A3B8; font-size: 9.5px;">Económico directo</span>
+        <!-- SECCIÓN 1: Calidad de Pintura (Color Base) -->
+        <div class="paint-material-block">
+          <div class="paint-material-header">
+            <span class="paint-material-title"><span>🎨</span> Calidad de Pintura (Color Base)</span>
+            <span style="font-size: 10px; color: #38BDF8; font-weight: 800;">3 Calidades Disponibles</span>
+          </div>
+          <p class="paint-material-sub">Selecciona el tipo de pigmento base para la carrocería de tu vehículo.</p>
+
+          <div class="paint-quality-grid">
+            ${this.paintQualities.map(p => {
+              const isSel = this.wizardState.paintQuality === p.id;
+              const tierClass = p.id === 'alta' ? 'tier-high' : (p.id === 'media' ? 'tier-mid' : 'tier-low');
+              return `
+                <div class="paint-quality-card ${isSel ? 'selected' : ''}" onclick="PaintServiceApp.selectPaintQuality('${p.id}')">
+                  <span class="paint-tier-pill ${tierClass}">${p.tier}</span>
+                  <span class="paint-quality-name">${p.icon} ${p.name}</span>
+                  <span class="paint-quality-desc">${p.desc}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: Barniz Transparente (Clear Coat) -->
+        <div class="paint-material-block">
+          <div class="paint-material-header">
+            <span class="paint-material-title"><span>✨</span> Barniz (Transparente / Clear Coat)</span>
+            <span style="font-size: 10px; color: #FCD34D; font-weight: 800;">Protección UV & Brillo</span>
+          </div>
+          <p class="paint-material-sub">El barniz sella la pintura, define la dureza contra rayas y la intensidad del brillo.</p>
+
+          <div class="paint-quality-grid">
+            ${this.varnishCategories.map(v => {
+              const isSel = this.wizardState.varnishQuality === v.id;
+              const tierClass = v.id === 'alta_a' ? 'tier-high' : (v.id === 'media_b' ? 'tier-mid' : 'tier-low');
+              return `
+                <div class="paint-quality-card ${isSel ? 'selected' : ''}" onclick="PaintServiceApp.selectVarnishTier('${v.id}')">
+                  <span class="paint-tier-pill ${tierClass}">${v.tier}</span>
+                  <span class="paint-quality-name">${v.brands.map(b => b.name).join(' / ')}</span>
+                  <span class="paint-quality-desc">${v.desc}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Brand Specific Pills for Selected Tier -->
+          <div class="paint-varnish-brand-chips">
+            <span style="font-size: 10px; font-weight: 800; color: #94A3B8; display: flex; align-items: center; margin-right: 4px;">Marca elegida:</span>
+            ${this.getCurrentVarnishTierObj().brands.map(b => {
+              const isBActive = this.wizardState.varnishBrand === b.id;
+              return `
+                <button type="button" class="paint-vbrand-btn ${isBActive ? 'active' : ''}" onclick="PaintServiceApp.selectVarnishBrand('${b.id}')">
+                  <span>${isBActive ? '✓' : '•'}</span> ${b.name} (${b.sub})
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- SECCIÓN 3: Materiales Utilizados para Pulir (Solo se maneja Gama Alta) -->
+        <div class="paint-polish-box">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 18px;">💎</span>
+              <strong style="color: #FFF; font-size: 13px;">Materiales para Pulir y Corrección</strong>
             </div>
-            <div class="paint-finish-card ${this.wizardState.finishType === 'bicapa' ? 'selected' : ''}" onclick="PaintServiceApp.selectFinish('bicapa')">
-              <div class="paint-finish-swatch" style="background: linear-gradient(135deg, #EF4444, #F87171); box-shadow: 0 0 8px rgba(239,68,68,0.6);"></div>
-              <strong style="color: #FFF; font-size: 11px; display: block;">Bicapa Poliuretano</strong>
-              <span style="color: #94A3B8; font-size: 9.5px;">Brillo y garantía (Estándar)</span>
-            </div>
-            <div class="paint-finish-card ${this.wizardState.finishType === 'tricapa' ? 'selected' : ''}" onclick="PaintServiceApp.selectFinish('tricapa')">
-              <div class="paint-finish-swatch" style="background: radial-gradient(circle, #FDE047 10%, #EAB308 90%);"></div>
-              <strong style="color: #FFF; font-size: 11px; display: block;">Tricapa Perlado</strong>
-              <span style="color: #94A3B8; font-size: 9.5px;">Perla y profundidad</span>
-            </div>
-            <div class="paint-finish-card ${this.wizardState.finishType === 'mate' ? 'selected' : ''}" onclick="PaintServiceApp.selectFinish('mate')">
-              <div class="paint-finish-swatch" style="background: #1E293B; border-color: #64748B;"></div>
-              <strong style="color: #FFF; font-size: 11px; display: block;">Acabado Mate</strong>
-              <span style="color: #94A3B8; font-size: 9.5px;">Barniz sedoso mate</span>
-            </div>
+            <span style="font-size: 9px; font-weight: 900; background: linear-gradient(135deg, #F59E0B, #10B981); color: #0F172A; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">
+              Solo se maneja Gama Alta
+            </span>
+          </div>
+          <p style="margin: 4px 0 10px 0; font-size: 11px; color: #CBD5E1;">
+            Todos nuestros trabajos incluyen terminado profesional espejo con insumos certificados de alta gama:
+          </p>
+
+          <div class="paint-polish-grid">
+            ${this.polishingMaterials.map(m => `
+              <div class="paint-polish-item">
+                <span class="paint-polish-icon">${m.icon}</span>
+                <div class="paint-polish-info">
+                  <span class="paint-polish-name">${m.name}</span>
+                  <span class="paint-polish-desc">${m.desc}</span>
+                </div>
+              </div>
+            `).join('')}
           </div>
         </div>
       `;
@@ -1018,6 +1188,9 @@ const PaintServiceApp = {
       const maxVes = Math.round(maxUsd * vesRate);
 
       const pieceNames = this.wizardState.selectedPieces.map(k => this.getPieceLabel(k));
+      const paintObj = this.getCurrentPaintQualityObj();
+      const varnishTierObj = this.getCurrentVarnishTierObj();
+      const varnishBrandObj = this.getCurrentVarnishBrandObj();
 
       container.innerHTML = `
         <h4 style="margin: 0 0 6px 0; font-size: 15px; color: #FFF; font-weight: 800;">Paso 4: Contacto y Rango Estimado</h4>
@@ -1059,8 +1232,16 @@ const PaintServiceApp = {
             <strong style="color: #FFF;">${currentModel.name} (${this.wizardState.vehicleType.toUpperCase()})</strong>
           </div>
           <div class="paint-estimate-row">
-            <span>Acabado de Pintura:</span>
-            <strong style="color: #38BDF8;">${this.getFinishName(this.wizardState.finishType)}</strong>
+            <span>Pintura Base:</span>
+            <strong style="color: #38BDF8;">${paintObj.name} (${paintObj.tier})</strong>
+          </div>
+          <div class="paint-estimate-row">
+            <span>Barniz Transparente:</span>
+            <strong style="color: #FBBF24;">${varnishBrandObj.name} (${varnishTierObj.tier})</strong>
+          </div>
+          <div class="paint-estimate-row">
+            <span>Pulido Especializado:</span>
+            <strong style="color: #34D399; font-size: 10.5px;">Gama Alta 3M, Robin, Symplex & Cerámica</strong>
           </div>
           <div class="paint-estimate-row">
             <span>Piezas Desglosadas (${this.wizardState.selectedPieces.length}):</span>
@@ -1207,7 +1388,10 @@ const PaintServiceApp = {
       if (totalBase === 0) totalBase = isMoto ? 25 : 48;
     }
 
-    const fMult = this.finishMultipliers[this.wizardState.finishType] || 1.0;
+    const paintObj = this.getCurrentPaintQualityObj();
+    const varnishTierObj = this.getCurrentVarnishTierObj();
+    const pMult = paintObj.multiplier || 1.0;
+    const vMult = varnishTierObj.multiplier || 1.0;
     
     let latCost = 0;
     if (this.wizardState.hasLatoneria) {
@@ -1219,7 +1403,7 @@ const PaintServiceApp = {
       }
     }
 
-    let calculated = Math.round((totalBase * fMult) + latCost);
+    let calculated = Math.round((totalBase * pMult * vMult) + latCost);
     let min = Math.max(isMoto ? 15 : 30, Math.round(calculated * 0.9));
     let max = Math.round(calculated * 1.15);
 
@@ -1271,6 +1455,9 @@ const PaintServiceApp = {
     const modelObj = this.getCurrentModelObj();
     const piecesMap = this.getCurrentPiecesMap();
     const pieceNames = this.wizardState.selectedPieces.map(k => piecesMap[k]?.name || this.getPieceLabel(k));
+    const paintObj = this.getCurrentPaintQualityObj();
+    const varnishTierObj = this.getCurrentVarnishTierObj();
+    const varnishBrandObj = this.getCurrentVarnishBrandObj();
 
     const payload = {
       clientName: this.wizardState.customerName,
@@ -1286,7 +1473,16 @@ const PaintServiceApp = {
       hasBodywork: this.wizardState.hasLatoneria,
       latoneriaSeverity: this.wizardState.latoneriaSeverity,
       finishType: this.wizardState.finishType,
-      finishName: this.getFinishName(this.wizardState.finishType),
+      finishName: `${paintObj.name} + ${varnishBrandObj.name}`,
+      paintQuality: this.wizardState.paintQuality,
+      paintQualityName: paintObj.name,
+      paintQualityTier: paintObj.tier,
+      varnishQuality: this.wizardState.varnishQuality,
+      varnishQualityTier: varnishTierObj.tier,
+      varnishBrand: varnishBrandObj.name,
+      varnishName: `${varnishBrandObj.name} (${varnishTierObj.tier})`,
+      polishingMaterials: this.polishingMaterials.map(m => m.name),
+      polishingTier: 'Solo Gama Alta (3M, Symplex Piraña & Cerámica)',
       serviceName: 'Latonería y Pintura',
       photosCount: this.wizardState.photos.length,
       urgency: this.wizardState.urgency,
@@ -1404,12 +1600,24 @@ const PaintServiceApp = {
           <strong style="color: #FFF; font-size: 11px;">${Array.isArray(quote.parts) ? quote.parts.join(', ') : ((quote.selectedPieces || []).map(p => this.getPieceLabel(p)).join(', ') || 'General')}</strong>
         </div>
         <div>
+          <span style="color: #94A3B8; font-size: 10px; display: block;">PINTURA BASE</span>
+          <strong style="color: #38BDF8; font-size: 11px;">🎨 ${quote.paintQualityName || (quote.paintQuality ? quote.paintQuality.toUpperCase() : 'Poliéster y Tintas')}</strong>
+        </div>
+        <div>
+          <span style="color: #94A3B8; font-size: 10px; display: block;">BARNIZ TRANSPARENTE</span>
+          <strong style="color: #A855F7; font-size: 11px;">✨ ${quote.varnishName || (quote.varnishBrand ? `${quote.varnishBrand} (${quote.varnishQualityTier || 'Gama Alta'})` : 'DuPont / Glasurit')}</strong>
+        </div>
+        <div>
+          <span style="color: #94A3B8; font-size: 10px; display: block;">PULITURA SHOW CAR</span>
+          <strong style="color: #F59E0B; font-size: 11px;">💎 ${quote.polishingTier || 'Solo Gama Alta (3M & Cerámica)'}</strong>
+        </div>
+        <div>
           <span style="color: #94A3B8; font-size: 10px; display: block;">LATONERÍA</span>
-          <strong style="color: #FCD34D;">${quote.hasLatoneria ? (quote.latoneriaSeverity || 'Leve').toUpperCase() : 'Ninguna'}</strong>
+          <strong style="color: #FCD34D;">${quote.hasLatoneria || quote.hasBodywork ? (quote.latoneriaSeverity || 'Leve').toUpperCase() : 'Ninguna'}</strong>
         </div>
         <div>
           <span style="color: #94A3B8; font-size: 10px; display: block;">PRECIO ESTIMADO / FINAL</span>
-          <strong style="color: #10B981; font-size: 13px;">${quote.finalPrice ? `$${quote.finalPrice} USD (Acordado)` : `$${quote.estimatedRangeUsd} USD`}</strong>
+          <strong style="color: #10B981; font-size: 13px;">${quote.finalPrice || quote.agreedPrice?.usd ? `$${quote.finalPrice || quote.agreedPrice.usd} USD (Acordado)` : `$${quote.estimatedRangeUsd || (quote.estimatedPriceRange ? quote.estimatedPriceRange.minUsd + ' - ' + quote.estimatedPriceRange.maxUsd : '45 - 80')} USD`}</strong>
         </div>
       </div>
 

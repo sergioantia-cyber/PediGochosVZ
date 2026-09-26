@@ -4734,6 +4734,11 @@ class AdminController {
         if (data.type === 'PRINT3D_QUOTE_NEW' || data.type === 'PRINT3D_QUOTE_UPDATE' || data.type === 'PRINT3D_QUOTE_MESSAGE') {
           this.handlePrint3DWsEvent(data);
         }
+
+        // Real-time Resin Quotes and Messages (ShelliArt)
+        if (data.type === 'RESIN_QUOTE_NEW' || data.type === 'RESIN_QUOTE_UPDATE' || data.type === 'RESIN_QUOTE_MESSAGE') {
+          this.handleResinWsEvent(data);
+        }
       } catch (err) {
         console.error('Error parsing WS message in admin:', err);
       }
@@ -5137,6 +5142,18 @@ class AdminController {
   }
 
   setOrdersFilter(filter) {
+    if (filter === 'resin') {
+      this.openResinAdminModal();
+      return;
+    }
+    if (filter === 'paint') {
+      this.openPaintAdminModal();
+      return;
+    }
+    if (filter === 'print3d') {
+      this.openPrint3DAdminModal();
+      return;
+    }
     this.ordersFilter = filter;
     ['all', 'restaurant', 'ride', 'cauchera'].forEach(f => {
       const btn = document.getElementById(`filter-pill-${f}`);
@@ -7568,7 +7585,9 @@ class AdminController {
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; font-size: 11.5px; color: #CBD5E1; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 10px;">
             <div><strong>Vehículo:</strong> ${(q.vehicleType || '').toUpperCase()}</div>
-            <div><strong>Acabado:</strong> ${(q.finishType || 'Bicapa').toUpperCase()}</div>
+            <div><strong>Pintura:</strong> <span style="color: #38BDF8;">🎨 ${q.paintQualityName || (q.finishType || 'Bicapa').toUpperCase()}</span></div>
+            <div><strong>Barniz:</strong> <span style="color: #C084FC;">✨ ${q.varnishName || 'DuPont (Gama Alta A)'}</span></div>
+            <div><strong>Pulitura:</strong> <span style="color: #FBBF24;">💎 ${q.polishingTier || 'Solo Gama Alta (3M / Cerámica)'}</span></div>
             <div><strong>Piezas:</strong> ${piecesStr}</div>
             <div><strong>Latonería:</strong> ${q.hasLatoneria ? (q.latoneriaSeverity || 'Leve').toUpperCase() : 'NO'}</div>
             <div><strong>Estimado / Final:</strong> <span style="color: #10B981; font-weight: 800;">${q.finalPrice ? `$${q.finalPrice} USD` : `$${q.estimatedRangeUsd} USD`}</span></div>
@@ -7783,6 +7802,170 @@ class AdminController {
   }
 
   // ==========================================
+  // ShelliArt Resina Admin Control
+  // ==========================================
+  async openResinAdminModal() {
+    const modal = document.getElementById('admin-resin-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+    }
+    const badge = document.getElementById('admin-resin-badge');
+    if (badge) badge.style.display = 'none';
+    await this.loadResinQuotes();
+  }
+
+  closeResinAdminModal() {
+    const modal = document.getElementById('admin-resin-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+    }
+  }
+
+  handleResinWsEvent(data) {
+    const badge = document.getElementById('admin-resin-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (this.currentInspectingQuote && this.currentInspectingQuote.type === 'resin' && this.currentInspectingQuote.id === data.quoteId) {
+      this.loadQuoteChatMessages();
+    }
+    const modal = document.getElementById('admin-resin-modal');
+    if (modal && modal.style.display === 'flex') {
+      this.loadResinQuotes();
+    }
+  }
+
+  async loadResinQuotes() {
+    try {
+      const res = await fetch('/api/resin-services/quotes');
+      const quotes = await res.json();
+      this.renderResinQuotes(quotes);
+    } catch (e) {
+      console.warn('Could not load resin quotes:', e);
+    }
+  }
+
+  renderResinQuotes(quotes) {
+    const listEl = document.getElementById('admin-resin-quotes-list');
+    if (!listEl) return;
+
+    const total = quotes.length;
+    const inChat = quotes.filter(q => q.status === 'En Conversación').length;
+    const curing = quotes.filter(q => q.status === 'En Curado UV' || q.status === 'En Elaboración').length;
+    const done = quotes.filter(q => q.status === 'Listo para Entrega' || q.status === 'Entregado').length;
+
+    const totalEl = document.getElementById('admin-resin-kpi-total');
+    const chatEl = document.getElementById('admin-resin-kpi-chat');
+    const curingEl = document.getElementById('admin-resin-kpi-curing');
+    const doneEl = document.getElementById('admin-resin-kpi-done');
+
+    if (totalEl) totalEl.textContent = total;
+    if (chatEl) chatEl.textContent = inChat;
+    if (curingEl) curingEl.textContent = curing;
+    if (doneEl) doneEl.textContent = done;
+
+    if (!quotes.length) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">✨</span>
+          <p style="margin: 0; font-size: 13px;">No hay pedidos de resina registrados aún.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = quotes.map(q => {
+      const statusColors = {
+        'Solicitado': '#F59E0B',
+        'En Conversación': '#3B82F6',
+        'En Elaboración': '#F472B6',
+        'En Curado UV': '#EC4899',
+        'Precio Acordado': '#A855F7',
+        'Listo para Entrega': '#10B981',
+        'Entregado': '#059669'
+      };
+      const color = statusColors[q.status] || '#94A3B8';
+      const price = q.agreedPriceUsd || q.estimatedPriceUsd || 4.5;
+
+      return `
+        <div style="background: #181F30; border: 1.5px solid rgba(244, 114, 182, 0.25); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, ${q.baseColor || '#F472B6'} 0%, rgba(255,255,255,0.2) 100%); border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.4);">
+                ${q.letter || 'A'}
+              </div>
+              <div>
+                <strong style="color: #FFF; font-size: 14px;">Orden #${q.id.slice(-6)}: Inicial "${q.letter || 'A'}" - ${q.clientName || 'Cliente'}</strong>
+                <div style="font-size: 11.5px; color: #94A3B8;">📞 ${q.clientPhone || 'Sin teléfono'} • <span style="color: #F472B6; font-weight: 700;">$${price} USD</span></div>
+              </div>
+            </div>
+            <span style="background: ${color}20; color: ${color}; border: 1px solid ${color}60; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800;">
+              ${q.status}
+            </span>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-size: 11.5px;">
+            <div><span style="color: #94A3B8; font-size: 10px; display: block;">COLOR & ESTILO:</span><strong style="color: #FFF;">${q.baseColorName || 'Rosa'} • ${q.styleName || 'Bicolor'}</strong></div>
+            <div><span style="color: #94A3B8; font-size: 10px; display: block;">BORLA & HERRAJE:</span><strong style="color: #F472B6;">${q.tasselColor || 'Borla'} • ${q.hardwareColor || 'Dorado'}</strong></div>
+            <div><span style="color: #94A3B8; font-size: 10px; display: block;">NOMBRE SELLADO:</span><strong style="color: #FFF;">${q.customName ? `"${q.customName}"` : 'Sin nombre'}</strong></div>
+            <div><span style="color: #94A3B8; font-size: 10px; display: block;">DIJE EXTRA:</span><strong style="color: #38BDF8;">${q.extraCharm || 'Ninguno'}</strong></div>
+          </div>
+
+          <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; margin-top: 4px;">
+            <button type="button" onclick="AdminApp.openQuoteChatInspector('resin', '${q.id}', 'Llavero Inicial ${q.letter} - ${q.clientName}')" style="background: rgba(244, 114, 182, 0.15); border: 1px solid #F472B6; color: #FBCFE8; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💬 Chatear
+            </button>
+            <button type="button" onclick="AdminApp.promptResinPrice('${q.id}')" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #A855F7; color: #E9D5FF; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💵 Fijar Precio ($ USD)
+            </button>
+            <select onchange="AdminApp.updateResinStatus('${q.id}', this.value)" style="background: #0F172A; border: 1px solid rgba(255,255,255,0.2); color: #FFF; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              <option value="Solicitado" ${q.status === 'Solicitado' ? 'selected' : ''}>⏳ Solicitado</option>
+              <option value="En Conversación" ${q.status === 'En Conversación' ? 'selected' : ''}>💬 En Conversación</option>
+              <option value="En Elaboración" ${q.status === 'En Elaboración' ? 'selected' : ''}>🎨 En Elaboración</option>
+              <option value="En Curado UV" ${q.status === 'En Curado UV' ? 'selected' : ''}>⏳ En Curado UV</option>
+              <option value="Listo para Entrega" ${q.status === 'Listo para Entrega' ? 'selected' : ''}>🎀 Listo para Entrega</option>
+              <option value="Entregado" ${q.status === 'Entregado' ? 'selected' : ''}>✅ Entregado</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async updateResinStatus(quoteId, status) {
+    try {
+      await fetch(`/api/resin-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      this.loadResinQuotes();
+    } catch (e) {
+      alert('Error actualizando estado.');
+    }
+  }
+
+  async promptResinPrice(quoteId) {
+    const p = prompt('Ingresa el monto oficial acordado en USD (ej. 5.50):');
+    if (!p || isNaN(p)) return;
+
+    try {
+      await fetch(`/api/resin-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_agreed_price', agreedPriceUsd: parseFloat(p) })
+      });
+      this.loadResinQuotes();
+    } catch (e) {
+      alert('Error fijando precio.');
+    }
+  }
+
+  // ==========================================
   // Quote Chat Inspector for Admin
   // ==========================================
   openQuoteChatInspector(type, quoteId, title) {
@@ -7792,7 +7975,7 @@ class AdminController {
     const subEl = document.getElementById('admin-quote-chat-sub');
 
     if (titleEl) titleEl.textContent = `Chat con Cliente: ${title || quoteId}`;
-    if (subEl) subEl.textContent = type === 'paint' ? 'Taller de Pintura y Latonería' : 'Laboratorio 3D Maker';
+    if (subEl) subEl.textContent = type === 'paint' ? 'Latonería y Pintura' : (type === 'resin' ? 'ShelliArt Resina' : 'Laboratorio 3D Maker');
 
     if (modal) {
       modal.style.display = 'flex';
@@ -7813,7 +7996,7 @@ class AdminController {
   async loadQuoteChatMessages() {
     if (!this.currentInspectingQuote) return;
     const { type, id } = this.currentInspectingQuote;
-    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}` : `/api/print3d-services/quotes/${id}`;
+    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}` : (type === 'resin' ? `/api/resin-services/quotes/${id}` : `/api/print3d-services/quotes/${id}`);
 
     try {
       const res = await fetch(endpoint);
@@ -7822,12 +8005,12 @@ class AdminController {
       if (!feed) return;
 
       feed.innerHTML = (quote.messages || []).map(m => {
-        const isAdmin = m.sender === 'admin' || m.sender === 'workshop' || m.sender === 'lab';
+        const isAdmin = m.senderRole === 'workshop' || m.senderRole === 'admin' || m.sender === 'admin' || m.sender === 'workshop' || m.sender === 'lab';
         return `
           <div style="align-self: ${isAdmin ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isAdmin ? '#10B981' : '#1E293B'}; color: #FFF; padding: 8px 12px; border-radius: 12px; font-size: 12.5px;">
             <div>${m.text}</div>
             <div style="font-size: 9.5px; opacity: 0.8; margin-top: 3px; text-align: right;">
-              <span>${m.senderName || (isAdmin ? 'Taller / Admin' : 'Cliente')}</span> • <span>${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span>${m.senderName || (isAdmin ? 'Taller / Admin' : 'Cliente')}</span> • <span>${new Date(m.timestamp || m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
           </div>
         `;
@@ -7846,11 +8029,12 @@ class AdminController {
     if (!text) return;
 
     const { type, id } = this.currentInspectingQuote;
-    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}/messages` : `/api/print3d-services/quotes/${id}/messages`;
+    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}/messages` : (type === 'resin' ? `/api/resin-services/quotes/${id}/messages` : `/api/print3d-services/quotes/${id}/messages`);
 
     const payload = {
-      sender: type === 'paint' ? 'workshop' : 'lab',
-      senderName: type === 'paint' ? 'Taller Aliado' : 'Fabricante 3D',
+      senderRole: 'admin',
+      sender: type === 'paint' ? 'workshop' : (type === 'resin' ? 'workshop' : 'lab'),
+      senderName: type === 'paint' ? 'Taller Aliado' : (type === 'resin' ? 'ShelliArt Resina' : 'Fabricante 3D'),
       text
     };
 
