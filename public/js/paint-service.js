@@ -227,8 +227,8 @@ const PaintServiceApp = {
             ←
           </button>
           <div class="paint-title-wrap">
-            <h2>🎨 Pintura y Latonería Automotriz</h2>
-            <p>Pinta tu vehículo con talleres verificados y acabado al horno</p>
+            <h2>🎨 Latonería y Pintura</h2>
+            <p>Servicio profesional de latonería y pintura con secado al horno</p>
           </div>
         </div>
         <div class="paint-header-actions">

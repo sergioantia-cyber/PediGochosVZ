@@ -69,12 +69,12 @@ const ServicePartnerApp = {
       case 'cauchera':
         return {
           id: 'cauchera',
-          title: 'Cauchera & Auxilio 24H',
+          title: 'Cauchera Cachu 24H',
           icon: '🛞',
           catalogEndpoint: '',
           quotesEndpoint: '/api/admin/orders',
           statsEndpoint: '',
-          roleName: 'Montallantas El Cachu',
+          roleName: 'Cauchera Cachu',
           presets: [
             "🚨 Móvil de auxilio vial en camino a tu ubicación GPS.",
             "⏱️ Tiempo estimado de llegada: 15 a 20 minutos.",
@@ -85,7 +85,7 @@ const ServicePartnerApp = {
       default:
         return {
           id: 'paint',
-          title: 'Taller Pintura & Latonería',
+          title: 'Latonería y Pintura',
           icon: '🎨',
           catalogEndpoint: '/api/paint-services/catalog',
           quotesEndpoint: '/api/paint-services/quotes',
@@ -94,7 +94,7 @@ const ServicePartnerApp = {
           wsQuoteMsg: 'PAINT_QUOTE_MESSAGE',
           wsQuoteUpdate: 'PAINT_QUOTE_UPDATE',
           wsCatalogUpdate: 'PAINT_CATALOG_UPDATE',
-          roleName: 'Taller Maestro Latonería & Pintura',
+          roleName: 'Latonería y Pintura',
           presets: [
             "👋 ¡Hola! ¿Podrías traernos el vehículo para chequearlo en persona?",
             "🎨 Igualamos el tono exacto con tu código VIN computarizado.",

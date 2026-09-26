@@ -933,7 +933,7 @@ class MarketplaceController {
       }
 
       grid.innerHTML = `
-        <!-- Cauchera Móvil 24/7 -->
+        <!-- Cauchera Cachu 24/7 -->
         <div class="est-row-card service-row-card" onclick="MarketplaceApp.openCaucheraModal()" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(239, 68, 68, 0.5); cursor: pointer;">
           <div class="service-card-main-flex">
             <div class="service-card-icon-box" style="background: rgba(239, 68, 68, 0.22); border: 2px solid #EF4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.45);">
@@ -942,14 +942,14 @@ class MarketplaceController {
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
                 <h4 class="service-card-title">
-                  Montallantas El Cachu
+                  🛞 Cauchera Cachu 24/7
                 </h4>
                 <span class="service-card-badge" style="background: #EF4444; color: #FFF; box-shadow: 0 2px 8px rgba(239,68,68,0.4);">
                   🔴 24/7 ACTIVO
                 </span>
               </div>
               <p class="service-card-desc">
-                Cauchera Móvil a Domicilio. Despinche y auxilio vial para motos, autos y camionetas con GPS.
+                Cauchera Móvil a Domicilio. Despinche y auxilio vial para motos, autos y camionetas con GPS las 24 horas.
               </p>
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
                 <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); padding: 3px 9px; border-radius: 8px;">
@@ -993,7 +993,7 @@ class MarketplaceController {
           </div>
         </div>
 
-        <!-- Pintura y Latonería Automotriz ("Pinta tu Vehículo") -->
+        <!-- Latonería y Pintura -->
         <div class="est-row-card service-row-card" onclick="PaintServiceApp ? PaintServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(234, 88, 12, 0.55); cursor: pointer;">
           <div class="service-card-main-flex">
             <div class="service-card-icon-box" style="background: rgba(234, 88, 12, 0.22); border: 2px solid #EA580C; box-shadow: 0 0 20px rgba(234, 88, 12, 0.45);">
@@ -1002,21 +1002,21 @@ class MarketplaceController {
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
                 <h4 class="service-card-title">
-                  Pintura y Latonería Automotriz
+                  Latonería y Pintura
                 </h4>
                 <span class="service-card-badge" style="background: #EA580C; color: #FFF; box-shadow: 0 2px 8px rgba(234,88,12,0.4);">
                   🔥 AL HORNO
                 </span>
               </div>
               <p class="service-card-desc">
-                Pinta tu auto o piezas con secado al horno, sacado de golpes y cotizador inteligente en San Antonio.
+                Sacado de golpes, latonería profesional y pintura con secado al horno en talleres certificados.
               </p>
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
                 <span style="font-size: 11.5px; font-weight: 800; color: #FDBA74; background: rgba(234, 88, 12, 0.16); border: 1px solid rgba(234, 88, 12, 0.35); padding: 3px 9px; border-radius: 8px;">
                   ⭐ 4.9 • Garantía de Color
                 </span>
                 <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%); border: 1px solid #EA580C; box-shadow: 0 3px 10px rgba(234,88,12,0.35);">
-                  Cotizar Auto ➔
+                  Cotizar ➔
                 </span>
               </div>
             </div>

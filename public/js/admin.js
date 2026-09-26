@@ -7973,7 +7973,7 @@ class AdminController {
     const subEl = document.getElementById('admin-quote-chat-sub');
 
     if (titleEl) titleEl.textContent = `Chat con Cliente: ${title || quoteId}`;
-    if (subEl) subEl.textContent = type === 'paint' ? 'Taller de Pintura y Latonería' : (type === 'resin' ? 'ShelliArt Resina' : 'Laboratorio 3D Maker');
+    if (subEl) subEl.textContent = type === 'paint' ? 'Latonería y Pintura' : (type === 'resin' ? 'ShelliArt Resina' : 'Laboratorio 3D Maker');
 
     if (modal) {
       modal.style.display = 'flex';

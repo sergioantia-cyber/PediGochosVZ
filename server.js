@@ -2725,7 +2725,7 @@ app.post('/api/paint-services/quotes', (req, res) => {
     vehicleType: body.vehicleType || 'sedan',
     vehicleModel: body.vehicleModel || 'Vehículo Particular',
     serviceType: body.serviceType || 'pieza',
-    serviceName: body.serviceName || 'Pintura y Latonería',
+    serviceName: body.serviceName || 'Latonería y Pintura',
     finishType: body.finishType || 'brillante',
     finishName: body.finishName || 'Brillante Estándar al Horno',
     parts: Array.isArray(body.parts) && body.parts.length > 0 ? body.parts : ['Piezas Seleccionadas'],
