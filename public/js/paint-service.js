@@ -681,7 +681,7 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
         </div>
         <div class="paint-header-actions">
           <button type="button" class="btn-open-quoter" onclick="PaintServiceApp.openQuoter()">
-            ⚡ Cotizar Mi Auto
+            ⚡ Cotizar mi vehículo
           </button>
         </div>
       </header>
