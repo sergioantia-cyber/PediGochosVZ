@@ -81,6 +81,26 @@ const ServicePartnerApp = {
             "🔧 Llevamos compresor de aire y parches vulcanizados."
           ]
         };
+      case 'pinatas':
+        return {
+          id: 'pinatas',
+          title: 'Taller de Piñatas • Tus Piñatas a Medida',
+          icon: '🪅',
+          catalogEndpoint: '/api/pinata-services/catalog',
+          quotesEndpoint: '/api/pinata-services/quotes',
+          statsEndpoint: '/api/pinata-services/stats',
+          wsQuoteNew: 'PINATA_QUOTE_NEW',
+          wsQuoteMsg: 'PINATA_QUOTE_MESSAGE',
+          wsQuoteUpdate: 'PINATA_QUOTE_UPDATE',
+          wsCatalogUpdate: 'PINATA_CATALOG_UPDATE',
+          roleName: 'Taller de Piñatas',
+          presets: [
+            "👋 ¡Hola! Tu diseño y temática están hermosos, con gusto podemos elaborarla.",
+            "✂️ Estructura armada y en proceso de empapelado y secado artesanal.",
+            "🎨 Detallando relieves, flecos y accesorios temáticos.",
+            "🪅 ¡Tu piñata está lista! Perfecta para tu fiesta."
+          ]
+        };
       case 'paint':
       default:
         return {

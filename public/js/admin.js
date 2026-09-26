@@ -4739,6 +4739,11 @@ class AdminController {
         if (data.type === 'RESIN_QUOTE_NEW' || data.type === 'RESIN_QUOTE_UPDATE' || data.type === 'RESIN_QUOTE_MESSAGE') {
           this.handleResinWsEvent(data);
         }
+
+        // Real-time Piñatas Quotes, Messages & Catalog Updates
+        if (data.type === 'PINATA_QUOTE_NEW' || data.type === 'PINATA_QUOTE_UPDATE' || data.type === 'PINATA_QUOTE_MESSAGE' || data.type === 'PINATA_CATALOG_UPDATE') {
+          this.handlePinatasWsEvent(data);
+        }
       } catch (err) {
         console.error('Error parsing WS message in admin:', err);
       }
@@ -7972,6 +7977,344 @@ class AdminController {
   }
 
   // ==========================================
+  // Piñatas Personalizadas Admin & Inventory Control
+  // ==========================================
+  async openPinatasAdminModal() {
+    const modal = document.getElementById('admin-pinatas-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+    }
+    const badge = document.getElementById('admin-pinatas-badge');
+    if (badge) badge.style.display = 'none';
+    this.switchPinatasAdminTab('orders');
+    await this.loadPinatasQuotes();
+  }
+
+  closePinatasAdminModal() {
+    const modal = document.getElementById('admin-pinatas-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+    }
+  }
+
+  switchPinatasAdminTab(tab) {
+    const ordersTab = document.getElementById('admin-pinata-tab-orders');
+    const invTab = document.getElementById('admin-pinata-tab-inventory');
+    const btnOrders = document.getElementById('tab-btn-pinata-orders');
+    const btnInv = document.getElementById('tab-btn-pinata-inventory');
+
+    if (tab === 'orders') {
+      if (ordersTab) ordersTab.style.display = 'flex';
+      if (invTab) invTab.style.display = 'none';
+      if (btnOrders) {
+        btnOrders.style.background = 'rgba(244, 63, 94, 0.2)';
+        btnOrders.style.borderColor = '#F43F5E';
+        btnOrders.style.color = '#FFF';
+      }
+      if (btnInv) {
+        btnInv.style.background = 'transparent';
+        btnInv.style.borderColor = 'rgba(255,255,255,0.15)';
+        btnInv.style.color = '#94A3B8';
+      }
+      this.loadPinatasQuotes();
+    } else {
+      if (ordersTab) ordersTab.style.display = 'none';
+      if (invTab) invTab.style.display = 'flex';
+      if (btnInv) {
+        btnInv.style.background = 'rgba(244, 63, 94, 0.2)';
+        btnInv.style.borderColor = '#F43F5E';
+        btnInv.style.color = '#FFF';
+      }
+      if (btnOrders) {
+        btnOrders.style.background = 'transparent';
+        btnOrders.style.borderColor = 'rgba(255,255,255,0.15)';
+        btnOrders.style.color = '#94A3B8';
+      }
+      this.loadPinatasCatalog();
+    }
+  }
+
+  handlePinatasWsEvent(data) {
+    const badge = document.getElementById('admin-pinatas-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (this.currentInspectingQuote && this.currentInspectingQuote.type === 'pinatas' && (this.currentInspectingQuote.id === data.quoteId || this.currentInspectingQuote.id === data.chatId)) {
+      this.loadQuoteChatMessages();
+    }
+    const modal = document.getElementById('admin-pinatas-modal');
+    if (modal && modal.style.display === 'flex') {
+      this.loadPinatasQuotes();
+    }
+  }
+
+  async loadPinatasQuotes() {
+    try {
+      const [resQuotes, resStats] = await Promise.all([
+        fetch('/api/pinata-services/quotes'),
+        fetch('/api/pinata-services/stats')
+      ]);
+      const quotes = await resQuotes.json();
+      const stats = await resStats.json();
+      this.renderPinatasQuotes(quotes, stats);
+    } catch (e) {
+      console.warn('Could not load pinatas quotes:', e);
+    }
+  }
+
+  renderPinatasQuotes(quotes, stats) {
+    const listEl = document.getElementById('admin-pinatas-quotes-list');
+    if (!listEl) return;
+
+    if (stats) {
+      const totalEl = document.getElementById('admin-pinatas-kpi-total');
+      const chatEl = document.getElementById('admin-pinatas-kpi-chat');
+      const agreedEl = document.getElementById('admin-pinatas-kpi-agreed');
+      const curingEl = document.getElementById('admin-pinatas-kpi-curing');
+      const doneEl = document.getElementById('admin-pinatas-kpi-done');
+      const convEl = document.getElementById('admin-pinatas-metric-conversion');
+      const timeEl = document.getElementById('admin-pinatas-metric-time');
+
+      if (totalEl) totalEl.textContent = stats.total;
+      if (chatEl) chatEl.textContent = stats.enConversacion;
+      if (agreedEl) agreedEl.textContent = stats.precioAcordado;
+      if (curingEl) curingEl.textContent = stats.enElaboracion;
+      if (doneEl) doneEl.textContent = stats.entregados;
+      if (convEl) convEl.textContent = `${stats.conversionRate}%`;
+      if (timeEl) timeEl.textContent = `~${stats.avgResponseMinutes || 15} min`;
+    }
+
+    if (!quotes.length) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">🪅</span>
+          <p style="margin: 0; font-size: 13px;">No hay pedidos de piñatas registrados aún.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = quotes.map(q => {
+      const dateStr = new Date(q.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+      const photoHtml = (q.referencePhotos && q.referencePhotos.length) 
+        ? `<div style="display: flex; gap: 6px; margin-top: 6px;">
+            ${q.referencePhotos.map(p => `<img src="${p}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);">`).join('')}
+          </div>` 
+        : '';
+
+      return `
+        <div style="background: #172033; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <span style="font-size: 11px; font-weight: 800; color: #FDA4AF; text-transform: uppercase;">Orden #${q.id} • ${dateStr}</span>
+              <h4 style="margin: 2px 0 0 0; font-size: 14px; font-weight: 900; color: #FFF;">
+                🪅 ${q.styleName || 'Piñata a Medida'} (${q.sizeName})
+              </h4>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="background: rgba(244, 63, 94, 0.2); border: 1px solid #F43F5E; color: #FDA4AF; padding: 3px 8px; border-radius: 8px; font-size: 11px; font-weight: 800;">
+                ${q.status}
+              </span>
+              <span style="font-size: 14px; font-weight: 900; color: #10B981;">
+                ${q.agreedPriceUsd ? `$${q.agreedPriceUsd.toFixed(2)} USD` : (q.estimatedPriceRange || `$${q.estimatedPriceUsd} USD`)}
+              </span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; font-size: 11px; color: #CBD5E1; background: rgba(0,0,0,0.2); padding: 8px 10px; border-radius: 10px;">
+            <div>👤 Cliente: <strong style="color: #FFF;">${q.clientName} ${q.clientPhone ? `(${q.clientPhone})` : ''}</strong></div>
+            <div>🎨 Motivo: <strong style="color: #FFF;">${q.theme}</strong></div>
+            <div>🎀 Apertura: <strong style="color: #FFF;">${q.openingName || 'Tradicional'}</strong></div>
+            <div>🍬 Relleno/Extras: <strong style="color: #FFF;">${q.extrasSummary || 'Solo piñata'}</strong></div>
+            <div>📅 Fecha Evento: <strong style="color: #FCD34D;">${q.eventDate || 'Por coordinar'}</strong></div>
+            ${q.customName ? `<div>✍️ Nombre/Número: <strong style="color: #FFF;">"${q.customName}"</strong></div>` : ''}
+          </div>
+
+          ${photoHtml}
+
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+            <button type="button" onclick="AdminApp.openQuoteChatInspector('pinatas', '${q.id}', '${q.clientName} - Piñata ${q.theme}')" style="background: rgba(244, 63, 94, 0.2); border: 1px solid #F43F5E; color: #FDA4AF; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💬 Chat con Cliente (${(q.messages || []).length})
+            </button>
+            <button type="button" onclick="AdminApp.promptPinataPrice('${q.id}')" style="background: rgba(139, 92, 246, 0.2); border: 1px solid #8B5CF6; color: #C084FC; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💰 Ajustar Precio Final ($ USD)
+            </button>
+            <button type="button" onclick="AdminApp.setPinataStatus('${q.id}', 'En Elaboración')" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #F59E0B; color: #FCD34D; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              ✂️ Pasar a Elaboración
+            </button>
+            <button type="button" onclick="AdminApp.setPinataStatus('${q.id}', 'Listo / Entregado')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981; color: #6EE7B7; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              🎉 Marcar Entregada
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async promptPinataPrice(quoteId) {
+    const p = prompt('Ingresa el monto oficial acordado en USD (ej. 24.00):');
+    if (!p || isNaN(p)) return;
+
+    try {
+      await fetch(`/api/pinata-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'adjust_price', agreedPriceUsd: parseFloat(p) })
+      });
+      this.loadPinatasQuotes();
+    } catch (e) {
+      alert('Error fijando precio.');
+    }
+  }
+
+  async setPinataStatus(quoteId, status) {
+    try {
+      await fetch(`/api/pinata-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_status', status })
+      });
+      this.loadPinatasQuotes();
+    } catch (e) {
+      alert('Error actualizando estado.');
+    }
+  }
+
+  // ==========================================
+  // Piñatas Inventory & Store Catalog Management
+  // ==========================================
+  async loadPinatasCatalog() {
+    try {
+      const res = await fetch('/api/pinata-services/catalog');
+      const catalog = await res.json();
+      this.renderPinatasCatalogAdmin(catalog);
+    } catch (e) {
+      console.warn('Could not load pinatas catalog in admin:', e);
+    }
+  }
+
+  renderPinatasCatalogAdmin(catalog) {
+    const container = document.getElementById('admin-pinatas-catalog-list');
+    const countEl = document.getElementById('admin-pinatas-inventory-count');
+    if (!container) return;
+
+    if (countEl) countEl.textContent = `${catalog.length} productos registrados`;
+
+    if (!catalog.length) {
+      container.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px; grid-column: 1 / -1;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">📦</span>
+          <p style="margin: 0; font-size: 13px;">No hay piñatas registradas en el inventario.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = catalog.map(item => `
+      <div style="background: #172033; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="width: 100%; aspect-ratio: 16/10; position: relative; background: #0F172A;">
+          <img src="${item.image}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/pinatas/pinata_celebracion.jpg'">
+          <span style="position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); color: #FFF; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">
+            ${item.size || 'Mediana'}
+          </span>
+        </div>
+        <div style="padding: 10px 12px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; gap: 8px;">
+          <div>
+            <h5 style="margin: 0 0 2px 0; font-size: 13px; font-weight: 800; color: #FFF;">${item.name}</h5>
+            <span style="font-size: 10.5px; color: #94A3B8; text-transform: uppercase;">${item.categoryLabel || item.category}</span>
+            <p style="margin: 4px 0 0 0; font-size: 11px; color: #CBD5E1; line-height: 1.3;">${item.desc || ''}</p>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; margin-top: auto;">
+            <strong style="color: #F43F5E; font-size: 13px;">$${item.basePriceUsd} USD</strong>
+            <button type="button" onclick="AdminApp.deletePinataProduct('${item.id}', '${item.name.replace(/'/g, "\\'")}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #FCA5A5; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; cursor: pointer;" title="Eliminar del catálogo">
+              🗑️ Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  toggleAddPinataForm(forceState) {
+    const form = document.getElementById('admin-pinata-add-form');
+    if (!form) return;
+    if (typeof forceState === 'boolean') {
+      form.style.display = forceState ? 'block' : 'none';
+    } else {
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+  }
+
+  async saveNewPinataProduct() {
+    const name = document.getElementById('admin-pinata-input-name')?.value.trim();
+    const size = document.getElementById('admin-pinata-input-size')?.value;
+    const category = document.getElementById('admin-pinata-input-category')?.value;
+    const price = parseFloat(document.getElementById('admin-pinata-input-price')?.value);
+    const image = document.getElementById('admin-pinata-input-image')?.value.trim();
+    const desc = document.getElementById('admin-pinata-input-desc')?.value.trim();
+
+    if (!name || !image || isNaN(price)) {
+      alert('Por favor completa todos los campos obligatorios (Nombre, Tamaño, Foto y Precio).');
+      return;
+    }
+
+    const payload = {
+      name,
+      title: name,
+      size,
+      category,
+      basePriceUsd: price,
+      priceRange: `$${price - 2} - $${price + 4} USD`,
+      image,
+      desc
+    };
+
+    try {
+      const res = await fetch('/api/pinata-services/catalog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.toggleAddPinataForm(false);
+        // Clean inputs
+        document.getElementById('admin-pinata-input-name').value = '';
+        document.getElementById('admin-pinata-input-price').value = '';
+        document.getElementById('admin-pinata-input-image').value = '';
+        document.getElementById('admin-pinata-input-desc').value = '';
+        this.loadPinatasCatalog();
+      } else {
+        alert(data.error || 'Error al guardar producto.');
+      }
+    } catch (e) {
+      alert('Error de conexión al registrar producto.');
+    }
+  }
+
+  async deletePinataProduct(id, name) {
+    if (!confirm(`¿Estás seguro de eliminar "${name}" del inventario de piñatas?`)) return;
+
+    try {
+      const res = await fetch(`/api/pinata-services/catalog/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.loadPinatasCatalog();
+      } else {
+        alert(data.error || 'Error al eliminar producto.');
+      }
+    } catch (e) {
+      alert('Error de conexión al eliminar producto.');
+    }
+  }
+
+  // ==========================================
   // Quote Chat Inspector for Admin
   // ==========================================
   openQuoteChatInspector(type, quoteId, title) {
@@ -7981,7 +8324,7 @@ class AdminController {
     const subEl = document.getElementById('admin-quote-chat-sub');
 
     if (titleEl) titleEl.textContent = `Chat con Cliente: ${title || quoteId}`;
-    if (subEl) subEl.textContent = type === 'paint' ? 'Latonería y Pintura' : (type === 'resin' ? 'ShelliArt Resina' : 'Laboratorio 3D Maker');
+    if (subEl) subEl.textContent = type === 'paint' ? 'Latonería y Pintura' : (type === 'resin' ? 'ShelliArt Resina' : (type === 'pinatas' ? 'Taller de Piñatas Artesanales' : 'Laboratorio 3D Maker'));
 
     if (modal) {
       modal.style.display = 'flex';
@@ -8002,7 +8345,7 @@ class AdminController {
   async loadQuoteChatMessages() {
     if (!this.currentInspectingQuote) return;
     const { type, id } = this.currentInspectingQuote;
-    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}` : (type === 'resin' ? `/api/resin-services/quotes/${id}` : `/api/print3d-services/quotes/${id}`);
+    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}` : (type === 'resin' ? `/api/resin-services/quotes/${id}` : (type === 'pinatas' ? `/api/pinata-services/quotes/${id}` : `/api/print3d-services/quotes/${id}`));
 
     try {
       const res = await fetch(endpoint);
@@ -8035,12 +8378,12 @@ class AdminController {
     if (!text) return;
 
     const { type, id } = this.currentInspectingQuote;
-    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}/messages` : (type === 'resin' ? `/api/resin-services/quotes/${id}/messages` : `/api/print3d-services/quotes/${id}/messages`);
+    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}/messages` : (type === 'resin' ? `/api/resin-services/quotes/${id}/messages` : (type === 'pinatas' ? `/api/pinata-services/quotes/${id}/messages` : `/api/print3d-services/quotes/${id}/messages`));
 
     const payload = {
       senderRole: 'admin',
-      sender: type === 'paint' ? 'workshop' : (type === 'resin' ? 'workshop' : 'lab'),
-      senderName: type === 'paint' ? 'Taller Aliado' : (type === 'resin' ? 'ShelliArt Resina' : 'Fabricante 3D'),
+      sender: type === 'paint' ? 'workshop' : (type === 'resin' ? 'workshop' : (type === 'pinatas' ? 'workshop' : 'lab')),
+      senderName: type === 'paint' ? 'Taller Aliado' : (type === 'resin' ? 'ShelliArt Resina' : (type === 'pinatas' ? 'Taller de Piñatas' : 'Fabricante 3D')),
       text
     };
 

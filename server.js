@@ -3873,6 +3873,544 @@ app.get('/api/resin-services/stats', (req, res) => {
   });
 });
 
+/* ==========================================================================
+   PIÑATAS PERSONALIZADAS ("Tus Piñatas a Medida") - API & Persistencia
+   ========================================================================== */
+const PINATAS_CATALOG_FILE = path.join(__dirname, 'pinatas_catalog.json');
+const PINATAS_QUOTES_FILE = path.join(__dirname, 'pinatas_quotes.json');
+
+function readPinatasCatalog() {
+  try {
+    if (fs.existsSync(PINATAS_CATALOG_FILE)) {
+      const data = JSON.parse(fs.readFileSync(PINATAS_CATALOG_FILE, 'utf8'));
+      if (Array.isArray(data) && data.length > 0) return data;
+    }
+  } catch(e) {
+    console.warn('Error reading pinatas_catalog.json:', e);
+  }
+  return [
+    {
+      id: 'pin-cat-1',
+      name: 'Piñata Oso Superhéroe 3D',
+      title: 'Piñata Oso Superhéroe 3D',
+      category: 'personajes',
+      categoryLabel: 'Personajes Infantiles',
+      size: 'Mediana (~80 cm)',
+      sizeId: 'mediana',
+      style: 'Escultural / Volumen 3D',
+      styleId: '3d',
+      basePriceUsd: 20.0,
+      priceRange: '$18 - $24 USD',
+      capacity: '3 a 5 kg de caramelos',
+      desc: 'Figura artesanal tridimensional de alto impacto elaborada con capas de papel maché reforzado, relieves y detalles satinados.',
+      image: '/images/pinatas/pinata_super_bear.jpg',
+      tags: ['100% Hecho a Mano', 'Volumen 3D', 'Reforzada'],
+      active: true
+    },
+    {
+      id: 'pin-cat-2',
+      name: 'Número Temático Floral & Mariposas',
+      title: 'Número Temático Floral & Mariposas',
+      category: 'numeros',
+      categoryLabel: 'Números & Letras',
+      size: 'Mediana (~80 cm)',
+      sizeId: 'mediana',
+      style: 'Número o Letra Personalizada',
+      styleId: 'numero',
+      basePriceUsd: 18.0,
+      priceRange: '$15 - $22 USD',
+      capacity: '3 a 4 kg de caramelos',
+      desc: 'Número o inicial decorada con flores de papel crepé moldeadas a mano, mariposas tridimensionales y toques dorados.',
+      image: '/images/pinatas/pinata_numero_tematico.jpg',
+      tags: ['100% Hecho a Mano', 'Flores 3D', 'Cumpleaños Elegante'],
+      active: true
+    },
+    {
+      id: 'pin-cat-3',
+      name: 'Figura Escultural Unicornio Mágico',
+      title: 'Figura Escultural Unicornio Mágico',
+      category: 'figuras3d',
+      categoryLabel: 'Figuras Esculturales 3D',
+      size: 'Grande (~1 metro)',
+      sizeId: 'grande',
+      style: 'Escultural / Volumen 3D',
+      styleId: '3d',
+      basePriceUsd: 28.0,
+      priceRange: '$25 - $35 USD',
+      capacity: '6 a 8 kg de caramelos',
+      desc: 'Escultura artesanal en volumen con crin pastel en degradé, cuerno dorado brillante y sistema de cintas de seguridad.',
+      image: '/images/pinatas/pinata_figura_3d.jpg',
+      tags: ['Volumen 3D', 'Pastel', 'Gran Impacto'],
+      active: true
+    },
+    {
+      id: 'pin-cat-4',
+      name: 'Piñata Fiesta & Celebración Tradicional',
+      title: 'Piñata Fiesta & Celebración Tradicional',
+      category: 'eventos',
+      categoryLabel: 'Eventos Especiales',
+      size: 'Mediana (~80 cm)',
+      sizeId: 'mediana',
+      style: 'Silueta / Relieve (2D)',
+      styleId: '2d',
+      basePriceUsd: 16.0,
+      priceRange: '$14 - $20 USD',
+      capacity: '3 a 5 kg de caramelos',
+      desc: 'Diseño clásico festivo con flecos finos en papel crepé premium, gran resistencia estructural y apertura tradicional o con tiras.',
+      image: '/images/pinatas/pinata_celebracion.jpg',
+      tags: ['Clásico Festivo', 'Multicolor', 'Alta Resistencia'],
+      active: true
+    }
+  ];
+}
+
+function writePinatasCatalog(data) {
+  try {
+    fs.writeFileSync(PINATAS_CATALOG_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing pinatas_catalog.json:', e);
+  }
+}
+
+if (!fs.existsSync(PINATAS_CATALOG_FILE)) {
+  writePinatasCatalog(readPinatasCatalog());
+}
+
+function readPinatasQuotes() {
+  try {
+    if (fs.existsSync(PINATAS_QUOTES_FILE)) {
+      const data = JSON.parse(fs.readFileSync(PINATAS_QUOTES_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch(e) {
+    console.warn('Error reading pinatas_quotes.json:', e);
+  }
+  return [
+    {
+      id: 'PIN-1001',
+      chatId: 'chat-pin-1001',
+      createdAt: new Date(Date.now() - 3600000 * 2.5).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+      clientName: 'Mariana Gómez',
+      clientPhone: '3227949751',
+      theme: 'Spiderman / Hombre Araña con telarañas 3D',
+      customName: 'Santi 4',
+      styleId: '3d',
+      styleName: 'Escultural / Volumen (3D)',
+      sizeId: 'mediana',
+      sizeName: 'Mediana (~80 cm)',
+      capacity: '3 a 5 kg aprox.',
+      openingSystem: 'cintas',
+      openingName: 'Sistema de Cintas / Tiras (Seguro para interiores)',
+      filling: 'candies',
+      fillingName: 'Incluir paquete de caramelos surtidos',
+      extras: ['palo', 'antifaz'],
+      extrasSummary: 'Palo temático decorado + Antifaz a juego',
+      eventDate: new Date(Date.now() + 86400000 * 6).toISOString().split('T')[0],
+      referencePhotos: ['/images/pinatas/pinata_super_bear.jpg'],
+      estimatedPriceUsd: 26.5,
+      estimatedPriceRange: '$24.00 - $30.00 USD',
+      agreedPriceUsd: 26.0,
+      status: 'En Elaboración',
+      workshopName: 'Taller Artesanal de Piñatas PediGochos',
+      messages: [
+        {
+          id: 'msg-p1',
+          senderRole: 'system',
+          senderName: 'Taller de Piñatas',
+          type: 'quotation_card',
+          timestamp: new Date(Date.now() - 3600000 * 2.5).toISOString(),
+          text: 'Ficha de Cotización Interactiva generada para Piñata Spiderman 3D (Mediana ~80 cm)'
+        },
+        {
+          id: 'msg-p2',
+          senderRole: 'workshop',
+          senderName: 'Artesana Creadora',
+          timestamp: new Date(Date.now() - 3600000 * 2.1).toISOString(),
+          text: '¡Hola Mariana! Qué temazo para el cumple de Santi. La estructura 3D quedará increíble con los ojos en relieve brillante.'
+        },
+        {
+          id: 'msg-p3',
+          senderRole: 'client',
+          senderName: 'Mariana Gómez',
+          timestamp: new Date(Date.now() - 3600000 * 1.8).toISOString(),
+          text: '¡Hola! Sí, por favor, me gustaría que tenga las cintas abajo porque la fiesta es en un salón techado.'
+        },
+        {
+          id: 'msg-p4',
+          senderRole: 'workshop',
+          senderName: 'Artesana Creadora',
+          timestamp: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+          text: '¡Anotado! Confirmamos el precio final en $26 USD y ya iniciamos con el armado de la base y secado de la estructura.'
+        }
+      ]
+    }
+  ];
+}
+
+function writePinatasQuotes(data) {
+  try {
+    fs.writeFileSync(PINATAS_QUOTES_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing pinatas_quotes.json:', e);
+  }
+}
+
+if (!fs.existsSync(PINATAS_QUOTES_FILE)) {
+  writePinatasQuotes(readPinatasQuotes());
+}
+
+// GET Piñatas catalog
+app.get('/api/pinata-services/catalog', (req, res) => {
+  res.json(readPinatasCatalog());
+});
+
+// POST / ADD product to Piñatas catalog (Admin & Store Management)
+app.post('/api/pinata-services/catalog', (req, res) => {
+  const { name, title, category, size, style, basePriceUsd, priceRange, capacity, desc, image, tags } = req.body || {};
+  if (!name || !image) {
+    return res.status(400).json({ error: 'Nombre e Imagen son obligatorios' });
+  }
+
+  const catalog = readPinatasCatalog();
+  const newItem = {
+    id: 'pin-cat-' + Date.now(),
+    name: name.trim(),
+    title: (title || name).trim(),
+    category: category || 'personajes',
+    categoryLabel: category === 'numeros' ? 'Números & Letras' : (category === 'figuras3d' ? 'Figuras Esculturales 3D' : (category === 'mini' ? 'Mini-Piñatas' : 'Personajes Infantiles')),
+    size: size || 'Mediana (~80 cm)',
+    sizeId: size && size.toLowerCase().includes('peque') ? 'pequena' : (size && size.toLowerCase().includes('grande') ? 'grande' : (size && size.toLowerCase().includes('mini') ? 'mini' : 'mediana')),
+    style: style || 'Escultural / Volumen 3D',
+    styleId: style && style.toLowerCase().includes('2d') ? '2d' : (style && style.toLowerCase().includes('num') ? 'numero' : (style && style.toLowerCase().includes('mini') ? 'mini' : '3d')),
+    basePriceUsd: parseFloat(basePriceUsd) || 18.0,
+    priceRange: priceRange || `$${(parseFloat(basePriceUsd) || 18) - 2} - $${(parseFloat(basePriceUsd) || 18) + 4} USD`,
+    capacity: capacity || '3 a 5 kg de caramelos',
+    desc: desc || 'Diseño artesanal elaborado a mano.',
+    image: image,
+    tags: Array.isArray(tags) ? tags : ['100% Hecho a Mano', 'Personalizada'],
+    active: true,
+    createdAt: new Date().toISOString()
+  };
+
+  catalog.unshift(newItem);
+  writePinatasCatalog(catalog);
+
+  // Broadcast catalog update via WebSocket
+  const payload = JSON.stringify({ type: 'PINATA_CATALOG_UPDATE', items: catalog });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, item: newItem });
+});
+
+// DELETE product from Piñatas catalog
+app.delete('/api/pinata-services/catalog/:id', (req, res) => {
+  const { id } = req.params;
+  let catalog = readPinatasCatalog();
+  const initialCount = catalog.length;
+  catalog = catalog.filter(it => it.id !== id);
+
+  if (catalog.length === initialCount) {
+    return res.status(404).json({ error: 'Producto no encontrado' });
+  }
+
+  writePinatasCatalog(catalog);
+
+  // Broadcast catalog update via WebSocket
+  const payload = JSON.stringify({ type: 'PINATA_CATALOG_UPDATE', items: catalog });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, message: 'Producto eliminado del catálogo' });
+});
+
+// PUT / UPDATE Piñatas catalog (Bulk update or toggle)
+app.put('/api/pinata-services/catalog', (req, res) => {
+  const items = req.body;
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'Formato inválido' });
+  writePinatasCatalog(items);
+
+  const payload = JSON.stringify({ type: 'PINATA_CATALOG_UPDATE', items });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, count: items.length });
+});
+
+// GET all Piñatas quotes
+app.get('/api/pinata-services/quotes', (req, res) => {
+  const quotes = readPinatasQuotes();
+  quotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  res.json(quotes);
+});
+
+// GET single Piñata quote
+app.get('/api/pinata-services/quotes/:id', (req, res) => {
+  const quotes = readPinatasQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Cotización de piñata no encontrada' });
+  res.json(quote);
+});
+
+// POST new Piñata quote / request
+app.post('/api/pinata-services/quotes', (req, res) => {
+  const body = req.body || {};
+  if (!body.theme || !body.clientName) {
+    return res.status(400).json({ error: 'La temática y el nombre del cliente son obligatorios' });
+  }
+
+  const quotes = readPinatasQuotes();
+  const newId = 'PIN-' + Math.floor(1000 + Math.random() * 9000);
+  const chatId = 'chat-' + newId.toLowerCase();
+
+  const newQuote = {
+    id: newId,
+    chatId: chatId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    clientName: (body.clientName || 'Cliente').trim(),
+    clientPhone: (body.clientPhone || '').trim(),
+    theme: body.theme.trim(),
+    customName: (body.customName || '').trim(),
+    styleId: body.styleId || '3d',
+    styleName: body.styleName || 'Escultural / Volumen (3D)',
+    sizeId: body.sizeId || 'mediana',
+    sizeName: body.sizeName || 'Mediana (~80 cm)',
+    capacity: body.capacity || '3 a 5 kg aprox.',
+    openingSystem: body.openingSystem || 'tradicional',
+    openingName: body.openingName || 'Tradicional (Para romper a palo)',
+    filling: body.filling || 'empty',
+    fillingName: body.fillingName || 'Solo la piñata vacía',
+    extras: Array.isArray(body.extras) ? body.extras : [],
+    extrasSummary: body.extrasSummary || 'Ninguno',
+    eventDate: body.eventDate || '',
+    referencePhotos: Array.isArray(body.referencePhotos) ? body.referencePhotos : [],
+    estimatedPriceUsd: parseFloat(body.estimatedPriceUsd) || 20.0,
+    estimatedPriceRange: body.estimatedPriceRange || '$18.00 - $25.00 USD',
+    agreedPriceUsd: null,
+    status: 'Solicitud Enviada',
+    notes: body.notes || '',
+    workshopName: 'Taller Artesanal de Piñatas PediGochos',
+    messages: [
+      {
+        id: 'msg-' + Date.now(),
+        senderRole: 'system',
+        senderName: 'Sistema PediGochos',
+        type: 'quotation_card',
+        timestamp: new Date().toISOString(),
+        text: `Ficha de Pedido Interactiva generada para motivo: "${body.theme}"`,
+        data: {
+          theme: body.theme,
+          customName: body.customName,
+          styleName: body.styleName,
+          sizeName: body.sizeName,
+          openingName: body.openingName,
+          fillingName: body.fillingName,
+          extrasSummary: body.extrasSummary,
+          eventDate: body.eventDate,
+          estimatedPriceRange: body.estimatedPriceRange,
+          referencePhotos: body.referencePhotos || []
+        }
+      }
+    ]
+  };
+
+  quotes.unshift(newQuote);
+  writePinatasQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'PINATA_QUOTE_NEW',
+    quote: newQuote
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, quote: newQuote });
+});
+
+// POST message in Piñata quote chat
+app.post('/api/pinata-services/quotes/:id/messages', (req, res) => {
+  const { text, senderRole, senderName, photo } = req.body || {};
+  if (!text && !photo) {
+    return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
+  }
+
+  const quotes = readPinatasQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Cotización de piñata no encontrada' });
+
+  const role = senderRole || 'client';
+  const newMsg = {
+    id: 'msg-' + Date.now(),
+    senderRole: role,
+    senderName: senderName || (role === 'workshop' ? 'Artesana Creadora' : (role === 'admin' ? 'Administrador' : quote.clientName)),
+    timestamp: new Date().toISOString(),
+    text: text || '',
+    photo: photo || null
+  };
+
+  quote.messages = quote.messages || [];
+  quote.messages.push(newMsg);
+  quote.updatedAt = new Date().toISOString();
+
+  // If the craftswoman/admin responds and status is still 'Solicitud Enviada', transition to 'En Conversación / Atendido'
+  if ((role === 'workshop' || role === 'admin') && quote.status === 'Solicitud Enviada') {
+    quote.status = 'En Conversación';
+  }
+
+  writePinatasQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'PINATA_QUOTE_MESSAGE',
+    quoteId: quote.id,
+    chatId: quote.chatId,
+    message: newMsg,
+    quoteStatus: quote.status
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, message: newMsg, status: quote.status });
+});
+
+// PUT / ACTION on Piñata quote (adjust price, start production, mark ready, deliver)
+app.put('/api/pinata-services/quotes/:id/action', (req, res) => {
+  const { action, agreedPriceUsd, notes, deliveryDate } = req.body || {};
+  const quotes = readPinatasQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Cotización de piñata no encontrada' });
+
+  let systemText = '';
+
+  switch (action) {
+    case 'adjust_price': {
+      const price = parseFloat(agreedPriceUsd);
+      if (!price || isNaN(price) || price <= 0) {
+        return res.status(400).json({ error: 'Monto de precio acordado inválido' });
+      }
+      quote.agreedPriceUsd = price;
+      quote.status = 'Precio Acordado';
+      systemText = `💰 Precio final acordado y confirmado en: $${price.toFixed(2)} USD (~$${Math.round(price * 4000).toLocaleString('es-CO')} COP)`;
+      break;
+    }
+    case 'start_production':
+    case 'accept_order': {
+      quote.status = 'En Elaboración';
+      if (deliveryDate) quote.eventDate = deliveryDate;
+      systemText = `✂️ Pedido aceptado. ¡La piñata ha entrado a taller en proceso de elaboración y secado artesanal!`;
+      break;
+    }
+    case 'mark_ready': {
+      quote.status = 'Listo para Entrega';
+      systemText = `🪅 ¡Tu piñata personalizada está terminada, decorada y lista para entrega / despacho!`;
+      break;
+    }
+    case 'mark_delivered': {
+      quote.status = 'Listo / Entregado';
+      systemText = `🎉 Pedido entregado satisfactoriamente. ¡Que disfruten mucho la fiesta!`;
+      break;
+    }
+    case 'set_status': {
+      if (req.body.status) {
+        quote.status = req.body.status;
+        systemText = `ℹ️ Estado de la orden actualizado a: ${req.body.status}`;
+      }
+      break;
+    }
+    default:
+      return res.status(400).json({ error: 'Acción no reconocida' });
+  }
+
+  quote.updatedAt = new Date().toISOString();
+
+  if (systemText) {
+    quote.messages.push({
+      id: 'msg-' + Date.now(),
+      senderRole: 'system',
+      senderName: 'Taller de Piñatas',
+      timestamp: new Date().toISOString(),
+      text: systemText
+    });
+  }
+
+  writePinatasQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'PINATA_QUOTE_UPDATE',
+    quote
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, quote });
+});
+
+// GET stats for Piñatas services (KPIs & Conversion)
+app.get('/api/pinata-services/stats', (req, res) => {
+  const quotes = readPinatasQuotes();
+  const total = quotes.length;
+  const solicitados = quotes.filter(q => q.status === 'Solicitud Enviada' || q.status === 'Solicitado').length;
+  const enConversacion = quotes.filter(q => q.status === 'En Conversación' || q.status === 'En Conversación / Atendido').length;
+  const precioAcordado = quotes.filter(q => q.status === 'Precio Acordado').length;
+  const enElaboracion = quotes.filter(q => q.status === 'En Elaboración').length;
+  const listos = quotes.filter(q => q.status === 'Listo para Entrega').length;
+  const entregados = quotes.filter(q => q.status === 'Listo / Entregado' || q.status === 'Entregado').length;
+
+  const totalConcretados = precioAcordado + enElaboracion + listos + entregados;
+  const conversionRate = total > 0 ? Math.round((totalConcretados / total) * 100) : 0;
+
+  // Calculate average response time
+  let totalResponseMs = 0;
+  let responsesCount = 0;
+  quotes.forEach(q => {
+    if (q.messages && q.messages.length > 1) {
+      const firstUserMsg = q.messages.find(m => m.senderRole === 'client' || m.senderRole === 'system');
+      const firstWorkshopMsg = q.messages.find(m => m.senderRole === 'workshop' || m.senderRole === 'admin');
+      if (firstUserMsg && firstWorkshopMsg) {
+        const diff = new Date(firstWorkshopMsg.timestamp).getTime() - new Date(firstUserMsg.timestamp).getTime();
+        if (diff > 0) {
+          totalResponseMs += diff;
+          responsesCount++;
+        }
+      }
+    }
+  });
+
+  const avgResponseMinutes = responsesCount > 0 ? Math.round((totalResponseMs / responsesCount) / 60000) : 15;
+
+  let totalMoneyUsd = 0;
+  quotes.forEach(q => {
+    const price = q.agreedPriceUsd || q.estimatedPriceUsd || 0;
+    if (q.status === 'Precio Acordado' || q.status === 'En Elaboración' || q.status === 'Listo para Entrega' || q.status === 'Listo / Entregado' || q.status === 'Entregado') {
+      totalMoneyUsd += parseFloat(price) || 0;
+    }
+  });
+
+  res.json({
+    total,
+    solicitados,
+    enConversacion,
+    precioAcordado,
+    enElaboracion,
+    listos,
+    entregados,
+    totalConcretados,
+    conversionRate,
+    avgResponseMinutes,
+    totalMoneyUsd
+  });
+});
+
 // Fallback for SPA routing (if any) or simple index.html
 app.get('*', (req, res, next) => {
   // If request is for api, skip to next route handler (standard Express)

@@ -137,6 +137,11 @@
             <span>ShelliArt Resina</span>
             <span id="admin-resin-badge" style="display: none; background: #F472B6; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
           </button>
+          <button type="button" id="btn-header-pinatas-services" class="btn-logout" onclick="AdminApp.openPinatasAdminModal()" style="background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%); color: #ffffff; font-weight: 800; border: 1px solid #F43F5E; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(225, 29, 72, 0.35); position: relative;" title="Control de Pedidos & Inventario: Piñatas Personalizadas">
+            <span>🪅</span>
+            <span>Piñatas</span>
+            <span id="admin-pinatas-badge" style="display: none; background: #F43F5E; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
+          </button>
           <button class="btn-logout" onclick="AdminApp.forceCleanUpdate()" style="background-color: rgba(239, 68, 68, 0.15); color: #F87171; font-weight: 800; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer;" title="Limpiar caché y forzar descarga de la última versión">⚡ Forzar Actualización</button>
           <button class="btn-logout" onclick="AdminApp.openPaymentMethodsModal()" style="background-color: #0F766E; color: #5EEAD4; font-weight: 800; border: 1px solid #14B8A6; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer;" title="Configurar cuentas de pago bancarias y códigos QR">💳 Cuentas & QR</button>
           <button class="btn-logout" onclick="AdminApp.requestNotificationPermission()" style="background-color: #3B82F6; color: #FFFFFF; font-weight: 800; border: 1px solid #3B82F6;">🔔 Notificaciones</button>
@@ -3005,6 +3010,139 @@
       <!-- Feed / List -->
       <div id="admin-resin-quotes-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;">
         <div style="text-align: center; color: #94A3B8; padding: 30px;">⏳ Cargando pedidos de resina...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Piñatas Personalizadas Monitoring & Inventory Modal -->
+  <div id="admin-pinatas-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;">
+    <div style="background: #0F131F; border: 1.5px solid rgba(244, 63, 94, 0.4); border-radius: 20px; width: 100%; max-width: 940px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+      <!-- Header -->
+      <div style="padding: 16px 20px; background: linear-gradient(135deg, #881337 0%, #4C0519 100%); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">🪅</span>
+          <div>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #FFF;">Control de Pedidos & Inventario: Piñatas Personalizadas</h3>
+            <span style="font-size: 11px; color: #FDA4AF;">Tus Piñatas a Medida • Taller Artesanal, Fichas Técnicas & Catálogo</span>
+          </div>
+        </div>
+        <button type="button" onclick="AdminApp.closePinatasAdminModal()" style="background: rgba(255,255,255,0.1); border: none; color: #94A3B8; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- Navigation Tabs (Pedidos vs Inventario de Tienda) -->
+      <div style="display: flex; gap: 4px; padding: 8px 16px; background: #131A2B; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" id="tab-btn-pinata-orders" onclick="AdminApp.switchPinatasAdminTab('orders')" style="background: rgba(244, 63, 94, 0.2); border: 1px solid #F43F5E; color: #FFF; padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span>📋</span> Pedidos & Trazabilidad
+        </button>
+        <button type="button" id="tab-btn-pinata-inventory" onclick="AdminApp.switchPinatasAdminTab('inventory')" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #94A3B8; padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span>📦</span> Inventario & Catálogo de la Tienda
+        </button>
+      </div>
+
+      <!-- TAB 1: Pedidos & Trazabilidad -->
+      <div id="admin-pinata-tab-orders" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+        <!-- KPI Summary Cards -->
+        <div style="padding: 14px 20px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: rgba(15, 19, 31, 0.95); border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 8px 10px; text-align: center;">
+            <span style="font-size: 9.5px; color: #94A3B8; font-weight: 800; text-transform: uppercase;">TOTAL ORDENES</span>
+            <div id="admin-pinatas-kpi-total" style="font-size: 17px; font-weight: 900; color: #FFF; margin-top: 2px;">0</div>
+          </div>
+          <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 8px 10px; text-align: center;">
+            <span style="font-size: 9.5px; color: #FCD34D; font-weight: 800; text-transform: uppercase;">EN CONVERSACIÓN</span>
+            <div id="admin-pinatas-kpi-chat" style="font-size: 17px; font-weight: 900; color: #F59E0B; margin-top: 2px;">0</div>
+          </div>
+          <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 8px 10px; text-align: center;">
+            <span style="font-size: 9.5px; color: #C084FC; font-weight: 800; text-transform: uppercase;">PRECIO ACORDADO</span>
+            <div id="admin-pinatas-kpi-agreed" style="font-size: 17px; font-weight: 900; color: #A78BFA; margin-top: 2px;">0</div>
+          </div>
+          <div style="background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.4); border-radius: 12px; padding: 8px 10px; text-align: center;">
+            <span style="font-size: 9.5px; color: #FDA4AF; font-weight: 800; text-transform: uppercase;">EN ELABORACIÓN</span>
+            <div id="admin-pinatas-kpi-curing" style="font-size: 17px; font-weight: 900; color: #F43F5E; margin-top: 2px;">0</div>
+          </div>
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 8px 10px; text-align: center;">
+            <span style="font-size: 9.5px; color: #6EE7B7; font-weight: 800; text-transform: uppercase;">ENTREGADAS</span>
+            <div id="admin-pinatas-kpi-done" style="font-size: 17px; font-weight: 900; color: #10B981; margin-top: 2px;">0</div>
+          </div>
+        </div>
+
+        <!-- Metrics bar -->
+        <div style="padding: 6px 20px; background: rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #94A3B8; border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <span>⏱️ Tiempo promedio de respuesta: <strong id="admin-pinatas-metric-time" style="color: #FBBF24;">~15 min</strong></span>
+          <span>📈 Tasa de conversión: <strong id="admin-pinatas-metric-conversion" style="color: #34D399;">0%</strong></span>
+        </div>
+
+        <!-- Feed / List -->
+        <div id="admin-pinatas-quotes-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;">
+          <div style="text-align: center; color: #94A3B8; padding: 30px;">⏳ Cargando pedidos de piñatas...</div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Inventario & Catálogo de la Tienda -->
+      <div id="admin-pinata-tab-inventory" style="display: none; flex-direction: column; flex: 1; overflow: hidden; background: #0b0f19;">
+        <!-- Inventory Actions Bar -->
+        <div style="padding: 12px 20px; background: #131A2B; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h4 style="margin: 0; font-size: 13.5px; font-weight: 800; color: #FFF;">Catálogo de Modelos & Inventario</h4>
+            <span id="admin-pinatas-inventory-count" style="font-size: 11px; color: #94A3B8;">0 productos registrados</span>
+          </div>
+          <button type="button" onclick="AdminApp.toggleAddPinataForm()" style="background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%); color: #FFF; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(244, 63, 94, 0.4);">
+            <span>➕</span> Agregar Nueva Piñata al Catálogo
+          </button>
+        </div>
+
+        <!-- New Product Form Modal / Section -->
+        <div id="admin-pinata-add-form" style="display: none; padding: 14px 20px; background: #172033; border-bottom: 1.5px solid rgba(244, 63, 94, 0.35);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <strong style="color: #FFF; font-size: 13px;">Registrar Nueva Piñata en el Inventario</strong>
+            <button type="button" onclick="AdminApp.toggleAddPinataForm(false)" style="background: none; border: none; color: #94A3B8; font-size: 16px; cursor: pointer;">✕</button>
+          </div>
+          <form onsubmit="event.preventDefault(); AdminApp.saveNewPinataProduct();" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <div>
+              <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Nombre del Modelo *</label>
+              <input type="text" id="admin-pinata-input-name" placeholder="Ej: Piñata Mario Bros 3D" required style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Tamaño *</label>
+              <select id="admin-pinata-input-size" required style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
+                <option value="Mediana (~80 cm)">Mediana (~80 cm) - Recomendada</option>
+                <option value="Pequeña (~50 cm)">Pequeña (~50 cm)</option>
+                <option value="Grande (~1 metro o más)">Grande (~1 metro o más)</option>
+                <option value="Mini-Piñata">Mini-Piñata (Recuerdo)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Categoría *</label>
+              <select id="admin-pinata-input-category" required style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
+                <option value="personajes">Personajes Infantiles</option>
+                <option value="numeros">Números & Letras</option>
+                <option value="figuras3d">Figuras Esculturales 3D</option>
+                <option value="mini">Mini-Piñatas</option>
+                <option value="eventos">Eventos Especiales</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Precio Base Referencial (USD) *</label>
+              <input type="number" step="0.5" id="admin-pinata-input-price" placeholder="Ej: 18.00" required style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Foto del Producto (URL o Archivo) *</label>
+              <input type="text" id="admin-pinata-input-image" placeholder="/images/pinatas/... o URL" required style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Descripción Breve</label>
+              <input type="text" id="admin-pinata-input-desc" placeholder="Acabado artesanal, papel crepé, etc." style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
+            </div>
+            <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
+              <button type="button" onclick="AdminApp.toggleAddPinataForm(false)" style="background: rgba(255,255,255,0.1); border: none; color: #CBD5E1; padding: 8px 14px; border-radius: 8px; font-size: 12px; cursor: pointer;">Cancelar</button>
+              <button type="submit" style="background: #10B981; color: #FFF; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">Guardar en Catálogo</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Inventory List Grid -->
+        <div id="admin-pinatas-catalog-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;">
+          <div style="text-align: center; color: #94A3B8; padding: 30px; grid-column: 1 / -1;">⏳ Cargando catálogo de piñatas...</div>
+        </div>
       </div>
     </div>
   </div>

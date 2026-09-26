@@ -1,0 +1,1191 @@
+/* ==========================================================================
+   Piñatas Personalizadas ("Tus Piñatas a Medida") - CSS Stylesheet
+   PediGochos Mobile-First Festive & Craft Service Design
+   ========================================================================== */
+
+/* Main Container Modal */
+.pinata-service-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  background-color: #0b0f19;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(244, 63, 94, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 60%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  animation: pinataFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pinata-service-modal.hidden {
+  display: none !important;
+}
+
+@keyframes pinataFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.pinata-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(244, 63, 94, 0.2);
+  z-index: 10;
+}
+
+.pinata-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pinata-brand-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.3) 0%, rgba(245, 158, 11, 0.25) 100%);
+  border: 1.5px solid rgba(244, 63, 94, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.25);
+}
+
+.pinata-header-brand h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pinata-header-brand h2 span {
+  background: linear-gradient(135deg, #F43F5E 0%, #FB923C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pinata-header-brand p {
+  margin: 2px 0 0 0;
+  font-size: 11.5px;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.pinata-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pinata-close-btn:hover {
+  background: rgba(244, 63, 94, 0.25);
+  color: #fff;
+  border-color: #F43F5E;
+  transform: scale(1.05);
+}
+
+/* Scrollable Body */
+.pinata-body-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  padding-bottom: 90px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hero Section */
+.pinata-hero-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.18) 0%, rgba(245, 158, 11, 0.12) 50%, rgba(30, 41, 59, 0.8) 100%);
+  border: 1.5px solid rgba(244, 63, 94, 0.35);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+}
+
+.pinata-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.35);
+}
+
+.pinata-hero-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.25;
+  margin: 0 0 8px 0;
+}
+
+.pinata-hero-desc {
+  font-size: 13.5px;
+  color: #e2e8f0;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+}
+
+/* Guarantee Badges */
+.pinata-guarantee-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pinata-guarantee-pill {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pinata-guarantee-pill span.icon {
+  font-size: 18px;
+}
+
+.pinata-guarantee-pill span.text {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.2;
+}
+
+/* Big Hero CTA Button */
+.btn-pinata-hero-cta {
+  width: 100%;
+  background: linear-gradient(135deg, #F43F5E 0%, #FB923C 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 14px;
+}
+
+.btn-pinata-hero-cta:active {
+  transform: scale(0.98);
+}
+
+/* Section Titles */
+.pinata-sec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 22px 0 12px 0;
+}
+
+.pinata-sec-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pinata-sec-header span.counter {
+  font-size: 12px;
+  color: #F43F5E;
+  font-weight: 700;
+  background: rgba(244, 63, 94, 0.15);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* Filter Pills Bar */
+.pinata-filter-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  scrollbar-width: none;
+}
+
+.pinata-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.pinata-filter-chip {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.pinata-filter-chip.active {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.25) 0%, rgba(245, 158, 11, 0.25) 100%);
+  color: #fff;
+  border-color: #F43F5E;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.25);
+}
+
+/* Gallery Grid */
+.pinata-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .pinata-gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+.pinata-sample-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.pinata-sample-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(244, 63, 94, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.pinata-sample-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #1e293b;
+  overflow: hidden;
+}
+
+.pinata-sample-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  display: block;
+}
+
+.pinata-sample-card:hover .pinata-sample-img {
+  transform: scale(1.05);
+}
+
+.pinata-sample-size-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 8px;
+}
+
+.pinata-sample-info {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.pinata-sample-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.pinata-sample-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin: 0 0 10px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pinata-sample-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pinata-sample-price {
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #F43F5E;
+}
+
+.btn-sample-quote-sim {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #FDA4AF;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sample-quote-sim:hover {
+  background: #F43F5E;
+  color: #fff;
+}
+
+/* Skeletons */
+.pinata-skeleton-card {
+  background: #1e293b;
+  border-radius: 16px;
+  overflow: hidden;
+  height: 220px;
+  position: relative;
+}
+
+.pinata-skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ==========================================================================
+   WIZARD MODAL & STEPS
+   ========================================================================== */
+
+.pinata-wizard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99995;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .pinata-wizard-overlay {
+    align-items: center;
+    padding: 20px;
+  }
+}
+
+.pinata-wizard-container {
+  background: #0f172a;
+  border-top: 1.5px solid rgba(244, 63, 94, 0.4);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 580px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 640px) {
+  .pinata-wizard-container {
+    border-radius: 24px;
+    border: 1.5px solid rgba(244, 63, 94, 0.4);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.pinata-wizard-header {
+  padding: 16px 20px 12px 20px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pinata-wizard-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.pinata-wizard-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pinata-wizard-step-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #F43F5E;
+  background: rgba(244, 63, 94, 0.15);
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.pinata-wizard-progress-bar {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pinata-wizard-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #F43F5E 0%, #FB923C 100%);
+  border-radius: 10px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pinata-wizard-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pinata-step-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #fff;
+  margin: 0 0 6px 0;
+}
+
+.pinata-step-subtitle {
+  font-size: 12.5px;
+  color: #94a3b8;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+/* Step 1: Open Text & Photos */
+.pinata-input-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.pinata-textarea {
+  width: 100%;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: #fff;
+  outline: none;
+  resize: none;
+  min-height: 85px;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pinata-textarea:focus {
+  border-color: #F43F5E;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
+}
+
+.pinata-text-input {
+  width: 100%;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #fff;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.pinata-text-input:focus {
+  border-color: #F43F5E;
+}
+
+/* Photo Upload Box */
+.pinata-uploader-zone {
+  border: 2px dashed rgba(244, 63, 94, 0.4);
+  background: rgba(244, 63, 94, 0.05);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 12px 0;
+}
+
+.pinata-uploader-zone:hover {
+  background: rgba(244, 63, 94, 0.1);
+  border-color: #F43F5E;
+}
+
+.pinata-uploader-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.pinata-uploader-text {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.pinata-uploader-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.pinata-thumbs-strip {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.pinata-thumb-box {
+  width: 76px;
+  height: 76px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  border: 1.5px solid rgba(244, 63, 94, 0.5);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.pinata-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pinata-thumb-del {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(225, 29, 72, 0.9);
+  color: #fff;
+  border: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Choice Cards (Steps 2, 4) */
+.pinata-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 480px) {
+  .pinata-choice-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.pinata-choice-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.pinata-choice-card:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.pinata-choice-card.selected {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%);
+  border-color: #F43F5E;
+  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25);
+}
+
+.pinata-choice-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pinata-choice-info strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.pinata-choice-info span {
+  font-size: 11.5px;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.pinata-choice-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 9.5px;
+  font-weight: 800;
+  background: #F43F5E;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+/* Step 3: Size Pills */
+.pinata-size-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pinata-size-pill {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pinata-size-pill:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.pinata-size-pill.selected {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%);
+  border-color: #F43F5E;
+  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25);
+}
+
+.pinata-size-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pinata-size-left span.dimension {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.pinata-size-left span.capacity {
+  font-size: 11.5px;
+  color: #94a3b8;
+  display: block;
+}
+
+.pinata-size-badge-rec {
+  background: #10B981;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+/* Step 5: Extras & Checkboxes */
+.pinata-extras-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.pinata-extra-checkbox-item {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pinata-extra-checkbox-item.selected {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: #F43F5E;
+}
+
+.pinata-extra-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pinata-extra-left input[type="checkbox"],
+.pinata-extra-left input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #F43F5E;
+  cursor: pointer;
+}
+
+.pinata-extra-price {
+  font-size: 12px;
+  font-weight: 800;
+  color: #FB923C;
+}
+
+/* Step 6: Date & Summary Card */
+.pinata-date-picker-wrap {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.pinata-date-picker-wrap input[type="date"] {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+  font-family: inherit;
+  color-scheme: dark;
+}
+
+.pinata-warning-badge {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #FCD34D;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 10px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Summary Card */
+.pinata-summary-card {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1.5px solid rgba(244, 63, 94, 0.35);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.pinata-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+}
+
+.pinata-summary-row:last-child {
+  border-bottom: none;
+}
+
+.pinata-summary-row strong {
+  color: #fff;
+}
+
+.pinata-price-estimate-box {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%);
+  border: 1.5px solid #F43F5E;
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+  margin-top: 14px;
+}
+
+.pinata-price-estimate-box span.title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #FDA4AF;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pinata-price-estimate-box div.range {
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  margin: 4px 0 2px 0;
+}
+
+.pinata-price-estimate-box span.equiv {
+  font-size: 11.5px;
+  color: #FCD34D;
+  font-weight: 700;
+  display: block;
+}
+
+.pinata-legal-disclaimer {
+  font-size: 10.5px;
+  color: #94a3b8;
+  line-height: 1.35;
+  margin-top: 10px;
+  font-style: italic;
+  text-align: center;
+}
+
+/* Wizard Footer Controls */
+.pinata-wizard-footer {
+  padding: 14px 20px;
+  background: rgba(15, 23, 42, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-pinata-back {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-size: 13.5px;
+  font-weight: 800;
+  padding: 12px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-pinata-next {
+  flex: 1;
+  background: linear-gradient(135deg, #F43F5E 0%, #FB923C 100%);
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
+  transition: transform 0.2s ease;
+}
+
+.btn-pinata-next:active {
+  transform: scale(0.98);
+}
+
+/* ==========================================================================
+   INTEGRATED CHAT MODAL
+   ========================================================================== */
+.pinata-chat-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: #0b0f19;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: pinataFadeIn 0.25s ease;
+}
+
+.pinata-chat-modal.hidden {
+  display: none !important;
+}
+
+.pinata-chat-header {
+  padding: 12px 16px;
+  background: #1e1b4b;
+  border-bottom: 1px solid rgba(244, 63, 94, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pinata-chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pinata-chat-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #090d16;
+}
+
+/* Ficha de Pedido Interactiva */
+.pinata-ficha-card {
+  margin: 12px;
+  padding: 14px;
+  background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%);
+  border: 1.5px solid rgba(244, 63, 94, 0.4);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.pinata-ficha-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.pinata-ficha-status {
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.status-enviada { background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid #3B82F6; }
+.status-conversacion { background: rgba(245, 158, 11, 0.2); color: #FBBF24; border: 1px solid #F59E0B; }
+.status-acordado { background: rgba(139, 92, 246, 0.2); color: #C084FC; border: 1px solid #8B5CF6; }
+.status-elaboracion { background: rgba(244, 63, 94, 0.2); color: #FB7185; border: 1px solid #F43F5E; }
+.status-entregado { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid #10B981; }
+
+.pinata-ficha-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.pinata-ficha-photos {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pinata-ficha-photos img {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pinata-craft-actions-toolbar {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-craft-action {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-craft-adjust {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: #8B5CF6;
+  color: #C084FC;
+}
+
+.btn-craft-accept {
+  background: rgba(244, 63, 94, 0.25);
+  border-color: #F43F5E;
+  color: #FDA4AF;
+}
+
+.btn-craft-deliver {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10B981;
+  color: #6EE7B7;
+}
+
+/* Chat Messages */
+.pinata-messages-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pinata-bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.pinata-bubble-in {
+  align-self: flex-start;
+  background: #1e293b;
+  color: #f1f5f9;
+  border-bottom-left-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pinata-bubble-out {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 3px 10px rgba(225, 29, 72, 0.3);
+}
+
+.pinata-bubble-meta {
+  font-size: 9.5px;
+  opacity: 0.65;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.pinata-chat-bar {
+  padding: 10px 14px;
+  background: #1e1b4b;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 8px;
+}
+
+.pinata-chat-input {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  outline: none;
+}
+
+.btn-send-pinata-msg {
+  background: #F43F5E;
+  color: #fff;
+  border: none;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+}

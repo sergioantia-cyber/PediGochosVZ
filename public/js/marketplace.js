@@ -1083,6 +1083,36 @@ class MarketplaceController {
           </div>
         </div>
 
+        <!-- Piñatas Personalizadas ("Tus Piñatas a Medida") -->
+        <div class="est-row-card service-row-card" onclick="PinataServiceApp ? PinataServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(244, 63, 94, 0.55); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(244, 63, 94, 0.22); border: 2px solid #F43F5E; box-shadow: 0 0 20px rgba(244, 63, 94, 0.45);">
+              🪅
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
+                  Piñatas Personalizadas
+                </h4>
+                <span class="service-card-badge" style="background: #F43F5E; color: #FFF; box-shadow: 0 2px 8px rgba(244,63,94,0.4);">
+                  🎉 A MEDIDA
+                </span>
+              </div>
+              <p class="service-card-desc">
+                Piñatas artesanales 3D, números temáticos con flores, siluetas y mini-piñatas. Romper a palo o cintas.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #FDA4AF; background: rgba(244, 63, 94, 0.16); border: 1px solid rgba(244, 63, 94, 0.35); padding: 3px 9px; border-radius: 8px;">
+                  ⭐ 5.0 • 100% Hecho a Mano • Cualquier Motivo
+                </span>
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%); border: 1px solid #F43F5E; box-shadow: 0 3px 10px rgba(244,63,94,0.35);">
+                  Personalizar ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Invite to Register Another Service -->
         <div style="grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
           <p style="font-size: 12px; color: #94A3B8; margin: 0 0 10px 0;">
