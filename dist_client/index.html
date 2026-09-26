@@ -1891,24 +1891,46 @@
           </div>
         </div>
 
-        <!-- Step 3: Location / GPS Detection -->
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 14px;">
+        <!-- Step 3: Location / GPS Detection & Interactive Map -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 14px; position: relative;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
             <label style="font-size: 12px; font-weight: 800; color: #EF4444; display: flex; align-items: center; gap: 4px;">
               <span>📍</span> 3️⃣ ¿Dónde estás varado? *
             </label>
-            <button type="button" onclick="MarketplaceApp.captureCaucheraGps()" style="background: rgba(239, 68, 68, 0.2); color: #FCA5A5; border: 1px solid #EF4444; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-              <span>📡</span> Capturar mi GPS
+            <button type="button" onclick="MarketplaceApp.captureCaucheraGps()" style="background: rgba(239, 68, 68, 0.2); color: #FCA5A5; border: 1px solid #EF4444; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+              <span id="cauchera-gps-icon">📡</span> Capturar mi GPS
             </button>
           </div>
-          <input type="text" id="cauchera-location-input" required placeholder="Obteniendo coordenadas GPS..." style="width: 100%; padding: 9px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12.5px; box-sizing: border-box;">
-          
-          <div style="margin-top: 8px;">
-            <input type="text" id="cauchera-reference-input" required placeholder="Punto de referencia exacto (ej. Frente a la estación de servicio, calle 3...)" style="width: 100%; padding: 8px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12px; box-sizing: border-box;">
+
+          <!-- Location Search Input with Suggestions Dropdown -->
+          <div style="position: relative;">
+            <input type="text" id="cauchera-location-input" required 
+              placeholder="Escribe tu ubicación (ej. Plaza Bolívar, Terminal, Calle 4)..." 
+              autocomplete="off"
+              oninput="MarketplaceApp.onCaucheraLocationInput(this.value)"
+              onkeydown="if(event.key==='Enter'){event.preventDefault(); MarketplaceApp.selectFirstCaucheraSuggestion();}"
+              style="width: 100%; padding: 10px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12.5px; box-sizing: border-box;">
+            
+            <!-- Real-time map suggestions dropdown -->
+            <div id="cauchera-suggestions-box" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 2000; background: #1E2333; border: 1.5px solid #EF4444; border-radius: 12px; max-height: 220px; overflow-y: auto; box-shadow: 0 12px 36px rgba(0,0,0,0.9);">
+            </div>
           </div>
           
-          <div id="cauchera-gps-coords-badge" style="font-size: 10.5px; color: #6EE7B7; margin-top: 6px; display: flex; align-items: center; gap: 4px;">
-            <span>📡 GPS: </span><span id="cauchera-gps-coords-text">Esperando captura de satélite...</span>
+          <div style="margin-top: 8px;">
+            <input type="text" id="cauchera-reference-input" placeholder="Punto de referencia exacto (ej. Frente a estación de servicio, esquina, casa azul...)" style="width: 100%; padding: 8px 12px; border-radius: 10px; background: #141721; border: 1px solid rgba(255,255,255,0.15); color: #FFF; font-size: 12px; box-sizing: border-box;">
+          </div>
+
+          <!-- Leaflet Interactive Map for Cauchera -->
+          <div style="margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-size: 11px; color: #CBD5E1; font-weight: 700;">🗺️ Toca o arrastra la rueda en el mapa:</span>
+              <span id="cauchera-map-status" style="font-size: 10.5px; color: #34D399; font-weight: 800;">📍 Mapa Activo</span>
+            </div>
+            <div id="cauchera-leaflet-map" style="width: 100%; height: 200px; border-radius: 12px; border: 1.5px solid rgba(239, 68, 68, 0.4); overflow: hidden; background: #0F172A; box-shadow: 0 4px 14px rgba(0,0,0,0.4);"></div>
+          </div>
+          
+          <div id="cauchera-gps-coords-badge" style="font-size: 11px; color: #6EE7B7; margin-top: 8px; display: flex; align-items: center; gap: 4px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 6px 10px;">
+            <span>📡 GPS: </span><span id="cauchera-gps-coords-text">Toca "Capturar mi GPS", escribe tu lugar o mueve el marcador</span>
           </div>
         </div>
 

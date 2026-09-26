@@ -7789,6 +7789,60 @@ class MarketplaceController {
     }
   }
 
+  getTachiraPlacesDatabase() {
+    return [
+      // San Antonio del Táchira & Frontera
+      { keys: ['plaza bolivar', 'plaza san antonio', 'centro san antonio', 'alcaldia bolivar', 'banco banesco', 'banco mercantil', 'banco venezuela', 'centro', 'carrera 4', 'calle 4'], name: 'Plaza Bolívar / Centro (San Antonio)', lat: 7.8145, lng: -72.4455, city: 'San Antonio del Táchira' },
+      { keys: ['terminal', 'expreso', 'bus', 'terminal san antonio', 'transporte'], name: 'Terminal de Pasajeros de San Antonio', lat: 7.8180, lng: -72.4410, city: 'San Antonio del Táchira' },
+      { keys: ['puente', 'bolivar', 'simon bolivar', 'frontera', 'aduana', 'seniat', 'migracion', 'la linea', 'paso'], name: 'Puente Internacional Simón Bolívar', lat: 7.8285, lng: -72.4542, city: 'Frontera San Antonio - Cúcuta' },
+      { keys: ['hospital', 'cdi', 'ambulatorio', 'seguro', 'samuel dario', 'clinica', 'medico', 'salud'], name: 'Hospital Dr. Samuel Darío Maldonado', lat: 7.8120, lng: -72.4430, city: 'San Antonio del Táchira' },
+      { keys: ['aeropuerto', 'pista', 'avion', 'juan vicente gomez', 'aeropuerto san antonio'], name: 'Aeropuerto Juan Vicente Gómez', lat: 7.8398, lng: -72.4402, city: 'San Antonio del Táchira' },
+      { keys: ['palotal', 'sector palotal'], name: 'Palotal', lat: 7.8020, lng: -72.4460, city: 'San Antonio del Táchira' },
+      { keys: ['llano', 'el llano', 'barrio el llano'], name: 'Barrio El Llano', lat: 7.8115, lng: -72.4490, city: 'San Antonio del Táchira' },
+      { keys: ['peracal', 'alcabala peracal', 'alcabala'], name: 'Alcabala de Peracal', lat: 7.8290, lng: -72.4210, city: 'Vía San Cristóbal' },
+      { keys: ['libertadores', 'sector libertadores', '5 de julio'], name: 'Sector Libertadores / 5 de Julio', lat: 7.8170, lng: -72.4480, city: 'San Antonio del Táchira' },
+      { keys: ['obrero', 'barrio obrero san antonio', 'miranda'], name: 'Barrio Obrero / Miranda (San Antonio)', lat: 7.8160, lng: -72.4495, city: 'San Antonio del Táchira' },
+      { keys: ['cementerio', 'camposanto'], name: 'Cementerio Municipal', lat: 7.8090, lng: -72.4415, city: 'San Antonio del Táchira' },
+      { keys: ['tienditas', 'atanasio girardot', 'puente nuevo tienditas'], name: 'Puente Atanasio Girardot (Tienditas)', lat: 7.8680, lng: -72.4560, city: 'Frontera Tienditas' },
+      { keys: ['la popa', 'mirador la popa'], name: 'Mirador de La Popa', lat: 7.8190, lng: -72.4380, city: 'San Antonio del Táchira' },
+      { keys: ['los proceres', 'proceres'], name: 'Barrio Los Próceres', lat: 7.8130, lng: -72.4410, city: 'San Antonio del Táchira' },
+      { keys: ['las dantas', 'dantas'], name: 'Las Dantas (Vía Rubio)', lat: 7.7850, lng: -72.4150, city: 'Táchira' },
+
+      // Pedro María Ureña
+      { keys: ['urena', 'centro urena', 'plaza urena', 'pedro maria urena', 'alcaldia urena'], name: 'Ureña / Centro', lat: 7.9192, lng: -72.4468, city: 'Pedro María Ureña' },
+      { keys: ['aguas calientes', 'aguascalientes', 'termas'], name: 'Aguas Calientes (Ureña)', lat: 7.9350, lng: -72.4350, city: 'Pedro María Ureña' },
+      { keys: ['puente santander', 'puente francisco de paula santander'], name: 'Puente Francisco de Paula Santander (Ureña)', lat: 7.9255, lng: -72.4590, city: 'Frontera Ureña - Cúcuta' },
+      { keys: ['zona industrial urena', 'zona industrial'], name: 'Zona Industrial de Ureña', lat: 7.9250, lng: -72.4420, city: 'Pedro María Ureña' },
+
+      // Cúcuta & Área Metropolitana
+      { keys: ['la parada', 'parada frontera', 'villa del rosario'], name: 'La Parada (Frontera Cúcuta)', lat: 7.8310, lng: -72.4600, city: 'Villa del Rosario / Cúcuta' },
+      { keys: ['terminal cucuta', 'transporte cucuta'], name: 'Terminal de Transportes de Cúcuta', lat: 7.9010, lng: -72.5020, city: 'Cúcuta' },
+      { keys: ['ventura', 'ventura plaza'], name: 'Ventura Plaza (Cúcuta)', lat: 7.8920, lng: -72.4970, city: 'Cúcuta' },
+      { keys: ['centro cucuta', 'parque santander cucuta'], name: 'Centro de Cúcuta', lat: 7.8890, lng: -72.5050, city: 'Cúcuta' },
+      { keys: ['aeropuerto cucuta', 'camilo daza'], name: 'Aeropuerto Camilo Daza (Cúcuta)', lat: 7.9270, lng: -72.5110, city: 'Cúcuta' },
+
+      // San Cristóbal
+      { keys: ['barrio obrero', 'obrero sc', 'plaza los mangos', 'los mangos', 'carrera 21', 'calle 10'], name: 'Plaza Los Mangos / Barrio Obrero (San Cristóbal)', lat: 7.7712, lng: -72.2223, city: 'San Cristóbal' },
+      { keys: ['centro san cristobal', '5ta avenida', 'quinta avenida', 'plaza bolivar sc', 'catedral sc', 'ateneo'], name: 'Centro / 5ta Avenida (San Cristóbal)', lat: 7.7669, lng: -72.2280, city: 'San Cristóbal' },
+      { keys: ['sambil', 'sambil san cristobal', 'centro comercial sambil', 'autopista'], name: 'Sambil San Cristóbal', lat: 7.7950, lng: -72.2030, city: 'San Cristóbal' },
+      { keys: ['terminal san cristobal', 'terminal big low sc', 'terminal sc', 'expresos san cristobal'], name: 'Terminal de Pasajeros de San Cristóbal', lat: 7.7550, lng: -72.2350, city: 'San Cristóbal' },
+      { keys: ['hospital central', 'hospital de san cristobal', 'hospital central sc', 'maternidad'], name: 'Hospital Central de San Cristóbal', lat: 7.7600, lng: -72.2210, city: 'San Cristóbal' },
+      { keys: ['pueblo nuevo', 'polideportivo', 'estadio pueblo nuevo', 'plaza de toros', 'monumental'], name: 'Pueblo Nuevo / Polideportivo (San Cristóbal)', lat: 7.7920, lng: -72.2150, city: 'San Cristóbal' },
+      { keys: ['pirineos', 'pirineos 1', 'pirineos 2', 'las lomas', 'avenida principal pirineos'], name: 'Pirineos / Las Lomas (San Cristóbal)', lat: 7.7850, lng: -72.2280, city: 'San Cristóbal' },
+      { keys: ['la concordia', 'concordia', 'mercado la concordia', 'plaza miranda concordia'], name: 'La Concordia / Mercado (San Cristóbal)', lat: 7.7580, lng: -72.2380, city: 'San Cristóbal' },
+      { keys: ['unet', 'universidad experimental del tachira'], name: 'UNET (San Cristóbal)', lat: 7.7985, lng: -72.2110, city: 'San Cristóbal' },
+      { keys: ['ula', 'universidad de los andes', 'ula tachira', 'paramillo'], name: 'ULA Táchira / Paramillo', lat: 7.7810, lng: -72.2190, city: 'San Cristóbal' },
+      { keys: ['palo gordo', 'paramillo palo gordo'], name: 'Palo Gordo', lat: 7.8150, lng: -72.2050, city: 'San Cristóbal' },
+
+      // Capacho, Táriba, Palmira, Rubio
+      { keys: ['capacho', 'capacho nuevo', 'independencia'], name: 'Capacho Nuevo', lat: 7.7950, lng: -72.3100, city: 'Capacho' },
+      { keys: ['capacho viejo', 'libertad'], name: 'Capacho Viejo', lat: 7.7880, lng: -72.3250, city: 'Capacho' },
+      { keys: ['tariba', 'plaza tariba', 'basilica tariba', 'cardenas'], name: 'Táriba / Basílica', lat: 7.8200, lng: -72.2230, city: 'Táriba' },
+      { keys: ['palmira', 'plaza palmira', 'guasimos'], name: 'Palmira', lat: 7.8450, lng: -72.2280, city: 'Palmira' },
+      { keys: ['rubio', 'junin', 'centro rubio', 'los teques'], name: 'Rubio / Centro', lat: 7.7020, lng: -72.3550, city: 'Rubio' }
+    ];
+  }
+
   async findClosestDestination(text) {
     if (!text || text.length < 2) return;
 
@@ -7801,54 +7855,8 @@ class MarketplaceController {
 
     const norm = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
-    // 1. Comprehensive Database of Landmarks & Sectors across Táchira & Frontera
-    const localPlaces = [
-      // San Antonio del Táchira & Frontera
-      { keys: ['terminal', 'expreso', 'bus', 'terminal san antonio'], name: 'Terminal de Pasajeros de San Antonio', lat: 7.8180, lng: -72.4410 },
-      { keys: ['puente', 'bolivar', 'simon bolivar', 'frontera', 'aduana', 'seniat', 'migracion', 'la linea', 'paso'], name: 'Puente Internacional Simón Bolívar', lat: 7.8285, lng: -72.4542 },
-      { keys: ['plaza bolivar', 'plaza san antonio', 'centro san antonio', 'alcaldia bolivar', 'banco banesco', 'banco mercantil', 'banco venezuela', 'centro'], name: 'Plaza Bolívar / Centro (San Antonio)', lat: 7.8145, lng: -72.4455 },
-      { keys: ['hospital', 'cdi', 'ambulatorio', 'seguro', 'samuel dario', 'clinica', 'medico', 'salud'], name: 'Hospital Dr. Samuel Darío Maldonado', lat: 7.8120, lng: -72.4430 },
-      { keys: ['aeropuerto', 'pista', 'avion', 'juan vicente gomez', 'aeropuerto san antonio'], name: 'Aeropuerto Juan Vicente Gómez', lat: 7.8398, lng: -72.4402 },
-      { keys: ['palotal', 'sector palotal'], name: 'Palotal', lat: 7.8020, lng: -72.4460 },
-      { keys: ['llano', 'el llano', 'barrio el llano'], name: 'Barrio El Llano', lat: 7.8115, lng: -72.4490 },
-      { keys: ['peracal', 'alcabala peracal', 'alcabala'], name: 'Alcabala de Peracal', lat: 7.8290, lng: -72.4210 },
-      { keys: ['libertadores', 'sector libertadores', '5 de julio'], name: 'Sector Libertadores / 5 de Julio', lat: 7.8170, lng: -72.4480 },
-      { keys: ['obrero', 'barrio obrero san antonio', 'miranda'], name: 'Barrio Obrero / Miranda (San Antonio)', lat: 7.8160, lng: -72.4495 },
-      { keys: ['cementerio', 'camposanto'], name: 'Cementerio Municipal', lat: 7.8090, lng: -72.4415 },
-      { keys: ['tienditas', 'atanasio girardot', 'puente nuevo tienditas'], name: 'Puente Atanasio Girardot (Tienditas)', lat: 7.8680, lng: -72.4560 },
-
-      // Pedro María Ureña
-      { keys: ['urena', 'centro urena', 'plaza urena', 'pedro maria urena', 'alcaldia urena'], name: 'Ureña / Centro', lat: 7.9192, lng: -72.4468 },
-      { keys: ['aguas calientes', 'aguascalientes', 'termas'], name: 'Aguas Calientes (Ureña)', lat: 7.9350, lng: -72.4350 },
-      { keys: ['puente santander', 'puente francisco de paula santander'], name: 'Puente Francisco de Paula Santander (Ureña)', lat: 7.9255, lng: -72.4590 },
-      { keys: ['zona industrial urena', 'zona industrial'], name: 'Zona Industrial de Ureña', lat: 7.9250, lng: -72.4420 },
-
-      // San Cristóbal & Área Metropolitana
-      { keys: ['barrio obrero', 'obrero sc', 'plaza los mangos', 'los mangos', 'carrera 21', 'calle 10'], name: 'Plaza Los Mangos / Barrio Obrero (San Cristóbal)', lat: 7.7712, lng: -72.2223 },
-      { keys: ['centro san cristobal', '5ta avenida', 'quinta avenida', 'plaza bolivar sc', 'catedral sc', 'ateneo'], name: 'Centro / 5ta Avenida (San Cristóbal)', lat: 7.7669, lng: -72.2280 },
-      { keys: ['sambil', 'sambil san cristobal', 'centro comercial sambil', 'autopista'], name: 'Sambil San Cristóbal', lat: 7.7950, lng: -72.2030 },
-      { keys: ['terminal san cristobal', 'terminal big low sc', 'terminal sc', 'expresos san cristobal'], name: 'Terminal de Pasajeros de San Cristóbal', lat: 7.7550, lng: -72.2350 },
-      { keys: ['hospital central', 'hospital de san cristobal', 'hospital central sc', 'maternidad'], name: 'Hospital Central de San Cristóbal', lat: 7.7600, lng: -72.2210 },
-      { keys: ['pueblo nuevo', 'polideportivo', 'estadio pueblo nuevo', 'plaza de toros', 'monumental'], name: 'Pueblo Nuevo / Polideportivo (San Cristóbal)', lat: 7.7920, lng: -72.2150 },
-      { keys: ['pirineos', 'pirineos 1', 'pirineos 2', 'las lomas', 'avenida principal pirineos'], name: 'Pirineos / Las Lomas (San Cristóbal)', lat: 7.7850, lng: -72.2280 },
-      { keys: ['la concordia', 'concordia', 'mercado la concordia', 'plaza miranda concordia'], name: 'La Concordia / Mercado (San Cristóbal)', lat: 7.7580, lng: -72.2380 },
-      { keys: ['unet', 'universidad experimental del tachira'], name: 'UNET (San Cristóbal)', lat: 7.7985, lng: -72.2110 },
-      { keys: ['ula', 'universidad de los andes', 'ula tachira', 'paramillo'], name: 'ULA Táchira / Paramillo', lat: 7.7810, lng: -72.2190 },
-      { keys: ['palo gordo', 'paramillo palo gordo'], name: 'Palo Gordo', lat: 7.8150, lng: -72.2050 },
-
-      // Capacho, Táriba, Palmira, Rubio
-      { keys: ['capacho', 'capacho nuevo', 'independencia'], name: 'Capacho Nuevo', lat: 7.7950, lng: -72.3100 },
-      { keys: ['capacho viejo', 'libertad'], name: 'Capacho Viejo', lat: 7.7880, lng: -72.3250 },
-      { keys: ['tariba', 'plaza tariba', 'basilica tariba', 'cardenas'], name: 'Táriba / Basílica', lat: 7.8200, lng: -72.2230 },
-      { keys: ['palmira', 'plaza palmira', 'guasimos'], name: 'Palmira', lat: 7.8450, lng: -72.2280 },
-      { keys: ['rubio', 'junin', 'centro rubio', 'los teques'], name: 'Rubio / Centro', lat: 7.7020, lng: -72.3550 },
-
-      // Cúcuta / Frontera
-      { keys: ['la parada', 'parada frontera', 'villa del rosario'], name: 'La Parada (Frontera Cúcuta)', lat: 7.8310, lng: -72.4600 },
-      { keys: ['terminal cucuta', 'transporte cucuta'], name: 'Terminal de Transportes de Cúcuta', lat: 7.9010, lng: -72.5020 },
-      { keys: ['ventura', 'ventura plaza'], name: 'Ventura Plaza (Cúcuta)', lat: 7.8920, lng: -72.4970 },
-      { keys: ['centro cucuta', 'parque santander cucuta'], name: 'Centro de Cúcuta', lat: 7.8890, lng: -72.5050 }
-    ];
+    // Comprehensive Database of Landmarks & Sectors across Táchira & Frontera
+    const localPlaces = this.getTachiraPlacesDatabase();
 
     const candidates = [];
 
@@ -7914,22 +7922,29 @@ class MarketplaceController {
       console.warn('Nominatim geocode query skipped:', e);
     }
 
-    // Calculate distance from origin to all candidates and pick closest
+    // Score candidates by lexical match relevance (exact match > prefix match > word match)
     if (candidates.length > 0) {
       candidates.forEach(c => {
+        const cNorm = (c.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        let score = 0;
+        if (cNorm === norm) score += 100;
+        else if (cNorm.startsWith(norm)) score += 60;
+        else if (cNorm.includes(norm)) score += 40;
+        if (c.source === 'local') score += 20;
+        c.matchScore = score;
         c.distance = this.calculateGeodesicDistance(originLat, originLng, c.lat, c.lng);
       });
-      // Sort ascending by distance (closest first)
-      candidates.sort((a, b) => a.distance - b.distance);
-      const closest = candidates[0];
+      // Sort descending by match score
+      candidates.sort((a, b) => b.matchScore - a.matchScore);
+      const chosen = candidates[0];
 
-      // Set destination on the map at the closest point
-      this.setRideDestination(closest.lat, closest.lng, text, false);
+      // Set destination on the map at the chosen point
+      this.setRideDestination(chosen.lat, chosen.lng, chosen.name || text, false);
 
       if (statusBadge) {
-        statusBadge.innerHTML = `✅ <strong style="color: #34D399;">Punto más cercano:</strong> ${closest.name} (<span style="color: #FBBF24; font-weight: 800;">${closest.distance.toFixed(1)} km</span>)`;
+        statusBadge.innerHTML = `✅ <strong style="color: #34D399;">Destino fijado:</strong> ${chosen.name} (<span style="color: #FBBF24; font-weight: 800;">${chosen.distance.toFixed(1)} km</span>)`;
       }
-      if (statusIcon) statusIcon.innerText = '📍 Detectado';
+      if (statusIcon) statusIcon.innerText = '📍 Fijado';
     } else {
       // Fallback: place point in nearby area on map
       const fallbackLat = originLat + 0.010;
@@ -8384,9 +8399,14 @@ class MarketplaceController {
     this.updateCaucheraNightBanner();
     this.updateCaucheraPricing();
 
-    // Auto capture GPS if not yet captured
+    // Initialize interactive Leaflet map for Cauchera
+    setTimeout(() => {
+      this.initCaucheraMap();
+    }, 150);
+
+    // Auto capture GPS if not yet captured or invalid
     const locInp = document.getElementById('cauchera-location-input');
-    if (!locInp || !locInp.value || locInp.value.includes('Obteniendo')) {
+    if (!locInp || !locInp.value || locInp.value.includes('Obteniendo') || !this.caucheraGps?.lat) {
       this.captureCaucheraGps();
     }
   }
@@ -8400,6 +8420,8 @@ class MarketplaceController {
       modal.style.visibility = '';
       modal.style.pointerEvents = '';
     }
+    const suggBox = document.getElementById('cauchera-suggestions-box');
+    if (suggBox) suggBox.style.display = 'none';
   }
 
   isNightRateActive() {
@@ -8502,49 +8524,350 @@ class MarketplaceController {
     if (btnText) btnText.innerText = `Solicitar Auxilio por WhatsApp ($${total.toLocaleString('es-CO')} COP)`;
   }
 
+  initCaucheraMap() {
+    const mapContainer = document.getElementById('cauchera-leaflet-map');
+    if (!mapContainer || typeof L === 'undefined') return;
+
+    const defaultLat = (this.caucheraGps && this.caucheraGps.lat) || 7.8145; // San Antonio del Táchira
+    const defaultLng = (this.caucheraGps && this.caucheraGps.lng) || -72.4455;
+
+    if (!this.caucheraLeafMap) {
+      this.caucheraLeafMap = L.map('cauchera-leaflet-map', {
+        center: [defaultLat, defaultLng],
+        zoom: 15,
+        zoomControl: true
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(this.caucheraLeafMap);
+
+      this.caucheraLeafMap.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        this.setCaucheraLocationFromCoords(lat, lng, null, true);
+      });
+    }
+
+    setTimeout(() => {
+      if (this.caucheraLeafMap) {
+        this.caucheraLeafMap.invalidateSize();
+        if (this.caucheraGps && this.caucheraGps.lat && this.caucheraGps.lng) {
+          this.caucheraLeafMap.setView([this.caucheraGps.lat, this.caucheraGps.lng], 16);
+        }
+      }
+    }, 200);
+
+    this.ensureCaucheraMarker(defaultLat, defaultLng);
+  }
+
+  ensureCaucheraMarker(lat, lng) {
+    if (!this.caucheraLeafMap || typeof L === 'undefined') return;
+
+    const iconHtml = `
+      <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+        <div style="position: absolute; width: 36px; height: 36px; background: rgba(239, 68, 68, 0.4); border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+        <div style="position: relative; background: #EF4444; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6); border: 2px solid white;">🛞</div>
+      </div>
+    `;
+
+    const markerIcon = L.divIcon({
+      className: 'custom-cauchera-marker',
+      html: iconHtml,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+
+    if (this.caucheraMarker) {
+      this.caucheraMarker.setLatLng([lat, lng]);
+    } else {
+      this.caucheraMarker = L.marker([lat, lng], { icon: markerIcon, draggable: true }).addTo(this.caucheraLeafMap);
+      this.caucheraMarker.on('dragend', (e) => {
+        const pos = e.target.getLatLng();
+        this.setCaucheraLocationFromCoords(pos.lat, pos.lng, null, true);
+      });
+    }
+  }
+
+  setCaucheraLocationFromCoords(lat, lng, addressName = null, reverseGeocode = false) {
+    this.caucheraGps = this.caucheraGps || {};
+    this.caucheraGps.lat = lat;
+    this.caucheraGps.lng = lng;
+
+    const coordsText = document.getElementById('cauchera-gps-coords-text');
+    if (coordsText) {
+      coordsText.innerHTML = `✅ Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
+    }
+
+    this.ensureCaucheraMarker(lat, lng);
+
+    if (this.caucheraLeafMap) {
+      this.caucheraLeafMap.flyTo([lat, lng], 16, { duration: 0.8 });
+    }
+
+    if (addressName) {
+      const locInp = document.getElementById('cauchera-location-input');
+      if (locInp) locInp.value = addressName;
+      this.caucheraGps.address = addressName;
+    } else if (reverseGeocode) {
+      this.reverseGeocodeCauchera(lat, lng);
+    }
+  }
+
   captureCaucheraGps() {
     const locInp = document.getElementById('cauchera-location-input');
     const coordsText = document.getElementById('cauchera-gps-coords-text');
+    const gpsIcon = document.getElementById('cauchera-gps-icon');
 
-    if (locInp) locInp.placeholder = '📡 Localizando satélites GPS...';
-    if (coordsText) coordsText.innerText = 'Detectando ubicación satelital...';
+    if (gpsIcon) gpsIcon.innerText = '⏳';
+    if (coordsText) coordsText.innerHTML = '<span style="color:#FBBF24;">📡 Buscando señal satelital GPS...</span>';
+
+    const applyCoords = (lat, lng, acc = 0) => {
+      if (gpsIcon) gpsIcon.innerText = '✅';
+      this.caucheraGps = { lat, lng };
+      localStorage.setItem('user_gps_lat', String(lat));
+      localStorage.setItem('user_gps_lng', String(lng));
+
+      const accInfo = acc > 0 ? ` (±${Math.round(acc)}m)` : '';
+      if (coordsText) {
+        coordsText.innerHTML = `✅ Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)} <span style="color:#94A3B8; font-size:10px;">${accInfo}</span>`;
+      }
+
+      this.setCaucheraLocationFromCoords(lat, lng, null, true);
+    };
+
+    const handleFail = () => {
+      const cachedLat = parseFloat(localStorage.getItem('user_gps_lat'));
+      const cachedLng = parseFloat(localStorage.getItem('user_gps_lng'));
+      if (!isNaN(cachedLat) && !isNaN(cachedLng)) {
+        if (gpsIcon) gpsIcon.innerText = '📍';
+        if (coordsText) {
+          coordsText.innerHTML = `📍 Ubicación anterior (${cachedLat.toFixed(4)}, ${cachedLng.toFixed(4)}). Puedes ajustar en el mapa.`;
+        }
+        this.setCaucheraLocationFromCoords(cachedLat, cachedLng, null, false);
+      } else {
+        if (gpsIcon) gpsIcon.innerText = '📍';
+        if (coordsText) {
+          coordsText.innerHTML = `📍 <span style="color:#FCA5A5;">GPS no detectado. Toca el mapa o escribe tu lugar arriba.</span>`;
+        }
+        this.setCaucheraLocationFromCoords(7.8145, -72.4455, 'San Antonio del Táchira', false);
+      }
+    };
 
     if (!('geolocation' in navigator)) {
-      if (locInp) locInp.value = 'San Antonio del Táchira (Ubicación manual)';
-      if (coordsText) coordsText.innerText = 'GPS no disponible en navegador';
+      handleFail();
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        this.caucheraGps = { lat, lng };
-
-        if (coordsText) {
-          coordsText.innerText = `${lat.toFixed(5)}, ${lng.toFixed(5)} (Precisión: ±${Math.round(pos.coords.accuracy)}m)`;
-        }
-
-        // Reverse geocoding via OpenStreetMap Nominatim
-        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
-          .then(r => r.json())
-          .then(data => {
-            const display = data.display_name ? data.display_name.split(',').slice(0, 3).join(',') : `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
-            if (locInp) locInp.value = display;
-            this.caucheraGps.address = display;
-          })
-          .catch(() => {
-            if (locInp) locInp.value = `Ubicación GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-            this.caucheraGps.address = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-          });
+        applyCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
       },
       (err) => {
-        console.warn('Cauchera GPS detection error:', err);
-        if (locInp) locInp.placeholder = 'Escribe tu dirección o ubicación...';
-        if (coordsText) coordsText.innerText = 'Permiso de ubicación denegado. Escribe tu referencia.';
+        console.warn('High accuracy GPS error/timeout, trying network geolocation:', err);
+        navigator.geolocation.getCurrentPosition(
+          (pos2) => {
+            applyCoords(pos2.coords.latitude, pos2.coords.longitude, pos2.coords.accuracy);
+          },
+          (err2) => {
+            console.warn('Network geolocation failed too:', err2);
+            handleFail();
+          },
+          { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+        );
       },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 }
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 10000 }
     );
+  }
+
+  reverseGeocodeCauchera(lat, lng) {
+    const locInp = document.getElementById('cauchera-location-input');
+    const db = this.getTachiraPlacesDatabase();
+    let bestLocal = null;
+    let minD = 999;
+    db.forEach(p => {
+      const d = this.calculateGeodesicDistance(lat, lng, p.lat, p.lng);
+      if (d < 0.35 && d < minD) {
+        minD = d;
+        bestLocal = p;
+      }
+    });
+
+    if (bestLocal) {
+      const addr = `${bestLocal.name} (cerca)`;
+      if (locInp) locInp.value = addr;
+      if (this.caucheraGps) this.caucheraGps.address = addr;
+      return;
+    }
+
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.display_name) {
+          const parts = data.display_name.split(',').map(s => s.trim());
+          const display = parts.slice(0, 3).join(', ');
+          if (locInp) locInp.value = display;
+          if (this.caucheraGps) this.caucheraGps.address = display;
+        }
+      })
+      .catch(() => {
+        const fallback = `Ubicación en mapa (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+        if (locInp && (!locInp.value || locInp.value.includes('Obteniendo'))) {
+          locInp.value = fallback;
+        }
+        if (this.caucheraGps) this.caucheraGps.address = fallback;
+      });
+  }
+
+  onCaucheraLocationInput(val) {
+    const suggBox = document.getElementById('cauchera-suggestions-box');
+    if (!suggBox) return;
+
+    if (!val || val.trim().length < 2) {
+      suggBox.style.display = 'none';
+      suggBox.innerHTML = '';
+      return;
+    }
+
+    const query = val.trim();
+    const norm = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    if (this._caucheraSearchTimer) clearTimeout(this._caucheraSearchTimer);
+
+    this._caucheraSearchTimer = setTimeout(async () => {
+      const dbPlaces = this.getTachiraPlacesDatabase();
+      const candidates = [];
+
+      // 1. Check local places database with relevance scoring (NOT closest distance!)
+      const queryWords = norm.split(/\s+/).filter(w => w.length > 2);
+      dbPlaces.forEach(p => {
+        let score = 0;
+        const pNorm = p.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (pNorm === norm) score += 100;
+        else if (pNorm.startsWith(norm)) score += 60;
+        else if (pNorm.includes(norm)) score += 40;
+        else if (p.keys.some(k => k.includes(norm) || norm.includes(k))) score += 50;
+        else if (queryWords.length > 0 && queryWords.some(w => p.keys.some(k => k.includes(w)))) score += 30;
+
+        if (score > 0) {
+          candidates.push({
+            name: p.name,
+            sub: p.city || 'Táchira',
+            lat: p.lat,
+            lng: p.lng,
+            score: score + 20,
+            icon: '📍'
+          });
+        }
+      });
+
+      // 2. Check Street and Carrera patterns (e.g. Calle 5, Carrera 8)
+      const calleMatch = norm.match(/calle\s*(\d+)/i);
+      const carreraMatch = norm.match(/carrera\s*(\d+)/i);
+      if (calleMatch || carreraMatch) {
+        const cNum = calleMatch ? parseInt(calleMatch[1]) : 4;
+        const kNum = carreraMatch ? parseInt(carreraMatch[1]) : 5;
+        const baseLat = 7.8145 - ((cNum - 4) * 0.0009);
+        const baseLng = -72.4455 + ((kNum - 5) * 0.0009);
+        candidates.push({
+          name: `Calle ${cNum} con Carrera ${kNum}`,
+          sub: 'San Antonio del Táchira (Centro)',
+          lat: baseLat,
+          lng: baseLng,
+          score: 85,
+          icon: '🛣️'
+        });
+      }
+
+      // 3. Query OpenStreetMap Nominatim for exact locations
+      if (navigator.onLine && query.length >= 3) {
+        try {
+          const regionQuery = `${query}, Táchira, Venezuela`;
+          const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(regionQuery)}&limit=4`;
+          const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              data.forEach(item => {
+                const rLat = parseFloat(item.lat);
+                const rLng = parseFloat(item.lon);
+                if (!isNaN(rLat) && !isNaN(rLng)) {
+                  const parts = (item.display_name || '').split(',');
+                  const mainTitle = parts[0].trim();
+                  const subTitle = parts.slice(1, 3).map(s => s.trim()).join(', ');
+                  const exists = candidates.some(c => Math.abs(c.lat - rLat) < 0.002 && Math.abs(c.lng - rLng) < 0.002);
+                  if (!exists) {
+                    candidates.push({
+                      name: mainTitle,
+                      sub: subTitle || 'Táchira, Venezuela',
+                      lat: rLat,
+                      lng: rLng,
+                      score: 40,
+                      icon: '🔍'
+                    });
+                  }
+                }
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('Nominatim search error:', e);
+        }
+      }
+
+      // Sort by relevance score descending (HIGHEST MATCH FIRST - NOT by distance!)
+      candidates.sort((a, b) => b.score - a.score);
+
+      if (candidates.length === 0) {
+        suggBox.innerHTML = `
+          <div style="padding: 12px; color: #94A3B8; font-size: 12px; text-align: center;">
+            No se encontraron sugerencias. Puedes marcar directamente tu punto en el mapa abajo 🗺️
+          </div>
+        `;
+        suggBox.style.display = 'block';
+        return;
+      }
+
+      const topCandidates = candidates.slice(0, 6);
+      this._currentCaucheraSuggestions = topCandidates;
+
+      suggBox.innerHTML = topCandidates.map((c, i) => `
+        <div class="cauchera-sugg-item" 
+          onclick="MarketplaceApp.selectCaucheraSuggestion(${c.lat}, ${c.lng}, '${c.name.replace(/'/g, "\\'")}')"
+          style="padding: 10px 14px; cursor: pointer; border-bottom: ${i < topCandidates.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none'}; display: flex; align-items: center; justify-content: space-between; gap: 10px; transition: background 0.15s ease;"
+          onmouseenter="this.style.background='rgba(239, 68, 68, 0.2)';"
+          onmouseleave="this.style.background='transparent';">
+          <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+            <span style="font-size: 18px; flex-shrink: 0;">${c.icon || '📍'}</span>
+            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <div style="font-weight: 800; font-size: 12.5px; color: #FFF; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${c.name}</div>
+              <div style="font-size: 10.5px; color: #94A3B8; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${c.sub}</div>
+            </div>
+          </div>
+          <span style="font-size: 10px; font-weight: 800; background: rgba(239, 68, 68, 0.2); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.4); padding: 2px 7px; border-radius: 6px; flex-shrink: 0;">Llevar 🎯</span>
+        </div>
+      `).join('');
+
+      suggBox.style.display = 'block';
+    }, 220);
+  }
+
+  selectCaucheraSuggestion(lat, lng, name) {
+    const locInp = document.getElementById('cauchera-location-input');
+    const suggBox = document.getElementById('cauchera-suggestions-box');
+    if (locInp) locInp.value = name;
+    if (suggBox) {
+      suggBox.style.display = 'none';
+      suggBox.innerHTML = '';
+    }
+
+    this.setCaucheraLocationFromCoords(lat, lng, name, false);
+  }
+
+  selectFirstCaucheraSuggestion() {
+    if (this._currentCaucheraSuggestions && this._currentCaucheraSuggestions.length > 0) {
+      const top = this._currentCaucheraSuggestions[0];
+      this.selectCaucheraSuggestion(top.lat, top.lng, top.name);
+    }
   }
 
   submitCaucheraRequest() {
@@ -8601,9 +8924,9 @@ class MarketplaceController {
     const total = this.caucheraTotal || 10000;
     const totalFormatted = `$${Math.round(total).toLocaleString('es-CO')} COP`;
 
-    const gpsLat = this.caucheraGps?.lat;
-    const gpsLng = this.caucheraGps?.lng;
-    const mapLink = (gpsLat && gpsLng) ? `https://www.google.com/maps?q=${gpsLat},${gpsLng}` : '';
+    const gpsLat = this.caucheraGps?.lat || (this.caucheraLeafMap ? this.caucheraLeafMap.getCenter().lat : 7.8145);
+    const gpsLng = this.caucheraGps?.lng || (this.caucheraLeafMap ? this.caucheraLeafMap.getCenter().lng : -72.4455);
+    const mapLink = `https://www.google.com/maps?q=${gpsLat},${gpsLng}`;
 
     // Construct WhatsApp message
     let waMessage = `🛞 *¡SOLICITUD DE CAUCHERA MÓVIL 24H - PEDIGOCHOS!* 🛞\n`;
