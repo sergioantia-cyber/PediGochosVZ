@@ -3393,6 +3393,468 @@ app.get('/api/print3d-services/stats', (req, res) => {
   });
 });
 
+
+// ==========================================
+// ✨ SHELLIART RESINA - LLAVEROS & ARTE EN RESINA
+// ==========================================
+const RESIN_QUOTES_FILE = path.join(__dirname, 'resin_quotes.json');
+const RESIN_CATALOG_FILE = path.join(__dirname, 'resin_catalog.json');
+
+function readResinQuotes() {
+  try {
+    if (fs.existsSync(RESIN_QUOTES_FILE)) {
+      const data = JSON.parse(fs.readFileSync(RESIN_QUOTES_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch(e) {
+    console.warn('Error reading resin_quotes.json:', e.message);
+  }
+  return [];
+}
+
+function writeResinQuotes(data) {
+  try {
+    fs.writeFileSync(RESIN_QUOTES_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing resin_quotes.json:', e);
+  }
+}
+
+// Seed initial realistic Resin quotes if empty
+if (!fs.existsSync(RESIN_QUOTES_FILE) || readResinQuotes().length === 0) {
+  const initialResinQuotes = [
+    {
+      id: 'RES-8041',
+      chatId: 'chat-res-8041',
+      createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+      clientName: 'Valentina Roa',
+      clientPhone: '0414-7891234',
+      productType: 'keychain_letter',
+      productTitle: 'Llavero de Inicial "S" - Rosa Pastel con Glitter',
+      letter: 'S',
+      resinStyle: 'bicolor',
+      styleName: 'Bicolor con Glitter y Hoja de Oro',
+      baseColor: '#F472B6',
+      baseColorName: 'Rosa Pastel',
+      secondaryColor: 'transparente',
+      inclusions: 'Hojas de Oro 24K + Glitter Grueso',
+      tasselColor: 'Rosa Pastel',
+      tasselHex: '#F472B6',
+      hardwareColor: 'Dorado Clásico ✨',
+      customName: 'Sofía',
+      extraCharm: 'Mini Corazón con Glitter',
+      quantity: 1,
+      basePriceUsd: 4.5,
+      extrasPriceUsd: 0.8,
+      estimatedPriceUsd: 5.3,
+      agreedPriceUsd: 5.3,
+      status: 'En Curado UV',
+      notes: 'Curado en molde de 24 horas y pulido de bordes',
+      messages: [
+        {
+          id: 'msg-1',
+          senderRole: 'system',
+          senderName: 'ShelliArt Resina',
+          type: 'quotation_card',
+          timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
+          text: 'Ficha de Llavero Personalizado generada para letra "S" (Rosa Pastel con Pan de Oro)'
+        },
+        {
+          id: 'msg-2',
+          senderRole: 'workshop',
+          senderName: 'ShelliArt Resina',
+          type: 'text',
+          timestamp: new Date(Date.now() - 3600000 * 5.8).toISOString(),
+          text: '¡Hola Valentina! Tu pedido de la letra "S" con borla rosa y mini corazón quedó anotado. Mezcla epóxica vaciada sin burbujas.'
+        },
+        {
+          id: 'msg-3',
+          senderRole: 'workshop',
+          senderName: 'ShelliArt Resina',
+          type: 'action_notice',
+          timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+          text: '⏳ Llavero en lámpara de curado UV. Listo mañana a primera hora con acabado cristal espejo.'
+        }
+      ]
+    },
+    {
+      id: 'RES-8052',
+      chatId: 'chat-res-8052',
+      createdAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+      clientName: 'Andrés Mora',
+      clientPhone: '0424-6543210',
+      productType: 'keychain_letter',
+      productTitle: 'Llavero de Inicial "A" - Azul Océano & Pan de Oro',
+      letter: 'A',
+      resinStyle: 'gold_flakes',
+      styleName: 'Hoja de Oro 24K Encapsulada',
+      baseColor: '#1E40AF',
+      baseColorName: 'Azul Rey Profundo',
+      secondaryColor: 'transparente',
+      inclusions: 'Hojas de Oro Flakes',
+      tasselColor: 'Celeste Suave',
+      tasselHex: '#38BDF8',
+      hardwareColor: 'Dorado Clásico ✨',
+      customName: 'Andrés',
+      extraCharm: 'Ninguno',
+      quantity: 1,
+      basePriceUsd: 4.5,
+      extrasPriceUsd: 0.0,
+      estimatedPriceUsd: 4.5,
+      agreedPriceUsd: null,
+      status: 'Solicitado',
+      notes: 'Para regalo de cumpleaños',
+      messages: [
+        {
+          id: 'msg-1',
+          senderRole: 'system',
+          senderName: 'ShelliArt Resina',
+          type: 'quotation_card',
+          timestamp: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+          text: 'Ficha de Llavero Personalizado generada para letra "A" (Azul Rey & Oro)'
+        }
+      ]
+    }
+  ];
+  writeResinQuotes(initialResinQuotes);
+}
+
+// Resin Catalog Persistence
+function readResinCatalog() {
+  try {
+    if (fs.existsSync(RESIN_CATALOG_FILE)) {
+      const data = JSON.parse(fs.readFileSync(RESIN_CATALOG_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch(e) {}
+  return [
+    {
+      id: 'resin-1',
+      title: 'Llavero de Letra Personalizada (A-Z) con Borla & Herraje',
+      category: 'llaveros',
+      basePriceUsd: 4.5,
+      estDays: '24-48 horas',
+      vehicleType: 'Resina Epóxica UV',
+      desc: 'Letra volumétrica con acabado brillo espejo. Personaliza tu inicial con pigmentos perlados, hoja de oro 24K, glitter o flores secas, más borla de gamuza a juego.',
+      image: '/images/servicios.jpg',
+      tags: ['100% Hecho a Mano', 'Hoja de Oro 24K', 'Borla de Gamuza', 'Anti-amarilleo'],
+      active: true
+    },
+    {
+      id: 'resin-2',
+      title: 'Llavero de Corazón / Huesito para Mascotas con Nombre',
+      category: 'llaveros',
+      basePriceUsd: 4.0,
+      estDays: '24-48 horas',
+      vehicleType: 'Resina Epóxica UV',
+      desc: 'Dije personalizado para collar de perrito o gatito con nombre y número de teléfono encapsulados en resina de alta resistencia.',
+      image: '/images/burger_royale.jpg',
+      tags: ['Identificador Mascota', 'Glitter Encapsulado', 'Ultra Liviano'],
+      active: true
+    },
+    {
+      id: 'resin-3',
+      title: 'Set Dúo Llaveros de Letras para Parejas / Mejores Amigas',
+      category: 'sets',
+      basePriceUsd: 8.0,
+      estDays: '24-48 horas',
+      vehicleType: 'Resina Epóxica UV',
+      desc: 'Dos llaveros de letras a juego combinados en tonos complementarios, con borlas y dijes adicionales de regalo.',
+      image: '/images/ferreteria.jpg',
+      tags: ['Ideal Regalo', 'Dúo Pareja', 'Empaque de Regalo'],
+      active: true
+    },
+    {
+      id: 'resin-4',
+      title: 'Marcapáginas / Separador de Libros con Flores Secas',
+      category: 'accesorios',
+      basePriceUsd: 5.0,
+      estDays: '2-3 días',
+      vehicleType: 'Resina Cristal',
+      desc: 'Separador de páginas delgado y cristalino con flores prensadas de colores, detalles en pan de oro y borla larga de seda.',
+      image: '/images/servicios.jpg',
+      tags: ['Flores Prensadas', 'Lectores', 'Pan de Oro'],
+      active: true
+    },
+    {
+      id: 'resin-5',
+      title: 'Portavasos Geoda de Resina con Borde Dorado',
+      category: 'hogar',
+      basePriceUsd: 6.5,
+      estDays: '2-3 días',
+      vehicleType: 'Resina Térmica',
+      desc: 'Portavasos artesanal estilo geoda natural con efecto cuarzo, polvo de mica perlada y borde pintado a mano en oro líquido.',
+      image: '/images/burger_royale.jpg',
+      tags: ['Resiste Calor', 'Efecto Geoda', 'Borde Dorado'],
+      active: true
+    }
+  ];
+}
+
+function writeResinCatalog(data) {
+  try {
+    fs.writeFileSync(RESIN_CATALOG_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing resin_catalog.json:', e);
+  }
+}
+
+if (!fs.existsSync(RESIN_CATALOG_FILE)) {
+  writeResinCatalog(readResinCatalog());
+}
+
+// GET resin catalog
+app.get('/api/resin-services/catalog', (req, res) => {
+  res.json(readResinCatalog());
+});
+
+// PUT / UPDATE resin catalog
+app.put('/api/resin-services/catalog', (req, res) => {
+  const items = req.body;
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'Formato inválido' });
+  writeResinCatalog(items);
+
+  // Broadcast catalog update via WebSocket
+  const payload = JSON.stringify({ type: 'RESIN_CATALOG_UPDATE', items });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, count: items.length });
+});
+
+// GET all resin quotes
+app.get('/api/resin-services/quotes', (req, res) => {
+  const quotes = readResinQuotes();
+  quotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  res.json(quotes);
+});
+
+// GET single resin quote
+app.get('/api/resin-services/quotes/:id', (req, res) => {
+  const quotes = readResinQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Pedido de resina no encontrado' });
+  res.json(quote);
+});
+
+// POST new resin quote / order
+app.post('/api/resin-services/quotes', (req, res) => {
+  const body = req.body || {};
+  if (!body.letter || !body.clientName) {
+    return res.status(400).json({ error: 'Datos incompletos de letra o cliente' });
+  }
+
+  const quotes = readResinQuotes();
+  const newId = 'RES-' + Math.floor(8000 + Math.random() * 2000);
+  const chatId = 'chat-' + newId.toLowerCase();
+
+  const newQuote = {
+    id: newId,
+    chatId: chatId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    clientName: body.clientName || 'Cliente',
+    clientPhone: body.clientPhone || '',
+    productType: body.productType || 'keychain_letter',
+    productTitle: body.productTitle || `Llavero de Inicial "${body.letter}"`,
+    letter: (body.letter || 'A').toUpperCase(),
+    resinStyle: body.resinStyle || 'bicolor',
+    styleName: body.styleName || 'Bicolor con Glitter y Hoja de Oro',
+    baseColor: body.baseColor || '#F472B6',
+    baseColorName: body.baseColorName || 'Rosa Pastel',
+    secondaryColor: body.secondaryColor || 'transparente',
+    inclusions: body.inclusions || 'Hojas de Oro 24K + Glitter',
+    tasselColor: body.tasselColor || 'Rosa Pastel',
+    tasselHex: body.tasselHex || '#F472B6',
+    hardwareColor: body.hardwareColor || 'Dorado Clásico ✨',
+    customName: body.customName || '',
+    extraCharm: body.extraCharm || 'Ninguno',
+    quantity: parseInt(body.quantity) || 1,
+    basePriceUsd: parseFloat(body.basePriceUsd) || 4.5,
+    extrasPriceUsd: parseFloat(body.extrasPriceUsd) || 0.0,
+    estimatedPriceUsd: parseFloat(body.estimatedPriceUsd) || 4.5,
+    agreedPriceUsd: null,
+    status: 'Solicitado',
+    notes: body.notes || '',
+    workshopName: 'ShelliArt Resina Cúcuta-Ureña',
+    messages: [
+      {
+        id: 'msg-' + Date.now(),
+        senderRole: 'system',
+        senderName: 'ShelliArt Resina',
+        type: 'quotation_card',
+        timestamp: new Date().toISOString(),
+        text: `Ficha Técnica de Llavero generada para inicial "${body.letter}" (${body.baseColorName || 'Color'})`,
+        data: {
+          letter: body.letter,
+          styleName: body.styleName,
+          baseColorName: body.baseColorName,
+          inclusions: body.inclusions,
+          tasselColor: body.tasselColor,
+          hardwareColor: body.hardwareColor,
+          customName: body.customName,
+          extraCharm: body.extraCharm,
+          estimatedPriceUsd: body.estimatedPriceUsd
+        }
+      }
+    ]
+  };
+
+  quotes.unshift(newQuote);
+  writeResinQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'RESIN_QUOTE_NEW',
+    quote: newQuote
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, quote: newQuote });
+});
+
+// POST message in resin quote chat
+app.post('/api/resin-services/quotes/:id/messages', (req, res) => {
+  const { text, senderRole, senderName, photo } = req.body;
+  if (!text && !photo) {
+    return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
+  }
+
+  const quotes = readResinQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Pedido de resina no encontrado' });
+
+  const role = senderRole || 'client';
+  const name = senderName || (role === 'workshop' ? 'ShelliArt Resina' : role === 'admin' ? '👑 Dueño / Central' : 'Cliente');
+
+  if ((role === 'workshop' || role === 'admin') && quote.status === 'Solicitado') {
+    quote.status = 'En Conversación';
+  }
+
+  const newMsg = {
+    id: 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    senderRole: role,
+    senderName: name,
+    type: photo ? 'photo' : 'text',
+    text: text ? String(text).trim() : '',
+    photo: photo || null,
+    timestamp: new Date().toISOString()
+  };
+
+  quote.messages.push(newMsg);
+  quote.updatedAt = new Date().toISOString();
+  writeResinQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'RESIN_QUOTE_MESSAGE',
+    quoteId: quote.id,
+    chatId: quote.chatId,
+    message: newMsg,
+    status: quote.status
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, message: newMsg, status: quote.status });
+});
+
+// PUT action on resin quote
+app.put('/api/resin-services/quotes/:id/action', (req, res) => {
+  const { action, agreedPriceUsd, status, notes } = req.body;
+  const quotes = readResinQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Pedido de resina no encontrado' });
+
+  let actionText = '';
+  if (action === 'set_agreed_price' && agreedPriceUsd) {
+    quote.agreedPriceUsd = parseFloat(agreedPriceUsd);
+    quote.status = 'Precio Acordado';
+    actionText = `💰 Precio oficial fijado: $${quote.agreedPriceUsd} USD.`;
+  } else if (action === 'start_casting') {
+    quote.status = 'En Elaboración';
+    actionText = `✨ ¡Moldes preparados y mezcla de resina epóxica vaciada! ${notes || ''}`;
+  } else if (action === 'uv_curing') {
+    quote.status = 'En Curado UV';
+    actionText = `⏳ Pieza en tiempo de curado UV (24 horas) para lograr máxima transparencia y dureza.`;
+  } else if (action === 'ready_for_delivery') {
+    quote.status = 'Listo para Entrega';
+    actionText = `🎀 ¡Llavero desmoldado, pulido y listo para entrega! Con borla y argolla instaladas.`;
+  } else if (action === 'delivered') {
+    quote.status = 'Entregado';
+    actionText = `✅ Llavero entregado con éxito al cliente. ¡Gracias por apoyar a ShelliArt!`;
+  } else if (status) {
+    quote.status = status;
+    actionText = `ℹ️ Estado actualizado a: ${status}.`;
+  }
+
+  if (actionText) {
+    const sysMsg = {
+      id: 'msg-' + Date.now(),
+      senderRole: 'system',
+      senderName: 'ShelliArt Resina',
+      type: 'action_notice',
+      text: actionText,
+      timestamp: new Date().toISOString()
+    };
+    quote.messages.push(sysMsg);
+  }
+
+  quote.updatedAt = new Date().toISOString();
+  writeResinQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'RESIN_QUOTE_UPDATE',
+    quote: quote
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, quote });
+});
+
+// GET stats for resin services
+app.get('/api/resin-services/stats', (req, res) => {
+  const quotes = readResinQuotes();
+  const total = quotes.length;
+  const solicitados = quotes.filter(q => q.status === 'Solicitado').length;
+  const enConversacion = quotes.filter(q => q.status === 'En Conversación').length;
+  const enElaboracion = quotes.filter(q => q.status === 'En Elaboración' || q.status === 'En Curado UV').length;
+  const listos = quotes.filter(q => q.status === 'Listo para Entrega').length;
+  const entregados = quotes.filter(q => q.status === 'Entregado').length;
+
+  const totalConcretados = enElaboracion + listos + entregados;
+  const conversionRate = total > 0 ? Math.round((totalConcretados / total) * 100) : 0;
+
+  let totalMoneyUsd = 0;
+  quotes.forEach(q => {
+    const price = q.agreedPriceUsd || q.estimatedPriceUsd || 0;
+    if (q.status === 'En Elaboración' || q.status === 'En Curado UV' || q.status === 'Listo para Entrega' || q.status === 'Entregado') {
+      totalMoneyUsd += parseFloat(price) || 0;
+    }
+  });
+
+  res.json({
+    total,
+    solicitados,
+    enConversacion,
+    enElaboracion,
+    listos,
+    entregados,
+    totalConcretados,
+    conversionRate,
+    totalMoneyUsd
+  });
+});
+
 // Fallback for SPA routing (if any) or simple index.html
 app.get('*', (req, res, next) => {
   // If request is for api, skip to next route handler (standard Express)

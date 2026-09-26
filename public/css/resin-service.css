@@ -1,0 +1,654 @@
+/* ==========================================================================
+   Llaveros y Arte en Resina ("ShelliArt Resina") - Stylesheet
+   PediGochos Specialized Services Module
+   ========================================================================== */
+
+:root {
+  --resin-pink: #F472B6;
+  --resin-gold: #F59E0B;
+  --resin-purple: #A855F7;
+  --resin-bg-dark: #0F131F;
+  --resin-card-bg: #1A2234;
+  --resin-card-border: rgba(244, 114, 182, 0.25);
+  --resin-glass: rgba(255, 255, 255, 0.08);
+}
+
+/* Modal Overlay */
+.resin-service-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999990;
+  background: rgba(8, 11, 20, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  color: #FFF;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Header */
+.resin-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15, 19, 31, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1.5px solid var(--resin-card-border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.resin-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.resin-brand-icon {
+  font-size: 26px;
+}
+
+.resin-header-brand h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  color: #FFF;
+}
+
+.resin-header-brand h2 span {
+  background: linear-gradient(135deg, #F472B6 0%, #F59E0B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.resin-header-brand p {
+  margin: 1px 0 0 0;
+  font-size: 11px;
+  color: #FDA4AF;
+  font-weight: 700;
+}
+
+.resin-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFF;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Container */
+.resin-container {
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 14px 90px 14px;
+}
+
+/* Hero Banner */
+.resin-hero-card {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.15) 0%, rgba(245, 158, 11, 0.12) 50%, rgba(30, 41, 59, 0.5) 100%);
+  border: 1.5px solid rgba(244, 114, 182, 0.35);
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.resin-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(244, 114, 182, 0.2);
+  border: 1px solid rgba(244, 114, 182, 0.4);
+  color: #FBCFE8;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.resin-hero-card h3 {
+  margin: 0 0 6px 0;
+  font-size: 17px;
+  font-weight: 900;
+  color: #FFF;
+}
+
+.resin-hero-card p {
+  margin: 0;
+  font-size: 12px;
+  color: #CBD5E1;
+  line-height: 1.4;
+}
+
+/* Interactive Keychain Preview Stage */
+.resin-preview-stage {
+  background: radial-gradient(circle at center, #262E45 0%, #111624 85%);
+  border: 2px solid rgba(244, 114, 182, 0.3);
+  border-radius: 24px;
+  padding: 24px 16px;
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(244, 114, 182, 0.1);
+  overflow: hidden;
+}
+
+.resin-live-tag {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34D399;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+/* Keychain Assembly Visuals */
+.keychain-visual-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin: 14px auto 8px auto;
+  max-width: 240px;
+}
+
+/* Metallic Ring & Chain */
+.keychain-ring-top {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4.5px solid #EAB308; /* or silver */
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.5);
+  margin-bottom: 2px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.keychain-ring-top.silver-metal {
+  border-color: #CBD5E1;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.8), 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.keychain-chain-link {
+  width: 4px;
+  height: 18px;
+  background: repeating-linear-gradient(to bottom, #EAB308, #EAB308 3px, #B45309 4px, #EAB308 5px);
+  border-radius: 2px;
+  margin-bottom: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  transition: all 0.3s ease;
+}
+
+.keychain-chain-link.silver-metal {
+  background: repeating-linear-gradient(to bottom, #E2E8F0, #E2E8F0 3px, #64748B 4px, #E2E8F0 5px);
+}
+
+/* Big Resin Letter */
+.resin-letter-glyph-box {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 28px;
+  position: relative;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.4), inset 0 -4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.85) 0%, rgba(245, 158, 11, 0.75) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Glass & Specular Glare */
+.resin-letter-glyph-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-top-left-radius: 26px;
+  border-top-right-radius: 26px;
+  pointer-events: none;
+}
+
+/* Floating Gold Flakes / Glitter overlay */
+.resin-letter-glyph-box .flakes-layer {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(253, 224, 71, 0.8) 2px, transparent 4px),
+    radial-gradient(circle at 70% 25%, rgba(253, 224, 71, 0.9) 3px, transparent 5px),
+    radial-gradient(circle at 40% 75%, rgba(253, 224, 71, 0.85) 4px, transparent 6px),
+    radial-gradient(circle at 80% 80%, rgba(253, 224, 71, 0.7) 2px, transparent 4px),
+    radial-gradient(circle at 25% 65%, rgba(255, 255, 255, 0.9) 2px, transparent 3px),
+    radial-gradient(circle at 60% 50%, rgba(253, 224, 71, 0.85) 5px, transparent 7px);
+  pointer-events: none;
+  animation: shimmerFlakes 3s ease-in-out infinite alternate;
+}
+
+@keyframes shimmerFlakes {
+  0% { opacity: 0.75; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.02); }
+}
+
+.resin-big-char {
+  font-size: 82px;
+  font-weight: 900;
+  font-family: "Arial Black", Impact, -apple-system, sans-serif;
+  color: #FFFFFF;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 255, 255, 0.6);
+  position: relative;
+  z-index: 2;
+  user-select: none;
+  line-height: 1;
+}
+
+/* Name Overlay on Resin Letter */
+.resin-custom-name-tag {
+  position: absolute;
+  bottom: 14px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  z-index: 5;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+/* Hanging Tassel & Charms */
+.keychain-accessories-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.keychain-tassel {
+  width: 22px;
+  height: 48px;
+  border-radius: 4px 4px 14px 14px;
+  background: var(--resin-pink);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.5), inset 0 3px 5px rgba(255,255,255,0.4);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.keychain-tassel::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 2px;
+  right: 2px;
+  height: 6px;
+  background: #EAB308;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.keychain-charm-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 14px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #FFF;
+}
+
+/* Customizer Sections */
+.resin-section-card {
+  background: var(--resin-card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.resin-section-title {
+  margin: 0 0 12px 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.resin-section-title span.badge-opt {
+  font-size: 11px;
+  color: #F472B6;
+  font-weight: 700;
+}
+
+/* Alphabet Buttons Grid */
+.alphabet-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 480px) {
+  .alphabet-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.btn-letter-pick {
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #FFF;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-letter-pick:active,
+.btn-letter-pick.active {
+  background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%);
+  border-color: #FBCFE8;
+  color: #FFF;
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(244, 114, 182, 0.4);
+}
+
+/* Color & Swatch Selectors */
+.swatches-scroll-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+
+.swatches-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+.color-swatch-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  color: #E2E8F0;
+  transition: all 0.15s ease;
+}
+
+.color-swatch-pill.active {
+  border-color: #F472B6;
+  background: rgba(244, 114, 182, 0.15);
+  color: #FFF;
+}
+
+.swatch-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+}
+
+/* Style Cards Grid */
+.resin-styles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.resin-style-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.resin-style-card.active {
+  border-color: #F472B6;
+  background: rgba(244, 114, 182, 0.12);
+}
+
+.resin-style-card strong {
+  display: block;
+  font-size: 12.5px;
+  color: #FFF;
+  margin-bottom: 2px;
+}
+
+.resin-style-card span {
+  font-size: 11px;
+  color: #94A3B8;
+  display: block;
+  line-height: 1.3;
+}
+
+/* Input Fields */
+.resin-input-text {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #FFF;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.resin-input-text:focus {
+  border-color: #F472B6;
+}
+
+/* Sticky Bottom Price & CTA Bar */
+.resin-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(15, 19, 31, 0.95);
+  backdrop-filter: blur(14px);
+  border-top: 1.5px solid rgba(244, 114, 182, 0.3);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resin-bottom-pricing {
+  flex-shrink: 0;
+}
+
+.resin-price-total {
+  font-size: 18px;
+  font-weight: 900;
+  color: #F472B6;
+  display: block;
+}
+
+.resin-price-cop {
+  font-size: 11px;
+  color: #CBD5E1;
+}
+
+.resin-bottom-actions {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.btn-resin-order-app {
+  background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%);
+  color: #FFF;
+  border: none;
+  border-radius: 14px;
+  padding: 11px 16px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(244, 114, 182, 0.35);
+  white-space: nowrap;
+}
+
+.btn-resin-order-wa {
+  background: #25D366;
+  color: #FFF;
+  border: none;
+  border-radius: 14px;
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Chat Modal for Resin */
+.resin-chat-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999995;
+  background: rgba(8, 11, 20, 0.94);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+}
+
+.resin-chat-header {
+  padding: 12px 16px;
+  background: #151C2C;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resin-chat-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.resin-quote-sheet {
+  background: rgba(244, 114, 182, 0.08);
+  border-bottom: 1px solid rgba(244, 114, 182, 0.2);
+  padding: 10px 14px;
+  font-size: 11.5px;
+}
+
+.resin-messages-area {
+  flex: 1;
+  padding: 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resin-msg-bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.resin-msg-incoming {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFF;
+  border-bottom-left-radius: 4px;
+}
+
+.resin-msg-outgoing {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%);
+  color: #FFF;
+  border-bottom-right-radius: 4px;
+}
+
+.resin-chat-input-bar {
+  display: flex;
+  padding: 10px 12px;
+  background: #111726;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 8px;
+}
+
+.resin-chat-input-bar input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 10px 16px;
+  color: #FFF;
+  font-size: 13px;
+  outline: none;
+}
+
+.btn-send-resin-msg {
+  background: #F472B6;
+  color: #0F172A;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}

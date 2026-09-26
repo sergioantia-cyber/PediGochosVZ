@@ -46,6 +46,26 @@ const ServicePartnerApp = {
             "📦 ¡Pieza terminada, curada y lista para entrega!"
           ]
         };
+      case 'resin':
+        return {
+          id: 'resin',
+          title: 'ShelliArt Resina • Llaveros',
+          icon: '✨',
+          catalogEndpoint: '/api/resin-services/catalog',
+          quotesEndpoint: '/api/resin-services/quotes',
+          statsEndpoint: '/api/resin-services/stats',
+          wsQuoteNew: 'RESIN_QUOTE_NEW',
+          wsQuoteMsg: 'RESIN_QUOTE_MESSAGE',
+          wsQuoteUpdate: 'RESIN_QUOTE_UPDATE',
+          wsCatalogUpdate: 'RESIN_CATALOG_UPDATE',
+          roleName: 'ShelliArt Resina',
+          presets: [
+            "👋 ¡Hola! Tu pedido de inicial en resina está anotado.",
+            "🎨 Mezclando resina epóxica y pigmentos con pan de oro 24K.",
+            "⏳ En tiempo de curado UV (24h) para máximo brillo cristal.",
+            "✨ ¡Llavero listo y pulido! Con borla y argolla instalada."
+          ]
+        };
       case 'cauchera':
         return {
           id: 'cauchera',
@@ -129,7 +149,7 @@ const ServicePartnerApp = {
 
   restoreSavedService() {
     const saved = localStorage.getItem('pedigochos_service_partner_mode');
-    if (saved && ['paint', 'print3d', 'cauchera'].includes(saved)) {
+    if (saved && ['paint', 'print3d', 'resin', 'cauchera'].includes(saved)) {
       this.currentService = saved;
     } else {
       // Show gate on first open
@@ -406,14 +426,15 @@ const ServicePartnerApp = {
   renderQuoteCardHtml(q) {
     const isPaint = this.currentService === 'paint';
     const is3d = this.currentService === 'print3d';
+    const isResin = this.currentService === 'resin';
 
     let title = '';
     let specs = '';
     let statusClass = 'badge-solicitado';
     if (q.status === 'En Conversación') statusClass = 'badge-conversacion';
     if (q.status === 'Precio Acordado' || q.status === 'Presupuestado') statusClass = 'badge-acordado';
-    if (q.status === 'Concretado' || q.status === 'En Producción') statusClass = 'badge-concretado';
-    if (q.status === 'Finalizado' || q.status === 'Completado') statusClass = 'badge-finalizado';
+    if (q.status === 'Concretado' || q.status === 'En Producción' || q.status === 'En Curado UV' || q.status === 'En Elaboración') statusClass = 'badge-concretado';
+    if (q.status === 'Finalizado' || q.status === 'Completado' || q.status === 'Listo para Entrega' || q.status === 'Entregado') statusClass = 'badge-finalizado';
 
     if (isPaint) {
       title = `${q.vehicleModel || 'Vehículo'} • ${q.serviceName || 'Pintura y Latonería'}`;
@@ -456,6 +477,27 @@ const ServicePartnerApp = {
         <div>
           <span class="sp-spec-label">PRESUPUESTO</span>
           <span class="sp-spec-val" style="color: #38BDF8;">${priceText}</span>
+        </div>
+      `;
+    } else if (isResin) {
+      title = `Llavero Letra "${q.letter || 'A'}" • ${q.clientName || 'Cliente'}`;
+      const priceText = q.agreedPriceUsd ? `$${q.agreedPriceUsd} USD (Cerrado)` : `$${q.estimatedPriceUsd || 4.5} USD (Estimado)`;
+      specs = `
+        <div>
+          <span class="sp-spec-label">INICIAL & ESTILO</span>
+          <span class="sp-spec-val">Letra "${q.letter || 'A'}" • ${q.styleName || 'Personalizado'}</span>
+        </div>
+        <div>
+          <span class="sp-spec-label">COLOR & BORLA</span>
+          <span class="sp-spec-val">${q.baseColorName || 'Rosa'} • ${q.tasselColor || 'Borla'}</span>
+        </div>
+        <div>
+          <span class="sp-spec-label">HERRAJE & DETALLES</span>
+          <span class="sp-spec-val">${q.hardwareColor || 'Dorado'}${q.customName ? ` • "${q.customName}"` : ''}</span>
+        </div>
+        <div>
+          <span class="sp-spec-label">PRESUPUESTO</span>
+          <span class="sp-spec-val" style="color: #F472B6;">${priceText}</span>
         </div>
       `;
     } else {
@@ -507,7 +549,7 @@ const ServicePartnerApp = {
             <span>💰</span> Fijar Presupuesto
           </button>
           <button type="button" class="btn-card-action btn-action-schedule" onclick="ServicePartnerApp.openAppointmentModalForQuote('${q.id}')">
-            <span>📅</span> ${is3d ? 'Producción' : 'Agendar Cita'}
+            <span>📅</span> ${is3d ? 'Producción' : (isResin ? 'Curado UV' : 'Agendar Cita')}
           </button>
           ${waUrl ? `
             <a href="${waUrl}" target="_blank" rel="noopener" class="btn-card-action btn-action-wa" style="text-decoration: none;">
@@ -603,6 +645,17 @@ const ServicePartnerApp = {
           <div>
             <strong style="color: #FFF;">🚗 ${quote.vehicleModel || 'Vehículo'}</strong> • <span style="color: #38BDF8; font-weight: 700;">${price}</span>
             <div style="font-size: 10.5px; color: #94A3B8;">Piezas: ${(quote.parts || []).join(', ')} • ${quote.finishName || 'Bicapa'}</div>
+          </div>
+          <span class="sp-card-badge badge-conversacion" style="font-size: 10px;">${quote.status}</span>
+        </div>
+      `;
+    } else if (this.currentService === 'resin') {
+      const price = quote.agreedPriceUsd ? `$${quote.agreedPriceUsd} USD` : `$${quote.estimatedPriceUsd || 4.5} USD`;
+      sticky.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="color: #FFF;">✨ Letra "${quote.letter || 'A'}"</strong> • <span style="color: #F472B6; font-weight: 700;">${price}</span>
+            <div style="font-size: 10.5px; color: #94A3B8;">Color: ${quote.baseColorName || 'Rosa'} • Borla: ${quote.tasselColor || 'Rosa'}${quote.customName ? ` • Nombre: "${quote.customName}"` : ''}</div>
           </div>
           <span class="sp-card-badge badge-conversacion" style="font-size: 10px;">${quote.status}</span>
         </div>
@@ -995,14 +1048,18 @@ const ServicePartnerApp = {
 
     const meta = this.getServiceMeta();
     const is3d = this.currentService === 'print3d';
+    const isResin = this.currentService === 'resin';
     const payload = is3d ? {
       action: 'start_production',
+      notes
+    } : (isResin ? {
+      action: 'uv_curing',
       notes
     } : {
       action: 'schedule_appointment',
       appointmentDate: dateVal,
       notes
-    };
+    });
 
     try {
       const url = `${this.getApiBaseUrl()}${meta.quotesEndpoint}/${this.activeQuote.id}/action`;
