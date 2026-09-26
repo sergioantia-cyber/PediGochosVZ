@@ -4861,7 +4861,7 @@ class MarketplaceController {
         return;
       }
 
-      await Promise.all(promises);
+      const createdOrders = await Promise.all(promises);
 
       // Award GochoPoints (10 pts per $1 spent)
       const cartSubtotalCop = this.cart.items.reduce((sum, item) => sum + this.normalizeCopPrice(item.subtotal_combined), 0);
@@ -4871,6 +4871,25 @@ class MarketplaceController {
 
       this.sendPushNotification('¡Pedido Enviado! 🚀', `Tu pedido en ${shopIds.length} comercio(s) fue recibido. ¡Ganaste +${earnedPts} GochoPoints! ⭐`);
       this.showToast(`🔔 ¡Pedido enviado con éxito! ⭐ Ganaste +${earnedPts} GochoPoints`);
+
+      // Build formatted WhatsApp order message and URL for official Central PediGochos (+57 322 794 9751)
+      const waMessage = this.buildRestaurantOrderWhatsAppMessage(createdOrders, {
+        customerName,
+        phone,
+        orderType: this.orderType,
+        address,
+        tableNumber,
+        paymentMethod,
+        paymentNotes,
+        distanceKm: this.calculatedDistanceKm,
+        shopMap: groupedItems
+      });
+      const officialWaNumber = '573227949751';
+      const waUrl = `https://wa.me/${officialWaNumber}?text=${encodeURIComponent(waMessage)}`;
+
+      // Automatically launch WhatsApp for the user
+      this.openWhatsAppUrl(waUrl);
+
       this.clearCart();
       this.closeCartModal();
       
@@ -4914,7 +4933,9 @@ class MarketplaceController {
         phone: phone,
         paymentMethod: paymentMethod,
         paymentNotes: paymentNotes,
-        orderCount: shopIds.length
+        orderCount: shopIds.length,
+        createdOrders: createdOrders,
+        waUrl: waUrl
       });
 
     } catch (e) {
@@ -4923,20 +4944,167 @@ class MarketplaceController {
     }
   }
 
+  openWhatsAppUrl(waUrl) {
+    if (!waUrl) return;
+    try {
+      if (window.Capacitor) {
+        window.open(waUrl, '_system');
+        return;
+      }
+    } catch(e) {}
+
+    try {
+      const a = document.createElement('a');
+      a.href = waUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 200);
+    } catch(err) {
+      window.open(waUrl, '_blank') || (window.location.href = waUrl);
+    }
+  }
+
+  buildRestaurantOrderWhatsAppMessage(createdOrders, context = {}) {
+    const orders = Array.isArray(createdOrders) ? createdOrders : (createdOrders ? [createdOrders] : []);
+    if (orders.length === 0) return '';
+
+    const firstOrder = orders[0];
+    const customerName = context.customerName || firstOrder.customerName || 'Cliente PediGochos';
+    const phone = context.phone || firstOrder.customerPhone || (firstOrder.deliveryDetails && firstOrder.deliveryDetails.phone) || 'N/A';
+    const orderType = context.orderType || firstOrder.orderType || 'delivery';
+    const tableNumber = context.tableNumber || firstOrder.tableNumber;
+    const paymentMethod = context.paymentMethod || firstOrder.paymentMethod || 'Efectivo';
+    const paymentNotes = context.paymentNotes || firstOrder.paymentNotes || '';
+
+    let modalityText = '🚴 Envío a Domicilio';
+    if (orderType === 'mesa' || tableNumber) {
+      modalityText = `🍽️ Consumo en Mesa (Mesa #${tableNumber || '1'})`;
+    } else if (orderType === 'pickup') {
+      modalityText = `🛍️ Para Llevar / Retiro en Restaurante`;
+    }
+
+    const lines = [];
+    lines.push(`🛵 *¡NUEVO PEDIDO DE RESTAURANTE EN PEDIGOCHOS!* 🍔🍕`);
+    lines.push(`━━━━━━━━━━━━━━━━━━━━━`);
+    lines.push(`👤 *Cliente:* ${customerName}`);
+    lines.push(`📞 *Teléfono / WhatsApp:* ${phone}`);
+    lines.push(`🛵 *Modalidad:* ${modalityText}`);
+
+    if (orderType === 'delivery') {
+      const deliv = firstOrder.deliveryDetails || {};
+      const address = deliv.address || context.address || 'Dirección acordada';
+      const securityCode = deliv.code || context.code || 'N/A';
+      lines.push(`📍 *Dirección de Entrega:* ${address}`);
+      lines.push(`🔐 *Código de Seguridad:* *${securityCode}*`);
+      if (deliv.distanceKm || context.distanceKm) {
+        const dist = Number(deliv.distanceKm || context.distanceKm).toFixed(1);
+        lines.push(`📏 *Distancia Estimada:* ${dist} km`);
+      }
+      if (deliv.latitude && deliv.longitude) {
+        lines.push(`🗺️ *Ubicación GPS:* https://www.google.com/maps?q=${deliv.latitude},${deliv.longitude}`);
+      }
+      if (deliv.housePhotoUrl) {
+        lines.push(`🏠 *Foto de Fachada:* ${deliv.housePhotoUrl}`);
+      }
+    }
+
+    lines.push(`━━━━━━━━━━━━━━━━━━━━━`);
+
+    let grandTotal = 0;
+    orders.forEach((ord, index) => {
+      grandTotal += (ord.total || 0);
+      const estName = ord.establishmentName || (context.shopMap && context.shopMap[ord.establishmentId]?.name) || 'Restaurante';
+      const orderCode = ord.id ? (ord.id.length > 8 ? ord.id.slice(-6).toUpperCase() : ord.id) : `${index + 1}`;
+
+      lines.push(`🏪 *RESTAURANTE:* *${estName}*`);
+      lines.push(`🆔 *Código de Comanda:* #${orderCode}`);
+      lines.push(`🛒 *Artículos Solicitados:*`);
+
+      if (ord.items && ord.items.length > 0) {
+        ord.items.forEach(it => {
+          const qty = it.quantity || 1;
+          const subtotalPrice = this.formatPesos(this.normalizeCopPrice(it.subtotal_combined || ((it.price || 0) * qty)));
+          lines.push(`  • *${qty}x ${it.name}* (${subtotalPrice})`);
+          if (it.specifications && it.specifications.trim()) {
+            lines.push(`    ↳ _${it.specifications}_`);
+          }
+        });
+      }
+
+      if (ord.nightSurcharge && ord.nightSurcharge > 0) {
+        lines.push(`  🌙 *Recargo Nocturno:* +${this.formatPesos(ord.nightSurcharge)}`);
+      }
+
+      lines.push(`💰 *Subtotal Comercio:* *${this.formatPesos(ord.total || 0)}*`);
+      if (index < orders.length - 1) {
+        lines.push(`---------------------`);
+      }
+    });
+
+    lines.push(`━━━━━━━━━━━━━━━━━━━━━`);
+    lines.push(`💵 *DETALLES DEL PAGO:*`);
+    lines.push(`💳 *Forma de Pago:* ${paymentMethod}`);
+    if (paymentNotes) {
+      lines.push(`📝 *Detalles:* ${paymentNotes}`);
+    }
+    if (firstOrder.paymentReceiptUrl) {
+      lines.push(`📎 *Comprobante Adjunto:* ${firstOrder.paymentReceiptUrl}`);
+    }
+    lines.push(`💰 *TOTAL A PAGAR:* *${this.formatPesos(grandTotal)}*`);
+
+    try {
+      if (this.copToUsdRate && this.copToUsdRate > 0) {
+        const usdVal = (grandTotal / this.copToUsdRate).toFixed(2);
+        lines.push(`💵 *Equivalente USD:* $${usdVal} USD`);
+      }
+      if (this.copToVesRate && this.copToVesRate > 0) {
+        const vesVal = (grandTotal * this.copToVesRate).toFixed(2);
+        lines.push(`🇻🇪 *Equivalente Bs:* ${vesVal} Bs`);
+      }
+    } catch(e) {}
+
+    lines.push(`━━━━━━━━━━━━━━━━━━━━━`);
+    lines.push(`🧾 *Comanda generada automáticamente en el app del restaurante.*`);
+    lines.push(`📍 *Enviado desde PediGochos App*`);
+    lines.push(`💬 *Central WhatsApp Oficial: +57 322 794 9751*`);
+
+    return lines.join('\n');
+  }
+
   openOrderNoticeModal(data = {}) {
     const modal = document.getElementById('order-confirmation-notice-modal');
     const summaryEl = document.getElementById('order-notice-summary');
+    const waBtn = document.getElementById('order-notice-wa-btn');
+
     if (summaryEl) {
       const stores = data.storeNames || (this.selectedEstablishment ? this.selectedEstablishment.name : 'el restaurante');
       const phoneTxt = data.phone ? `<div style="margin-bottom: 4px;">📱 <strong>Teléfono de contacto:</strong> ${data.phone}</div>` : '';
       const payTxt = data.paymentMethod ? `<div>💵 <strong>Método de pago:</strong> ${data.paymentMethod}${data.paymentNotes ? ` <span style="color:#FDE047;">(${data.paymentNotes})</span>` : ''}</div>` : '';
+      const comandaTxt = `<div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.1); color: #34D399; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px;"><span>🧾</span> Comanda enviada a la App del Restaurante con éxito</div>`;
 
       summaryEl.innerHTML = `
         <div style="margin-bottom: 4px;">🏪 <strong>Establecimiento:</strong> ${stores}</div>
         ${phoneTxt}
         ${payTxt}
+        ${comandaTxt}
       `;
     }
+
+    if (waBtn) {
+      const waUrl = data.waUrl || 'https://wa.me/573227949751';
+      waBtn.href = waUrl;
+      waBtn.onclick = (e) => {
+        try {
+          if (window.Capacitor) {
+            e.preventDefault();
+            window.open(waUrl, '_system');
+          }
+        } catch(err) {}
+      };
+    }
+
     if (modal) {
       modal.classList.add('open');
       modal.style.setProperty('display', 'flex', 'important');
@@ -6904,6 +7072,9 @@ class MarketplaceController {
 
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
           ${liveBtnHTML}
+          <a href="https://wa.me/573227949751?text=${encodeURIComponent(`Hola Central PediGochos, consulto sobre mi pedido #${codeStr} de ${estName}.`)}" target="_blank" rel="noopener noreferrer" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+            🟢 WhatsApp (322 794 9751)
+          </a>
           <button type="button" onclick="MarketplaceApp.openRatingModal('${ord.id}', '${ord.establishmentId || ord.establishment_id || ''}')" style="background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
             ⭐ Calificar
           </button>
