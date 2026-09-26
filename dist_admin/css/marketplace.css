@@ -3781,6 +3781,7 @@ body {
   justify-content: center;
   line-height: 1;
   gap: 1px;
+  pointer-events: none;
 }
 
 .fab-icon {
@@ -3983,9 +3984,12 @@ body {
   transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.services-drawer-overlay.open {
+.services-drawer-overlay.open,
+.services-drawer-overlay.active {
   display: flex !important;
   opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 .services-drawer-content {
@@ -4009,7 +4013,8 @@ body {
   z-index: 999998;
 }
 
-.services-drawer-overlay.open .services-drawer-content {
+.services-drawer-overlay.open .services-drawer-content,
+.services-drawer-overlay.active .services-drawer-content {
   transform: translateX(0) !important;
 }
 

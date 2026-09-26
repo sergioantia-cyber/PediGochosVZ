@@ -543,6 +543,14 @@ class MarketplaceController {
     this.updateFloatingAndHeaderSos(true);
 
     this.renderEstablishments();
+
+    // Smoothly scroll down so user immediately sees the category items (especially for Servicios)
+    setTimeout(() => {
+      const target = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 60);
   }
 
   updateFloatingAndHeaderSos(isInSubCategoryOrStore) {
@@ -919,7 +927,7 @@ class MarketplaceController {
       const allRestHeader = document.getElementById('all-restaurants-header');
       const allRestTitle = document.getElementById('all-restaurants-title-text');
       if (allRestHeader) allRestHeader.style.display = 'block';
-      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (5)';
+      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (6)';
 
       const promoSection = document.getElementById('daily-promotions-section');
       if (promoSection) {
@@ -5377,7 +5385,7 @@ class MarketplaceController {
   }
 
   closeAllModals() {
-    ['cart-modal', 'location-modal', 'terms-modal', 'customizer-modal'].forEach(id => {
+    ['cart-modal', 'location-modal', 'terms-modal', 'customizer-modal', 'services-menu-modal', 'sos-menu-modal', 'merchant-register-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.classList.remove('open');
@@ -9093,28 +9101,35 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
   // ========================================================
 
   toggleServicesMenu(force = null) {
+    const now = Date.now();
+    if (this._lastServicesToggle && now - this._lastServicesToggle < 250) return;
+    this._lastServicesToggle = now;
+
     const modal = document.getElementById('services-menu-modal');
     if (!modal) return;
-    const isVisible = modal.classList.contains('open') || modal.style.display === 'flex';
+    const isVisible = modal.classList.contains('open') || modal.classList.contains('active') || (modal.style.display === 'flex' && modal.style.opacity !== '0');
     const show = force !== null ? force : !isVisible;
     if (show) {
       this.closeSosMenu();
       modal.style.display = 'flex';
-      setTimeout(() => {
-        modal.classList.add('open');
-      }, 10);
+      modal.classList.add('open', 'active');
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+      modal.style.pointerEvents = 'auto';
     } else {
-      modal.classList.remove('open');
-      setTimeout(() => {
-        if (!modal.classList.contains('open')) {
-          modal.style.display = 'none';
-        }
-      }, 280);
+      this.closeServicesMenu();
     }
   }
 
   closeServicesMenu() {
-    this.toggleServicesMenu(false);
+    const modal = document.getElementById('services-menu-modal');
+    if (modal) {
+      modal.classList.remove('open', 'active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
   }
 
   toggleMovilidadAccordion() {
@@ -9133,6 +9148,10 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
   // ========================================================
 
   toggleSosMenu(force = null) {
+    const now = Date.now();
+    if (this._lastSosToggle && now - this._lastSosToggle < 250) return;
+    this._lastSosToggle = now;
+
     const modal = document.getElementById('sos-menu-modal');
     if (!modal) return;
     const isVisible = modal.classList.contains('open') || modal.classList.contains('active') || (modal.style.display === 'flex' && modal.style.opacity !== '0');
