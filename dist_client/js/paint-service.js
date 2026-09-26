@@ -397,7 +397,9 @@ const PaintServiceApp = {
     {
       id: 'alta',
       name: 'Poliéster y Tintas',
-      tier: 'Gama Alta',
+      tier: 'Gama Alta (Full Recomendado)',
+      tierShort: 'Gama Alta',
+      recommendation: '(Full Recomendado)',
       badge: 'Brillo y Cobertura Suprema',
       desc: 'Bicapa/Tricapa poliéster de máxima resistencia, pigmentación pura, tintas concentradas y alta estabilidad UV.',
       multiplier: 1.15,
@@ -406,7 +408,9 @@ const PaintServiceApp = {
     {
       id: 'media',
       name: 'Acrílico Automotriz',
-      tier: 'Gama Media',
+      tier: 'Gama Media (Básico)',
+      tierShort: 'Gama Media',
+      recommendation: '(Básico)',
       badge: 'Estándar Balanceado',
       desc: 'Pintura acrílica automotriz de secado al horno, duradera y de excelente rendimiento comercial.',
       multiplier: 1.0,
@@ -415,7 +419,9 @@ const PaintServiceApp = {
     {
       id: 'baja',
       name: 'Laca Tradicional',
-      tier: 'Gama Baja',
+      tier: 'Gama Baja (Poco Recomendado)',
+      tierShort: 'Gama Baja',
+      recommendation: '(Poco Recomendado)',
       badge: 'Económica',
       desc: 'Laca nitrocelulosa tradicional para presupuestos accesibles o retoques puntuales.',
       multiplier: 0.88,
@@ -427,7 +433,9 @@ const PaintServiceApp = {
   varnishCategories: [
     {
       id: 'alta_a',
-      tier: 'Gama Alta A',
+      tier: 'Gama Alta A (Full Recomendado)',
+      tierShort: 'Gama Alta A',
+      recommendation: '(Full Recomendado)',
       badge: '⭐ Acabado Show Car / Filtro UV Superior',
       desc: 'Transparente de poliuretano de alta densidad, efecto espejo profundo y máxima dureza contra arañazos.',
       multiplier: 1.25,
@@ -438,7 +446,9 @@ const PaintServiceApp = {
     },
     {
       id: 'media_b',
-      tier: 'Gama Media B',
+      tier: 'Gama Media B (Básico)',
+      tierShort: 'Gama Media B',
+      recommendation: '(Básico)',
       badge: 'Protección Comercial Garantizada',
       desc: 'Transparente 2K de gran nivelación, excelente brillo y curado uniforme para uso diario.',
       multiplier: 1.0,
@@ -449,7 +459,9 @@ const PaintServiceApp = {
     },
     {
       id: 'baja_c',
-      tier: 'Gama Baja C',
+      tier: 'Gama Baja C (Poco Recomendado)',
+      tierShort: 'Gama Baja C',
+      recommendation: '(Poco Recomendado)',
       badge: 'Opción Económica',
       desc: 'Barniz transparente directo tradicional para trabajos económicos.',
       multiplier: 0.85,
@@ -1080,9 +1092,13 @@ const PaintServiceApp = {
             ${this.paintQualities.map(p => {
               const isSel = this.wizardState.paintQuality === p.id;
               const tierClass = p.id === 'alta' ? 'tier-high' : (p.id === 'media' ? 'tier-mid' : 'tier-low');
+              const recClass = p.id === 'alta' ? 'rec-full' : (p.id === 'media' ? 'rec-basic' : 'rec-low');
               return `
                 <div class="paint-quality-card ${isSel ? 'selected' : ''}" onclick="PaintServiceApp.selectPaintQuality('${p.id}')">
-                  <span class="paint-tier-pill ${tierClass}">${p.tier}</span>
+                  <div class="paint-card-top-pills">
+                    <span class="paint-tier-pill ${tierClass}">${p.tierShort}</span>
+                    <span class="paint-rec-pill ${recClass}">${p.recommendation}</span>
+                  </div>
                   <span class="paint-quality-name">${p.icon} ${p.name}</span>
                   <span class="paint-quality-desc">${p.desc}</span>
                 </div>
@@ -1103,9 +1119,13 @@ const PaintServiceApp = {
             ${this.varnishCategories.map(v => {
               const isSel = this.wizardState.varnishQuality === v.id;
               const tierClass = v.id === 'alta_a' ? 'tier-high' : (v.id === 'media_b' ? 'tier-mid' : 'tier-low');
+              const recClass = v.id === 'alta_a' ? 'rec-full' : (v.id === 'media_b' ? 'rec-basic' : 'rec-low');
               return `
                 <div class="paint-quality-card ${isSel ? 'selected' : ''}" onclick="PaintServiceApp.selectVarnishTier('${v.id}')">
-                  <span class="paint-tier-pill ${tierClass}">${v.tier}</span>
+                  <div class="paint-card-top-pills">
+                    <span class="paint-tier-pill ${tierClass}">${v.tierShort}</span>
+                    <span class="paint-rec-pill ${recClass}">${v.recommendation}</span>
+                  </div>
                   <span class="paint-quality-name">${v.brands.map(b => b.name).join(' / ')}</span>
                   <span class="paint-quality-desc">${v.desc}</span>
                 </div>
@@ -1233,11 +1253,11 @@ const PaintServiceApp = {
           </div>
           <div class="paint-estimate-row">
             <span>Pintura Base:</span>
-            <strong style="color: #38BDF8;">${paintObj.name} (${paintObj.tier})</strong>
+            <strong style="color: #38BDF8;">${paintObj.name} • ${paintObj.tier}</strong>
           </div>
           <div class="paint-estimate-row">
             <span>Barniz Transparente:</span>
-            <strong style="color: #FBBF24;">${varnishBrandObj.name} (${varnishTierObj.tier})</strong>
+            <strong style="color: #FBBF24;">${varnishBrandObj.name} • ${varnishTierObj.tier}</strong>
           </div>
           <div class="paint-estimate-row">
             <span>Pulido Especializado:</span>
@@ -1475,12 +1495,12 @@ const PaintServiceApp = {
       finishType: this.wizardState.finishType,
       finishName: `${paintObj.name} + ${varnishBrandObj.name}`,
       paintQuality: this.wizardState.paintQuality,
-      paintQualityName: paintObj.name,
+      paintQualityName: `${paintObj.name} • ${paintObj.tier}`,
       paintQualityTier: paintObj.tier,
       varnishQuality: this.wizardState.varnishQuality,
       varnishQualityTier: varnishTierObj.tier,
       varnishBrand: varnishBrandObj.name,
-      varnishName: `${varnishBrandObj.name} (${varnishTierObj.tier})`,
+      varnishName: `${varnishBrandObj.name} • ${varnishTierObj.tier}`,
       polishingMaterials: this.polishingMaterials.map(m => m.name),
       polishingTier: 'Solo Gama Alta (3M, Symplex Piraña & Cerámica)',
       serviceName: 'Latonería y Pintura',

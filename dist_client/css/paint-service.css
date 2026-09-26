@@ -1040,6 +1040,15 @@
   box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
 }
 
+.paint-card-top-pills {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
 .paint-tier-pill {
   font-size: 8.5px;
   font-weight: 900;
@@ -1048,7 +1057,37 @@
   text-transform: uppercase;
   letter-spacing: 0.4px;
   display: inline-block;
-  margin-bottom: 4px;
+}
+
+.paint-rec-pill {
+  font-size: 8.5px;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  text-transform: none;
+  line-height: 1.2;
+}
+
+.paint-rec-pill.rec-full {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid #10B981;
+  color: #34D399;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.2);
+}
+
+.paint-rec-pill.rec-basic {
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid #38BDF8;
+  color: #7DD3FC;
+}
+
+.paint-rec-pill.rec-low {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid #F59E0B;
+  color: #FCD34D;
 }
 
 .tier-high {
