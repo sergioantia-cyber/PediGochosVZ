@@ -7919,6 +7919,9 @@ class AdminController {
           </div>
 
           <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; margin-top: 4px;">
+            <a href="https://wa.me/573227949751?text=${encodeURIComponent(`✨ *PEDIDO #${q.id} SHELLIART RESINA*\n👤 Cliente: ${q.clientName} (${q.clientPhone})\n🔤 Inicial: "${q.letter}"\n🎨 Estilo: ${q.styleName} - Color: ${q.baseColorName}\n🪢 Borla: ${q.tasselColor} - Herraje: ${q.hardwareColor}\n✍️ Nombre: ${q.customName || 'Sin nombre'}\n💰 Total: $${q.agreedPriceUsd || q.estimatedPriceUsd || 4.5} USD`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+              <span>🟢</span> WhatsApp (322 794 9751)
+            </a>
             <button type="button" onclick="AdminApp.openQuoteChatInspector('resin', '${q.id}', 'Llavero Inicial ${q.letter} - ${q.clientName}')" style="background: rgba(244, 114, 182, 0.15); border: 1px solid #F472B6; color: #FBCFE8; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
               💬 Chatear
             </button>

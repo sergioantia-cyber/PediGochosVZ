@@ -24,12 +24,15 @@
   display: flex;
   flex-direction: column;
   color: #FFF;
-  overflow-y: auto;
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Header */
 .resin-header {
+  flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -86,10 +89,14 @@
 
 /* Container */
 .resin-container {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   max-width: 680px;
   width: 100%;
   margin: 0 auto;
-  padding: 16px 14px 90px 14px;
+  padding: 16px 14px 24px 14px;
+  box-sizing: border-box;
 }
 
 /* Hero Banner */
@@ -481,21 +488,23 @@
   border-color: #F472B6;
 }
 
-/* Sticky Bottom Price & CTA Bar */
+/* Fixed Bottom Price & WhatsApp CTA Bar */
 .resin-bottom-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(15, 19, 31, 0.95);
-  backdrop-filter: blur(14px);
-  border-top: 1.5px solid rgba(244, 114, 182, 0.3);
+  flex-shrink: 0;
+  width: 100%;
+  background: rgba(15, 19, 31, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1.5px solid rgba(244, 114, 182, 0.4);
   padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  z-index: 500;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
 }
 
 .resin-bottom-pricing {
@@ -503,54 +512,51 @@
 }
 
 .resin-price-total {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 900;
   color: #F472B6;
   display: block;
+  letter-spacing: -0.5px;
 }
 
 .resin-price-cop {
   font-size: 11px;
   color: #CBD5E1;
+  font-weight: 600;
 }
 
 .resin-bottom-actions {
   display: flex;
-  gap: 8px;
   flex: 1;
   justify-content: flex-end;
 }
 
-.btn-resin-order-app {
-  background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%);
-  color: #FFF;
-  border: none;
-  border-radius: 14px;
-  padding: 11px 16px;
-  font-size: 13px;
-  font-weight: 900;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 14px rgba(244, 114, 182, 0.35);
-  white-space: nowrap;
-}
-
-.btn-resin-order-wa {
+.btn-resin-order-wa-full {
   background: #25D366;
   color: #FFF;
   border: none;
   border-radius: 14px;
-  padding: 11px 14px;
-  font-size: 13px;
+  padding: 12px 20px;
+  font-size: 13.5px;
   font-weight: 900;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  text-decoration: none;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
   white-space: nowrap;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 260px;
+}
+
+.btn-resin-order-wa-full:hover,
+.btn-resin-order-wa-full:active {
+  background: #22C55E;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.5);
 }
 
 /* Chat Modal for Resin */

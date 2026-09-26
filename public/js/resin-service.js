@@ -6,6 +6,8 @@
 const ResinServiceApp = {
   activeQuote: null,
   ws: null,
+  resinWhatsAppNumber: '573227949751',
+  resinWhatsAppDisplay: '322 794 9751',
 
   alphabet: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'],
 
@@ -308,7 +310,7 @@ const ResinServiceApp = {
 
       </div>
 
-      <!-- Sticky Bottom Price & Dual CTAs Bar -->
+      <!-- Fixed Bottom Price & WhatsApp CTA Bar -->
       <footer class="resin-bottom-bar">
         <div class="resin-bottom-pricing">
           <span class="resin-price-total" id="resin-total-usd">$4.50 USD</span>
@@ -316,11 +318,8 @@ const ResinServiceApp = {
         </div>
 
         <div class="resin-bottom-actions">
-          <button type="button" class="btn-resin-order-app" onclick="ResinServiceApp.submitInAppOrder()">
-            <span>🛍️</span> Pedir en App
-          </button>
-          <a id="btn-resin-wa-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-resin-order-wa">
-            <span>🟢</span> WhatsApp
+          <a id="btn-resin-wa-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-resin-order-wa-full" onclick="ResinServiceApp.handleWhatsAppClick(event)">
+            <span>🟢</span> Pedir en WhatsApp
           </a>
         </div>
       </footer>
@@ -492,19 +491,99 @@ const ResinServiceApp = {
     // 8. WhatsApp Link Pre-generation
     const waLink = document.getElementById('btn-resin-wa-link');
     if (waLink) {
-      const waText = encodeURIComponent(
-        `✨ ¡Hola ShelliArt Resina! Me gustaría encargar un Llavero Personalizado:\n\n` +
-        `• Letra / Inicial: "${this.state.letter}"\n` +
-        `• Estilo: ${this.styles.find(s => s.id === this.state.styleId)?.name || 'Bicolor'}\n` +
-        `• Color Base: ${this.state.baseColorName}\n` +
-        `• Borla (Tassel): ${this.state.tasselName}\n` +
-        `• Herraje: ${this.state.hardware === 'gold' ? 'Dorado ✨' : 'Plateado 🔘'}\n` +
-        `${this.state.customName ? `• Nombre en vinil: "${this.state.customName}"\n` : ''}` +
-        `${charmObj && charmObj.id !== 'none' ? `• Dije extra: ${charmObj.name}\n` : ''}` +
-        `• Total Estimado: $${pricing.totalUsd.toFixed(2)} USD (~$${pricing.totalCop.toLocaleString('es-CO')} COP)\n\n` +
-        `¿Cuándo lo tendrían listo para entrega?`
-      );
-      waLink.href = `https://wa.me/573144883492?text=${waText}`;
+      const waText = this.buildWhatsAppMessage();
+      waLink.href = `https://wa.me/${this.resinWhatsAppNumber}?text=${waText}`;
+    }
+  },
+
+  buildWhatsAppMessage() {
+    const pricing = this.calculatePricing();
+    const charmObj = this.charms.find(ch => ch.id === this.state.extraCharmId);
+    const styleObj = this.styles.find(s => s.id === this.state.styleId) || { name: 'Personalizado' };
+
+    const nameText = this.state.customName ? `"${this.state.customName.toUpperCase()}" (sellado permanente en vinil)` : 'Sin nombre adicional';
+    const charmText = (charmObj && charmObj.id !== 'none') ? `${charmObj.icon} ${charmObj.name} (+$${charmObj.extraUsd.toFixed(2)} USD)` : 'Ninguno';
+    const hardwareText = this.state.hardware === 'gold' ? 'Dorado de Lujo ✨' : 'Plateado Cromado 🔘';
+
+    const clientName = localStorage.getItem('customer_name') || '';
+    const clientPhone = localStorage.getItem('customer_phone') || '';
+
+    const text =
+`✨ *¡NUEVO PEDIDO DE LLAVERO EN RESINA - SHELLIART!* ✨
+━━━━━━━━━━━━━━━━━━━━
+🔤 *Letra / Inicial:* "${this.state.letter}"
+🎨 *Estilo de Resina:* ${styleObj.name}
+🌸 *Color Base:* ${this.state.baseColorName}
+✨ *Inclusiones / Relleno:* ${this.state.inclusions || styleObj.desc || 'Hojas de Oro / Destellos'}
+🪢 *Borla de Gamuza (Tassel):* ${this.state.tasselName}
+🔘 *Herraje & Cadena:* ${hardwareText}
+✍️ *Nombre en Vinil:* ${nameText}
+🧸 *Dije Extra (Charm):* ${charmText}
+🔢 *Cantidad:* ${this.state.quantity} unidad(es)
+━━━━━━━━━━━━━━━━━━━━
+💰 *TOTAL A PAGAR:* $${pricing.totalUsd.toFixed(2)} USD
+💵 *Equivalente:* ~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs
+${clientName ? `👤 *Cliente:* ${clientName}${clientPhone ? ` (${clientPhone})` : ''}\n` : ''}━━━━━━━━━━━━━━━━━━━━
+📍 *Enviado desde PediGochos App* (San Antonio / Cúcuta / Frontera)
+💬 *Taller ShelliArt WhatsApp: +57 322 794 9751*
+
+¿Para cuándo tendrían disponible este pedido para entrega? ¡Muchas gracias!`;
+
+    return encodeURIComponent(text);
+  },
+
+  handleWhatsAppClick(e) {
+    if (e) e.preventDefault();
+    this.registerQuoteSilently();
+    const waText = this.buildWhatsAppMessage();
+    const waUrl = `https://wa.me/${this.resinWhatsAppNumber}?text=${waText}`;
+    try {
+      const win = window.open(waUrl, '_blank');
+      if (!win) {
+        window.location.href = waUrl;
+      }
+    } catch (err) {
+      window.location.href = waUrl;
+    }
+  },
+
+  async registerQuoteSilently() {
+    try {
+      const pricing = this.calculatePricing();
+      const charmObj = this.charms.find(ch => ch.id === this.state.extraCharmId);
+      const styleObj = this.styles.find(s => s.id === this.state.styleId);
+      const clientName = localStorage.getItem('customer_name') || 'Cliente WhatsApp';
+      const clientPhone = localStorage.getItem('customer_phone') || '3227949751';
+
+      const payload = {
+        clientName,
+        clientPhone,
+        productType: 'keychain_letter',
+        productTitle: `Llavero de Inicial "${this.state.letter}" en Resina`,
+        letter: this.state.letter,
+        resinStyle: this.state.styleId,
+        styleName: styleObj?.name || 'Personalizado',
+        baseColor: this.state.baseColorHex,
+        baseColorName: this.state.baseColorName,
+        inclusions: styleObj?.name || 'Hojas de Oro + Glitter',
+        tasselColor: this.state.tasselName,
+        tasselHex: this.state.tasselHex,
+        hardwareColor: this.state.hardware === 'gold' ? 'Dorado Clásico ✨' : 'Plateado Cromado 🔘',
+        customName: this.state.customName,
+        extraCharm: charmObj ? charmObj.name : 'Ninguno',
+        quantity: this.state.quantity,
+        basePriceUsd: pricing.basePrice,
+        extrasPriceUsd: pricing.extraCharmPrice,
+        estimatedPriceUsd: pricing.totalUsd
+      };
+
+      await fetch('/api/resin-services/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.warn('Silent resin quote save err:', e);
     }
   },
 
