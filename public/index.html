@@ -161,13 +161,22 @@
       <!-- Categories Section (Asymmetrical Grid) -->
       <section class="categories-section">
         <div class="categories-grid-delivercity">
-          <!-- Restaurantes (Tall Vertical Card) -->
+          <!-- Restaurantes (Tall Vertical Hero Card) -->
           <div class="category-card-delivercity card-restaurantes" data-category="comidas" onclick="MarketplaceApp.selectCategory('comidas')">
             <div class="category-overlay-dark"></div>
             <div class="category-card-bg" style="background-image: url('/images/burger_royale.jpg');"></div>
-            <div class="category-card-content">
-              <h4>🍔 Restaurantes</h4>
-              <p>Los mejores sabores</p>
+            <div class="category-hero-top-badge">
+              <span class="badge-fire">🔥 MÁS POPULAR</span>
+              <span class="badge-delivery">⚡ Entrega Rápida</span>
+            </div>
+            <div class="category-card-content content-restaurantes">
+              <span class="cat-pill-highlight">🍔 Comidas & Postres</span>
+              <h4>Restaurantes</h4>
+              <p>Hamburguesas, pizzas, sushi, parrillas y comida rápida</p>
+              <div class="cat-action-row">
+                <span class="cat-action-text">Pedir Ahora</span>
+                <span class="cat-action-arrow">➔</span>
+              </div>
             </div>
           </div>
           
@@ -177,6 +186,7 @@
             <div class="category-card-bg" style="background-image: url('/images/vitamina_c.jpg');"></div>
             <div class="category-card-content">
               <h4>💊 Farmacias</h4>
+              <p>Salud & Medicinas 24/7</p>
             </div>
           </div>
 
@@ -186,6 +196,7 @@
             <div class="category-card-bg" style="background-image: url('/images/servicios.jpg'); background-color: #EA580C;"></div>
             <div class="category-card-content">
               <h4>🛵 Servicios</h4>
+              <p>Cauchera 24/7, Móvil, Latonería & 3D</p>
             </div>
           </div>
 
@@ -195,6 +206,7 @@
             <div class="category-card-bg" style="background-image: url('/images/ferreteria.jpg'); background-color: #B8860B;"></div>
             <div class="category-card-content">
               <h4>🛠️ Ferreterías</h4>
+              <p>Herramientas & Hogar</p>
             </div>
           </div>
         </div>
@@ -1451,7 +1463,8 @@
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             
-            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('comidas');" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; cursor: pointer;">
+            <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('comidas');" style="background: rgba(255, 107, 0, 0.15); border: 1.5px solid rgba(255, 107, 0, 0.4); border-radius: 12px; padding: 10px; cursor: pointer; position: relative;">
+              <span style="position: absolute; top: 6px; right: 6px; font-size: 8.5px; font-weight: 900; background: #FF6B00; color: #FFF; padding: 2px 6px; border-radius: 6px;">TOP</span>
               <div style="font-size: 22px; margin-bottom: 2px;">🍔</div>
               <div style="font-size: 12.5px; font-weight: 800; color: #FFF;">Restaurantes</div>
             </div>
