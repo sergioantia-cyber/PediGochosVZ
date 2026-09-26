@@ -131,8 +131,25 @@ const PaintServiceApp = {
 
   init() {
     this.setupWebSocket();
+    this.loadCatalog();
     this.checkHashRoute();
     window.addEventListener('hashchange', () => this.checkHashRoute());
+  },
+
+  async loadCatalog() {
+    try {
+      const res = await fetch('/api/paint-services/catalog');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          this.services = data;
+          const grid = document.getElementById('paint-catalog-grid');
+          if (grid) this.renderCatalog();
+        }
+      }
+    } catch(e) {
+      console.warn('Could not load paint catalog from backend:', e);
+    }
   },
 
   checkHashRoute() {
@@ -156,6 +173,10 @@ const PaintServiceApp = {
           } else if (data.type === 'PAINT_QUOTE_UPDATE' && this.activeQuote && data.quote.id === this.activeQuote.id) {
             this.activeQuote = data.quote;
             this.updateFichaTecnica(data.quote);
+          } else if (data.type === 'PAINT_CATALOG_UPDATE' && Array.isArray(data.items)) {
+            this.services = data.items;
+            const grid = document.getElementById('paint-catalog-grid');
+            if (grid) this.renderCatalog();
           }
         } catch (e) {
           console.warn('WS paint message parse error:', e);

@@ -149,8 +149,25 @@ const Print3DServiceApp = {
 
   init() {
     this.setupWebSocket();
+    this.loadCatalog();
     this.checkHashRoute();
     window.addEventListener('hashchange', () => this.checkHashRoute());
+  },
+
+  async loadCatalog() {
+    try {
+      const res = await fetch('/api/print3d-services/catalog');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          this.products = data;
+          const grid = document.getElementById('print3d-catalog-grid');
+          if (grid) this.renderCatalog();
+        }
+      }
+    } catch(e) {
+      console.warn('Could not load 3d catalog from backend:', e);
+    }
   },
 
   checkHashRoute() {
@@ -184,6 +201,10 @@ const Print3DServiceApp = {
           } else if (data.type === 'PRINT3D_QUOTE_UPDATE' && this.activeQuote && data.quote.id === this.activeQuote.id) {
             this.activeQuote = data.quote;
             this.updateFichaTecnica(data.quote);
+          } else if (data.type === 'PRINT3D_CATALOG_UPDATE' && Array.isArray(data.items)) {
+            this.products = data.items;
+            const grid = document.getElementById('print3d-catalog-grid');
+            if (grid) this.renderCatalog();
           }
         } catch (e) {
           console.warn('WS print3d message parse error:', e);

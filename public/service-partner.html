@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PediGochos Servicios - Panel del Taller & Proveedor</title>
+  <link rel="stylesheet" href="/css/common.css?v=180">
+  <link rel="stylesheet" href="/css/service-partner.css?v=10">
+</head>
+<body class="sp-body">
+
+  <!-- Service Selection Modal / Gate -->
+  <div id="sp-service-selector-gate" class="sp-gate-overlay hidden">
+    <div class="sp-gate-card">
+      <div class="sp-gate-header">
+        <div class="sp-gate-logo">🛠️</div>
+        <h2>PediGochos <span>Servicios</span></h2>
+        <p class="sp-gate-sub">Selecciona el módulo o taller de tu negocio</p>
+      </div>
+
+      <div class="sp-service-options">
+        <button type="button" class="sp-service-opt-card opt-paint" onclick="ServicePartnerApp.selectService('paint')">
+          <div class="opt-icon">🎨</div>
+          <div class="opt-info">
+            <strong>Pintura & Latonería Automotriz</strong>
+            <span>Presupuestos de latonería, piezas, horneado y acabados cerámicos</span>
+          </div>
+          <span class="opt-arrow">➔</span>
+        </button>
+
+        <button type="button" class="sp-service-opt-card opt-print3d" onclick="ServicePartnerApp.selectService('print3d')">
+          <div class="opt-icon">🖨️</div>
+          <div class="opt-info">
+            <strong>3D Lab & Prototipado</strong>
+            <span>Pedidos en PLA, PETG y Resina 4K, cotizaciones y tiempos de impresión</span>
+          </div>
+          <span class="opt-arrow">➔</span>
+        </button>
+
+        <button type="button" class="sp-service-opt-card opt-cauchera" onclick="ServicePartnerApp.selectService('cauchera')">
+          <div class="opt-icon">🛞</div>
+          <div class="opt-info">
+            <strong>Cauchera Móvil & Auxilio 24H</strong>
+            <span>Montallantas a domicilio, auxilios viales y emergencias con GPS</span>
+          </div>
+          <span class="opt-arrow">➔</span>
+        </button>
+      </div>
+
+      <div style="margin-top: 18px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <input type="checkbox" id="sp-remember-service" checked style="width: 16px; height: 16px; accent-color: #38BDF8;">
+        <label for="sp-remember-service" style="font-size: 12.5px; color: #94A3B8; cursor: pointer;">Recordar mi selección en esta app</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div class="sp-app-container">
+
+    <!-- Top App Bar -->
+    <header class="sp-header">
+      <div class="sp-header-left">
+        <button type="button" class="btn-sp-switch-service" onclick="ServicePartnerApp.openServiceSelector()" title="Cambiar Servicio">
+          <span id="sp-current-icon">🎨</span>
+          <div class="sp-title-group">
+            <h1 id="sp-current-title">Taller Pintura & Latonería</h1>
+            <span id="sp-current-sub" class="sp-badge-live">🟢 En Línea • Conectado</span>
+          </div>
+          <span class="sp-switch-arrow">▼</span>
+        </button>
+      </div>
+
+      <div class="sp-header-right">
+        <button type="button" class="sp-action-icon-btn" onclick="ServicePartnerApp.refreshCurrentView()" title="Recargar datos">
+          🔄
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="sp-tabs-nav">
+      <button type="button" class="sp-tab-btn active" id="tab-btn-quotes" onclick="ServicePartnerApp.switchTab('quotes')">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label">Cotizaciones</span>
+        <span class="sp-tab-badge hidden" id="badge-quotes-count">0</span>
+      </button>
+
+      <button type="button" class="sp-tab-btn" id="tab-btn-chat" onclick="ServicePartnerApp.switchTab('chat')">
+        <span class="tab-icon">💬</span>
+        <span class="tab-label">Chat en Vivo</span>
+        <span class="sp-tab-badge hidden" id="badge-chat-count">0</span>
+      </button>
+
+      <button type="button" class="sp-tab-btn" id="tab-btn-catalog" onclick="ServicePartnerApp.switchTab('catalog')">
+        <span class="tab-icon">🛠️</span>
+        <span class="tab-label">Catálogo & Precios</span>
+      </button>
+
+      <button type="button" class="sp-tab-btn" id="tab-btn-stats" onclick="ServicePartnerApp.switchTab('stats')">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">Métricas</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="sp-main-view">
+
+      <!-- ========================================== -->
+      <!-- TAB 1: COTIZACIONES & SOLICITUDES          -->
+      <!-- ========================================== -->
+      <section id="view-quotes" class="sp-tab-content active">
+        <!-- Sub-filters Bar -->
+        <div class="sp-filter-scroll">
+          <button type="button" class="sp-filter-pill active" onclick="ServicePartnerApp.setQuotesFilter('all', this)">
+            Todos (<span id="count-all">0</span>)
+          </button>
+          <button type="button" class="sp-filter-pill" onclick="ServicePartnerApp.setQuotesFilter('Solicitado', this)">
+            Nuevos (<span id="count-solicitado">0</span>)
+          </button>
+          <button type="button" class="sp-filter-pill" onclick="ServicePartnerApp.setQuotesFilter('En Conversación', this)">
+            En Chat (<span id="count-conversacion">0</span>)
+          </button>
+          <button type="button" class="sp-filter-pill" onclick="ServicePartnerApp.setQuotesFilter('Precio Acordado', this)">
+            Presupuestados (<span id="count-acordado">0</span>)
+          </button>
+          <button type="button" class="sp-filter-pill" onclick="ServicePartnerApp.setQuotesFilter('Concretado', this)">
+            Citas / Producción (<span id="count-concretado">0</span>)
+          </button>
+          <button type="button" class="sp-filter-pill" onclick="ServicePartnerApp.setQuotesFilter('Finalizado', this)">
+            Finalizados (<span id="count-finalizado">0</span>)
+          </button>
+        </div>
+
+        <!-- Quotes List Container -->
+        <div id="sp-quotes-list" class="sp-cards-container">
+          <div class="sp-loading-spinner">
+            <div class="spinner"></div>
+            <span>Cargando solicitudes...</span>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- TAB 2: CHAT EN VIVO                        -->
+      <!-- ========================================== -->
+      <section id="view-chat" class="sp-tab-content">
+        <div class="sp-chat-layout" id="sp-chat-layout">
+
+          <!-- Chat List View -->
+          <div class="sp-chat-sidebar" id="sp-chat-sidebar">
+            <div class="sp-chat-sidebar-header">
+              <h3>Mensajes & Conversaciones</h3>
+            </div>
+            <div class="sp-chat-threads-list" id="sp-chat-threads-list">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Chat Active View -->
+          <div class="sp-chat-active-panel hidden" id="sp-chat-active-panel">
+            <header class="sp-chat-box-header">
+              <button type="button" class="btn-chat-back-mobile" onclick="ServicePartnerApp.closeActiveChatMobile()">←</button>
+              <div class="sp-chat-contact-info">
+                <strong id="sp-chat-target-name">Cliente</strong>
+                <span id="sp-chat-target-detail">Vehículo / Detalle</span>
+              </div>
+              <div class="sp-chat-header-actions">
+                <button type="button" class="btn-chat-action-quick" onclick="ServicePartnerApp.openPriceModalForActiveChat()">
+                  💰 Presupuestar
+                </button>
+                <button type="button" class="btn-chat-action-quick" onclick="ServicePartnerApp.openAppointmentModalForActiveChat()">
+                  📅 Agendar
+                </button>
+              </div>
+            </header>
+
+            <!-- Sticky Ficha Técnica summary inside Chat -->
+            <div class="sp-chat-sticky-quote" id="sp-chat-sticky-quote">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="sp-chat-messages-area" id="sp-chat-messages-stream">
+              <!-- Bubbles -->
+            </div>
+
+            <!-- Quick Response Presets Chips -->
+            <div class="sp-quick-chips-scroll" id="sp-quick-chips-container">
+              <!-- Preset chips loaded according to current service -->
+            </div>
+
+            <!-- Input Bar -->
+            <form class="sp-chat-input-bar" onsubmit="event.preventDefault(); ServicePartnerApp.sendCurrentChatMessage();">
+              <input type="text" id="sp-chat-input-field" placeholder="Escribe tu mensaje o presupuesto..." autocomplete="off">
+              <button type="submit" class="btn-sp-chat-send" title="Enviar Mensaje">
+                ➤
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- TAB 3: CATÁLOGO & SERVICIOS EDITOR         -->
+      <!-- ========================================== -->
+      <section id="view-catalog" class="sp-tab-content">
+        <div class="sp-catalog-toolbar">
+          <div>
+            <h2 class="sp-section-heading">Catálogo de Productos y Servicios</h2>
+            <p class="sp-section-sub">Los clientes ven estos precios y servicios directamente en el app PediGochos.</p>
+          </div>
+          <button type="button" class="btn-sp-add-item" onclick="ServicePartnerApp.openItemEditorModal(null)">
+            <span>➕</span> Agregar Nuevo
+          </button>
+        </div>
+
+        <div id="sp-catalog-items-grid" class="sp-catalog-grid">
+          <div class="sp-loading-spinner">
+            <div class="spinner"></div>
+            <span>Cargando catálogo...</span>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- TAB 4: MÉTRICAS Y RENDIMIENTO              -->
+      <!-- ========================================== -->
+      <section id="view-stats" class="sp-tab-content">
+        <h2 class="sp-section-heading" style="margin-bottom: 4px;">Rendimiento de tu Negocio</h2>
+        <p class="sp-section-sub" style="margin-bottom: 16px;">Monitorea tus presupuestos concretados y flujo de clientes.</p>
+
+        <div class="sp-stats-grid">
+          <div class="sp-stat-card stat-primary">
+            <div class="stat-icon">💰</div>
+            <div class="stat-data">
+              <span class="stat-num" id="stat-money-usd">$0 USD</span>
+              <span class="stat-desc">Presupuestos Aprobados</span>
+            </div>
+          </div>
+
+          <div class="sp-stat-card stat-success">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-data">
+              <span class="stat-num" id="stat-conversion-rate">0%</span>
+              <span class="stat-desc">Tasa de Concreción</span>
+            </div>
+          </div>
+
+          <div class="sp-stat-card stat-accent">
+            <div class="stat-icon">📥</div>
+            <div class="stat-data">
+              <span class="stat-num" id="stat-total-quotes">0</span>
+              <span class="stat-desc">Solicitudes Totales</span>
+            </div>
+          </div>
+
+          <div class="sp-stat-card stat-warning">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-data">
+              <span class="stat-num" id="stat-avg-response">~3 min</span>
+              <span class="stat-desc">Tiempo de Respuesta</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funnel breakdown -->
+        <div class="sp-stats-breakdown-card">
+          <h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 800; color: #FFF;">Embudo de Cotizaciones</h3>
+          <div class="sp-funnel-item">
+            <span>Nuevas Solicitadas:</span>
+            <strong id="stat-funnel-solicitadas" style="color: #38BDF8;">0</strong>
+          </div>
+          <div class="sp-funnel-item">
+            <span>En Conversación:</span>
+            <strong id="stat-funnel-conversacion" style="color: #F59E0B;">0</strong>
+          </div>
+          <div class="sp-funnel-item">
+            <span>Presupuestadas / Acordadas:</span>
+            <strong id="stat-funnel-acordadas" style="color: #818CF8;">0</strong>
+          </div>
+          <div class="sp-funnel-item">
+            <span>Citas / En Proceso:</span>
+            <strong id="stat-funnel-concretadas" style="color: #10B981;">0</strong>
+          </div>
+          <div class="sp-funnel-item">
+            <span>Trabajos Finalizados:</span>
+            <strong id="stat-funnel-finalizadas" style="color: #34D399;">0</strong>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: EDITAR / AGREGAR ITEM DE CATÁLOGO   -->
+  <!-- ========================================== -->
+  <div id="sp-item-editor-modal" class="sp-modal-overlay hidden" onclick="if(event.target === this) ServicePartnerApp.closeItemEditorModal()">
+    <div class="sp-modal-content">
+      <header class="sp-modal-header">
+        <h3 id="item-editor-title">Editar Servicio</h3>
+        <button type="button" class="btn-modal-close" onclick="ServicePartnerApp.closeItemEditorModal()">✕</button>
+      </header>
+
+      <form id="sp-item-form" onsubmit="event.preventDefault(); ServicePartnerApp.saveItemEditor();" class="sp-modal-form">
+        <input type="hidden" id="edit-item-id">
+
+        <div class="sp-form-group">
+          <label>Título del Servicio / Producto *</label>
+          <input type="text" id="edit-item-title" required placeholder="Ej. Pintura Parachoques al Horno">
+        </div>
+
+        <div class="sp-form-row">
+          <div class="sp-form-group">
+            <label>Precio Base (USD) *</label>
+            <input type="text" id="edit-item-price" required placeholder="Ej. 45 - 80 / pieza o 18.00">
+          </div>
+          <div class="sp-form-group">
+            <label>Tiempo Estimado *</label>
+            <input type="text" id="edit-item-days" required placeholder="Ej. 24-48 horas o 5 horas">
+          </div>
+        </div>
+
+        <div class="sp-form-row">
+          <div class="sp-form-group">
+            <label>Categoría</label>
+            <input type="text" id="edit-item-category" placeholder="Ej. pieza, general, repuestos">
+          </div>
+          <div class="sp-form-group">
+            <label>Tipo de Vehículo / Material</label>
+            <input type="text" id="edit-item-vehicletype" placeholder="Ej. Sedán, PLA, PETG">
+          </div>
+        </div>
+
+        <div class="sp-form-group">
+          <label>Descripción Detallada *</label>
+          <textarea id="edit-item-desc" rows="3" required placeholder="Explica el proceso, materiales y garantía que ofreces..."></textarea>
+        </div>
+
+        <div class="sp-form-group">
+          <label>URL de Imagen Ilustrativa</label>
+          <input type="text" id="edit-item-image" placeholder="/images/servicios.jpg">
+        </div>
+
+        <div class="sp-form-group">
+          <label>Etiquetas / Ventajas (separadas por coma)</label>
+          <input type="text" id="edit-item-tags" placeholder="Ej. Horno de Pintura, Barniz PPG, Garantía 2 Años">
+        </div>
+
+        <div class="sp-form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+          <input type="checkbox" id="edit-item-active" checked style="width: 18px; height: 18px; accent-color: #10B981;">
+          <label for="edit-item-active" style="cursor: pointer; font-weight: 700;">Servicio Activo y Visible para Clientes</label>
+        </div>
+
+        <div class="sp-modal-actions">
+          <button type="button" class="btn-sp-danger hidden" id="btn-delete-item" onclick="ServicePartnerApp.deleteCurrentItem()">
+            🗑️ Eliminar
+          </button>
+          <div style="display: flex; gap: 10px; margin-left: auto;">
+            <button type="button" class="btn-sp-cancel" onclick="ServicePartnerApp.closeItemEditorModal()">Cancelar</button>
+            <button type="submit" class="btn-sp-primary">💾 Guardar Cambios</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: FIJAR PRECIO ACORDADO (USD)         -->
+  <!-- ========================================== -->
+  <div id="sp-price-modal" class="sp-modal-overlay hidden" onclick="if(event.target === this) ServicePartnerApp.closePriceModal()">
+    <div class="sp-modal-content">
+      <header class="sp-modal-header">
+        <h3>💰 Fijar Presupuesto Acordado (USD)</h3>
+        <button type="button" class="btn-modal-close" onclick="ServicePartnerApp.closePriceModal()">✕</button>
+      </header>
+
+      <form onsubmit="event.preventDefault(); ServicePartnerApp.submitAgreedPrice();" class="sp-modal-form">
+        <p style="font-size: 12.5px; color: #94A3B8; margin: 0 0 12px 0;">
+          El cliente verá este precio fijado en su ficha de cotización y chat en vivo.
+        </p>
+
+        <div class="sp-form-group">
+          <label>Monto Cerrado en USD ($) *</label>
+          <input type="number" step="0.5" id="input-agreed-usd" required placeholder="Ej. 120" style="font-size: 18px; font-weight: 900; color: #38BDF8;">
+        </div>
+
+        <div class="sp-form-group">
+          <label>Detalles / Condiciones del Presupuesto</label>
+          <input type="text" id="input-agreed-notes" placeholder="Ej. Incluye pulitura de faros y pintura tricapa con 2 años de garantía">
+        </div>
+
+        <div class="sp-modal-actions">
+          <button type="button" class="btn-sp-cancel" onclick="ServicePartnerApp.closePriceModal()">Cancelar</button>
+          <button type="submit" class="btn-sp-primary">✅ Enviar Presupuesto al Cliente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: AGENDAR CITA O INGRESO AL TALLER    -->
+  <!-- ========================================== -->
+  <div id="sp-appointment-modal" class="sp-modal-overlay hidden" onclick="if(event.target === this) ServicePartnerApp.closeAppointmentModal()">
+    <div class="sp-modal-content">
+      <header class="sp-modal-header">
+        <h3>📅 Agendar Cita o Recepción</h3>
+        <button type="button" class="btn-modal-close" onclick="ServicePartnerApp.closeAppointmentModal()">✕</button>
+      </header>
+
+      <form onsubmit="event.preventDefault(); ServicePartnerApp.submitAppointment();" class="sp-modal-form">
+        <div class="sp-form-group">
+          <label>Fecha y Hora sugerida *</label>
+          <input type="datetime-local" id="input-appointment-date" required>
+        </div>
+
+        <div class="sp-form-group">
+          <label>Instrucciones de Recepción</label>
+          <input type="text" id="input-appointment-notes" placeholder="Ej. Traer el vehículo limpio por la mañana para inspección de chapa">
+        </div>
+
+        <div class="sp-modal-actions">
+          <button type="button" class="btn-sp-cancel" onclick="ServicePartnerApp.closeAppointmentModal()">Cancelar</button>
+          <button type="submit" class="btn-sp-primary">📅 Confirmar Cita</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Audio Chimes -->
+  <audio id="sp-chime-quote" preload="auto">
+    <source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18AAAAAAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn8=" type="audio/wav">
+  </audio>
+
+  <script src="/js/service-partner.js?v=10"></script>
+</body>
+</html>

@@ -2573,6 +2573,121 @@ if (!fs.existsSync(PAINT_QUOTES_FILE) || readPaintQuotes().length === 0) {
   writePaintQuotes(initialPaintQuotes);
 }
 
+// Paint Services Catalog Persistence
+const PAINT_CATALOG_FILE = path.join(__dirname, 'paint_catalog.json');
+function readPaintCatalog() {
+  try {
+    if (fs.existsSync(PAINT_CATALOG_FILE)) {
+      const data = JSON.parse(fs.readFileSync(PAINT_CATALOG_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch(e) {}
+  return [
+    {
+      id: 'paint-1',
+      title: 'Pintura General al Horno - Acabado Espejo',
+      category: 'general',
+      workshop: 'AutoPinturas Los Andes (San Antonio)',
+      rating: 4.9,
+      estDays: '5-7 días hábiles',
+      vehicleType: 'Sedán / SUV',
+      desc: 'Desarme completo de molduras, preparación de chapa, fondo epóxico, 3 manos de color bicapa y barniz cerámico secado al horno.',
+      priceUsd: '380 - 550',
+      image: '/images/burger_royale.jpg',
+      tags: ['Horno de Pintura', 'Barniz Cerámico', 'Garantía 2 Años'],
+      active: true
+    },
+    {
+      id: 'paint-2',
+      title: 'Pintura de Parachoques & Piezas Individuales',
+      category: 'pieza',
+      workshop: 'Taller Rápido El Tachirense',
+      rating: 4.8,
+      estDays: '24-48 horas',
+      vehicleType: 'Cualquier Modelo',
+      desc: 'Igualación computarizada del color original por código VIN. Eliminación de rayones y acabado de fábrica en parachoques o puertas.',
+      priceUsd: '45 - 80 / pieza',
+      image: '/images/servicios.jpg',
+      tags: ['Mismo Tono Garantizado', 'Secado Express', 'Pintura PPG'],
+      active: true
+    },
+    {
+      id: 'paint-3',
+      title: 'Latonería Especializada & Sacado de Golpes',
+      category: 'latoneria',
+      workshop: 'Latonería & Chasis San Cristóbal / Frontera',
+      rating: 4.9,
+      estDays: '2-4 días',
+      vehicleType: 'Autos & Pick-ups',
+      desc: 'Reparación con máquina spotter sin dañar temple de lámina, alineación de guardafangos, compactos y reconstrucción plástica.',
+      priceUsd: '60 - 180',
+      image: '/images/ferreteria.jpg',
+      tags: ['Tiraje de Chasis', 'Spotter Eléctrico', 'Reparación de Plásticos'],
+      active: true
+    },
+    {
+      id: 'paint-4',
+      title: 'Pulitura Corrección 3 Pasos & Tratamiento Cerámico 9H',
+      category: 'pulitura',
+      workshop: 'Detailing Gocho Studio',
+      rating: 5.0,
+      estDays: '1 día (8 horas)',
+      vehicleType: 'Todos',
+      desc: 'Corte fino de micro-rayas (swirls), abrillantado profundo y aplicación de sellador cerámico hidrofóbico con protección UV 9H.',
+      priceUsd: '70 - 130',
+      image: '/images/burger_royale.jpg',
+      tags: ['Sellado 9H', 'Efecto Hidrofóbico', 'Brillo Máximo'],
+      active: true
+    },
+    {
+      id: 'paint-5',
+      title: 'Acabados Especiales: Negro Satinado / Mate & Candy',
+      category: 'especiales',
+      workshop: 'Custom Paint Frontera',
+      rating: 4.9,
+      estDays: '7-10 días',
+      vehicleType: 'Autos & Motos',
+      desc: 'Personalización de alta gama con barnices mate de tacto sedoso, efectos perla tornasol y bicapas candy de profundidad única.',
+      priceUsd: '450 - 750',
+      image: '/images/servicios.jpg',
+      tags: ['Poliuretano Mate', 'Efecto Tricapa', 'Show Car'],
+      active: true
+    }
+  ];
+}
+
+function writePaintCatalog(data) {
+  try {
+    fs.writeFileSync(PAINT_CATALOG_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing paint_catalog.json:', e);
+  }
+}
+
+if (!fs.existsSync(PAINT_CATALOG_FILE)) {
+  writePaintCatalog(readPaintCatalog());
+}
+
+// GET paint catalog
+app.get('/api/paint-services/catalog', (req, res) => {
+  res.json(readPaintCatalog());
+});
+
+// PUT / UPDATE paint catalog
+app.put('/api/paint-services/catalog', (req, res) => {
+  const items = req.body;
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'Formato inválido' });
+  writePaintCatalog(items);
+
+  // Broadcast catalog update via WebSocket
+  const payload = JSON.stringify({ type: 'PAINT_CATALOG_UPDATE', items });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, count: items.length });
+});
+
 // GET all paint quotes
 app.get('/api/paint-services/quotes', (req, res) => {
   const quotes = readPaintQuotes();
@@ -2923,6 +3038,147 @@ if (!fs.existsSync(PRINT3D_QUOTES_FILE) || readPrint3dQuotes().length === 0) {
   ];
   writePrint3dQuotes(initial3dQuotes);
 }
+
+// Print 3D Services Catalog Persistence
+const PRINT3D_CATALOG_FILE = path.join(__dirname, 'print3d_catalog.json');
+function readPrint3dCatalog() {
+  try {
+    if (fs.existsSync(PRINT3D_CATALOG_FILE)) {
+      const data = JSON.parse(fs.readFileSync(PRINT3D_CATALOG_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch(e) {}
+  return [
+    {
+      id: 'print-1',
+      slug: 'soporte-celular-volante',
+      title: 'Soporte Celular Ergonómico para Auto / Moto',
+      category: 'repuestos',
+      material: 'petg',
+      baseDimensions: { x: 8.5, y: 7.2, z: 9.0 },
+      basePriceUsd: 12.0,
+      estPrintHours: 4.5,
+      weightGrams: 65,
+      image: '/images/servicios.jpg',
+      modelGlb: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+      desc: 'Soporte de alta durabilidad para sujetar smartphone en salpicadero o manillar. Resistente a vibraciones y exposición solar prolongada.',
+      tags: ['Resistente UV', 'Antivibración', 'Grip Firme'],
+      active: true
+    },
+    {
+      id: 'print-2',
+      slug: 'dragon-articulado-3d',
+      title: 'Dragón Articulado Legendario (Print-in-Place)',
+      category: 'coleccionables',
+      material: 'pla',
+      baseDimensions: { x: 32.0, y: 8.0, z: 6.5 },
+      basePriceUsd: 18.0,
+      estPrintHours: 8.0,
+      weightGrams: 110,
+      image: '/images/burger_royale.jpg',
+      modelGlb: 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
+      desc: 'Figura coleccionable totalmente articulada impresa en una sola pieza continua. Movimiento flexible suave ideal para regalo o escritorio.',
+      tags: ['100% Articulado', 'Coleccionable', 'Sin Ensamblaje'],
+      active: true
+    },
+    {
+      id: 'print-3',
+      slug: 'engranaje-repuesto-industrial',
+      title: 'Engranaje de Reemplazo & Repuestos Mecánicos',
+      category: 'repuestos',
+      material: 'petg',
+      baseDimensions: { x: 6.0, y: 6.0, z: 2.5 },
+      basePriceUsd: 9.5,
+      estPrintHours: 2.5,
+      weightGrams: 35,
+      image: '/images/ferreteria.jpg',
+      modelGlb: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+      desc: 'Fabricación precisa de dientes y tolerancias para piezas descatalogadas de licuadoras, taladros, elevavidrios o maquinaria.',
+      tags: ['Tolerancia 0.1mm', 'Alta Torsión', 'A Medida'],
+      active: true
+    },
+    {
+      id: 'print-4',
+      slug: 'llavero-pedigochos-turbo',
+      title: 'Llaveros Personalizados & Merch con Relieve',
+      category: 'llaveros',
+      material: 'pla',
+      baseDimensions: { x: 5.5, y: 3.0, z: 0.6 },
+      basePriceUsd: 3.5,
+      estPrintHours: 0.8,
+      weightGrams: 15,
+      image: '/images/burger_royale.jpg',
+      modelGlb: 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
+      desc: 'Llaveros corporativos y souvenirs con logo en dos colores o relieve tridimensional. Descuentos por volumen para negocios.',
+      tags: ['Doble Color', 'Empresarial', 'Bajo Costo'],
+      active: true
+    },
+    {
+      id: 'print-5',
+      slug: 'soporte-auriculares-gamer',
+      title: 'Soporte Minimalista para Auriculares Gamer / DJ',
+      category: 'soportes',
+      material: 'pla',
+      baseDimensions: { x: 12.0, y: 14.0, z: 24.0 },
+      basePriceUsd: 16.0,
+      estPrintHours: 7.0,
+      weightGrams: 140,
+      image: '/images/servicios.jpg',
+      modelGlb: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+      desc: 'Diseño geométrico moderno con base pesada antiderrapante y curvatura que cuida la diadema de tus audífonos.',
+      tags: ['Estilo Gamer', 'Base Firme', 'Geométrico'],
+      active: true
+    },
+    {
+      id: 'print-6',
+      slug: 'maceta-geometrica-voronoi',
+      title: 'Maceta Geométrica Facetada & Lámpara Decorativa',
+      category: 'decoracion',
+      material: 'pla',
+      baseDimensions: { x: 10.0, y: 10.0, z: 9.5 },
+      basePriceUsd: 11.0,
+      estPrintHours: 5.0,
+      weightGrams: 85,
+      image: '/images/burger_royale.jpg',
+      modelGlb: 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
+      desc: 'Maceta con patrón poligonal para suculentas o portavelas con drenaje oculto. Hermoso brillo en acabados seda y mármol.',
+      tags: ['Diseño Poligonal', 'Decoración', 'Con Drenaje'],
+      active: true
+    }
+  ];
+}
+
+function writePrint3dCatalog(data) {
+  try {
+    fs.writeFileSync(PRINT3D_CATALOG_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing print3d_catalog.json:', e);
+  }
+}
+
+if (!fs.existsSync(PRINT3D_CATALOG_FILE)) {
+  writePrint3dCatalog(readPrint3dCatalog());
+}
+
+// GET 3d catalog
+app.get('/api/print3d-services/catalog', (req, res) => {
+  res.json(readPrint3dCatalog());
+});
+
+// PUT / UPDATE 3d catalog
+app.put('/api/print3d-services/catalog', (req, res) => {
+  const items = req.body;
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'Formato inválido' });
+  writePrint3dCatalog(items);
+
+  // Broadcast catalog update via WebSocket
+  const payload = JSON.stringify({ type: 'PRINT3D_CATALOG_UPDATE', items });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, count: items.length });
+});
 
 // GET all 3d quotes
 app.get('/api/print3d-services/quotes', (req, res) => {

@@ -12,6 +12,8 @@
     "kitchen:build": "node scripts/build-kitchen-app.js && npx cap sync android",
     "driver:apk": "node scripts/build-driver-apk.js",
     "driver:build": "node scripts/build-driver-app.js && npx cap sync android",
+    "service:apk": "node scripts/build-service-apk.js",
+    "service:build": "node scripts/build-service-app.js && npx cap sync android",
     "cap:open": "npx cap open android"
   },
   "dependencies": {
