@@ -141,6 +141,7 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
     selectedModel: 'suzuki_gn_125',
     customModelName: '',
     selectedPieces: ['gn_tanque'],
+    modelSearchQuery: '',
     hasLatoneria: false,
     latoneriaSeverity: 'leve',
     finishType: 'bicapa',
@@ -165,6 +166,7 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       { id: 'keeway', name: 'Empire Keeway' },
       { id: 'yamaha', name: 'Yamaha' },
       { id: 'honda', name: 'Honda' },
+      { id: 'bajaj_tvs', name: 'Bajaj / TVS' },
       { id: 'otras', name: 'Otras' }
     ],
     sedan: [
@@ -172,7 +174,12 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       { id: 'chevrolet', name: 'Chevrolet' },
       { id: 'toyota', name: 'Toyota' },
       { id: 'ford', name: 'Ford' },
+      { id: 'renault', name: 'Renault' },
+      { id: 'nissan', name: 'Nissan' },
+      { id: 'mazda', name: 'Mazda' },
       { id: 'hyundai_kia', name: 'Hyundai / Kia' },
+      { id: 'volkswagen', name: 'Volkswagen' },
+      { id: 'fiat_daewoo', name: 'Fiat / Daewoo' },
       { id: 'otras', name: 'Otras' }
     ],
     suv: [
@@ -181,6 +188,9 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       { id: 'chevrolet', name: 'Chevrolet' },
       { id: 'ford', name: 'Ford' },
       { id: 'jeep', name: 'Jeep' },
+      { id: 'mitsubishi', name: 'Mitsubishi' },
+      { id: 'renault', name: 'Renault' },
+      { id: 'daihatsu', name: 'Daihatsu' },
       { id: 'otras', name: 'Otras' }
     ],
     pickup: [
@@ -188,6 +198,9 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       { id: 'toyota', name: 'Toyota' },
       { id: 'chevrolet', name: 'Chevrolet' },
       { id: 'ford', name: 'Ford' },
+      { id: 'dodge_ram', name: 'RAM' },
+      { id: 'mitsubishi_mazda', name: 'Mitsubishi / Mazda' },
+      { id: 'nissan', name: 'Nissan' },
       { id: 'otras', name: 'Otras' }
     ]
   },
@@ -204,69 +217,149 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       { id: 'suzuki_hj_125_cool', brand: 'suzuki', brandGroup: 'suzuki_gn_hj', name: 'Suzuki HJ 125 Cool (Haojue)', pieceType: 'hj_cool', badge: 'Top Ventas', icon: '🏍️', image: 'images/vehicles/suzuki_hj_cool.jpg' },
       { id: 'suzuki_hj_150_cool', brand: 'suzuki', brandGroup: 'suzuki_gn_hj', name: 'Suzuki HJ 150 Cool', pieceType: 'hj_cool', badge: 'Deportiva', icon: '🏍️', image: 'images/vehicles/suzuki_hj_150.jpg' },
       // Otras Suzuki
+      { id: 'suzuki_gixxer_150_250', brand: 'suzuki', name: 'Suzuki Gixxer 150 / 250 (SF/NKD)', pieceType: 'sport_bike', badge: 'Sport', icon: '🏍️', image: 'images/vehicles/yamaha_fz.jpg' },
       { id: 'suzuki_en_125', brand: 'suzuki', name: 'Suzuki EN 125 / GSX 150', pieceType: 'naked', badge: '', icon: '🏍️', image: 'images/vehicles/suzuki_en.jpg' },
       { id: 'suzuki_ax_100', brand: 'suzuki', name: 'Suzuki AX 100 / AX 4', pieceType: 'naked', badge: '2 Tiempos', icon: '🏍️', image: 'images/vehicles/suzuki_ax100.jpg' },
+      { id: 'suzuki_vivax_best', brand: 'suzuki', name: 'Suzuki Vivax 115 / Best 125', pieceType: 'scooter', badge: 'Semiauto', icon: '🛵', image: 'images/vehicles/moto_scooter.jpg' },
       { id: 'suzuki_dr_200_650', brand: 'suzuki', name: 'Suzuki DR 200 / DR 650', pieceType: 'enduro', badge: 'Enduro', icon: '🏍️', image: 'images/vehicles/suzuki_dr.jpg' },
       { id: 'suzuki_vstrom', brand: 'suzuki', name: 'Suzuki V-Strom 650 / 1000', pieceType: 'naked', badge: 'Touring', icon: '🏍️', image: 'images/vehicles/suzuki_vstrom.jpg' },
       // Bera
       { id: 'bera_sbr_150', brand: 'bera', name: 'Bera SBR 150 (New Bera)', pieceType: 'naked', badge: 'Muy Común', icon: '🏍️', image: 'images/vehicles/bera_sbr.jpg' },
+      { id: 'bera_kavak_150', brand: 'bera', name: 'Bera Kavak 150', pieceType: 'naked', badge: 'Popular', icon: '🏍️', image: 'images/vehicles/bera_sbr.jpg' },
       { id: 'bera_socialista', brand: 'bera', name: 'Bera Socialista / Titán 150', pieceType: 'naked', badge: '', icon: '🏍️', image: 'images/vehicles/bera_socialista.jpg' },
       { id: 'bera_leon', brand: 'bera', name: 'Bera León 150 / 200', pieceType: 'naked', badge: '', icon: '🏍️', image: 'images/vehicles/bera_leon.jpg' },
+      { id: 'bera_milan_150', brand: 'bera', name: 'Bera Milán 150 (Scooter)', pieceType: 'scooter', badge: 'Scooter', icon: '🛵', image: 'images/vehicles/moto_scooter.jpg' },
       { id: 'bera_meru_koko', brand: 'bera', name: 'Bera Merú / Koko (Scooter)', pieceType: 'scooter', badge: 'Scooter', icon: '🛵', image: 'images/vehicles/moto_scooter.jpg' },
       { id: 'bera_br_200', brand: 'bera', name: 'Bera BR 200 / DT', pieceType: 'enduro', badge: 'Cross', icon: '🏍️', image: 'images/vehicles/moto_enduro.jpg' },
+      { id: 'bera_corralero_cross', brand: 'bera', name: 'Bera Corralero / DT 200 Cross', pieceType: 'enduro', badge: 'Trabajo', icon: '🏍️', image: 'images/vehicles/moto_enduro.jpg' },
       // Empire Keeway
       { id: 'keeway_horse', brand: 'keeway', name: 'Empire Keeway Horse 150 (I/II)', pieceType: 'naked', badge: 'Clásica', icon: '🏍️', image: 'images/vehicles/keeway_horse.jpg' },
+      { id: 'keeway_speed_200', brand: 'keeway', name: 'Empire Keeway Speed 150 / 200', pieceType: 'naked', badge: 'Clásica', icon: '🏍️', image: 'images/vehicles/keeway_horse.jpg' },
       { id: 'keeway_arsen_2', brand: 'keeway', name: 'Empire Keeway Arsen II 150', pieceType: 'naked', badge: 'Deportiva', icon: '🏍️', image: 'images/vehicles/keeway_arsen.jpg' },
       { id: 'keeway_owen', brand: 'keeway', name: 'Empire Keeway Owen 150', pieceType: 'naked', badge: '', icon: '🏍️', image: 'images/vehicles/keeway_owen.jpg' },
       { id: 'keeway_express', brand: 'keeway', name: 'Empire Keeway Express 150', pieceType: 'naked', badge: 'Trabajo', icon: '🏍️', image: 'images/vehicles/keeway_horse.jpg' },
       { id: 'keeway_tx_200', brand: 'keeway', name: 'Empire Keeway TX 200', pieceType: 'enduro', badge: 'Enduro', icon: '🏍️', image: 'images/vehicles/keeway_tx.jpg' },
       { id: 'keeway_rkv_200', brand: 'keeway', name: 'Empire Keeway RKV 200', pieceType: 'naked', badge: '', icon: '🏍️', image: 'images/vehicles/keeway_arsen.jpg' },
+      { id: 'keeway_rk6_tnt', brand: 'keeway', name: 'Empire Keeway RK6 / TNT 300/600', pieceType: 'sport_bike', badge: 'Alta Gama', icon: '🏍️', image: 'images/vehicles/keeway_arsen.jpg' },
       { id: 'keeway_outlook', brand: 'keeway', name: 'Empire Keeway Outlook 150', pieceType: 'scooter', badge: 'Scooter', icon: '🛵', image: 'images/vehicles/moto_scooter.jpg' },
       // Yamaha
       { id: 'yamaha_dt_125', brand: 'yamaha', name: 'Yamaha DT 125 / 175', pieceType: 'enduro', badge: 'Leyenda', icon: '🏍️', image: 'images/vehicles/yamaha_dt.jpg' },
       { id: 'yamaha_ybr_125', brand: 'yamaha', name: 'Yamaha YBR 125', pieceType: 'naked', badge: '', icon: '🏍️', image: 'images/vehicles/yamaha_ybr.jpg' },
       { id: 'yamaha_bws_125', brand: 'yamaha', name: 'Yamaha BWS 125', pieceType: 'scooter', badge: 'Scooter', icon: '🛵', image: 'images/vehicles/yamaha_bws.jpg' },
       { id: 'yamaha_fz_16', brand: 'yamaha', name: 'Yamaha FZ 16 / FZ 2.0', pieceType: 'naked', badge: '', icon: '🏍️', image: 'images/vehicles/yamaha_fz.jpg' },
+      { id: 'yamaha_xt_660', brand: 'yamaha', name: 'Yamaha XT 660 / Ténéré', pieceType: 'enduro', badge: 'Alta Gama', icon: '🏍️', image: 'images/vehicles/suzuki_dr.jpg' },
+      { id: 'yamaha_crypton_115', brand: 'yamaha', name: 'Yamaha Crypton 115', pieceType: 'scooter', badge: 'Semiauto', icon: '🛵', image: 'images/vehicles/moto_scooter.jpg' },
       // Honda
       { id: 'honda_cg_125', brand: 'honda', name: 'Honda CG 125 / Titán', pieceType: 'naked', badge: '', icon: '🏍️', image: 'images/vehicles/honda_cg.jpg' },
       { id: 'honda_xr_150', brand: 'honda', name: 'Honda XR 150L / 190L', pieceType: 'enduro', badge: 'Enduro', icon: '🏍️', image: 'images/vehicles/honda_xr.jpg' },
       { id: 'honda_tornado', brand: 'honda', name: 'Honda Tornado 250', pieceType: 'enduro', badge: 'Enduro', icon: '🏍️', image: 'images/vehicles/honda_tornado.jpg' },
+      { id: 'honda_cbf_cb190', brand: 'honda', name: 'Honda CB 190R / CBF 150 / Invicta', pieceType: 'sport_bike', badge: 'Sport', icon: '🏍️', image: 'images/vehicles/honda_cg.jpg' },
+      { id: 'honda_wave_110', brand: 'honda', name: 'Honda Wave 110 / Biz 125', pieceType: 'scooter', badge: 'Semiauto', icon: '🛵', image: 'images/vehicles/moto_scooter.jpg' },
+      // Bajaj & TVS
+      { id: 'bajaj_pulsar_ns200', brand: 'bajaj_tvs', name: 'Bajaj Pulsar NS 200 / RS 200 / 180', pieceType: 'sport_bike', badge: 'Top Sport', icon: '🏍️', image: 'images/vehicles/bajaj_pulsar.jpg' },
+      { id: 'tvs_apache_160_200', brand: 'bajaj_tvs', name: 'TVS Apache RTR 160 / 180 / 200 4V', pieceType: 'sport_bike', badge: 'Sport', icon: '🏍️', image: 'images/vehicles/bajaj_pulsar.jpg' },
       // Otras Motos
       { id: 'moto_clasica_paseo', brand: 'otras', name: 'Moto Paseo / Clásica General', pieceType: 'naked', badge: '', icon: '🏍️', image: 'images/vehicles/moto_clasica.jpg' },
       { id: 'moto_scooter_gen', brand: 'otras', name: 'Scooter Automática General', pieceType: 'scooter', badge: 'Scooter', icon: '🛵', image: 'images/vehicles/moto_scooter.jpg' },
       { id: 'moto_enduro_gen', brand: 'otras', name: 'Moto Enduro / Cross General', pieceType: 'enduro', badge: 'Cross', icon: '🏍️', image: 'images/vehicles/moto_enduro.jpg' }
     ],
     sedan: [
+      // Chevrolet
       { id: 'chevrolet_aveo', brand: 'chevrolet', name: 'Chevrolet Aveo (3/4/5 ptas)', pieceType: 'sedan', badge: 'Popular', icon: '🚗', image: 'images/vehicles/chevrolet_aveo.jpg' },
-      { id: 'chevrolet_spark', brand: 'chevrolet', name: 'Chevrolet Spark / Matiz', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/chevrolet_spark.jpg' },
-      { id: 'chevrolet_corsa', brand: 'chevrolet', name: 'Chevrolet Corsa / Chevy', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/chevrolet_corsa.jpg' },
-      { id: 'chevrolet_optra', brand: 'chevrolet', name: 'Chevrolet Optra / Cruze', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/chevrolet_optra.jpg' },
-      { id: 'toyota_corolla', brand: 'toyota', name: 'Toyota Corolla (Baby / New / GLI)', pieceType: 'sedan', badge: 'Top', icon: '🚗', image: 'images/vehicles/toyota_corolla.jpg' },
-      { id: 'toyota_yaris', brand: 'toyota', name: 'Toyota Yaris / Starlet', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/toyota_yaris.jpg' },
-      { id: 'ford_fiesta', brand: 'ford', name: 'Ford Fiesta (Power / Max / Move)', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/ford_fiesta.jpg' },
+      { id: 'chevrolet_spark', brand: 'chevrolet', name: 'Chevrolet Spark / Matiz', pieceType: 'hatchback_compact', badge: '', icon: '🚗', image: 'images/vehicles/chevrolet_spark.jpg' },
+      { id: 'chevrolet_corsa', brand: 'chevrolet', name: 'Chevrolet Corsa / Chevy', pieceType: 'hatchback_compact', badge: '', icon: '🚗', image: 'images/vehicles/chevrolet_corsa.jpg' },
+      { id: 'chevrolet_optra', brand: 'chevrolet', name: 'Chevrolet Optra (Design / Advance)', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/chevrolet_optra.jpg' },
+      { id: 'chevrolet_cruze', brand: 'chevrolet', name: 'Chevrolet Cruze / Sonic', pieceType: 'sedan', badge: 'Moderno', icon: '🚗', image: 'images/vehicles/chevrolet_cruze.jpg' },
+      { id: 'chevrolet_sail', brand: 'chevrolet', name: 'Chevrolet Sail / Cobalt', pieceType: 'sedan', badge: 'Económico', icon: '🚗', image: 'images/vehicles/sedan_general.jpg' },
+      // Toyota
+      { id: 'toyota_corolla', brand: 'toyota', name: 'Toyota Corolla (Baby / New / GLI / XEI)', pieceType: 'sedan', badge: 'Top', icon: '🚗', image: 'images/vehicles/toyota_corolla.jpg' },
+      { id: 'toyota_yaris', brand: 'toyota', name: 'Toyota Yaris / Starlet', pieceType: 'hatchback_compact', badge: '', icon: '🚗', image: 'images/vehicles/toyota_yaris.jpg' },
+      { id: 'toyota_yaris_belta', brand: 'toyota', name: 'Toyota Yaris Belta / Soluna / Etios', pieceType: 'sedan', badge: 'Económico', icon: '🚗', image: 'images/vehicles/toyota_yaris.jpg' },
+      { id: 'toyota_camry', brand: 'toyota', name: 'Toyota Camry / Corona', pieceType: 'sedan', badge: 'Ejecutivo', icon: '🚗', image: 'images/vehicles/toyota_corolla.jpg' },
+      // Ford
+      { id: 'ford_fiesta', brand: 'ford', name: 'Ford Fiesta (Power / Max / Move)', pieceType: 'hatchback_compact', badge: 'Popular', icon: '🚗', image: 'images/vehicles/ford_fiesta.jpg' },
       { id: 'ford_focus', brand: 'ford', name: 'Ford Focus / Laser', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/ford_focus.jpg' },
-      { id: 'hyundai_accent', brand: 'hyundai_kia', name: 'Hyundai Accent / Getz / Elantra', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/hyundai_accent.jpg' },
-      { id: 'kia_rio', brand: 'hyundai_kia', name: 'Kia Rio / Picanto / Cerato', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/kia_rio.jpg' },
+      // Renault
+      { id: 'renault_logan', brand: 'renault', name: 'Renault Logan (Fase I / II)', pieceType: 'sedan', badge: 'Popular', icon: '🚗', image: 'images/vehicles/renault_logan.jpg' },
+      { id: 'renault_symbol', brand: 'renault', name: 'Renault Symbol / Megane', pieceType: 'sedan', badge: 'Clásico', icon: '🚗', image: 'images/vehicles/renault_symbol.jpg' },
+      { id: 'renault_sandero_clio', brand: 'renault', name: 'Renault Sandero / Clio / Stepway', pieceType: 'hatchback_compact', badge: 'Hatchback', icon: '🚗', image: 'images/vehicles/renault_clio.jpg' },
+      { id: 'renault_twingo', brand: 'renault', name: 'Renault Twingo (16V / 8V)', pieceType: 'hatchback_compact', badge: 'Monovolumen', icon: '🚗', image: 'images/vehicles/renault_twingo.jpg' },
+      // Nissan
+      { id: 'nissan_sentra', brand: 'nissan', name: 'Nissan Sentra (B13 / B14 / B15 / B16)', pieceType: 'sedan', badge: 'Clásico', icon: '🚗', image: 'images/vehicles/nissan_sentra.jpg' },
+      { id: 'nissan_tiida_versa', brand: 'nissan', name: 'Nissan Tiida / Versa / Almera', pieceType: 'sedan', badge: 'Familiar', icon: '🚗', image: 'images/vehicles/nissan_tiida.jpg' },
+      // Mazda
+      { id: 'mazda_3', brand: 'mazda', name: 'Mazda 3 (Sedán / Sport Hatch)', pieceType: 'sedan', badge: 'Destacado', icon: '🚗', image: 'images/vehicles/mazda_3.jpg' },
+      { id: 'mazda_allegro_323', brand: 'mazda', name: 'Mazda Allegro / 323 / Mazda 6', pieceType: 'sedan', badge: 'Clásico', icon: '🚗', image: 'images/vehicles/mazda_allegro.jpg' },
+      // Hyundai / Kia
+      { id: 'hyundai_accent', brand: 'hyundai_kia', name: 'Hyundai Accent / Elantra', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/hyundai_accent.jpg' },
+      { id: 'hyundai_getz_i10', brand: 'hyundai_kia', name: 'Hyundai Getz / Atos / Grand i10', pieceType: 'hatchback_compact', badge: 'Compacto', icon: '🚗', image: 'images/vehicles/hyundai_accent.jpg' },
+      { id: 'kia_rio', brand: 'hyundai_kia', name: 'Kia Rio / Cerato', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/kia_rio.jpg' },
+      { id: 'kia_picanto', brand: 'hyundai_kia', name: 'Kia Picanto', pieceType: 'hatchback_compact', badge: 'Económico', icon: '🚗', image: 'images/vehicles/kia_rio.jpg' },
+      // Volkswagen
+      { id: 'volkswagen_gol', brand: 'volkswagen', name: 'Volkswagen Gol / Parati / Fox', pieceType: 'hatchback_compact', badge: 'Popular', icon: '🚗', image: 'images/vehicles/vw_gol.jpg' },
+      { id: 'volkswagen_jetta_bora', brand: 'volkswagen', name: 'Volkswagen Bora / Jetta / Vento', pieceType: 'sedan', badge: 'Sedán', icon: '🚗', image: 'images/vehicles/vw_jetta.jpg' },
+      // Fiat / Daewoo
+      { id: 'fiat_palio_siena', brand: 'fiat_daewoo', name: 'Fiat Palio / Siena / Uno / Punto', pieceType: 'hatchback_compact', badge: 'Económico', icon: '🚗', image: 'images/vehicles/fiat_palio.jpg' },
+      { id: 'daewoo_cielo_lanos', brand: 'fiat_daewoo', name: 'Daewoo Cielo / Racer / Lanos', pieceType: 'sedan', badge: 'Clásico', icon: '🚗', image: 'images/vehicles/daewoo_cielo.jpg' },
+      // Otras Marcas
+      { id: 'honda_civic', brand: 'otras', name: 'Honda Civic (EX / LX / SI)', pieceType: 'sedan', badge: 'Top', icon: '🚗', image: 'images/vehicles/honda_civic.jpg' },
       { id: 'sedan_general', brand: 'otras', name: 'Otro Sedán / Hatchback', pieceType: 'sedan', badge: '', icon: '🚗', image: 'images/vehicles/sedan_general.jpg' }
     ],
     suv: [
-      { id: 'toyota_4runner', brand: 'toyota', name: 'Toyota 4Runner / Fortuner / Prado', pieceType: 'suv', badge: 'Destacada', icon: '🚙', image: 'images/vehicles/toyota_4runner.jpg' },
-      { id: 'toyota_rav4', brand: 'toyota', name: 'Toyota RAV4 / Terios', pieceType: 'suv', badge: '', icon: '🚙', image: 'images/vehicles/toyota_rav4.jpg' },
+      // Toyota
+      { id: 'toyota_4runner', brand: 'toyota', name: 'Toyota 4Runner (SR5 / Limited / TRD)', pieceType: 'suv', badge: 'Destacada', icon: '🚙', image: 'images/vehicles/toyota_4runner.jpg' },
+      { id: 'toyota_fortuner', brand: 'toyota', name: 'Toyota Fortuner (Hilux SW4)', pieceType: 'suv', badge: 'Top Ventas', icon: '🚙', image: 'images/vehicles/toyota_fortuner.jpg' },
+      { id: 'toyota_landcruiser_autana', brand: 'toyota', name: 'Toyota Land Cruiser Autana / Burbuja (Serie 80)', pieceType: 'rustico_4x4', badge: 'Leyenda 4x4', icon: '🚙', image: 'images/vehicles/toyota_autana.jpg' },
+      { id: 'toyota_prado_sumo', brand: 'toyota', name: 'Toyota Prado / Prado Sumo (3 ptas / 5 ptas)', pieceType: 'rustico_4x4', badge: 'Rústico', icon: '🚙', image: 'images/vehicles/toyota_prado.jpg' },
+      { id: 'toyota_meru', brand: 'toyota', name: 'Toyota Land Cruiser Merú (FJ90)', pieceType: 'rustico_4x4', badge: '4x4', icon: '🚙', image: 'images/vehicles/toyota_prado.jpg' },
+      { id: 'toyota_rav4', brand: 'toyota', name: 'Toyota RAV4', pieceType: 'suv', badge: '', icon: '🚙', image: 'images/vehicles/toyota_rav4.jpg' },
+      // Chevrolet
       { id: 'chevrolet_grand_vitara', brand: 'chevrolet', name: 'Chevrolet Grand Vitara / XL7', pieceType: 'suv', badge: 'Popular', icon: '🚙', image: 'images/vehicles/chevrolet_vitara.jpg' },
-      { id: 'chevrolet_trailblazer', brand: 'chevrolet', name: 'Chevrolet Trailblazer / Tahoe', pieceType: 'suv', badge: '', icon: '🚙', image: 'images/vehicles/chevrolet_trailblazer.jpg' },
-      { id: 'ford_explorer', brand: 'ford', name: 'Ford Explorer / Expedition', pieceType: 'suv', badge: '', icon: '🚙', image: 'images/vehicles/ford_explorer.jpg' },
+      { id: 'chevrolet_trailblazer', brand: 'chevrolet', name: 'Chevrolet Trailblazer', pieceType: 'suv', badge: '', icon: '🚙', image: 'images/vehicles/chevrolet_trailblazer.jpg' },
+      { id: 'chevrolet_tahoe_suburban', brand: 'chevrolet', name: 'Chevrolet Tahoe / Suburban', pieceType: 'suv', badge: 'Full Size', icon: '🚙', image: 'images/vehicles/chevrolet_tahoe.jpg' },
+      // Ford
+      { id: 'ford_explorer', brand: 'ford', name: 'Ford Explorer / Eddie Bauer', pieceType: 'suv', badge: '', icon: '🚙', image: 'images/vehicles/ford_explorer.jpg' },
       { id: 'ford_ecosport', brand: 'ford', name: 'Ford EcoSport / Escape', pieceType: 'suv', badge: '', icon: '🚙', image: 'images/vehicles/ford_ecosport.jpg' },
+      { id: 'ford_expedition', brand: 'ford', name: 'Ford Expedition', pieceType: 'suv', badge: 'Full Size', icon: '🚙', image: 'images/vehicles/ford_explorer.jpg' },
+      // Jeep
+      { id: 'jeep_cherokee', brand: 'jeep', name: 'Jeep Cherokee (XJ / KK / Classic)', pieceType: 'rustico_4x4', badge: '4x4', icon: '🚙', image: 'images/vehicles/jeep_cherokee.jpg' },
+      { id: 'jeep_grand_cherokee', brand: 'jeep', name: 'Jeep Grand Cherokee (WJ / WK / Laredo)', pieceType: 'suv', badge: 'Lujo', icon: '🚙', image: 'images/vehicles/jeep_grand_cherokee.jpg' },
+      { id: 'jeep_wrangler', brand: 'jeep', name: 'Jeep Wrangler (YJ / TJ / JK / Rubicon)', pieceType: 'rustico_4x4', badge: 'Rústico Puro', icon: '🚙', image: 'images/vehicles/jeep_wrangler.jpg' },
+      // Mitsubishi
+      { id: 'mitsubishi_montero', brand: 'mitsubishi', name: 'Mitsubishi Montero / Montero Dakar (Pajero)', pieceType: 'rustico_4x4', badge: '4x4 Clásico', icon: '🚙', image: 'images/vehicles/mitsubishi_montero.jpg' },
+      { id: 'mitsubishi_montero_sport', brand: 'mitsubishi', name: 'Mitsubishi Montero Sport / Nativa', pieceType: 'suv', badge: 'Familiar', icon: '🚙', image: 'images/vehicles/mitsubishi_montero.jpg' },
+      // Renault
+      { id: 'renault_duster', brand: 'renault', name: 'Renault Duster (4x2 / 4x4)', pieceType: 'suv', badge: 'Popular', icon: '🚙', image: 'images/vehicles/renault_duster.jpg' },
+      // Daihatsu
+      { id: 'daihatsu_terios', brand: 'daihatsu', name: 'Daihatsu Terios / Terios BeGo', pieceType: 'suv', badge: 'Popular', icon: '🚙', image: 'images/vehicles/daihatsu_terios.jpg' },
+      // Otras Marcas
       { id: 'hyundai_tucson', brand: 'otras', name: 'Hyundai Tucson / Kia Sportage', pieceType: 'suv', badge: '', icon: '🚙', image: 'images/vehicles/hyundai_tucson.jpg' },
-      { id: 'jeep_cherokee', brand: 'jeep', name: 'Jeep Cherokee (XJ / KK / Grand)', pieceType: 'suv', badge: '4x4', icon: '🚙', image: 'images/vehicles/jeep_cherokee.jpg' },
+      { id: 'nissan_patrol', brand: 'otras', name: 'Nissan Patrol (Super Safari / Y60 / Y61)', pieceType: 'rustico_4x4', badge: '4x4 Pesado', icon: '🚙', image: 'images/vehicles/nissan_patrol.jpg' },
       { id: 'suv_general', brand: 'otras', name: 'Otra Camioneta / SUV', pieceType: 'suv', badge: '', icon: '🚙', image: 'images/vehicles/suv_general.jpg' }
     ],
     pickup: [
+      // Toyota
       { id: 'toyota_hilux', brand: 'toyota', name: 'Toyota Hilux (Sencilla / Doble)', pieceType: 'pickup', badge: 'Destacada', icon: '🛻', image: 'images/vehicles/toyota_hilux.jpg' },
-      { id: 'toyota_machito', brand: 'toyota', name: 'Toyota Land Cruiser (Machito / Hembrita)', pieceType: 'pickup', badge: 'Rústico', icon: '🛻', image: 'images/vehicles/toyota_machito.jpg' },
-      { id: 'chevrolet_silverado', brand: 'chevrolet', name: 'Chevrolet Silverado / Cheyenne / C10', pieceType: 'pickup', badge: 'Pesada', icon: '🛻', image: 'images/vehicles/chevrolet_silverado.jpg' },
+      { id: 'toyota_hilux_kavak', brand: 'toyota', name: 'Toyota Hilux Kavak / Vigo / Revo 4x4', pieceType: 'pickup', badge: 'Top', icon: '🛻', image: 'images/vehicles/toyota_hilux.jpg' },
+      { id: 'toyota_machito', brand: 'toyota', name: 'Toyota Land Cruiser Machito (Serie 70)', pieceType: 'rustico_4x4', badge: 'Rústico', icon: '🛻', image: 'images/vehicles/toyota_machito.jpg' },
+      { id: 'toyota_machito_hembrita', brand: 'toyota', name: 'Toyota Land Cruiser Hembrita (Chasis Largo Serie 79)', pieceType: 'rustico_4x4', badge: 'Chasis Largo', icon: '🛻', image: 'images/vehicles/toyota_machito.jpg' },
+      // Chevrolet
+      { id: 'chevrolet_silverado', brand: 'chevrolet', name: 'Chevrolet Silverado / Cheyenne / C10', pieceType: 'pickup_heavy', badge: 'Pesada', icon: '🛻', image: 'images/vehicles/chevrolet_silverado.jpg' },
+      { id: 'chevrolet_silverado_z71', brand: 'chevrolet', name: 'Chevrolet Silverado Z71 / Cheyenne LTZ', pieceType: 'pickup_heavy', badge: 'V8 Pesada', icon: '🛻', image: 'images/vehicles/chevrolet_silverado.jpg' },
       { id: 'chevrolet_dmax', brand: 'chevrolet', name: 'Chevrolet D-Max / LUV', pieceType: 'pickup', badge: '', icon: '🛻', image: 'images/vehicles/chevrolet_dmax.jpg' },
-      { id: 'ford_f150', brand: 'ford', name: 'Ford F-150 / F-250 / Super Duty', pieceType: 'pickup', badge: '', icon: '🛻', image: 'images/vehicles/ford_f150.jpg' },
-      { id: 'ford_ranger', brand: 'ford', name: 'Ford Ranger', pieceType: 'pickup', badge: '', icon: '🛻', image: 'images/vehicles/ford_ranger.jpg' },
+      // Ford
+      { id: 'ford_f150', brand: 'ford', name: 'Ford F-150 / Fortaleza / FX4', pieceType: 'pickup_heavy', badge: '', icon: '🛻', image: 'images/vehicles/ford_f150.jpg' },
+      { id: 'ford_f350_superduty', brand: 'ford', name: 'Ford F-250 / F-350 Super Duty / Tritón', pieceType: 'pickup_heavy', badge: 'Super Duty', icon: '🛻', image: 'images/vehicles/ford_f150.jpg' },
+      { id: 'ford_ranger', brand: 'ford', name: 'Ford Ranger (Cabina Simple / Doble)', pieceType: 'pickup', badge: '', icon: '🛻', image: 'images/vehicles/ford_ranger.jpg' },
+      // RAM / Dodge
+      { id: 'dodge_ram_1500_2500', brand: 'dodge_ram', name: 'RAM 1500 / 2500 Hemi 4x4', pieceType: 'pickup_heavy', badge: 'Pesada', icon: '🛻', image: 'images/vehicles/dodge_ram.jpg' },
+      // Mitsubishi / Mazda
+      { id: 'mitsubishi_l200', brand: 'mitsubishi_mazda', name: 'Mitsubishi L200 / Sportero 4x4', pieceType: 'pickup', badge: 'Diesel 4x4', icon: '🛻', image: 'images/vehicles/mitsubishi_l200.jpg' },
+      { id: 'mazda_bt50', brand: 'mitsubishi_mazda', name: 'Mazda BT-50 / B2600', pieceType: 'pickup', badge: 'Trabajo', icon: '🛻', image: 'images/vehicles/ford_ranger.jpg' },
+      // Nissan
+      { id: 'nissan_frontier_d22', brand: 'nissan', name: 'Nissan Frontier / D22 / Navara', pieceType: 'pickup', badge: '4x4', icon: '🛻', image: 'images/vehicles/nissan_frontier.jpg' },
+      // Otras Marcas
+      { id: 'great_wall_wingle', brand: 'otras', name: 'Great Wall Wingle / Poer', pieceType: 'pickup', badge: 'Trabajo', icon: '🛻', image: 'images/vehicles/pickup_general.jpg' },
       { id: 'pickup_general', brand: 'otras', name: 'Otra Pick-up / Rústico', pieceType: 'pickup', badge: '', icon: '🛻', image: 'images/vehicles/pickup_general.jpg' }
     ]
   },
@@ -303,7 +396,21 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       'hj_tapas_motor': { name: 'Tapas de Motor HJ Cool (Pintura Alta Temp.)', baseUsd: 20, icon: '⚙️', tag: 'Térmica' }
     },
 
-    // Motos Naked y Paseo (Bera SBR, Horse, Arsen, Owen, YBR, CG, etc.)
+    // Motos Deportivas y Sport (Gixxer, Pulsar NS/RS, Apache, RK6, TNT, CB190, R3)
+    'sport_bike': {
+      'sp_tanque': { name: 'Tanque Deportivo con Protectores y Tomas de Aire', baseUsd: 28, icon: '⛽', tag: 'Tanque Sport' },
+      'sp_carenaje_frontal': { name: 'Carenaje Frontal / Cúpula Aerodinámica', baseUsd: 22, icon: '🎭', tag: 'Frontal' },
+      'sp_carenajes_lat': { name: 'Carenajes Laterales Sport (Izquierdo y Derecho)', baseUsd: 26, icon: '🛡️', tag: 'Laterales' },
+      'sp_quilla': { name: 'Quilla / Pechera Inferior de Motor', baseUsd: 18, icon: '🛡️', tag: 'Quilla' },
+      'sp_colin': { name: 'Colín Trasero Deportivo / Carenado de Asiento', baseUsd: 20, icon: '🚀', tag: 'Cola Sport' },
+      'sp_guarda_del': { name: 'Guardabarro Delantero Aerodinámico', baseUsd: 15, icon: '🛞', tag: 'Rueda Del' },
+      'sp_rines': { name: 'Par de Rines Deportivos de Aleación Bicolor', baseUsd: 30, icon: '⚪', tag: '2 Rines' },
+      'sp_chasis': { name: 'Chasis Perimetral y Basculante Trasero', baseUsd: 40, icon: '📐', tag: 'Estructura' },
+      'sp_retrovisores': { name: 'Espejos Retrovisores Deportivos (Par)', baseUsd: 12, icon: '🪞', tag: 'Espejos' },
+      'sp_tapas_motor': { name: 'Tapas de Motor (Pintura Cerámica / Alta Temp.)', baseUsd: 22, icon: '⚙️', tag: 'Térmica' }
+    },
+
+    // Motos Naked y Paseo (Bera SBR, Horse, Arsen, Owen, YBR, CG, Kavak, etc.)
     'naked': {
       'moto_tanque': { name: 'Tanque de Gasolina', baseUsd: 26, icon: '⛽', tag: 'Depósito' },
       'moto_tapas_lat': { name: 'Tapas Laterales / Cachas (Par)', baseUsd: 14, icon: '🛡️', tag: 'Laterales' },
@@ -316,31 +423,33 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       'moto_tapas_motor': { name: 'Tapas de Motor (Pintura Alta Temp.)', baseUsd: 20, icon: '⚙️', tag: 'Térmica' }
     },
 
-    // Motos Scooter (Bera Merú/Koko, BWS, Outlook, etc.)
+    // Motos Scooter y Semiautomáticas (Bera Merú/Koko, Milán, BWS, Outlook, Vivax, Crypton, Wave)
     'scooter': {
       'scoot_careta': { name: 'Careta Delantera y Cubre Manubrio', baseUsd: 18, icon: '🎭', tag: 'Manillar' },
       'scoot_pechera': { name: 'Pechera / Escudo Frontal Principal', baseUsd: 24, icon: '🛡️', tag: 'Frontal' },
       'scoot_costados': { name: 'Laterales / Costados Traseros (Par)', baseUsd: 25, icon: '🛡️', tag: 'Costados' },
       'scoot_guarda_del': { name: 'Guardabarro Delantero', baseUsd: 14, icon: '🛞', tag: 'Rueda' },
       'scoot_quilla': { name: 'Piso y Quilla Inferior', baseUsd: 18, icon: '🛴', tag: 'Piso' },
-      'scoot_rines': { name: 'Par de Rines de Scooter', baseUsd: 22, icon: '⚪', tag: '2 Rines' },
-      'scoot_aleron': { name: 'Alerón / Agarradera Trasera', baseUsd: 12, icon: '🚀', tag: 'Alerón' }
+      'scoot_rines': { name: 'Par de Rines de Scooter / Semiauto', baseUsd: 22, icon: '⚪', tag: '2 Rines' },
+      'scoot_aleron': { name: 'Alerón / Agarradera Trasera Pasajero', baseUsd: 12, icon: '🚀', tag: 'Alerón' },
+      'scoot_tapa_guantera': { name: 'Tapa Guantera / Cubierta Interior', baseUsd: 12, icon: '📦', tag: 'Interior' }
     },
 
-    // Motos Enduro / Cross (DR 200/650, XR, Tornado, DT, TX)
+    // Motos Enduro / Cross (DR 200/650, XR, Tornado, DT 125, TX, XT 660, Corralero)
     'enduro': {
       'end_tanque': { name: 'Tanque de Combustible Enduro', baseUsd: 25, icon: '⛽', tag: 'Tanque' },
-      'end_aletas': { name: 'Aletas Laterales de Tanque (Par)', baseUsd: 16, icon: '🛡️', tag: 'Aletas' },
-      'end_guarda_del': { name: 'Guardabarro Delantero Alto Cross', baseUsd: 15, icon: '🛞', tag: 'Cross' },
-      'end_guarda_tra': { name: 'Guardabarro Trasero Enduro', baseUsd: 14, icon: '🛞', tag: 'Cola' },
+      'end_aletas': { name: 'Aletas Laterales de Tanque / Radiador (Par)', baseUsd: 16, icon: '🛡️', tag: 'Aletas' },
+      'end_guarda_del': { name: 'Guardabarro Delantero Alto Cross (Pico de Loro)', baseUsd: 15, icon: '🛞', tag: 'Cross' },
+      'end_guarda_tra': { name: 'Guardabarro Trasero Enduro / Cola de Pato', baseUsd: 14, icon: '🛞', tag: 'Cola' },
       'end_tapas_lat': { name: 'Tapas Laterales Porta-Número (Par)', baseUsd: 14, icon: '🛡️', tag: 'Placas' },
-      'end_careta': { name: 'Careta Delantera de Faro', baseUsd: 12, icon: '🎭', tag: 'Faro' },
+      'end_careta': { name: 'Careta Delantera de Faro / Portanúmero', baseUsd: 12, icon: '🎭', tag: 'Faro' },
       'end_chasis': { name: 'Chasis Principal y Tijera Enduro', baseUsd: 38, icon: '📐', tag: 'Estructura' },
-      'end_rines': { name: 'Par de Rines de Radios Enduro', baseUsd: 28, icon: '⚪', tag: '2 Rines' },
-      'end_cortavientos': { name: 'Cortavientos / Protectores de Puños', baseUsd: 10, icon: '🧤', tag: 'Manos' }
+      'end_rines': { name: 'Par de Rines de Radios Reforzados Enduro', baseUsd: 28, icon: '⚪', tag: '2 Rines' },
+      'end_cortavientos': { name: 'Cortavientos / Protectores de Puños (Par)', baseUsd: 10, icon: '🧤', tag: 'Manos' },
+      'end_cubrecarter': { name: 'Protector de Motor / Cubrecárter Metálico', baseUsd: 14, icon: '🛡️', tag: 'Motor' }
     },
 
-    // Sedán y Hatchback
+    // Sedán de 4 puertas (Corolla, Aveo 4 ptas, Optra, Cruze, Logan, Sentra, Civic, Jetta, Tiida)
     'sedan': {
       'car_parachoque_del': { name: 'Parachoques Delantero', baseUsd: 48, icon: '🚗', tag: 'Frente' },
       'car_parachoque_tra': { name: 'Parachoques Trasero', baseUsd: 48, icon: '🚗', tag: 'Atrás' },
@@ -352,12 +461,29 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       'car_puerta_tra_der': { name: 'Puerta Trasera Derecha', baseUsd: 45, icon: '🚪', tag: 'Pasajero' },
       'car_guardafangos': { name: 'Guardafangos Delanteros (Par)', baseUsd: 50, icon: '🛡️', tag: 'Aletas' },
       'car_costados_tra': { name: 'Costados Traseros (Par)', baseUsd: 55, icon: '🛡️', tag: 'Costados' },
-      'car_maleta': { name: 'Maleta / Compuerta Trasera', baseUsd: 48, icon: '📦', tag: 'Maletero' },
+      'car_maleta': { name: 'Maleta / Tapa de Baúl Trasera', baseUsd: 48, icon: '📦', tag: 'Maletero' },
       'car_espejos': { name: 'Espejos Retrovisores (Par)', baseUsd: 20, icon: '🪞', tag: 'Retrovisores' },
-      'car_estribos': { name: 'Estribos / Zócalos Inferiores', baseUsd: 25, icon: '🪜', tag: 'Zócalos' }
+      'car_estribos': { name: 'Estribos / Zócalos Inferiores (Par)', baseUsd: 25, icon: '🪜', tag: 'Zócalos' },
+      'car_spoiler': { name: 'Spoiler / Alerón de Maleta', baseUsd: 22, icon: '🚀', tag: 'Alerón' }
     },
 
-    // Camioneta / SUV
+    // Hatchbacks y Compactos Urbanos (Spark, Corsa, Gol, Palio, Clio, Sandero, Twingo, Fiesta Hatch, Getz, Picanto)
+    'hatchback_compact': {
+      'hb_parachoque_del': { name: 'Parachoques Delantero Compacto', baseUsd: 45, icon: '🚗', tag: 'Frente' },
+      'hb_parachoque_tra': { name: 'Parachoques Trasero Compacto', baseUsd: 45, icon: '🚗', tag: 'Atrás' },
+      'hb_capo': { name: 'Capó / Bonete', baseUsd: 50, icon: '🚘', tag: 'Motor' },
+      'hb_techo': { name: 'Techo Completo', baseUsd: 55, icon: '🏠', tag: 'Superior' },
+      'hb_compuerta_hb': { name: 'Compuerta Trasera Hatchback (con marco de luneta)', baseUsd: 50, icon: '📦', tag: 'Compuerta' },
+      'hb_puertas_del': { name: 'Puertas Delanteras (Par)', baseUsd: 85, icon: '🚪', tag: 'Delanteras' },
+      'hb_puertas_tra': { name: 'Puertas Traseras (Par o Costados 3ptas)', baseUsd: 85, icon: '🚪', tag: 'Traseras' },
+      'hb_guardafangos': { name: 'Guardafangos Delanteros (Par)', baseUsd: 48, icon: '🛡️', tag: 'Guardafangos' },
+      'hb_costados_tra': { name: 'Costados Traseros (Par)', baseUsd: 52, icon: '🛡️', tag: 'Costados' },
+      'hb_espejos': { name: 'Espejos Retrovisores (Par)', baseUsd: 18, icon: '🪞', tag: 'Espejos' },
+      'hb_aleron_techo': { name: 'Spoiler / Alerón de Techo Deportivo', baseUsd: 20, icon: '🚀', tag: 'Alerón' },
+      'hb_estribos': { name: 'Faldones / Zócalos Laterales (Par)', baseUsd: 24, icon: '🪜', tag: 'Zócalos' }
+    },
+
+    // Camioneta / SUV Familiar y Moderna (4Runner, Fortuner, Grand Vitara, Explorer, EcoSport, Tucson, RAV4, Duster, Tahoe, Terios)
     'suv': {
       'suv_parachoque_del': { name: 'Parachoques Delantero SUV', baseUsd: 55, icon: '🚙', tag: 'Frente' },
       'suv_parachoque_tra': { name: 'Parachoques Trasero SUV', baseUsd: 55, icon: '🚙', tag: 'Atrás' },
@@ -369,23 +495,61 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       'suv_costados_tra': { name: 'Costados Traseros SUV (Par)', baseUsd: 60, icon: '🛡️', tag: 'Costados' },
       'suv_compuerta': { name: 'Compuerta de Maleta Trasera', baseUsd: 55, icon: '📦', tag: 'Compuerta' },
       'suv_espejos': { name: 'Espejos Retrovisores (Par)', baseUsd: 20, icon: '🪞', tag: 'Espejos' },
-      'suv_estribos': { name: 'Estribos y Molduras Plásticas', baseUsd: 30, icon: '🪜', tag: 'Estribos' }
+      'suv_estribos': { name: 'Estribos y Molduras Plásticas Laterales', baseUsd: 30, icon: '🪜', tag: 'Estribos' },
+      'suv_spoiler': { name: 'Spoiler Superior de Compuerta', baseUsd: 22, icon: '🚀', tag: 'Alerón' },
+      'suv_barras_techo': { name: 'Barras / Rieles de Techo Portaequipaje', baseUsd: 25, icon: '🏁', tag: 'Techo' }
     },
 
-    // Pick-up / Rústico
+    // Rústicos Puros y Todoterrenos 4x4 (Toyota Machito, Autana, Burbuja, Hembrita, Merú, Prado Sumo, Jeep Wrangler, Cherokee, Montero, Patrol)
+    'rustico_4x4': {
+      'rus_capo': { name: 'Capó Metálico con Tomas de Aire / Refuerzo', baseUsd: 65, icon: '🚘', tag: 'Capó 4x4' },
+      'rus_parachoque_del': { name: 'Defensa Delantera de Hierro / Parachoques Tipo ARB', baseUsd: 60, icon: '🛡️', tag: 'Defensa Del.' },
+      'rus_parachoque_tra': { name: 'Parachoques Trasero Reforzado con Porta-Repuesto', baseUsd: 55, icon: '🛡️', tag: 'Defensa Tras.' },
+      'rus_techo_hardtop': { name: 'Techo Completo / Hard Top Rústico', baseUsd: 80, icon: '🏠', tag: 'Techo 4x4' },
+      'rus_puertas_del': { name: 'Puertas Delanteras (Par)', baseUsd: 90, icon: '🚪', tag: 'Delanteras' },
+      'rus_puertas_tra': { name: 'Puertas Traseras / Portón Rústico Doble Hoja', baseUsd: 70, icon: '🚪', tag: 'Compuertas' },
+      'rus_guardafangos': { name: 'Guardafangos Delanteros Metálicos (Par)', baseUsd: 58, icon: '🛡️', tag: 'Guardafangos' },
+      'rus_cantoneras': { name: 'Cantoneras / Fenders Anchos 4x4 (Juego de 4)', baseUsd: 45, icon: '🛞', tag: 'Fenders 4x4' },
+      'rus_estribos': { name: 'Estribos Tubulares 4x4 Rock-Sliders', baseUsd: 35, icon: '🪜', tag: 'Estribos' },
+      'rus_mascara': { name: 'Máscara / Careta Frontal con Rejilla', baseUsd: 25, icon: '🎭', tag: 'Frente' },
+      'rus_snorkel': { name: 'Snorkel / Toma de Aire Elevada', baseUsd: 20, icon: '💨', tag: 'Snorkel' },
+      'rus_parrilla_techo': { name: 'Parrilla / Canasta de Techo Safari 4x4', baseUsd: 40, icon: '🏁', tag: 'Safari' },
+      'rus_espejos': { name: 'Espejos Retrovisores Rústicos (Par)', baseUsd: 20, icon: '🪞', tag: 'Espejos' }
+    },
+
+    // Pick-up Mediana / Doble Cabina (Hilux, D-Max, Ranger, L200, BT-50, Frontier, Wingle)
     'pickup': {
       'pk_parachoque_del': { name: 'Parachoques Delantero Pick-up', baseUsd: 55, icon: '🛻', tag: 'Frente' },
-      'pk_parachoque_tra': { name: 'Parachoques Trasero Reforzado', baseUsd: 50, icon: '🛻', tag: 'Atrás' },
+      'pk_parachoque_tra': { name: 'Parachoques Trasero con Escalón Reforzado', baseUsd: 50, icon: '🛻', tag: 'Atrás' },
       'pk_capo': { name: 'Capó / Bonete', baseUsd: 60, icon: '🚘', tag: 'Capó' },
       'pk_techo': { name: 'Techo de Cabina', baseUsd: 65, icon: '🏠', tag: 'Cabina' },
       'pk_puertas_del': { name: 'Puertas Delanteras (Par)', baseUsd: 90, icon: '🚪', tag: 'Delanteras' },
       'pk_puertas_tra': { name: 'Puertas Traseras (Doble Cabina)', baseUsd: 90, icon: '🚪', tag: 'Traseras' },
       'pk_guardafangos': { name: 'Guardafangos Delanteros (Par)', baseUsd: 55, icon: '🛡️', tag: 'Guardafangos' },
-      'pk_platon': { name: 'Costados de Platón / Cajón Trasero', baseUsd: 90, icon: '📦', tag: 'Platón' },
+      'pk_platon': { name: 'Costados Exteriores de Platón / Batea (Par)', baseUsd: 90, icon: '📦', tag: 'Platón' },
       'pk_compuerta': { name: 'Compuerta Trasera de Platón', baseUsd: 50, icon: '🛡️', tag: 'Compuerta' },
+      'pk_rollbar': { name: 'Barra Antivuelco / Rollbar Tubular de Platón', baseUsd: 30, icon: '🔧', tag: 'Rollbar' },
       'pk_espejos': { name: 'Espejos Retrovisores (Par)', baseUsd: 20, icon: '🪞', tag: 'Espejos' },
-      'pk_estribos': { name: 'Estribos Laterales y Molduras', baseUsd: 30, icon: '🪜', tag: 'Estribos' },
+      'pk_estribos': { name: 'Estribos Laterales de Cabina (Par)', baseUsd: 30, icon: '🪜', tag: 'Estribos' },
       'pk_parrilla': { name: 'Parrilla Frontal / Careta', baseUsd: 25, icon: '🛡️', tag: 'Parrilla' }
+    },
+
+    // Pick-up Grande / Heavy Duty (Silverado Z71, F-150 / F-250 / F-350 Tritón, RAM 1500/2500)
+    'pickup_heavy': {
+      'pkh_capo': { name: 'Capó Abultado / Powerdome Heavy Duty', baseUsd: 70, icon: '🚘', tag: 'Capó V8' },
+      'pkh_parachoque_del': { name: 'Parachoques Delantero Heavy Duty / Cromado', baseUsd: 65, icon: '🛻', tag: 'Frente HD' },
+      'pkh_parachoque_tra': { name: 'Parachoques Trasero con Escalón Reforzado', baseUsd: 55, icon: '🛻', tag: 'Atrás HD' },
+      'pkh_techo': { name: 'Techo de Cabina Extendida / Crew Cab', baseUsd: 75, icon: '🏠', tag: 'Cabina' },
+      'pkh_puertas_del': { name: 'Puertas Delanteras Heavy Duty (Par)', baseUsd: 95, icon: '🚪', tag: 'Delanteras' },
+      'pkh_puertas_tra': { name: 'Puertas Traseras de Cabina (Par)', baseUsd: 95, icon: '🚪', tag: 'Traseras' },
+      'pkh_guardafangos': { name: 'Guardafangos Delanteros Amplios (Par)', baseUsd: 60, icon: '🛡️', tag: 'Guardafangos' },
+      'pkh_platon': { name: 'Platón / Batea Larga con Costados Exteriores (Par)', baseUsd: 110, icon: '📦', tag: 'Batea Larga' },
+      'pkh_compuerta': { name: 'Compuerta de Platón con Aplique / Emblemas', baseUsd: 55, icon: '🛡️', tag: 'Compuerta' },
+      'pkh_fenders': { name: 'Cantoneras / Aletines de Platón (Par)', baseUsd: 35, icon: '🛞', tag: 'Aletines' },
+      'pkh_rollbar': { name: 'Rollbar / Cargador Tubular Heavy Duty', baseUsd: 35, icon: '🔧', tag: 'Rollbar' },
+      'pkh_estribos': { name: 'Estribos Laterales Tipo Plataforma (Par)', baseUsd: 35, icon: '🪜', tag: 'Estribos' },
+      'pkh_parrilla': { name: 'Parrilla Frontal Gigante / Cromada', baseUsd: 35, icon: '🛡️', tag: 'Parrilla' },
+      'pkh_espejos': { name: 'Retrovisores Extendibles de Remolque (Par)', baseUsd: 25, icon: '🪞', tag: 'Remolque' }
     }
   },
 
@@ -985,85 +1149,150 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
     const isMoto = this.wizardState.vehicleType === 'moto';
 
     if (step === 1) {
-      const brands = this.vehicleBrands[this.wizardState.vehicleType] || [];
-      const allModels = this.vehicleModels[this.wizardState.vehicleType] || [];
-      const currentBrand = this.wizardState.selectedBrand || (isMoto ? 'suzuki_gn_hj' : 'all');
+      const rawSearch = (this.wizardState.modelSearchQuery || '').trim();
+      const normalizeText = (t) => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const searchNorm = normalizeText(rawSearch);
+      const isSearching = searchNorm.length > 0;
 
-      const filteredModels = allModels.filter(m => {
-        if (currentBrand === 'all') return true;
-        if (currentBrand === 'suzuki_gn_hj') return m.brandGroup === 'suzuki_gn_hj';
-        return m.brand === currentBrand;
-      });
+      let filteredModels = [];
+      const currentBrand = this.wizardState.selectedBrand || (isMoto ? 'suzuki_gn_hj' : 'all');
+      const brands = this.vehicleBrands[this.wizardState.vehicleType] || [];
+
+      if (isSearching) {
+        // Global search across all categories
+        const allTypes = ['moto', 'sedan', 'suv', 'pickup'];
+        allTypes.forEach(t => {
+          const list = this.vehicleModels[t] || [];
+          list.forEach(m => {
+            const mName = normalizeText(m.name);
+            const mBrand = normalizeText(m.brand);
+            const mId = normalizeText(m.id);
+            if (mName.includes(searchNorm) || mBrand.includes(searchNorm) || mId.includes(searchNorm)) {
+              filteredModels.push({ ...m, _category: t });
+            }
+          });
+        });
+      } else {
+        const allModels = this.vehicleModels[this.wizardState.vehicleType] || [];
+        filteredModels = allModels.filter(m => {
+          if (currentBrand === 'all') return true;
+          if (currentBrand === 'suzuki_gn_hj') return m.brandGroup === 'suzuki_gn_hj';
+          return m.brand === currentBrand;
+        }).map(m => ({ ...m, _category: this.wizardState.vehicleType }));
+      }
 
       container.innerHTML = `
-        <h4 style="margin: 0 0 6px 0; font-size: 15px; color: #FFF; font-weight: 800;">Paso 1: Tipo de Vehículo y Modelo</h4>
-        <p style="margin: 0 0 12px 0; font-size: 12px; color: #94A3B8;">El modelo exacto desglosará las piezas reales a pintar en el siguiente paso.</p>
+        <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #FFF; font-weight: 800;">Paso 1: Tipo de Vehículo y Modelo</h4>
+        <p style="margin: 0 0 10px 0; font-size: 12px; color: #94A3B8;">El modelo exacto desglosará las piezas reales a pintar en el siguiente paso.</p>
+
+        <!-- Live Vehicle Search Bar -->
+        <div class="paint-search-container">
+          <div class="paint-search-input-wrap">
+            <span class="paint-search-icon">🔍</span>
+            <input type="text"
+                   id="paint-model-search-input"
+                   class="paint-model-search-input"
+                   placeholder="Buscar modelo o marca (ej. Aveo, Fortuner, GN 125, Pulsar, Hilux, Corsa)..."
+                   value="${this.wizardState.modelSearchQuery || ''}"
+                   oninput="PaintServiceApp.onSearchModel(event)"
+                   autocomplete="off">
+            ${this.wizardState.modelSearchQuery ? `
+              <button type="button" class="paint-search-clear" onclick="PaintServiceApp.clearSearchModel()" title="Limpiar búsqueda">✕</button>
+            ` : ''}
+          </div>
+        </div>
 
         <!-- Category Selector -->
         <div class="paint-vehicle-grid">
-          <div class="paint-vehicle-card ${this.wizardState.vehicleType === 'moto' ? 'selected' : ''}" onclick="PaintServiceApp.selectVehicle('moto')">
+          <div class="paint-vehicle-card ${this.wizardState.vehicleType === 'moto' && !isSearching ? 'selected' : ''}" onclick="PaintServiceApp.selectVehicle('moto')">
             <span class="paint-vehicle-icon">🏍️</span>
             <span class="paint-vehicle-name">Moto / Motocicleta</span>
-            <span class="paint-vehicle-sub">Suzuki GN, HJ Cool, Bera, Keeway</span>
+            <span class="paint-vehicle-sub">GN, HJ Cool, Bera, Keeway, Pulsar</span>
           </div>
-          <div class="paint-vehicle-card ${this.wizardState.vehicleType === 'sedan' ? 'selected' : ''}" onclick="PaintServiceApp.selectVehicle('sedan')">
+          <div class="paint-vehicle-card ${this.wizardState.vehicleType === 'sedan' && !isSearching ? 'selected' : ''}" onclick="PaintServiceApp.selectVehicle('sedan')">
             <span class="paint-vehicle-icon">🚗</span>
             <span class="paint-vehicle-name">Sedán / Hatchback</span>
-            <span class="paint-vehicle-sub">Aveo, Spark, Corsa, Corolla</span>
+            <span class="paint-vehicle-sub">Aveo, Spark, Corsa, Corolla, Logan</span>
           </div>
-          <div class="paint-vehicle-card ${this.wizardState.vehicleType === 'suv' ? 'selected' : ''}" onclick="PaintServiceApp.selectVehicle('suv')">
+          <div class="paint-vehicle-card ${this.wizardState.vehicleType === 'suv' && !isSearching ? 'selected' : ''}" onclick="PaintServiceApp.selectVehicle('suv')">
             <span class="paint-vehicle-icon">🚙</span>
             <span class="paint-vehicle-name">Camioneta / SUV</span>
-            <span class="paint-vehicle-sub">4Runner, Fortuner, Vitara</span>
+            <span class="paint-vehicle-sub">4Runner, Fortuner, Autana, Vitara</span>
           </div>
-          <div class="paint-vehicle-card ${this.wizardState.vehicleType === 'pickup' ? 'selected' : ''}" onclick="PaintServiceApp.selectVehicle('pickup')">
+          <div class="paint-vehicle-card ${this.wizardState.vehicleType === 'pickup' && !isSearching ? 'selected' : ''}" onclick="PaintServiceApp.selectVehicle('pickup')">
             <span class="paint-vehicle-icon" style="display:inline-flex; align-items:center; justify-content:center;">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M20 8h-3V4H4c-1.1 0-2 .9-2 2v10h2c0 1.66 1.34 3 3 3s3-1.34 3-3h4c0 1.66 1.34 3 3 3s3-1.34 3-3h1c.55 0 1-.45 1-1v-3.5L20 8zM7 17.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm10 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM15 8h3.25l1.5 2.5H15V8z"/></svg>
             </span>
             <span class="paint-vehicle-name">Pick-up / Rústico</span>
-            <span class="paint-vehicle-sub">Hilux, Silverado, F-150, Machito</span>
+            <span class="paint-vehicle-sub">Hilux, Silverado, F-150, Machito, RAM</span>
           </div>
         </div>
 
-        <!-- Brand Filter Pills -->
-        <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <strong style="color: #FFF; font-size: 13px;">Filtrar Marca o Serie:</strong>
-            <span style="font-size: 11px; color: #38BDF8; font-weight: 700;">${filteredModels.length} modelo(s)</span>
+        ${!isSearching ? `
+          <!-- Brand Filter Pills -->
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong style="color: #FFF; font-size: 12.5px;">Filtrar Marca o Serie:</strong>
+              <span style="font-size: 11px; color: #38BDF8; font-weight: 700;">${filteredModels.length} modelo(s)</span>
+            </div>
+            <div class="paint-brand-chips">
+              ${brands.map(b => `
+                <button type="button" class="paint-brand-chip ${currentBrand === b.id ? 'active' : ''}" onclick="PaintServiceApp.selectBrand('${b.id}')">
+                  ${b.name}
+                </button>
+              `).join('')}
+            </div>
           </div>
-          <div class="paint-brand-chips">
-            ${brands.map(b => `
-              <button type="button" class="paint-brand-chip ${currentBrand === b.id ? 'active' : ''}" onclick="PaintServiceApp.selectBrand('${b.id}')">
-                ${b.name}
-              </button>
-            `).join('')}
+        ` : `
+          <!-- Search Results Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0 6px 0; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+            <span style="font-size: 12px; color: #FFF; font-weight: 700;">
+              Resultados para <strong style="color: #38BDF8;">"${this.wizardState.modelSearchQuery}"</strong>:
+            </span>
+            <span style="font-size: 11px; color: #EF4444; font-weight: 800;">${filteredModels.length} encontrado(s)</span>
           </div>
-        </div>
+        `}
 
         <!-- Models Grid -->
-        <div style="margin-top: 4px;">
-          <span style="font-size: 11px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 8px;">
-            Selecciona tu Modelo de ${isMoto ? 'Moto' : 'Vehículo'}:
-          </span>
-          <div class="paint-models-grid">
-            ${filteredModels.map(m => {
-              const isSel = this.wizardState.selectedModel === m.id;
-              const fallbackIcon = m.icon || (isMoto ? '🏍️' : '🚗');
-              return `
-                <div class="paint-model-card ${isSel ? 'selected' : ''}" onclick="PaintServiceApp.selectModel('${m.id}')">
-                  ${m.badge ? `<span class="paint-model-badge">${m.badge}</span>` : ''}
-                  <div class="paint-model-img-wrapper">
-                    <img src="${m.image || 'images/vehicles/moto_clasica.jpg'}" alt="${m.name}" loading="lazy" class="paint-model-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="paint-model-fallback-icon" style="display:none;">${fallbackIcon}</div>
+        <div style="margin-top: 6px;">
+          ${!isSearching ? `
+            <span style="font-size: 11px; font-weight: 800; color: #CBD5E1; display: block; margin-bottom: 8px;">
+              Selecciona tu Modelo de ${isMoto ? 'Moto' : 'Vehículo'}:
+            </span>
+          ` : ''}
+
+          ${filteredModels.length === 0 ? `
+            <div style="padding: 24px 12px; text-align: center; color: #94A3B8; background: #0F172A; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.15); margin-bottom: 12px;">
+              <div style="font-size: 28px; margin-bottom: 6px;">🔍🚗</div>
+              <strong style="color: #FFF; font-size: 13px; display: block;">No encontramos modelos con "${this.wizardState.modelSearchQuery}"</strong>
+              <span style="font-size: 11px; display: block; margin-top: 4px;">Prueba buscando por marca (ej. Toyota, Chevrolet, Bera, Yamaha, Renault) o borra la búsqueda para ver todas las categorías.</span>
+              <button type="button" onclick="PaintServiceApp.clearSearchModel()" style="margin-top: 10px; background: rgba(239,68,68,0.2); border: 1px solid #EF4444; color: #FFF; padding: 5px 14px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                Ver todos los vehículos
+              </button>
+            </div>
+          ` : `
+            <div class="paint-models-grid">
+              ${filteredModels.map(m => {
+                const isSel = this.wizardState.selectedModel === m.id;
+                const fallbackIcon = m.icon || (m._category === 'moto' ? '🏍️' : '🚗');
+                const catLabel = m._category === 'moto' ? 'Moto' : (m._category === 'sedan' ? 'Sedán' : (m._category === 'suv' ? 'SUV' : 'Pick-up'));
+                return `
+                  <div class="paint-model-card ${isSel ? 'selected' : ''}" onclick="PaintServiceApp.selectModel('${m.id}', '${m._category}')">
+                    ${m.badge ? `<span class="paint-model-badge">${m.badge}</span>` : ''}
+                    <div class="paint-model-img-wrapper">
+                      <img src="${m.image || 'images/vehicles/moto_clasica.jpg'}" alt="${m.name}" loading="lazy" class="paint-model-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <div class="paint-model-fallback-icon" style="display:none;">${fallbackIcon}</div>
+                    </div>
+                    <div class="paint-model-info">
+                      ${isSearching ? `<span class="paint-model-cat-tag ${m._category}">${catLabel}</span>` : ''}
+                      <span class="paint-model-name">${m.name}</span>
+                      <span class="paint-model-brand">${m.brand?.toUpperCase() || ''}</span>
+                    </div>
                   </div>
-                  <div class="paint-model-info">
-                    <span class="paint-model-name">${m.name}</span>
-                    <span class="paint-model-brand">${m.brand?.toUpperCase() || ''}</span>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
+                `;
+              }).join('')}
+            </div>
+          `}
         </div>
 
         <!-- Selected Vehicle Summary Bar -->
@@ -1383,9 +1612,27 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
     }
   },
 
+  onSearchModel(event) {
+    this.wizardState.modelSearchQuery = event.target.value;
+    this.renderQuoterStep();
+    const input = document.getElementById('paint-model-search-input');
+    if (input) {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  },
+
+  clearSearchModel() {
+    this.wizardState.modelSearchQuery = '';
+    this.renderQuoterStep();
+    const input = document.getElementById('paint-model-search-input');
+    if (input) input.focus();
+  },
+
   selectVehicle(type) {
     this.wizardState.vehicleType = type;
     this.wizardState.selectedBrand = type === 'moto' ? 'suzuki_gn_hj' : 'all';
+    this.wizardState.modelSearchQuery = '';
     const models = this.vehicleModels[type] || [];
     this.wizardState.selectedModel = models[0]?.id || '';
     const pieces = this.getCurrentPiecesMap();
@@ -1395,6 +1642,7 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
 
   selectBrand(brandId) {
     this.wizardState.selectedBrand = brandId;
+    this.wizardState.modelSearchQuery = '';
     const allModels = this.vehicleModels[this.wizardState.vehicleType] || [];
     const filtered = allModels.filter(m => {
       if (brandId === 'all') return true;
@@ -1409,8 +1657,12 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
     this.renderQuoterStep();
   },
 
-  selectModel(modelId) {
+  selectModel(modelId, targetCategory) {
+    if (targetCategory && targetCategory !== this.wizardState.vehicleType) {
+      this.wizardState.vehicleType = targetCategory;
+    }
     this.wizardState.selectedModel = modelId;
+    this.wizardState.modelSearchQuery = '';
     const pieces = this.getCurrentPiecesMap();
     this.wizardState.selectedPieces = [Object.keys(pieces)[0]];
     this.renderQuoterStep();
