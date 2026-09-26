@@ -122,6 +122,16 @@
             <span>🎵</span>
             <span>Sonidos</span>
           </button>
+          <button type="button" id="btn-header-paint-services" class="btn-logout" onclick="AdminApp.openPaintAdminModal()" style="background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #ffffff; font-weight: 800; border: 1px solid #EF4444; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35); position: relative;" title="Cotizaciones y Chat de Pintura Automotriz">
+            <span>🎨</span>
+            <span>Pintura Auto</span>
+            <span id="admin-paint-badge" style="display: none; background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
+          </button>
+          <button type="button" id="btn-header-print3d-services" class="btn-logout" onclick="AdminApp.openPrint3DAdminModal()" style="background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%); color: #ffffff; font-weight: 800; border: 1px solid #6366F1; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35); position: relative;" title="Cotizaciones y Pedidos 3D Lab">
+            <span>🖨️</span>
+            <span>3D Lab</span>
+            <span id="admin-print3d-badge" style="display: none; background: #6366F1; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
+          </button>
           <button class="btn-logout" onclick="AdminApp.forceCleanUpdate()" style="background-color: rgba(239, 68, 68, 0.15); color: #F87171; font-weight: 800; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer;" title="Limpiar caché y forzar descarga de la última versión">⚡ Forzar Actualización</button>
           <button class="btn-logout" onclick="AdminApp.openPaymentMethodsModal()" style="background-color: #0F766E; color: #5EEAD4; font-weight: 800; border: 1px solid #14B8A6; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer;" title="Configurar cuentas de pago bancarias y códigos QR">💳 Cuentas & QR</button>
           <button class="btn-logout" onclick="AdminApp.requestNotificationPermission()" style="background-color: #3B82F6; color: #FFFFFF; font-weight: 800; border: 1px solid #3B82F6;">🔔 Notificaciones</button>
@@ -2853,6 +2863,117 @@
         <input type="text" id="admin-driver-chat-modal-input" placeholder="Escribe un mensaje al grupo de domiciliarios como Dueño..." autocomplete="off" style="flex: 1; background: transparent; border: none; color: #FFF; font-size: 13px; outline: none;">
         <button type="submit" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">
           <span>👑</span> Enviar
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Paint & Bodywork Monitoring Modal -->
+  <div id="admin-paint-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;">
+    <div style="background: #0F172A; border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 20px; width: 100%; max-width: 920px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+      <!-- Header -->
+      <div style="padding: 16px 20px; background: #1E293B; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 22px;">🎨</span>
+          <div>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #FFF;">Control de Cotizaciones: Pintura & Latonería</h3>
+            <span style="font-size: 11px; color: #94A3B8;">Talleres aliados en San Antonio del Táchira & Frontera</span>
+          </div>
+        </div>
+        <button type="button" onclick="AdminApp.closePaintAdminModal()" style="background: rgba(255,255,255,0.1); border: none; color: #94A3B8; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div style="padding: 16px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #94A3B8; font-weight: 800; text-transform: uppercase;">TOTAL COTIZACIONES</span>
+          <div id="admin-paint-kpi-total" style="font-size: 18px; font-weight: 900; color: #FFF; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #FCD34D; font-weight: 800; text-transform: uppercase;">PENDIENTES</span>
+          <div id="admin-paint-kpi-pending" style="font-size: 18px; font-weight: 900; color: #F59E0B; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #E9D5FF; font-weight: 800; text-transform: uppercase;">PRESUPUESTADOS</span>
+          <div id="admin-paint-kpi-quoted" style="font-size: 18px; font-weight: 900; color: #C084FC; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #6EE7B7; font-weight: 800; text-transform: uppercase;">FINALIZADOS</span>
+          <div id="admin-paint-kpi-done" style="font-size: 18px; font-weight: 900; color: #10B981; margin-top: 2px;">0</div>
+        </div>
+      </div>
+
+      <!-- Feed / List -->
+      <div id="admin-paint-quotes-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;">
+        <div style="text-align: center; color: #94A3B8; padding: 30px;">⏳ Cargando cotizaciones...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin 3D Lab Monitoring Modal -->
+  <div id="admin-print3d-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;">
+    <div style="background: #0B0F19; border: 1.5px solid rgba(99, 102, 241, 0.4); border-radius: 20px; width: 100%; max-width: 920px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+      <!-- Header -->
+      <div style="padding: 16px 20px; background: #1E1B4B; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 22px;">🖨️</span>
+          <div>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #FFF;">Control de Pedidos: PediGochos 3D Lab</h3>
+            <span style="font-size: 11px; color: #A5B4FC;">Manufactura Digital, Prototipado & Repuestos</span>
+          </div>
+        </div>
+        <button type="button" onclick="AdminApp.closePrint3DAdminModal()" style="background: rgba(255,255,255,0.1); border: none; color: #94A3B8; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div style="padding: 16px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: rgba(11, 15, 25, 0.95); border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #94A3B8; font-weight: 800; text-transform: uppercase;">TOTAL ORDENES 3D</span>
+          <div id="admin-print3d-kpi-total" style="font-size: 18px; font-weight: 900; color: #FFF; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #FCD34D; font-weight: 800; text-transform: uppercase;">EN CONVERSACIÓN</span>
+          <div id="admin-print3d-kpi-chat" style="font-size: 18px; font-weight: 900; color: #F59E0B; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #A5B4FC; font-weight: 800; text-transform: uppercase;">EN IMPRESIÓN</span>
+          <div id="admin-print3d-kpi-printing" style="font-size: 18px; font-weight: 900; color: #818CF8; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #6EE7B7; font-weight: 800; text-transform: uppercase;">FINALIZADOS</span>
+          <div id="admin-print3d-kpi-done" style="font-size: 18px; font-weight: 900; color: #10B981; margin-top: 2px;">0</div>
+        </div>
+      </div>
+
+      <!-- Feed / List -->
+      <div id="admin-print3d-quotes-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;">
+        <div style="text-align: center; color: #94A3B8; padding: 30px;">⏳ Cargando pedidos 3D...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Live Chat Inspector Modal (for Paint & 3D Lab) -->
+  <div id="admin-quote-chat-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99999; padding: 14px;">
+    <div style="background: #0B0F19; border: 1.5px solid rgba(255, 255, 255, 0.2); border-radius: 20px; width: 100%; max-width: 680px; height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
+      <!-- Header -->
+      <div style="padding: 14px 18px; background: #1E293B; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <h4 id="admin-quote-chat-title" style="margin: 0; font-size: 14px; font-weight: 800; color: #FFF;">Chat con Cliente</h4>
+          <span id="admin-quote-chat-sub" style="font-size: 11px; color: #94A3B8;">Respondiendo como Administrador / Taller</span>
+        </div>
+        <button type="button" onclick="AdminApp.closeQuoteChatInspector()" style="background: rgba(255,255,255,0.1); border: none; color: #94A3B8; width: 30px; height: 30px; border-radius: 50%; font-size: 14px; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- Messages Feed -->
+      <div id="admin-quote-chat-feed" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: #0B1120;">
+        <!-- Populated dynamically -->
+      </div>
+
+      <!-- Input Form -->
+      <form onsubmit="event.preventDefault(); AdminApp.sendQuoteChatMessage();" style="padding: 12px 16px; background: #1E293B; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px;">
+        <input type="text" id="admin-quote-chat-input" placeholder="Escribe tu respuesta al cliente..." style="flex: 1; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px 14px; border-radius: 12px; font-size: 13px; outline: none;">
+        <button type="submit" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer;">
+          Enviar
         </button>
       </form>
     </div>

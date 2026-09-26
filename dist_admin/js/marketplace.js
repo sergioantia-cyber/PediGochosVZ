@@ -915,7 +915,7 @@ class MarketplaceController {
       const allRestHeader = document.getElementById('all-restaurants-header');
       const allRestTitle = document.getElementById('all-restaurants-title-text');
       if (allRestHeader) allRestHeader.style.display = 'block';
-      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (2)';
+      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (4)';
 
       const promoSection = document.getElementById('daily-promotions-section');
       if (promoSection) {
@@ -987,6 +987,66 @@ class MarketplaceController {
                 </span>
                 <span style="font-size: 11px; font-weight: 900; color: #FF6B00; background: rgba(255, 107, 0, 0.18); border: 1px solid #FF6B00; padding: 3px 10px; border-radius: 10px;">
                   Pedir Móvil ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pintura y Latonería Automotriz ("Pinta tu Vehículo") -->
+        <div class="est-row-card service-row-card" onclick="PaintServiceApp ? PaintServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(30, 41, 59, 0.8) 100%); border: 1.5px solid rgba(239, 68, 68, 0.5); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(239, 68, 68, 0.2); border: 2px solid #EF4444; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);">
+              🎨
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  Pintura y Latonería Automotriz
+                </h4>
+                <span style="background: #EF4444; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                  🔥 AL HORNO
+                </span>
+              </div>
+              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
+                Pinta tu auto o piezas con secado al horno, sacado de golpes y cotizador inteligente en San Antonio.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 10px; font-weight: 800; color: #FCA5A5; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 8px; border-radius: 6px;">
+                  ⭐ 4.9 • Garantía de Color
+                </span>
+                <span style="font-size: 11px; font-weight: 900; color: #EF4444; background: rgba(239, 68, 68, 0.2); border: 1px solid #EF4444; padding: 3px 10px; border-radius: 10px;">
+                  Cotizar Auto ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Impresión 3D & Prototipado ("PediGochos 3D Lab") -->
+        <div class="est-row-card service-row-card" onclick="Print3DServiceApp ? Print3DServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(30, 41, 59, 0.8) 100%); border: 1.5px solid rgba(99, 102, 241, 0.5); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <div style="width: 68px; height: 68px; border-radius: 16px; background: rgba(99, 102, 241, 0.2); border: 2px solid #6366F1; display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; box-shadow: 0 0 16px rgba(99, 102, 241, 0.45);">
+              🖨️
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                <h4 style="font-size: 14.5px; font-weight: 900; color: #FFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  PediGochos 3D Lab
+                </h4>
+                <span style="background: #6366F1; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">
+                  🔄 VISOR 3D 360°
+                </span>
+              </div>
+              <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.35;">
+                Impresión 3D de coleccionables, repuestos automotrices, llaveros y prototipado con cotización inmediata.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 10px; font-weight: 800; color: #A5B4FC; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); padding: 2px 8px; border-radius: 6px;">
+                  ⭐ 5.0 • PLA • Resina • PETG
+                </span>
+                <span style="font-size: 11px; font-weight: 900; color: #818CF8; background: rgba(99, 102, 241, 0.2); border: 1px solid #6366F1; padding: 3px 10px; border-radius: 10px;">
+                  Explorar 3D ➔
                 </span>
               </div>
             </div>
@@ -8083,6 +8143,18 @@ class MarketplaceController {
       if (tabVe) tabVe.classList.remove('active');
       if (contCo) contCo.style.display = 'flex';
       if (contVe) contVe.style.display = 'none';
+    }
+  }
+
+  openPaintService() {
+    if (window.PaintServiceApp) {
+      window.PaintServiceApp.open();
+    }
+  }
+
+  openPrint3DService() {
+    if (window.Print3DServiceApp) {
+      window.Print3DServiceApp.open();
     }
   }
 

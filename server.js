@@ -2435,6 +2435,708 @@ app.post('/api/platform-settings', (req, res) => {
   res.json({ success: true, settings: updated });
 });
 
+// ==========================================
+// 🎨 PINTURA Y LATONERÍA AUTOMOTRIZ SERVICES
+// ==========================================
+const PAINT_QUOTES_FILE = path.join(__dirname, 'paint_quotes.json');
+
+function readPaintQuotes() {
+  try {
+    if (fs.existsSync(PAINT_QUOTES_FILE)) {
+      const data = JSON.parse(fs.readFileSync(PAINT_QUOTES_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch(e) {
+    console.warn('Error reading paint_quotes.json:', e.message);
+  }
+  return [];
+}
+
+function writePaintQuotes(data) {
+  try {
+    fs.writeFileSync(PAINT_QUOTES_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing paint_quotes.json:', e);
+  }
+}
+
+// Seed initial realistic quotes if empty
+if (!fs.existsSync(PAINT_QUOTES_FILE) || readPaintQuotes().length === 0) {
+  const initialPaintQuotes = [
+    {
+      id: 'PNT-1082',
+      chatId: 'chat-pnt-1082',
+      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+      clientName: 'Alejandro Morales',
+      clientPhone: '0414-7253819',
+      clientLocation: 'San Cristóbal - Barrio Obrero',
+      vehicleType: 'sedan',
+      vehicleModel: 'Toyota Corolla 2019',
+      serviceType: 'pieza',
+      serviceName: 'Pintura por Pieza al Horno',
+      finishType: 'perlado',
+      finishName: 'Perlado Tricapa Metálico (PPG)',
+      parts: ['Capó', 'Parachoques Delantero'],
+      hasBodywork: true,
+      estimatedPriceRange: { minUsd: 110, maxUsd: 140, minCop: 451000, maxCop: 574000, minBs: 14850, maxBs: 18900 },
+      agreedPrice: { usd: 125, cop: 512500, notes: 'Incluye sacado de golpe en punta de capó y pulido general' },
+      urgency: 'semana',
+      targetDate: '2026-09-29',
+      appointmentDate: '2026-09-29 08:30',
+      status: 'Concretado',
+      workshopName: 'Taller Maestro San Cristóbal (PPG Certified)',
+      workshopId: 'taller-master-1',
+      firstResponseTimeMinutes: 6,
+      photos: [],
+      messages: [
+        {
+          id: 'msg-1',
+          senderRole: 'system',
+          senderName: 'PediGochos Cotizador',
+          type: 'quotation_card',
+          timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
+          text: 'Ficha de Cotización Inicial generada para Toyota Corolla 2019'
+        },
+        {
+          id: 'msg-2',
+          senderRole: 'workshop',
+          senderName: 'Taller Maestro (Maestro Pintor)',
+          type: 'text',
+          timestamp: new Date(Date.now() - 3600000 * 4.9).toISOString(),
+          text: '¡Hola Alejandro! Un gusto saludarte. Vimos las piezas seleccionadas. Tenemos el código de color exacto Toyota 070 (Blanco Perlado Tricapa). Podemos dejarte el trabajo completo con latonería en $125 USD.'
+        },
+        {
+          id: 'msg-3',
+          senderRole: 'client',
+          senderName: 'Alejandro Morales',
+          type: 'text',
+          timestamp: new Date(Date.now() - 3600000 * 4).toISOString(),
+          text: 'Excelente precio amigo. ¿Tienen disponibilidad para ingresarlo el martes temprano?'
+        },
+        {
+          id: 'msg-4',
+          senderRole: 'workshop',
+          senderName: 'Taller Maestro (Maestro Pintor)',
+          type: 'action_appointment',
+          timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+          text: '📅 Cita agendada y confirmada para el martes 29 de septiembre a las 08:30 AM.'
+        }
+      ]
+    },
+    {
+      id: 'PNT-1094',
+      chatId: 'chat-pnt-1094',
+      createdAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+      updatedAt: new Date(Date.now() - 1800000).toISOString(),
+      clientName: 'Carla Zambrano',
+      clientPhone: '0424-7189023',
+      clientLocation: 'San Antonio del Táchira',
+      vehicleType: 'suv',
+      vehicleModel: 'Ford Explorer 2016',
+      serviceType: 'pulitura',
+      serviceName: 'Corrección de Pintura & Tratamiento Cerámico 9H',
+      finishType: 'brillante',
+      finishName: 'Tratamiento Cerámico Graphene Pro',
+      parts: ['Vehículo Completo'],
+      hasBodywork: false,
+      estimatedPriceRange: { minUsd: 90, maxUsd: 130, minCop: 369000, maxCop: 533000, minBs: 12150, maxBs: 17550 },
+      agreedPrice: null,
+      urgency: 'inmediato',
+      targetDate: '2026-09-27',
+      appointmentDate: null,
+      status: 'En Conversación',
+      workshopName: 'Detailing & Pintura Frontera',
+      workshopId: 'taller-frontera',
+      firstResponseTimeMinutes: 4,
+      photos: [],
+      messages: [
+        {
+          id: 'msg-1',
+          senderRole: 'system',
+          senderName: 'PediGochos Cotizador',
+          type: 'quotation_card',
+          timestamp: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+          text: 'Ficha de Cotización Inicial generada para Ford Explorer 2016'
+        },
+        {
+          id: 'msg-2',
+          senderRole: 'workshop',
+          senderName: 'Detailing & Pintura Frontera',
+          type: 'text',
+          timestamp: new Date(Date.now() - 3600000 * 1.4).toISOString(),
+          text: 'Hola Carla, un placer. Para la Explorer el tratamiento cerámico incluye corrección en 3 pasos para eliminar rayones de lavado y 3 años de protección hidrofóbica.'
+        }
+      ]
+    }
+  ];
+  writePaintQuotes(initialPaintQuotes);
+}
+
+// GET all paint quotes
+app.get('/api/paint-services/quotes', (req, res) => {
+  const quotes = readPaintQuotes();
+  quotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  res.json(quotes);
+});
+
+// GET single paint quote with chat
+app.get('/api/paint-services/quotes/:id', (req, res) => {
+  const quotes = readPaintQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Cotización no encontrada' });
+  res.json(quote);
+});
+
+// POST new paint quote
+app.post('/api/paint-services/quotes', (req, res) => {
+  const body = req.body || {};
+  if (!body.vehicleType || !body.clientName) {
+    return res.status(400).json({ error: 'Datos incompletos de vehículo o cliente' });
+  }
+
+  const quotes = readPaintQuotes();
+  const newId = 'PNT-' + Math.floor(1000 + Math.random() * 9000);
+  const chatId = 'chat-' + newId.toLowerCase();
+
+  const newQuote = {
+    id: newId,
+    chatId: chatId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    clientName: body.clientName || 'Cliente',
+    clientPhone: body.clientPhone || '',
+    clientLocation: body.clientLocation || 'San Antonio del Táchira',
+    vehicleType: body.vehicleType || 'sedan',
+    vehicleModel: body.vehicleModel || 'Vehículo Particular',
+    serviceType: body.serviceType || 'pieza',
+    serviceName: body.serviceName || 'Pintura y Latonería',
+    finishType: body.finishType || 'brillante',
+    finishName: body.finishName || 'Brillante Estándar al Horno',
+    parts: Array.isArray(body.parts) && body.parts.length > 0 ? body.parts : ['Piezas Seleccionadas'],
+    hasBodywork: Boolean(body.hasBodywork),
+    estimatedPriceRange: body.estimatedPriceRange || { minUsd: 50, maxUsd: 80 },
+    agreedPrice: null,
+    urgency: body.urgency || 'semana',
+    targetDate: body.targetDate || '',
+    appointmentDate: null,
+    status: 'Solicitado',
+    workshopName: body.workshopName || 'Taller Maestro Certificado PPG',
+    workshopId: body.workshopId || 'taller-master-1',
+    firstResponseTimeMinutes: null,
+    photos: Array.isArray(body.photos) ? body.photos : [],
+    messages: [
+      {
+        id: 'msg-' + Date.now(),
+        senderRole: 'system',
+        senderName: 'PediGochos Cotizador',
+        type: 'quotation_card',
+        timestamp: new Date().toISOString(),
+        text: `Ficha de Cotización Interactiva generada para ${body.vehicleModel || 'Vehículo'}`,
+        data: {
+          vehicleType: body.vehicleType,
+          vehicleModel: body.vehicleModel,
+          serviceName: body.serviceName,
+          finishName: body.finishName,
+          parts: body.parts,
+          hasBodywork: body.hasBodywork,
+          estimatedPriceRange: body.estimatedPriceRange,
+          urgency: body.urgency,
+          photosCount: (body.photos || []).length
+        }
+      }
+    ]
+  };
+
+  quotes.unshift(newQuote);
+  writePaintQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'PAINT_QUOTE_NEW',
+    quote: newQuote
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, quote: newQuote });
+});
+
+// POST message in paint quote chat
+app.post('/api/paint-services/quotes/:id/messages', (req, res) => {
+  const { text, senderRole, senderName, photo } = req.body;
+  if (!text && !photo) {
+    return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
+  }
+
+  const quotes = readPaintQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Cotización no encontrada' });
+
+  const role = senderRole || 'client';
+  const name = senderName || (role === 'workshop' ? 'Taller Maestro' : role === 'admin' ? '👑 Dueño / Central' : 'Cliente');
+
+  // Compute first response time if this is first reply from workshop or admin
+  if ((role === 'workshop' || role === 'admin') && quote.status === 'Solicitado') {
+    quote.status = 'En Conversación';
+    const diffMin = Math.max(1, Math.round((Date.now() - new Date(quote.createdAt).getTime()) / 60000));
+    quote.firstResponseTimeMinutes = diffMin;
+  }
+
+  const newMsg = {
+    id: 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    senderRole: role,
+    senderName: name,
+    type: photo ? 'photo' : 'text',
+    text: text ? String(text).trim() : '',
+    photo: photo || null,
+    timestamp: new Date().toISOString()
+  };
+
+  quote.messages.push(newMsg);
+  quote.updatedAt = new Date().toISOString();
+  writePaintQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'PAINT_QUOTE_MESSAGE',
+    quoteId: quote.id,
+    chatId: quote.chatId,
+    message: newMsg,
+    status: quote.status
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, message: newMsg, status: quote.status });
+});
+
+// PUT action on paint quote (set agreed price, schedule appointment, finalize)
+app.put('/api/paint-services/quotes/:id/action', (req, res) => {
+  const { action, agreedPrice, appointmentDate, status, notes } = req.body;
+  const quotes = readPaintQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Cotización no encontrada' });
+
+  let actionText = '';
+  if (action === 'set_agreed_price' && agreedPrice) {
+    quote.agreedPrice = agreedPrice;
+    quote.status = 'Precio Acordado';
+    actionText = `💰 Precio oficial fijado y acordado: $${agreedPrice.usd || 0} USD (${agreedPrice.notes || 'Presupuesto cerrado'}).`;
+  } else if (action === 'schedule_appointment' && appointmentDate) {
+    quote.appointmentDate = appointmentDate;
+    quote.status = 'Concretado';
+    actionText = `📅 ¡Cita concretada con éxito! Fecha de ingreso del vehículo: ${appointmentDate}. ${notes || ''}`;
+  } else if (action === 'finalize_service') {
+    quote.status = 'Finalizado';
+    actionText = `✅ Servicio finalizado y vehículo entregado al cliente con garantía de acabado.`;
+  } else if (status) {
+    quote.status = status;
+    actionText = `ℹ️ Estado actualizado a: ${status}.`;
+  }
+
+  if (actionText) {
+    const sysMsg = {
+      id: 'msg-' + Date.now(),
+      senderRole: 'system',
+      senderName: 'PediGochos Central',
+      type: 'action_notice',
+      text: actionText,
+      timestamp: new Date().toISOString()
+    };
+    quote.messages.push(sysMsg);
+  }
+
+  quote.updatedAt = new Date().toISOString();
+  writePaintQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'PAINT_QUOTE_UPDATE',
+    quote: quote
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, quote });
+});
+
+// GET stats for paint services (Admin Metrics)
+app.get('/api/paint-services/stats', (req, res) => {
+  const quotes = readPaintQuotes();
+  const total = quotes.length;
+  const solicitados = quotes.filter(q => q.status === 'Solicitado').length;
+  const enConversacion = quotes.filter(q => q.status === 'En Conversación').length;
+  const precioAcordado = quotes.filter(q => q.status === 'Precio Acordado').length;
+  const concretados = quotes.filter(q => q.status === 'Concretado').length;
+  const finalizados = quotes.filter(q => q.status === 'Finalizado').length;
+
+  const totalConcretados = concretados + finalizados;
+  const conversionRate = total > 0 ? Math.round((totalConcretados / total) * 100) : 0;
+
+  let totalMoneyUsd = 0;
+  quotes.forEach(q => {
+    if ((q.status === 'Concretado' || q.status === 'Finalizado' || q.status === 'Precio Acordado') && q.agreedPrice && q.agreedPrice.usd) {
+      totalMoneyUsd += parseFloat(q.agreedPrice.usd) || 0;
+    }
+  });
+
+  const responseTimes = quotes.filter(q => q.firstResponseTimeMinutes != null).map(q => q.firstResponseTimeMinutes);
+  const avgResponseTimeMin = responseTimes.length > 0
+    ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+    : 5;
+
+  res.json({
+    total,
+    solicitados,
+    enConversacion,
+    precioAcordado,
+    concretados,
+    finalizados,
+    totalConcretados,
+    conversionRate,
+    totalMoneyUsd,
+    avgResponseTimeMin
+  });
+});
+
+
+// ==========================================
+// 🔬 IMPRESIÓN 3D & PROTOTIPADO LAB SERVICES
+// ==========================================
+const PRINT3D_QUOTES_FILE = path.join(__dirname, 'print3d_quotes.json');
+
+function readPrint3dQuotes() {
+  try {
+    if (fs.existsSync(PRINT3D_QUOTES_FILE)) {
+      const data = JSON.parse(fs.readFileSync(PRINT3D_QUOTES_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch(e) {
+    console.warn('Error reading print3d_quotes.json:', e.message);
+  }
+  return [];
+}
+
+function writePrint3dQuotes(data) {
+  try {
+    fs.writeFileSync(PRINT3D_QUOTES_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing print3d_quotes.json:', e);
+  }
+}
+
+// Seed initial realistic 3D quotes if empty
+if (!fs.existsSync(PRINT3D_QUOTES_FILE) || readPrint3dQuotes().length === 0) {
+  const initial3dQuotes = [
+    {
+      id: '3D-2041',
+      chatId: 'chat-3d-2041',
+      createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+      clientName: 'Daniel Gómez',
+      clientPhone: '0412-6548901',
+      modelId: 'astronauta-cosmico',
+      modelName: 'Astronauta Cósmico Articulado',
+      category: 'coleccionables',
+      material: 'resina',
+      materialName: 'Resina 4K (Máximo Detalle)',
+      color: '#D4AF37',
+      colorName: 'Dorado Silk',
+      scale: '100%',
+      dimensions: { x: 8.5, y: 7.2, z: 15.0 },
+      quantity: 1,
+      estimatedPriceUsd: 18.0,
+      agreedPriceUsd: 18.0,
+      status: 'En Producción',
+      notes: 'Impresión con soporte hidrosoluble y curado UV de 20 min',
+      messages: [
+        {
+          id: 'msg-1',
+          senderRole: 'system',
+          senderName: 'PediGochos 3D Lab',
+          type: 'quotation_card',
+          timestamp: new Date(Date.now() - 3600000 * 8).toISOString(),
+          text: 'Cotización iniciada para Astronauta Cósmico Articulado (Resina 4K, 15 cm)'
+        },
+        {
+          id: 'msg-2',
+          senderRole: 'workshop',
+          senderName: 'Laboratorio 3D PediGochos',
+          type: 'text',
+          timestamp: new Date(Date.now() - 3600000 * 7.5).toISOString(),
+          text: '¡Hola Daniel! Modelo verificado en el slicer con altura de capa a 0.05mm. El acabado dorado silk en resina queda espectacular.'
+        },
+        {
+          id: 'msg-3',
+          senderRole: 'workshop',
+          senderName: 'Laboratorio 3D PediGochos',
+          type: 'action_notice',
+          timestamp: new Date(Date.now() - 3600000 * 3).toISOString(),
+          text: '⚙️ Pieza aprobada y puesta en cama de impresión. Tiempo estimado de curado: 5 horas.'
+        }
+      ]
+    },
+    {
+      id: '3D-2055',
+      chatId: 'chat-3d-2055',
+      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000).toISOString(),
+      clientName: 'Mariana Duque',
+      clientPhone: '0414-9872341',
+      modelId: 'soporte-mando-pro',
+      modelName: 'Soporte Mandos Dual Gaming',
+      category: 'soportes',
+      material: 'petg',
+      materialName: 'PETG Resistente (Mecánico y Térmico)',
+      color: '#0F172A',
+      colorName: 'Negro Ónix',
+      scale: '100%',
+      dimensions: { x: 14.0, y: 12.0, z: 18.0 },
+      quantity: 2,
+      estimatedPriceUsd: 22.0,
+      agreedPriceUsd: null,
+      status: 'En Conversación',
+      notes: 'Requiere relleno al 40% giroide para soporte de peso',
+      messages: [
+        {
+          id: 'msg-1',
+          senderRole: 'system',
+          senderName: 'PediGochos 3D Lab',
+          type: 'quotation_card',
+          timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+          text: 'Cotización iniciada para Soporte Mandos Dual Gaming (PETG, 2 unidades)'
+        },
+        {
+          id: 'msg-2',
+          senderRole: 'workshop',
+          senderName: 'Laboratorio 3D PediGochos',
+          type: 'text',
+          timestamp: new Date(Date.now() - 3600000 * 1.8).toISOString(),
+          text: 'Hola Mariana, un saludo. Al llevar 2 unidades te aplicamos 10% de descuento por volumen, saldría en $22 USD el par en PETG de alta tenacidad.'
+        }
+      ]
+    }
+  ];
+  writePrint3dQuotes(initial3dQuotes);
+}
+
+// GET all 3d quotes
+app.get('/api/print3d-services/quotes', (req, res) => {
+  const quotes = readPrint3dQuotes();
+  quotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  res.json(quotes);
+});
+
+// GET single 3d quote
+app.get('/api/print3d-services/quotes/:id', (req, res) => {
+  const quotes = readPrint3dQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Cotización 3D no encontrada' });
+  res.json(quote);
+});
+
+// POST new 3d quote
+app.post('/api/print3d-services/quotes', (req, res) => {
+  const body = req.body || {};
+  if (!body.modelName || !body.clientName) {
+    return res.status(400).json({ error: 'Datos incompletos de modelo o cliente' });
+  }
+
+  const quotes = readPrint3dQuotes();
+  const newId = '3D-' + Math.floor(2000 + Math.random() * 8000);
+  const chatId = 'chat-' + newId.toLowerCase();
+
+  const newQuote = {
+    id: newId,
+    chatId: chatId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    clientName: body.clientName || 'Cliente',
+    clientPhone: body.clientPhone || '',
+    modelId: body.modelId || 'modelo-3d',
+    modelName: body.modelName || 'Figura / Pieza 3D',
+    category: body.category || 'coleccionables',
+    material: body.material || 'pla',
+    materialName: body.materialName || 'PLA Estándar',
+    color: body.color || '#D4AF37',
+    colorName: body.colorName || 'Dorado Silk',
+    scale: body.scale || '100%',
+    dimensions: body.dimensions || { x: 10, y: 10, z: 10 },
+    quantity: parseInt(body.quantity) || 1,
+    estimatedPriceUsd: parseFloat(body.estimatedPriceUsd) || 15.0,
+    agreedPriceUsd: null,
+    status: 'Solicitado',
+    notes: body.notes || '',
+    messages: [
+      {
+        id: 'msg-' + Date.now(),
+        senderRole: 'system',
+        senderName: 'PediGochos 3D Lab',
+        type: 'quotation_card',
+        timestamp: new Date().toISOString(),
+        text: `Ficha Técnica 3D generada para ${body.modelName}`,
+        data: {
+          modelName: body.modelName,
+          materialName: body.materialName,
+          colorName: body.colorName,
+          scale: body.scale,
+          dimensions: body.dimensions,
+          quantity: body.quantity,
+          estimatedPriceUsd: body.estimatedPriceUsd
+        }
+      }
+    ]
+  };
+
+  quotes.unshift(newQuote);
+  writePrint3dQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'PRINT3D_QUOTE_NEW',
+    quote: newQuote
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, quote: newQuote });
+});
+
+// POST message in 3d quote chat
+app.post('/api/print3d-services/quotes/:id/messages', (req, res) => {
+  const { text, senderRole, senderName } = req.body;
+  if (!text || !String(text).trim()) {
+    return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
+  }
+
+  const quotes = readPrint3dQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Cotización 3D no encontrada' });
+
+  const role = senderRole || 'client';
+  const name = senderName || (role === 'workshop' ? 'Laboratorio 3D' : role === 'admin' ? '👑 Dueño / Central' : 'Cliente');
+
+  if ((role === 'workshop' || role === 'admin') && quote.status === 'Solicitado') {
+    quote.status = 'En Conversación';
+  }
+
+  const newMsg = {
+    id: 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    senderRole: role,
+    senderName: name,
+    type: 'text',
+    text: String(text).trim(),
+    timestamp: new Date().toISOString()
+  };
+
+  quote.messages.push(newMsg);
+  quote.updatedAt = new Date().toISOString();
+  writePrint3dQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'PRINT3D_QUOTE_MESSAGE',
+    quoteId: quote.id,
+    chatId: quote.chatId,
+    message: newMsg,
+    status: quote.status
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.status(201).json({ success: true, message: newMsg, status: quote.status });
+});
+
+// PUT action on 3d quote (set agreed price, production, complete)
+app.put('/api/print3d-services/quotes/:id/action', (req, res) => {
+  const { action, agreedPriceUsd, status, notes } = req.body;
+  const quotes = readPrint3dQuotes();
+  const quote = quotes.find(q => q.id === req.params.id || q.chatId === req.params.id);
+  if (!quote) return res.status(404).json({ error: 'Cotización 3D no encontrada' });
+
+  let actionText = '';
+  if (action === 'set_agreed_price' && agreedPriceUsd) {
+    quote.agreedPriceUsd = parseFloat(agreedPriceUsd);
+    quote.status = 'Presupuestado';
+    actionText = `💰 Presupuesto cerrado de impresión 3D: $${quote.agreedPriceUsd} USD.`;
+  } else if (action === 'start_production') {
+    quote.status = 'En Producción';
+    actionText = `⚙️ ¡Pieza ingresada a la cola de impresión 3D! Iniciando calibración y extrusión. ${notes || ''}`;
+  } else if (action === 'complete_print') {
+    quote.status = 'Completado';
+    actionText = `✅ ¡Impresión 3D finalizada con éxito y post-procesada! Lista para entrega.`;
+  } else if (status) {
+    quote.status = status;
+    actionText = `ℹ️ Estado actualizado a: ${status}.`;
+  }
+
+  if (actionText) {
+    const sysMsg = {
+      id: 'msg-' + Date.now(),
+      senderRole: 'system',
+      senderName: 'PediGochos 3D Lab',
+      type: 'action_notice',
+      text: actionText,
+      timestamp: new Date().toISOString()
+    };
+    quote.messages.push(sysMsg);
+  }
+
+  quote.updatedAt = new Date().toISOString();
+  writePrint3dQuotes(quotes);
+
+  // Broadcast WebSocket
+  const payload = JSON.stringify({
+    type: 'PRINT3D_QUOTE_UPDATE',
+    quote: quote
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, quote });
+});
+
+// GET stats for 3d print services (Admin Metrics)
+app.get('/api/print3d-services/stats', (req, res) => {
+  const quotes = readPrint3dQuotes();
+  const total = quotes.length;
+  const solicitados = quotes.filter(q => q.status === 'Solicitado').length;
+  const enConversacion = quotes.filter(q => q.status === 'En Conversación').length;
+  const presupuestados = quotes.filter(q => q.status === 'Presupuestado').length;
+  const enProduccion = quotes.filter(q => q.status === 'En Producción').length;
+  const completados = quotes.filter(q => q.status === 'Completado').length;
+
+  const totalConcretados = enProduccion + completados;
+  const conversionRate = total > 0 ? Math.round((totalConcretados / total) * 100) : 0;
+
+  let totalMoneyUsd = 0;
+  quotes.forEach(q => {
+    const price = q.agreedPriceUsd || q.estimatedPriceUsd || 0;
+    if (q.status === 'En Producción' || q.status === 'Completado' || q.status === 'Presupuestado') {
+      totalMoneyUsd += parseFloat(price) || 0;
+    }
+  });
+
+  res.json({
+    total,
+    solicitados,
+    enConversacion,
+    presupuestados,
+    enProduccion,
+    completados,
+    totalConcretados,
+    conversionRate,
+    totalMoneyUsd
+  });
+});
+
 // Fallback for SPA routing (if any) or simple index.html
 app.get('*', (req, res, next) => {
   // If request is for api, skip to next route handler (standard Express)

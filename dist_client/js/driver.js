@@ -524,8 +524,9 @@ class DriverController {
 
       // Regular text chat message
       const isSelf = msg.senderName === 'Yoxman' || msg.senderName === this.driver?.name;
+      const isOwner = msg.senderRole === 'owner';
       return `
-        <div class="chat-bubble-msg ${isSelf ? 'self' : ''}">
+        <div class="chat-bubble-msg ${isSelf ? 'self' : ''} ${isOwner ? 'owner-msg' : ''}">
           <div class="chat-sender-name">
             <span>${msg.senderName || 'Repartidor'}</span>
             <span class="chat-time-tag">${timeStr}</span>
@@ -1060,7 +1061,6 @@ class DriverController {
   closeProofPhotoModal() {
     const modal = document.getElementById('modal-view-proof-photo');
     if (modal) modal.classList.add('hidden');
-  }
   }
 
   // Render Leaflet Route Map with both points marked (Inicio a Destino)

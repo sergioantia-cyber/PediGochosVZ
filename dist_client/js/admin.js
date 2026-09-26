@@ -57,6 +57,10 @@ class AdminController {
     this.ordersSearchTerm = '';
     this.isAuthenticated = false;
     this.platformSettings = null;
+    this.driverChatMessages = [];
+    this.driverChatFilter = 'all';
+    this.driverChatUnreadCount = 0;
+    this.isDriverChatModalOpen = false;
 
     // Clear any stale cached establishments - server is authoritative
     try {
@@ -222,6 +226,10 @@ class AdminController {
 
     // Load active exchange rates and rain mode settings
     this.loadPlatformSettings();
+
+    // Load live driver group chat and start polling fallback
+    this.loadDriverChat();
+    this.startDriverChatPolling();
 
     // Permanent persistent auto-login (NEVER logs out, never shows login screen)
     this.isAuthenticated = true;
@@ -734,6 +742,292 @@ class AdminController {
     if (modal) {
       modal.classList.add('hidden');
       modal.style.display = 'none';
+    }
+  }
+
+  startDriverChatPolling() {
+    if (this.driverChatPollTimer) clearInterval(this.driverChatPollTimer);
+    this.driverChatPollTimer = setInterval(() => {
+      if (this.isAuthenticated) this.loadDriverChat(true);
+    }, 4500);
+  }
+
+  async loadDriverChat(silent = false) {
+    try {
+      const res = await fetch('/api/driver/chat');
+      if (!res.ok) return;
+      const msgs = await res.json();
+      if (!Array.isArray(msgs)) return;
+
+      const prevCount = this.driverChatMessages.length;
+      this.driverChatMessages = msgs;
+      this.renderDriverChat();
+
+      if (!silent && msgs.length > prevCount && prevCount > 0) {
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsg && lastMsg.senderRole !== 'owner') {
+          if (!this.isDriverChatModalOpen) {
+            this.driverChatUnreadCount += (msgs.length - prevCount);
+            this.updateDriverChatUnreadUI();
+          }
+        }
+      }
+    } catch(e) {
+      if (!silent) console.warn('Error loading driver chat:', e);
+    }
+  }
+
+  handleIncomingDriverChatMessage(msg) {
+    if (!msg) return;
+    const exists = this.driverChatMessages.some(m => m.id === msg.id);
+    if (!exists) {
+      this.driverChatMessages.push(msg);
+      if (msg.senderRole !== 'owner') {
+        if (!this.isDriverChatModalOpen) {
+          this.driverChatUnreadCount++;
+          this.updateDriverChatUnreadUI();
+        }
+        if (window.Sound && typeof Sound.playParcelOrderSound === 'function') {
+          Sound.playParcelOrderSound();
+        }
+      }
+      this.renderDriverChat();
+      this.scrollDriverChatToBottom();
+    }
+  }
+
+  updateDriverChatUnreadUI() {
+    const badge = document.getElementById('admin-chat-unread-badge');
+    if (badge) {
+      if (this.driverChatUnreadCount > 0) {
+        badge.innerText = this.driverChatUnreadCount;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }
+
+  setDriverChatFilter(filter) {
+    this.driverChatFilter = filter;
+    document.querySelectorAll('.chat-filter-btn').forEach(btn => {
+      if (btn.dataset.filter === filter) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    this.renderDriverChat();
+  }
+
+  renderDriverChat() {
+    const feeds = [
+      document.getElementById('admin-driver-chat-feed'),
+      document.getElementById('admin-driver-chat-modal-feed')
+    ].filter(Boolean);
+
+    if (feeds.length === 0) return;
+
+    let countAll = 0, countRide = 0, countFood = 0, countParcel = 0, countMessages = 0;
+    this.driverChatMessages.forEach(m => {
+      countAll++;
+      if (m.type === 'service_request') {
+        const isRide = m.serviceType === 'ride';
+        const isParcel = m.serviceType === 'parcel' || m.serviceType === 'encomienda' || m.vehicleType === 'encomienda';
+        if (isRide) countRide++;
+        else if (isParcel) countParcel++;
+        else countFood++;
+      } else {
+        countMessages++;
+      }
+    });
+
+    ['', '-modal'].forEach(p => {
+      const elAll = document.getElementById(`admin-chat${p}-count-all`);
+      const elRide = document.getElementById(`admin-chat${p}-count-ride`);
+      const elFood = document.getElementById(`admin-chat${p}-count-food`);
+      const elParcel = document.getElementById(`admin-chat${p}-count-parcel`);
+      const elMessages = document.getElementById(`admin-chat${p}-count-messages`);
+      if (elAll) elAll.innerText = countAll;
+      if (elRide) elRide.innerText = countRide;
+      if (elFood) elFood.innerText = countFood;
+      if (elParcel) elParcel.innerText = countParcel;
+      if (elMessages) elMessages.innerText = countMessages;
+    });
+
+    const visibleMessages = this.driverChatMessages.filter(msg => {
+      if (this.driverChatFilter === 'all') return true;
+      if (this.driverChatFilter === 'messages') return msg.type !== 'service_request';
+      if (msg.type !== 'service_request') return false;
+      const isRide = msg.serviceType === 'ride';
+      const isParcel = msg.serviceType === 'parcel' || msg.serviceType === 'encomienda' || msg.vehicleType === 'encomienda';
+      if (this.driverChatFilter === 'ride') return isRide;
+      if (this.driverChatFilter === 'parcel') return isParcel;
+      if (this.driverChatFilter === 'food') return !isRide && !isParcel;
+      return true;
+    });
+
+    if (visibleMessages.length === 0) {
+      const emptyHtml = `
+        <div style="text-align: center; color: #94A3B8; padding: 36px 12px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 6px;">💬</span>
+          <p style="margin: 0; font-size: 13px; font-weight: 700;">No hay elementos para este filtro en el chat.</p>
+        </div>
+      `;
+      feeds.forEach(f => f.innerHTML = emptyHtml);
+      return;
+    }
+
+    const html = visibleMessages.map(msg => {
+      const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+      if (msg.type === 'service_request') {
+        const isRide = msg.serviceType === 'ride';
+        const isLujo = msg.vehicleType === 'lujo';
+        const isTaken = msg.status === 'Tomado';
+        const isEntregado = msg.status === 'Entregado';
+        const safeOrigin = this.escapeHtml(msg.origin || 'Ubicación GPS');
+        const safeDest = this.escapeHtml(msg.destination || 'Dirección de entrega');
+        const originMap = (msg.originLat && msg.originLng) ? `https://www.google.com/maps?q=${msg.originLat},${msg.originLng}` : null;
+        const destMap = (msg.destLat && msg.destLng) ? `https://www.google.com/maps?q=${msg.destLat},${msg.destLng}` : null;
+
+        return `
+          <div class="service-request-card ${isTaken ? 'taken' : ''} ${isLujo ? 'ride-lujo' : ''}" style="margin-bottom: 10px;">
+            <div class="service-card-top">
+              <span class="service-type-badge ${isLujo ? 'lujo' : ''}">
+                ${isRide ? '🚖 TRASLADO MÓVIL' : '📦 ENCOMIENDA DELIVERY'} • ${this.escapeHtml(msg.vehicleLabel || 'Moto Taxi')}
+              </span>
+              <span class="service-price-pill">${msg.fareFormatted || `$${msg.fare} COP`}</span>
+            </div>
+
+            <div class="service-route-box">
+              <div class="route-step">
+                <span class="route-icon" style="color: #10B981;">🟢</span>
+                <div class="route-text" style="flex: 1;">
+                  <strong>Recogida (Origen):</strong>
+                  <span>${safeOrigin}</span>
+                  ${originMap ? `<a href="${originMap}" target="_blank" class="btn-mini-map-action" style="text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">🗺️ Mapa</a>` : ''}
+                </div>
+              </div>
+
+              <div class="route-step" style="margin-top: 6px;">
+                <span class="route-icon" style="color: #EF4444;">🏁</span>
+                <div class="route-text" style="flex: 1;">
+                  <strong>Destino (Llegada):</strong>
+                  <span>${safeDest}</span>
+                  ${destMap ? `<a href="${destMap}" target="_blank" class="btn-mini-map-action" style="text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">🗺️ Mapa</a>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="service-details-row" style="margin-top: 8px;">
+              <span>📏 <strong>${msg.distanceKm || 1} km</strong></span>
+              <span>👤 <strong>${this.escapeHtml(msg.customerName || 'Cliente')}</strong></span>
+              <span style="color: #94A3B8; margin-left: auto;">⏰ ${timeStr}</span>
+            </div>
+
+            <div style="margin-top: 10px; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-align: center; background: ${isTaken ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)'}; color: ${isTaken ? '#34D399' : '#FBBF24'}; border: 1px solid ${isTaken ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'};">
+              ${isTaken ? `🛵 Tomado por ${this.escapeHtml(msg.takenBy || 'Repartidor')}` : isEntregado ? '✅ Servicio Finalizado / Entregado' : '🟡 En espera de repartidor'}
+            </div>
+          </div>
+        `;
+      }
+
+      // Regular text chat message
+      const isOwner = msg.senderRole === 'owner';
+      return `
+        <div class="chat-bubble-msg ${isOwner ? 'self owner-msg' : ''}" style="margin-bottom: 8px;">
+          <div class="chat-sender-name">
+            <span style="${isOwner ? 'color: #FCD34D; font-weight: 900;' : 'color: #34D399; font-weight: 800;'}">
+              ${isOwner ? '👑 Dueño / Central' : '🛵 ' + this.escapeHtml(msg.senderName || 'Repartidor')}
+            </span>
+            <span class="chat-time-tag">${timeStr}</span>
+          </div>
+          <div class="chat-body-text">${this.escapeHtml(msg.text || '')}</div>
+        </div>
+      `;
+    }).join('');
+
+    feeds.forEach(feed => {
+      const isAtBottom = feed.scrollHeight - feed.scrollTop <= feed.clientHeight + 100;
+      feed.innerHTML = html;
+      if (isAtBottom) {
+        feed.scrollTop = feed.scrollHeight;
+      }
+    });
+  }
+
+  scrollDriverChatToBottom() {
+    setTimeout(() => {
+      const feeds = [
+        document.getElementById('admin-driver-chat-feed'),
+        document.getElementById('admin-driver-chat-modal-feed')
+      ].filter(Boolean);
+      feeds.forEach(f => f.scrollTop = f.scrollHeight);
+    }, 100);
+  }
+
+  async sendDriverChatMessage(fromModal = false) {
+    const inputId = fromModal ? 'admin-driver-chat-modal-input' : 'admin-driver-chat-input';
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    const text = inp.value.trim();
+    if (!text) return;
+
+    try {
+      inp.value = '';
+      const otherInput = document.getElementById(fromModal ? 'admin-driver-chat-input' : 'admin-driver-chat-modal-input');
+      if (otherInput) otherInput.value = '';
+
+      const res = await fetch('/api/driver/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: '👑 Dueño / Central',
+          senderPhone: 'owner',
+          senderRole: 'owner',
+          text: text
+        })
+      });
+
+      if (res.ok) {
+        const newMsg = await res.json();
+        this.driverChatMessages.push(newMsg);
+        this.renderDriverChat();
+        this.scrollDriverChatToBottom();
+      }
+    } catch(e) {
+      console.error('Error sending driver chat message from admin:', e);
+      alert('Error de conexión al enviar mensaje al chat de domiciliarios.');
+    }
+  }
+
+  openDriverChatModal() {
+    const modal = document.getElementById('admin-driver-chat-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    this.isDriverChatModalOpen = true;
+    this.driverChatUnreadCount = 0;
+    this.updateDriverChatUnreadUI();
+    this.renderDriverChat();
+    this.scrollDriverChatToBottom();
+  }
+
+  closeDriverChatModal() {
+    const modal = document.getElementById('admin-driver-chat-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+    this.isDriverChatModalOpen = false;
+  }
+
+  toggleDriverChatModal() {
+    if (this.isDriverChatModalOpen) {
+      this.closeDriverChatModal();
+    } else {
+      this.openDriverChatModal();
     }
   }
 
@@ -4415,11 +4709,30 @@ class AdminController {
 
           this.renderTable();
           this.playOrderNotification(order);
+          this.loadDriverChat(true);
         }
 
         if (data.type === 'PLATFORM_SETTINGS_UPDATE' && data.settings) {
           this.platformSettings = data.settings;
           this.updateHeaderSettingsUI();
+        }
+
+        if (data.type === 'DRIVER_CHAT_MESSAGE' && data.message) {
+          this.handleIncomingDriverChatMessage(data.message);
+        }
+
+        if (data.type === 'DRIVER_CHAT_UPDATE' || data.type === 'ORDER_STATUS_UPDATE') {
+          this.loadDriverChat(true);
+        }
+
+        // Real-time Paint Quotes and Messages
+        if (data.type === 'PAINT_QUOTE_NEW' || data.type === 'PAINT_QUOTE_UPDATE' || data.type === 'PAINT_QUOTE_MESSAGE') {
+          this.handlePaintWsEvent(data);
+        }
+
+        // Real-time 3D Lab Quotes and Messages
+        if (data.type === 'PRINT3D_QUOTE_NEW' || data.type === 'PRINT3D_QUOTE_UPDATE' || data.type === 'PRINT3D_QUOTE_MESSAGE') {
+          this.handlePrint3DWsEvent(data);
         }
       } catch (err) {
         console.error('Error parsing WS message in admin:', err);
@@ -7147,6 +7460,411 @@ class AdminController {
     if (modal) {
       modal.style.display = 'none';
       modal.classList.remove('active');
+    }
+  }
+
+  // ==========================================
+  // Paint & Bodywork Services Admin Control
+  // ==========================================
+  async openPaintAdminModal() {
+    const modal = document.getElementById('admin-paint-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+    }
+    const badge = document.getElementById('admin-paint-badge');
+    if (badge) badge.style.display = 'none';
+    await this.loadPaintQuotes();
+  }
+
+  closePaintAdminModal() {
+    const modal = document.getElementById('admin-paint-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+    }
+  }
+
+  handlePaintWsEvent(data) {
+    const badge = document.getElementById('admin-paint-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (this.currentInspectingQuote && this.currentInspectingQuote.type === 'paint' && this.currentInspectingQuote.id === data.quoteId) {
+      this.loadQuoteChatMessages();
+    }
+    const modal = document.getElementById('admin-paint-modal');
+    if (modal && modal.style.display === 'flex') {
+      this.loadPaintQuotes();
+    }
+  }
+
+  async loadPaintQuotes() {
+    try {
+      const res = await fetch('/api/paint-services/quotes');
+      const quotes = await res.json();
+      this.renderPaintQuotes(quotes);
+    } catch (e) {
+      console.warn('Could not load paint quotes:', e);
+    }
+  }
+
+  renderPaintQuotes(quotes) {
+    const listEl = document.getElementById('admin-paint-quotes-list');
+    if (!listEl) return;
+
+    const total = quotes.length;
+    const pending = quotes.filter(q => q.status === 'Solicitado').length;
+    const quoted = quotes.filter(q => q.status === 'Presupuestado').length;
+    const done = quotes.filter(q => q.status === 'Finalizado').length;
+
+    const totalEl = document.getElementById('admin-paint-kpi-total');
+    const pendEl = document.getElementById('admin-paint-kpi-pending');
+    const quotEl = document.getElementById('admin-paint-kpi-quoted');
+    const doneEl = document.getElementById('admin-paint-kpi-done');
+
+    if (totalEl) totalEl.textContent = total;
+    if (pendEl) pendEl.textContent = pending;
+    if (quotEl) quotEl.textContent = quoted;
+    if (doneEl) doneEl.textContent = done;
+
+    if (!quotes.length) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">🎨</span>
+          <p style="margin: 0; font-size: 13px;">No hay cotizaciones de pintura registradas aún.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = quotes.map(q => {
+      const statusColors = {
+        'Solicitado': '#F59E0B',
+        'En Conversación': '#3B82F6',
+        'Presupuestado': '#A855F7',
+        'En Producción': '#EF4444',
+        'Finalizado': '#10B981'
+      };
+      const color = statusColors[q.status] || '#94A3B8';
+      const piecesStr = (q.selectedPieces || []).join(', ') || 'Auto completo';
+
+      return `
+        <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <strong style="color: #FFF; font-size: 13.5px;">Cotización #${q.id.slice(-6)}: ${q.customerName}</strong>
+              <span style="font-size: 11.5px; color: #94A3B8; margin-left: 8px;">📞 ${q.customerPhone}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: rgba(255,255,255,0.08); color: ${color}; border: 1px solid ${color}; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 10px;">
+                ${q.status}
+              </span>
+              <span style="font-size: 11px; color: #64748B;">${new Date(q.createdAt).toLocaleDateString([], { day: '2-digit', month: 'short' })}</span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; font-size: 11.5px; color: #CBD5E1; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 10px;">
+            <div><strong>Vehículo:</strong> ${(q.vehicleType || '').toUpperCase()}</div>
+            <div><strong>Acabado:</strong> ${(q.finishType || 'Bicapa').toUpperCase()}</div>
+            <div><strong>Piezas:</strong> ${piecesStr}</div>
+            <div><strong>Latonería:</strong> ${q.hasLatoneria ? (q.latoneriaSeverity || 'Leve').toUpperCase() : 'NO'}</div>
+            <div><strong>Estimado / Final:</strong> <span style="color: #10B981; font-weight: 800;">${q.finalPrice ? `$${q.finalPrice} USD` : `$${q.estimatedRangeUsd} USD`}</span></div>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <button type="button" onclick="AdminApp.openQuoteChatInspector('paint', '${q.id}', '${q.customerName}')" style="background: rgba(59, 130, 246, 0.15); border: 1px solid #3B82F6; color: #93C5FD; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💬 Chat en Vivo (${(q.messages || []).length})
+            </button>
+            <button type="button" onclick="AdminApp.promptPaintPrice('${q.id}')" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #A855F7; color: #E9D5FF; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💵 Presupuestar ($ USD)
+            </button>
+            <select onchange="AdminApp.updatePaintStatus('${q.id}', this.value)" style="background: #0F172A; border: 1px solid rgba(255,255,255,0.2); color: #FFF; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              <option value="Solicitado" ${q.status === 'Solicitado' ? 'selected' : ''}>⏳ Solicitado</option>
+              <option value="En Conversación" ${q.status === 'En Conversación' ? 'selected' : ''}>💬 En Conversación</option>
+              <option value="Presupuestado" ${q.status === 'Presupuestado' ? 'selected' : ''}>📋 Presupuestado</option>
+              <option value="En Producción" ${q.status === 'En Producción' ? 'selected' : ''}>🚗 En Producción / Taller</option>
+              <option value="Finalizado" ${q.status === 'Finalizado' ? 'selected' : ''}>✅ Finalizado</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async updatePaintStatus(quoteId, status) {
+    try {
+      await fetch(`/api/paint-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setStatus', status })
+      });
+      this.loadPaintQuotes();
+    } catch (e) {
+      alert('Error actualizando estado.');
+    }
+  }
+
+  async promptPaintPrice(quoteId) {
+    const p = prompt('Ingresa el monto presupuestado final en USD (ej. 150):');
+    if (!p || isNaN(p)) return;
+
+    try {
+      await fetch(`/api/paint-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setPrice', price: parseFloat(p), status: 'Presupuestado' })
+      });
+      this.loadPaintQuotes();
+    } catch (e) {
+      alert('Error fijando precio.');
+    }
+  }
+
+  // ==========================================
+  // 3D Lab Services Admin Control
+  // ==========================================
+  async openPrint3DAdminModal() {
+    const modal = document.getElementById('admin-print3d-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+    }
+    const badge = document.getElementById('admin-print3d-badge');
+    if (badge) badge.style.display = 'none';
+    await this.loadPrint3DQuotes();
+  }
+
+  closePrint3DAdminModal() {
+    const modal = document.getElementById('admin-print3d-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+    }
+  }
+
+  handlePrint3DWsEvent(data) {
+    const badge = document.getElementById('admin-print3d-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (this.currentInspectingQuote && this.currentInspectingQuote.type === 'print3d' && this.currentInspectingQuote.id === data.quoteId) {
+      this.loadQuoteChatMessages();
+    }
+    const modal = document.getElementById('admin-print3d-modal');
+    if (modal && modal.style.display === 'flex') {
+      this.loadPrint3DQuotes();
+    }
+  }
+
+  async loadPrint3DQuotes() {
+    try {
+      const res = await fetch('/api/print3d-services/quotes');
+      const quotes = await res.json();
+      this.renderPrint3DQuotes(quotes);
+    } catch (e) {
+      console.warn('Could not load 3d quotes:', e);
+    }
+  }
+
+  renderPrint3DQuotes(quotes) {
+    const listEl = document.getElementById('admin-print3d-quotes-list');
+    if (!listEl) return;
+
+    const total = quotes.length;
+    const inChat = quotes.filter(q => q.status === 'En Conversación').length;
+    const printing = quotes.filter(q => q.status === 'En Producción').length;
+    const done = quotes.filter(q => q.status === 'Finalizado').length;
+
+    const totalEl = document.getElementById('admin-print3d-kpi-total');
+    const chatEl = document.getElementById('admin-print3d-kpi-chat');
+    const printEl = document.getElementById('admin-print3d-kpi-printing');
+    const doneEl = document.getElementById('admin-print3d-kpi-done');
+
+    if (totalEl) totalEl.textContent = total;
+    if (chatEl) chatEl.textContent = inChat;
+    if (printEl) printEl.textContent = printing;
+    if (doneEl) doneEl.textContent = done;
+
+    if (!quotes.length) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">🖨️</span>
+          <p style="margin: 0; font-size: 13px;">No hay pedidos de impresión 3D registrados aún.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = quotes.map(q => {
+      const statusColors = {
+        'Solicitado': '#F59E0B',
+        'En Conversación': '#3B82F6',
+        'Presupuestado': '#A855F7',
+        'En Producción': '#818CF8',
+        'Finalizado': '#10B981'
+      };
+      const color = statusColors[q.status] || '#94A3B8';
+
+      return `
+        <div style="background: #1E1B4B; border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <strong style="color: #FFF; font-size: 13.5px;">Orden 3D #${q.id.slice(-6)}: ${q.productTitle}</strong>
+              <span style="font-size: 11.5px; color: #A5B4FC; margin-left: 8px;">👤 ${q.customerName} (${q.customerPhone || 'Sin tel.'})</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: rgba(99,102,241,0.15); color: ${color}; border: 1px solid ${color}; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 10px;">
+                ${q.status}
+              </span>
+              <span style="font-size: 11px; color: #64748B;">${new Date(q.createdAt).toLocaleDateString([], { day: '2-digit', month: 'short' })}</span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; font-size: 11.5px; color: #CBD5E1; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px;">
+            <div><strong>Escala:</strong> ${q.scale}%</div>
+            <div><strong>Material:</strong> ${(q.material || 'PLA').toUpperCase()}</div>
+            <div><strong>Color:</strong> ${q.filamentColor || 'Negro'}</div>
+            <div><strong>Cantidad:</strong> ${q.quantity || 1} un.</div>
+            <div><strong>Precio:</strong> <span style="color: #38BDF8; font-weight: 800;">${q.finalPrice ? `$${q.finalPrice} USD` : `$${q.estimatedPriceUsd} USD`}</span></div>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <button type="button" onclick="AdminApp.openQuoteChatInspector('print3d', '${q.id}', '${q.customerName} - ${q.productTitle}')" style="background: rgba(99, 102, 241, 0.2); border: 1px solid #6366F1; color: #A5B4FC; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💬 Chat en Vivo (${(q.messages || []).length})
+            </button>
+            <button type="button" onclick="AdminApp.promptPrint3DPrice('${q.id}')" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #A855F7; color: #E9D5FF; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💵 Fijar Precio ($ USD)
+            </button>
+            <select onchange="AdminApp.updatePrint3DStatus('${q.id}', this.value)" style="background: #0F172A; border: 1px solid rgba(255,255,255,0.2); color: #FFF; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              <option value="Solicitado" ${q.status === 'Solicitado' ? 'selected' : ''}>⏳ Solicitado</option>
+              <option value="En Conversación" ${q.status === 'En Conversación' ? 'selected' : ''}>💬 En Conversación</option>
+              <option value="Presupuestado" ${q.status === 'Presupuestado' ? 'selected' : ''}>📋 Presupuestado</option>
+              <option value="En Producción" ${q.status === 'En Producción' ? 'selected' : ''}>🖨️ En Impresión 3D</option>
+              <option value="Finalizado" ${q.status === 'Finalizado' ? 'selected' : ''}>✅ Finalizado</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async updatePrint3DStatus(quoteId, status) {
+    try {
+      await fetch(`/api/print3d-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setStatus', status })
+      });
+      this.loadPrint3DQuotes();
+    } catch (e) {
+      alert('Error actualizando estado.');
+    }
+  }
+
+  async promptPrint3DPrice(quoteId) {
+    const p = prompt('Ingresa el monto presupuestado final en USD (ej. 18.50):');
+    if (!p || isNaN(p)) return;
+
+    try {
+      await fetch(`/api/print3d-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setPrice', price: parseFloat(p), status: 'Presupuestado' })
+      });
+      this.loadPrint3DQuotes();
+    } catch (e) {
+      alert('Error fijando precio.');
+    }
+  }
+
+  // ==========================================
+  // Quote Chat Inspector for Admin
+  // ==========================================
+  openQuoteChatInspector(type, quoteId, title) {
+    this.currentInspectingQuote = { type, id: quoteId, title };
+    const modal = document.getElementById('admin-quote-chat-modal');
+    const titleEl = document.getElementById('admin-quote-chat-title');
+    const subEl = document.getElementById('admin-quote-chat-sub');
+
+    if (titleEl) titleEl.textContent = `Chat con Cliente: ${title || quoteId}`;
+    if (subEl) subEl.textContent = type === 'paint' ? 'Taller de Pintura y Latonería' : 'Laboratorio 3D Maker';
+
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+    }
+    this.loadQuoteChatMessages();
+  }
+
+  closeQuoteChatInspector() {
+    this.currentInspectingQuote = null;
+    const modal = document.getElementById('admin-quote-chat-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+    }
+  }
+
+  async loadQuoteChatMessages() {
+    if (!this.currentInspectingQuote) return;
+    const { type, id } = this.currentInspectingQuote;
+    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}` : `/api/print3d-services/quotes/${id}`;
+
+    try {
+      const res = await fetch(endpoint);
+      const quote = await res.json();
+      const feed = document.getElementById('admin-quote-chat-feed');
+      if (!feed) return;
+
+      feed.innerHTML = (quote.messages || []).map(m => {
+        const isAdmin = m.sender === 'admin' || m.sender === 'workshop' || m.sender === 'lab';
+        return `
+          <div style="align-self: ${isAdmin ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isAdmin ? '#10B981' : '#1E293B'}; color: #FFF; padding: 8px 12px; border-radius: 12px; font-size: 12.5px;">
+            <div>${m.text}</div>
+            <div style="font-size: 9.5px; opacity: 0.8; margin-top: 3px; text-align: right;">
+              <span>${m.senderName || (isAdmin ? 'Taller / Admin' : 'Cliente')}</span> • <span>${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      feed.scrollTop = feed.scrollHeight;
+    } catch (e) {
+      console.warn('Error loading quote chat messages:', e);
+    }
+  }
+
+  async sendQuoteChatMessage() {
+    if (!this.currentInspectingQuote) return;
+    const input = document.getElementById('admin-quote-chat-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    const { type, id } = this.currentInspectingQuote;
+    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}/messages` : `/api/print3d-services/quotes/${id}/messages`;
+
+    const payload = {
+      sender: type === 'paint' ? 'workshop' : 'lab',
+      senderName: type === 'paint' ? 'Taller Aliado' : 'Fabricante 3D',
+      text
+    };
+
+    input.value = '';
+
+    try {
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      this.loadQuoteChatMessages();
+    } catch (e) {
+      alert('Error enviando mensaje.');
     }
   }
 }
