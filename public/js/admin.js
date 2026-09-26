@@ -7594,6 +7594,9 @@ class AdminController {
           </div>
 
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <a href="https://wa.me/573227949751?text=${encodeURIComponent(`🚗 *PEDIDO #${q.id.slice(-6)} DE LATONERÍA Y PINTURA*\n👤 Cliente: ${q.customerName} (${q.customerPhone})\n🚘 Vehículo: ${(q.vehicleType || '').toUpperCase()} - ${q.vehicleModel || ''}\n🎨 Pintura: ${q.paintQualityName || ''}\n✨ Barniz: ${q.varnishName || ''}\n💎 Pulitura: ${q.polishingTier || ''}\n💰 Estimado: ${q.finalPrice ? `$${q.finalPrice} USD` : `$${q.estimatedRangeUsd} USD`}`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+              <span>🟢</span> WhatsApp (322 794 9751)
+            </a>
             <button type="button" onclick="AdminApp.openQuoteChatInspector('paint', '${q.id}', '${q.customerName}')" style="background: rgba(59, 130, 246, 0.15); border: 1px solid #3B82F6; color: #93C5FD; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
               💬 Chat en Vivo (${(q.messages || []).length})
             </button>

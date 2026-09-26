@@ -7,6 +7,62 @@ const PaintServiceApp = {
   currentCategoryFilter: 'all',
   activeQuote: null,
   ws: null,
+  paintWhatsAppNumber: '573227949751',
+  paintWhatsAppDisplay: '322 794 9751',
+
+  buildWhatsAppMessage(quote) {
+    const isMoto = (quote.vehicleType || this.wizardState.vehicleType) === 'moto';
+    let partsList = '';
+    if (Array.isArray(quote.parts) && quote.parts.length > 0) {
+      partsList = quote.parts.join(', ');
+    } else if (Array.isArray(quote.selectedPieces) && quote.selectedPieces.length > 0) {
+      partsList = quote.selectedPieces.map(p => this.getPieceLabel(p)).join(', ');
+    } else {
+      partsList = isMoto ? 'Moto Completa' : 'Vehículo Completo';
+    }
+
+    const priceText = quote.finalPrice || quote.agreedPrice?.usd
+      ? `$${quote.finalPrice || quote.agreedPrice.usd} USD (Precio Acordado)`
+      : `$${quote.estimatedRangeUsd || (quote.estimatedPriceRange ? `${quote.estimatedPriceRange.minUsd} - ${quote.estimatedPriceRange.maxUsd}` : '45 - 80')} USD`;
+
+    const urgText = quote.urgency === 'urgente'
+      ? '⚡ Urgente (24 - 48 horas)'
+      : (quote.urgency === 'programada' ? '📅 Con Cita Previa' : 'Estándar (3 - 6 días)');
+
+    const msg =
+`🚗 *¡NUEVO PEDIDO DE LATONERÍA Y PINTURA!*
+━━━━━━━━━━━━━━━━━━━━
+🆔 *Cotización:* #${quote.id ? quote.id.slice(-6) : 'NUEVA'}
+👤 *Cliente:* ${quote.customerName || quote.clientName || 'Cliente'}
+📞 *Teléfono:* ${quote.customerPhone || quote.clientPhone || 'No indicado'}
+🚘 *Vehículo / Modelo:* ${quote.vehicleModel || (quote.vehicleType || '').toUpperCase()}
+🧩 *Piezas a Pintar:* ${partsList}
+
+🎨 *Calidad de Pintura:* ${quote.paintQualityName || 'Gama Alta (Full Recomendado)'}
+✨ *Barniz Transparente:* ${quote.varnishName || 'DuPont • Gama Alta A (Full Recomendado)'}
+💎 *Pulitura Especializada:* ${quote.polishingTier || 'Solo Gama Alta (3M, Symplex & Cerámica)'}
+🔨 *Latonería / Desabollado:* ${quote.hasLatoneria || quote.hasBodywork ? (quote.latoneriaSeverity || 'Leve').toUpperCase() : 'NO REQUIERE'}
+⏱️ *Urgencia:* ${urgText}
+💰 *Presupuesto Estimado:* ${priceText}
+${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━━━━━━━━━━━━━━━
+📍 *Enviado desde PediGochos App*
+💬 *Taller Aliado WhatsApp: +57 322 794 9751*`;
+
+    return encodeURIComponent(msg);
+  },
+
+  openWhatsAppForQuote(quote) {
+    const text = this.buildWhatsAppMessage(quote);
+    const waUrl = `https://wa.me/${this.paintWhatsAppNumber}?text=${text}`;
+    try {
+      const opened = window.open(waUrl, '_blank');
+      if (!opened) {
+        window.location.href = waUrl;
+      }
+    } catch (e) {
+      window.location.href = waUrl;
+    }
+  },
 
   // Sample catalog of workshop jobs & partner shops
   catalogItems: [
@@ -913,7 +969,15 @@ const PaintServiceApp = {
 
     if (prevBtn) prevBtn.style.display = step === 1 ? 'none' : 'block';
     if (nextBtn) {
-      nextBtn.innerHTML = step === 4 ? '<span>🚀 Enviar Cotización</span>' : '<span>Continuar →</span>';
+      if (step === 4) {
+        nextBtn.innerHTML = '<span>📲 Enviar Pedido a WhatsApp (322 794 9751)</span>';
+        nextBtn.style.background = '#25D366';
+        nextBtn.style.borderColor = '#25D366';
+      } else {
+        nextBtn.innerHTML = '<span>Continuar →</span>';
+        nextBtn.style.background = '';
+        nextBtn.style.borderColor = '';
+      }
     }
 
     const currentModel = this.getCurrentModelObj();
@@ -1284,6 +1348,20 @@ const PaintServiceApp = {
           <div class="paint-disclaimer">
             ⚠️ <em>Nota importante: El precio mostrado es un estimado referencial calculado según tarifas estándar. El taller aliado verificará el estado físico real de la lámina y te confirmará el presupuesto final exacto por el chat integrado.</em>
           </div>
+
+          <!-- Direct WhatsApp Dispatch Notice -->
+          <div style="margin-top: 14px; background: rgba(37, 211, 102, 0.12); border: 1.5px solid #25D366; border-radius: 12px; padding: 12px; text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px;">
+              <span style="font-size: 18px;">💬</span>
+              <strong style="color: #25D366; font-size: 13px;">Envío Directo a WhatsApp del Taller</strong>
+            </div>
+            <p style="margin: 0 0 10px 0; font-size: 11px; color: #E2E8F0; line-height: 1.4;">
+              Tu pedido de pintura y especificaciones se enviarán al número oficial del taller <strong>+57 322 794 9751</strong> para atención inmediata.
+            </p>
+            <button type="button" onclick="PaintServiceApp.nextStep()" style="background: #25D366; color: #FFF; border: none; font-weight: 800; font-size: 12.5px; padding: 10px 14px; border-radius: 10px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(37,211,102,0.35);">
+              <span>📲</span> Enviar al 322 794 9751 por WhatsApp
+            </button>
+          </div>
         </div>
       `;
     }
@@ -1522,10 +1600,14 @@ const PaintServiceApp = {
         this.activeQuote = data.quote;
         this.closeQuoter();
         this.openChat(data.quote);
+        // Automatically open WhatsApp with full quote breakdown for workshop 3227949751
+        this.openWhatsAppForQuote(data.quote);
       }
     } catch (e) {
       console.error('Error submitting paint quote:', e);
-      alert('Error enviando la solicitud. Por favor intenta de nuevo.');
+      // Fallback dispatch to WhatsApp 3227949751 so order is never lost
+      this.openWhatsAppForQuote(payload);
+      alert('Tu solicitud se está abriendo en WhatsApp (322 794 9751) para ser atendida por el taller.');
     }
   },
 
@@ -1642,11 +1724,14 @@ const PaintServiceApp = {
       </div>
 
       <div class="paint-sheet-actions">
+        <button type="button" class="btn-sheet-action" onclick="PaintServiceApp.openWhatsAppForQuote(PaintServiceApp.activeQuote || quote)" style="background: #25D366; border-color: #25D366; color: #FFF; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 5px;">
+          <span>🟢</span> WhatsApp Taller (322 794 9751)
+        </button>
         <button type="button" class="btn-sheet-action" onclick="PaintServiceApp.promptAdjustPrice('${quote.id}')">
-          ✏️ Ajustar Precio Final
+          ✏️ Ajustar Precio
         </button>
         <button type="button" class="btn-sheet-action accent" onclick="PaintServiceApp.scheduleAppointment('${quote.id}')">
-          📅 Agendar Cita en Taller
+          📅 Agendar Cita
         </button>
       </div>
     `;
