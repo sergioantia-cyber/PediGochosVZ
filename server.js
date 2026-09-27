@@ -203,14 +203,48 @@ function writeDriverChat(messages) {
   }
 }
 
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://bvdwxgfixirisqaavskj.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_8n4-tEnAx5J98ZMh_QwZiw_Qcncleqx';
+
+async function uploadBufferToSupabaseStorage(storagePath, buffer, contentType = 'application/octet-stream') {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return false;
+  try {
+    const cleanPath = String(storagePath).replace(/^\/+/, '');
+    const headers = {
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_ANON_KEY,
+      'x-upsert': 'true',
+      'Content-Type': contentType
+    };
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/${cleanPath}`, {
+      method: 'POST',
+      headers,
+      body: buffer
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn(`Supabase Storage upload warning for ${cleanPath}:`, res.status, errText);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn(`Supabase Storage upload error for ${storagePath}:`, err);
+    return false;
+  }
+}
+
+async function uploadJsonToSupabaseStorage(fileName, jsonString) {
+  return uploadBufferToSupabaseStorage(fileName, Buffer.from(jsonString, 'utf8'), 'application/json');
+}
+
 async function syncFromSupabase() {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-    console.log('Supabase env vars missing. Skipping cloud DB sync.');
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.log('Supabase credentials missing. Skipping cloud DB sync.');
     return;
   }
   try {
-    const rootUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/menu_images/db_backup.json`;
-    const uploadsUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/menu_images/uploads/db_backup.json`;
+    const rootUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/db_backup.json`;
+    const uploadsUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/uploads/db_backup.json`;
     console.log('Syncing database state from Supabase:', rootUrl);
     let res = await fetch(rootUrl);
     if (!res.ok) {
@@ -244,7 +278,7 @@ async function syncFromSupabase() {
     }
 
     try {
-      const disabledUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/menu_images/disabled_stores.json`;
+      const disabledUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/disabled_stores.json`;
       const disRes = await fetch(disabledUrl);
       if (disRes.ok) {
         try {
@@ -256,7 +290,7 @@ async function syncFromSupabase() {
         } catch(e) {}
       }
 
-      const gpsUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/menu_images/store_gps.json`;
+      const gpsUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/store_gps.json`;
       const gpsRes = await fetch(gpsUrl);
       if (gpsRes.ok) {
         try {
@@ -268,7 +302,7 @@ async function syncFromSupabase() {
         } catch(e) {}
       }
 
-      const drvUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/menu_images/drivers.json`;
+      const drvUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/drivers.json`;
       const drvRes = await fetch(drvUrl);
       if (drvRes.ok) {
         const drvText = await drvRes.text();
@@ -286,7 +320,7 @@ async function syncFromSupabase() {
         }
       }
 
-      const gpsDeletedUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/menu_images/gps_deleted.json`;
+      const gpsDeletedUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/gps_deleted.json`;
       const gpsDelRes = await fetch(gpsDeletedUrl);
       if (gpsDelRes.ok) {
         try {
@@ -308,6 +342,46 @@ async function syncFromSupabase() {
           console.log('🎉 gps_deleted.json restored and merged from Supabase Storage!');
         } catch(e) {}
       }
+
+      // Restore Piñatas Catalog & Quotes from Supabase Cloud
+      try {
+        const pinatasUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/pinatas_catalog.json`;
+        const pinRes = await fetch(pinatasUrl);
+        if (pinRes.ok) {
+          const cloudPinatas = await pinRes.json();
+          if (Array.isArray(cloudPinatas) && cloudPinatas.length > 0) {
+            fs.writeFileSync(PINATAS_CATALOG_FILE, JSON.stringify(cloudPinatas, null, 2), 'utf8');
+            console.log(`🎉 pinatas_catalog.json (${cloudPinatas.length} modelos) restored from Supabase Storage!`);
+          }
+        }
+      } catch (e) {
+        console.warn('Could not sync pinatas_catalog from Supabase Storage:', e);
+      }
+
+      try {
+        const quotesUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/pinatas_quotes.json`;
+        const quotesRes = await fetch(quotesUrl);
+        if (quotesRes.ok) {
+          const cloudQuotes = await quotesRes.json();
+          if (Array.isArray(cloudQuotes) && cloudQuotes.length > 0) {
+            fs.writeFileSync(PINATAS_QUOTES_FILE, JSON.stringify(cloudQuotes, null, 2), 'utf8');
+            console.log(`🎉 pinatas_quotes.json (${cloudQuotes.length} cotizaciones) restored from Supabase Storage!`);
+          }
+        }
+      } catch (e) {}
+
+      try {
+        const servEstUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/service_establishments.json`;
+        const servEstRes = await fetch(servEstUrl);
+        if (servEstRes.ok) {
+          const cloudServEsts = await servEstRes.json();
+          if (Array.isArray(cloudServEsts) && cloudServEsts.length > 0) {
+            fs.writeFileSync(SERVICE_ESTABLISHMENTS_FILE, JSON.stringify(cloudServEsts, null, 2), 'utf8');
+            console.log(`🎉 service_establishments.json restored from Supabase Storage!`);
+          }
+        }
+      } catch (e) {}
+
     } catch(e) {}
   } catch (err) {
     console.error('Error syncing database from Supabase:', err);
@@ -315,42 +389,57 @@ async function syncFromSupabase() {
 }
 
 async function uploadToSupabase() {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) return;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
   try {
     const fileContent = fs.readFileSync(DB_FILE, 'utf8');
     const headers = {
-      'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-      'apikey': process.env.SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_ANON_KEY,
       'x-upsert': 'true',
       'Content-Type': 'application/json'
     };
     const promises = [
-      fetch(`${process.env.SUPABASE_URL}/storage/v1/object/menu_images/db_backup.json`, { method: 'POST', headers, body: fileContent }),
-      fetch(`${process.env.SUPABASE_URL}/storage/v1/object/menu_images/uploads/db_backup.json`, { method: 'POST', headers, body: fileContent })
+      fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/db_backup.json`, { method: 'POST', headers, body: fileContent }),
+      fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/uploads/db_backup.json`, { method: 'POST', headers, body: fileContent })
     ];
 
     if (fs.existsSync(DISABLED_STORES_FILE)) {
       const disabledContent = fs.readFileSync(DISABLED_STORES_FILE, 'utf8');
-      promises.push(fetch(`${process.env.SUPABASE_URL}/storage/v1/object/menu_images/disabled_stores.json`, { method: 'POST', headers, body: disabledContent }));
+      promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/disabled_stores.json`, { method: 'POST', headers, body: disabledContent }));
     }
 
     if (fs.existsSync(STORE_GPS_FILE)) {
       const gpsContent = fs.readFileSync(STORE_GPS_FILE, 'utf8');
-      promises.push(fetch(`${process.env.SUPABASE_URL}/storage/v1/object/menu_images/store_gps.json`, { method: 'POST', headers, body: gpsContent }));
+      promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/store_gps.json`, { method: 'POST', headers, body: gpsContent }));
     }
 
     if (fs.existsSync(DRIVERS_FILE)) {
       const driversContent = fs.readFileSync(DRIVERS_FILE, 'utf8');
-      promises.push(fetch(`${process.env.SUPABASE_URL}/storage/v1/object/menu_images/drivers.json`, { method: 'POST', headers, body: driversContent }));
+      promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/drivers.json`, { method: 'POST', headers, body: driversContent }));
     }
 
     if (fs.existsSync(GPS_DELETED_FILE)) {
       const gpsDeletedContent = fs.readFileSync(GPS_DELETED_FILE, 'utf8');
-      promises.push(fetch(`${process.env.SUPABASE_URL}/storage/v1/object/menu_images/gps_deleted.json`, { method: 'POST', headers, body: gpsDeletedContent }));
+      promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/gps_deleted.json`, { method: 'POST', headers, body: gpsDeletedContent }));
+    }
+
+    if (fs.existsSync(PINATAS_CATALOG_FILE)) {
+      const pinatasContent = fs.readFileSync(PINATAS_CATALOG_FILE, 'utf8');
+      promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/pinatas_catalog.json`, { method: 'POST', headers, body: pinatasContent }));
+    }
+
+    if (fs.existsSync(PINATAS_QUOTES_FILE)) {
+      const quotesContent = fs.readFileSync(PINATAS_QUOTES_FILE, 'utf8');
+      promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/pinatas_quotes.json`, { method: 'POST', headers, body: quotesContent }));
+    }
+
+    if (fs.existsSync(SERVICE_ESTABLISHMENTS_FILE)) {
+      const servEstContent = fs.readFileSync(SERVICE_ESTABLISHMENTS_FILE, 'utf8');
+      promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/service_establishments.json`, { method: 'POST', headers, body: servEstContent }));
     }
 
     await Promise.all(promises);
-    console.log('☁️ Database state, disabled stores, GPS & Drivers backup updated successfully in Supabase Storage!');
+    console.log('☁️ Database state, disabled stores, GPS, Drivers & Pinatas backup updated successfully in Supabase Storage!');
   } catch (err) {
     console.error('Error backing up database to Supabase:', err);
     logAppError('uploadToSupabase', err);
@@ -1845,10 +1934,10 @@ app.post('/api/upload-payment-receipt', (req, res) => {
   }
 });
 
-// Universal Image Upload Endpoint (base64 to static /uploads/${folder}/${filename})
-app.post('/api/upload-image', (req, res) => {
+// Universal Image Upload Endpoint (uploads directly to Supabase Storage bucket 'menu_images' + local mirror)
+app.post('/api/upload-image', async (req, res) => {
   try {
-    const { imageBase64, folder = 'general', fileName } = req.body;
+    const { imageBase64, folder = 'general', fileName, establishmentId } = req.body;
     if (!imageBase64) {
       return res.status(400).json({ error: 'No image payload provided' });
     }
@@ -1856,29 +1945,77 @@ app.post('/api/upload-image', (req, res) => {
     const matches = imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
     let buffer;
     let extension = 'jpg';
+    let contentType = 'image/jpeg';
 
     if (matches && matches.length === 3) {
-      const mime = matches[1];
-      if (mime.includes('png')) extension = 'png';
-      else if (mime.includes('webp')) extension = 'webp';
-      else if (mime.includes('svg')) extension = 'svg';
+      const mime = matches[1].toLowerCase();
+      if (mime.includes('png')) { extension = 'png'; contentType = 'image/png'; }
+      else if (mime.includes('webp')) { extension = 'webp'; contentType = 'image/webp'; }
+      else if (mime.includes('svg')) { extension = 'svg'; contentType = 'image/svg+xml'; }
+      else if (mime.includes('gif')) { extension = 'gif'; contentType = 'image/gif'; }
       buffer = Buffer.from(matches[2], 'base64');
     } else {
       buffer = Buffer.from(imageBase64, 'base64');
     }
 
-    const safeFolder = String(folder).replace(/[^a-zA-Z0-9_-]/g, '') || 'general';
-    const safeFileName = `img_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}.${extension}`;
-    const uploadDir = path.join(__dirname, 'public/uploads', safeFolder);
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    // Determine clean structured cloud storage path
+    let cleanPath = 'general';
+    const folderStr = String(folder || '').toLowerCase().trim();
+    const estIdClean = establishmentId ? String(establishmentId).replace(/[^a-zA-Z0-9_-]/g, '') : '';
+
+    if (estIdClean) {
+      if (folderStr.includes('brand') || folderStr.includes('logo') || folderStr.includes('banner')) {
+        cleanPath = `establishments/${estIdClean}/branding`;
+      } else {
+        cleanPath = `establishments/${estIdClean}/products`;
+      }
+    } else if (folderStr.startsWith('services/') || folderStr.startsWith('establishments/')) {
+      cleanPath = folderStr.replace(/[^a-zA-Z0-9_\/-]/g, '').replace(/\/+/g, '/').replace(/^\/+|\/+$/g, '');
+    } else if (folderStr === 'pinatas' || folderStr.includes('pinata')) {
+      cleanPath = 'services/pinatas';
+    } else if (folderStr === 'resin' || folderStr.includes('resin')) {
+      cleanPath = 'services/resin';
+    } else if (folderStr === 'paint' || folderStr.includes('paint') || folderStr.includes('latoneria')) {
+      cleanPath = 'services/paint';
+    } else if (folderStr === 'print3d' || folderStr.includes('3d') || folderStr.includes('stl')) {
+      cleanPath = 'services/print3d';
+    } else if (folderStr === 'cauchera') {
+      cleanPath = 'services/cauchera';
+    } else if (folderStr) {
+      cleanPath = folderStr.replace(/[^a-zA-Z0-9_-]/g, '') || 'general';
     }
 
-    const filePath = path.join(uploadDir, safeFileName);
-    fs.writeFileSync(filePath, buffer);
+    const timestamp = Date.now();
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    const rawBaseName = fileName ? String(fileName).split('.')[0].replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30) : 'photo';
+    const safeFileName = `img_${timestamp}_${rand}_${rawBaseName}.${extension}`;
+    const storagePath = `${cleanPath}/${safeFileName}`;
 
-    const relativeUrl = `/uploads/${safeFolder}/${safeFileName}`;
-    res.json({ success: true, url: relativeUrl });
+    // 1. Upload to Supabase Cloud Storage (menu_images bucket)
+    let finalUrl = `/uploads/${cleanPath}/${safeFileName}`;
+    const cloudUploaded = await uploadBufferToSupabaseStorage(storagePath, buffer, contentType);
+    if (cloudUploaded) {
+      finalUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/${storagePath}`;
+      console.log(`☁️ Image uploaded to Supabase Storage: ${storagePath}`);
+    }
+
+    // 2. Also save to local uploads directory as a fallback mirror
+    try {
+      const localUploadDir = path.join(__dirname, 'public/uploads', cleanPath);
+      if (!fs.existsSync(localUploadDir)) {
+        fs.mkdirSync(localUploadDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(localUploadDir, safeFileName), buffer);
+    } catch (fsErr) {
+      console.warn('Could not write local image cache:', fsErr.message);
+    }
+
+    res.json({
+      success: true,
+      url: finalUrl,
+      storagePath,
+      isCloud: cloudUploaded
+    });
   } catch (err) {
     console.error('Error in /api/upload-image:', err);
     res.status(500).json({ error: 'Error guardando imagen en el servidor' });
@@ -4079,6 +4216,11 @@ function readPinatasCatalog() {
 function writePinatasCatalog(data) {
   try {
     fs.writeFileSync(PINATAS_CATALOG_FILE, JSON.stringify(data, null, 2), 'utf8');
+    uploadJsonToSupabaseStorage('pinatas_catalog.json', JSON.stringify(data, null, 2))
+      .then(ok => {
+        if (ok) console.log(`☁️ Synced ${data.length} pinatas to Supabase Storage.`);
+      })
+      .catch(e => console.warn('Background sync pinatas_catalog error:', e));
   } catch(e) {
     console.error('Error writing pinatas_catalog.json:', e);
   }
@@ -4163,6 +4305,8 @@ function readPinatasQuotes() {
 function writePinatasQuotes(data) {
   try {
     fs.writeFileSync(PINATAS_QUOTES_FILE, JSON.stringify(data, null, 2), 'utf8');
+    uploadJsonToSupabaseStorage('pinatas_quotes.json', JSON.stringify(data, null, 2))
+      .catch(() => {});
   } catch(e) {
     console.error('Error writing pinatas_quotes.json:', e);
   }
@@ -4173,7 +4317,20 @@ if (!fs.existsSync(PINATAS_QUOTES_FILE)) {
 }
 
 // GET Piñatas catalog
-app.get('/api/pinata-services/catalog', (req, res) => {
+app.get('/api/pinata-services/catalog', async (req, res) => {
+  // If local file doesn't exist, try to sync from Supabase Storage first
+  if (!fs.existsSync(PINATAS_CATALOG_FILE)) {
+    try {
+      const pinRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/menu_images/pinatas_catalog.json`);
+      if (pinRes.ok) {
+        const cloudData = await pinRes.json();
+        if (Array.isArray(cloudData) && cloudData.length > 0) {
+          fs.writeFileSync(PINATAS_CATALOG_FILE, JSON.stringify(cloudData, null, 2), 'utf8');
+          return res.json(cloudData);
+        }
+      }
+    } catch (e) {}
+  }
   res.json(readPinatasCatalog());
 });
 

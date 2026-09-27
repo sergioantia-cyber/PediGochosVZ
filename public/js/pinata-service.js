@@ -808,7 +808,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
 
   async loadCatalog() {
     try {
-      const res = await fetch('/api/pinata-services/catalog');
+      const res = await fetch(`/api/pinata-services/catalog?t=${Date.now()}`);
       this.catalog = await res.json();
       this.renderGallery();
     } catch(e) {
