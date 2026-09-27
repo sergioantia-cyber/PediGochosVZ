@@ -2200,34 +2200,42 @@ class MarketplaceController {
       let imgHTML = '';
       const estLogo = (this.selectedEstablishment && this.selectedEstablishment.logo) ? this.selectedEstablishment.logo : '🏪';
       if (prod.image) {
-        imgHTML = `<img src="${prod.image}" alt="${prod.name}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                   <div class="product-image-placeholder hidden">${estLogo}</div>`;
+        imgHTML = `<img src="${prod.image}" alt="${prod.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                   <div class="product-square-placeholder" style="display: none;">${estLogo}</div>`;
       } else {
-        imgHTML = `<div class="product-image-placeholder">${estLogo}</div>`;
+        imgHTML = `<div class="product-square-placeholder">${estLogo}</div>`;
       }
 
+      const formattedPrice = this.formatPesos(prod.price);
+
       const actionButtonHTML = !isStoreOpen
-        ? `<span style="font-size: 10px; color: #ef4444; font-weight: 800; background: rgba(239,68,68,0.12); padding: 3px 6px; border-radius: 6px; border: 1px solid rgba(239,68,68,0.3);">🔴 Cerrado</span>`
+        ? `<span style="font-size: 11px; color: #ef4444; font-weight: 800; background: rgba(239,68,68,0.18); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.35);">🔴 Cerrado</span>`
         : (isAgotado
-          ? `<span style="font-size: 10px; color: #EF4444; font-weight: 800; background: rgba(239,68,68,0.12); padding: 3px 6px; border-radius: 6px; border: 1px solid rgba(239,68,68,0.3);">🚫 Agotado</span>`
+          ? `<span style="font-size: 11px; color: #EF4444; font-weight: 800; background: rgba(239,68,68,0.18); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.35);">🚫 Agotado</span>`
           : (!isAvailableToday
-            ? `<span style="font-size: 10px; color: var(--text-muted); font-weight: 700;">No hoy</span>`
-            : `<button class="btn-add-product" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')">+</button>`));
+            ? `<span style="font-size: 11px; color: var(--text-muted); font-weight: 800; background: rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 8px;">No hoy</span>`
+            : `<button class="btn-add-product" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')" title="Personalizar y agregar">+</button>`));
 
       card.innerHTML = `
-        <div class="product-info">
-          <div>
-            ${dayBadgeHTML}
-            <h4>${prod.name}</h4>
-            <p>${prod.description || ''}</p>
-          </div>
-          <div class="product-price-row">
-            <span class="product-price">${this.formatPesos(prod.price)}</span>
-            ${actionButtonHTML}
+        <div class="product-square-media">
+          ${imgHTML}
+          ${dayBadgeHTML ? `<div class="product-badge-float">${dayBadgeHTML}</div>` : ''}
+          <div class="product-price-pill">
+            <span>${formattedPrice}</span>
           </div>
         </div>
-        <div class="product-image-container">
-          ${imgHTML}
+        <div class="product-card-body">
+          <div>
+            <h4>${prod.name}</h4>
+            <p>${prod.description || 'Deliciosa preparación artesanal elaborada con los mejores ingredientes.'}</p>
+          </div>
+          <div class="product-card-cta">
+            <span class="btn-tap-details">
+              <span>🔍 Ver detalles</span>
+              <span>➔</span>
+            </span>
+            ${actionButtonHTML}
+          </div>
         </div>
       `;
 

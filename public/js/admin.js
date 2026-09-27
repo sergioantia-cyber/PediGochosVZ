@@ -3109,37 +3109,78 @@ class AdminController {
     filtered.forEach(prod => {
       const card = document.createElement('div');
       card.className = 'admin-product-card-item';
-      card.style.background = 'rgba(255, 255, 255, 0.03)';
-      card.style.border = '1px solid rgba(255, 255, 255, 0.08)';
+      card.style.background = 'rgba(255, 255, 255, 0.04)';
+      card.style.border = '1px solid rgba(255, 255, 255, 0.09)';
       card.style.borderRadius = '16px';
-      card.style.padding = '12px';
+      card.style.padding = '0';
       card.style.display = 'flex';
       card.style.flexDirection = 'column';
-      card.style.gap = '10px';
+      card.style.overflow = 'hidden';
       card.style.position = 'relative';
+      card.style.cursor = 'pointer';
+      card.style.transition = 'all 0.22s ease';
+      card.title = `Toca para modificar ficha completa o eliminar "${prod.name}"`;
 
+      card.onmouseenter = () => {
+        card.style.borderColor = 'rgba(255, 107, 0, 0.4)';
+        card.style.transform = 'translateY(-2px)';
+        card.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
+      };
+      card.onmouseleave = () => {
+        card.style.borderColor = 'rgba(255, 255, 255, 0.09)';
+        card.style.transform = 'translateY(0)';
+        card.style.boxShadow = 'none';
+      };
+
+      // Tocar en cualquier parte de la tarjeta despliega la ficha completa editable y eliminable
+      card.onclick = () => AdminApp.openProductSpecsModal(prod.id);
+
+      const isAgotado = prod.out_of_stock === true || prod.agotado === true || prod.is_paused === true || prod.available === false;
       const imgUrl = prod.image || '/images/burger_royale.jpg';
       const formattedPrice = this.formatPesos(prod.price || 0);
+      const modCount = prod.modifiers && Array.isArray(prod.modifiers) ? prod.modifiers.length : 0;
 
       card.innerHTML = `
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <img src="${imgUrl}" alt="${prod.name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 12px; flex-shrink: 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);" onerror="this.src='/images/burger_royale.jpg'">
-          <div style="flex: 1; min-width: 0;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;">
-              <h4 style="color: #ffffff; font-size: 13.5px; margin: 0; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prod.name}</h4>
-              <span style="color: #10B981; font-weight: 800; font-size: 13px; white-space: nowrap;">${formattedPrice}</span>
-            </div>
-            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.3; margin: 4px 0 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${prod.description || 'Sin descripción.'}</p>
+        <div style="position: relative; width: 100%; aspect-ratio: 16/10; background: #0F172A; overflow: hidden;">
+          <img src="${imgUrl}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
+          <div style="position: absolute; top: 8px; left: 8px; z-index: 2;">
+            ${isAgotado 
+              ? `<span style="background: rgba(239, 68, 68, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🚫 Agotado</span>`
+              : `<span style="background: rgba(16, 185, 129, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🟢 En Stock</span>`
+            }
+          </div>
+          <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); color: #10B981; font-weight: 900; font-size: 13.5px; padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.3); box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+            ${formattedPrice}
           </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; margin-top: auto;">
-          <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.openProductSpecsModal('${prod.id}')" style="margin: 0; padding: 6px 14px; font-size: 11.5px; font-weight: 700; height: auto; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.06); color: #FFF;">
-            <span>✏️</span> Editar
-          </button>
-          <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.deleteProductFromModal('${prod.id}')" style="margin: 0; padding: 6px 10px; font-size: 11.5px; color: #EF4444; border-color: rgba(239,68,68,0.3); height: auto;" title="Eliminar producto">
-            <span>🗑️</span>
-          </button>
+        <div style="padding: 12px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; gap: 8px;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;">
+              <h4 style="color: #FFFFFF; font-size: 14.5px; margin: 0; font-weight: 800; line-height: 1.25;">${prod.name}</h4>
+            </div>
+            <span style="display: inline-block; font-size: 10px; color: #CBD5E1; background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; margin-top: 4px; font-weight: 700;">
+              🏷️ ${prod.category || 'General'}
+            </span>
+            <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.35; margin: 6px 0 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+              ${prod.description || 'Sin descripción detallada.'}
+            </p>
+            ${modCount > 0 ? `<div style="font-size: 10.5px; color: #F59E0B; margin-top: 4px; font-weight: 700;">🎛️ ${modCount} grupo(s) de adicionales</div>` : ''}
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: auto;">
+            <button type="button" onclick="event.stopPropagation(); AdminApp.toggleProductStatus('${prod.id}')" style="background: ${isAgotado ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}; color: ${isAgotado ? '#34D399' : '#FCD34D'}; border: 1px solid ${isAgotado ? '#10B981' : '#F59E0B'}; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 800; cursor: pointer;" title="Cambiar disponibilidad inmediata">
+              ${isAgotado ? '▶️ Habilitar' : '⏸️ Pausar'}
+            </button>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.openProductSpecsModal('${prod.id}')" style="margin: 0; padding: 4px 10px; font-size: 11px; font-weight: 800; height: auto; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); color: #FFF;" title="Modificar ficha">
+                <span>✏️</span> Editar
+              </button>
+              <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.deleteProductFromModal('${prod.id}')" style="margin: 0; padding: 4px 8px; font-size: 11px; color: #EF4444; border-color: rgba(239,68,68,0.3); height: auto;" title="Eliminar producto de la carta">
+                <span>🗑️</span>
+              </button>
+            </div>
+          </div>
         </div>
       `;
       grid.appendChild(card);
@@ -3738,11 +3779,48 @@ class AdminController {
       window.setSelectedDaysToContainer('specs-available-days-pills', prod.available_days || ['todos']);
     }
 
+    // Set stock status buttons
+    const isAvail = prod.available !== false && prod.is_paused !== true && prod.agotado !== true;
+    this.setSpecsModalStockStatus(isAvail);
+
     // Open dedicated standalone modal without touching current tab
     const modal = document.getElementById('product-specs-modal');
     if (modal) {
       modal.style.display = 'flex';
       modal.classList.add('active');
+    }
+  }
+
+  setSpecsModalStockStatus(isAvailable) {
+    const input = document.getElementById('specs-product-available');
+    if (input) input.value = isAvailable ? 'true' : 'false';
+
+    const activeBtn = document.getElementById('specs-status-active-btn');
+    const pausedBtn = document.getElementById('specs-status-paused-btn');
+    if (activeBtn && pausedBtn) {
+      if (isAvailable) {
+        activeBtn.style.background = 'rgba(16,185,129,0.25)';
+        activeBtn.style.borderColor = '#10B981';
+        activeBtn.style.color = '#34D399';
+        pausedBtn.style.background = 'rgba(255,255,255,0.05)';
+        pausedBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+        pausedBtn.style.color = '#94A3B8';
+      } else {
+        activeBtn.style.background = 'rgba(255,255,255,0.05)';
+        activeBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+        activeBtn.style.color = '#94A3B8';
+        pausedBtn.style.background = 'rgba(239,68,68,0.25)';
+        pausedBtn.style.borderColor = '#EF4444';
+        pausedBtn.style.color = '#FCA5A5';
+      }
+    }
+  }
+
+  deleteProductFromSpecsModal() {
+    const idEl = document.getElementById('specs-product-id');
+    const prodId = idEl ? idEl.value : this.activeSpecsProductId;
+    if (prodId) {
+      this.deleteProductFromModal(prodId);
     }
   }
 
@@ -3980,6 +4058,12 @@ class AdminController {
     prod.price = parseFloat(document.getElementById('specs-product-price').value) || 0;
     prod.description = document.getElementById('specs-product-description').value.trim();
     prod.available_days = typeof window.getSelectedDaysFromContainer === 'function' ? window.getSelectedDaysFromContainer('specs-available-days-pills') : ['todos'];
+
+    const isAvail = document.getElementById('specs-product-available')?.value !== 'false';
+    prod.available = isAvail;
+    prod.is_paused = !isAvail;
+    prod.agotado = !isAvail;
+    prod.out_of_stock = !isAvail;
 
     // 2. Prepare exclusions
     prod.exclusions = this.specsIngredients.map((item, i) => {

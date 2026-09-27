@@ -1102,3 +1102,75 @@ body.modal-open {
   border-left: 3px solid #10B981;
 }
 
+/* ==========================================================================
+   SISTEMA DE ALTA LEGIBILIDAD PARA PANEL DE ADMINISTRACIÓN (ADMIN)
+   ========================================================================== */
+/* Tablas de Comercios y Repartidores */
+.keys-table th,
+.admin-table th {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.3px !important;
+}
+
+.keys-table td,
+.admin-table td {
+  font-size: 13.5px !important;
+  color: #E2E8F0 !important;
+}
+
+.keys-table .shop-title-cell {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+}
+
+.keys-table .shop-category-cell {
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+
+.keys-table .shop-key-cell {
+  font-size: 15.5px !important;
+  font-weight: 900 !important;
+}
+
+/* Tabla de Pedidos en Vivo */
+#admin-live-orders-tbody td {
+  font-size: 13.5px !important;
+  line-height: 1.4 !important;
+}
+
+.service-badge {
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  padding: 4px 10px !important;
+}
+
+/* Modales y Formularios de Edición */
+.modal-content h3,
+.modal-header h3 {
+  font-size: 18px !important;
+  font-weight: 850 !important;
+}
+
+.modal-content label {
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  font-size: 13.5px !important;
+}
+
+/* Precios en General */
+.product-price,
+.stat-value,
+.card-revenue {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+}
+
+
