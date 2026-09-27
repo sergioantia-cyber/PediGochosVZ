@@ -185,6 +185,18 @@ class MarketplaceController {
     // Initialize floating bubbles (visible on home) and header SOS (hidden on home)
     this.updateFloatingAndHeaderSos(false);
 
+    // Register resilient click & touch listeners on floating action buttons
+    const servicesBtn = document.getElementById('floating-services-btn');
+    if (servicesBtn) {
+      servicesBtn.addEventListener('click', (e) => this.toggleServicesMenu(null, e));
+      servicesBtn.addEventListener('touchend', (e) => this.toggleServicesMenu(null, e), { passive: false });
+    }
+    const sosBtn = document.getElementById('floating-sos-btn');
+    if (sosBtn) {
+      sosBtn.addEventListener('click', (e) => this.toggleSosMenu(null, e));
+      sosBtn.addEventListener('touchend', (e) => this.toggleSosMenu(null, e), { passive: false });
+    }
+
     this.renderEstablishments();
     this.updateCartBadge();
     await this.checkSupabaseSession();
@@ -685,8 +697,8 @@ class MarketplaceController {
       }
     });
 
-    // Category selected -> Hide floating bubbles (Services and SOS) and show header SOS button
-    this.updateFloatingAndHeaderSos(true);
+    // Category selected -> Keep floating action bubbles visible while browsing on home
+    this.updateFloatingAndHeaderSos(false);
 
     this.renderEstablishments();
 
@@ -9849,35 +9861,66 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
   // SERVICES MENU MODAL METHODS
   // ========================================================
 
-  toggleServicesMenu(force = null) {
-    const now = Date.now();
-    if (this._lastServicesToggle && now - this._lastServicesToggle < 250) return;
-    this._lastServicesToggle = now;
+  toggleServicesMenu(force = null, event = null) {
+    if (event) {
+      if (typeof event.stopPropagation === 'function') event.stopPropagation();
+      if (typeof event.preventDefault === 'function') event.preventDefault();
+    }
 
     const modal = document.getElementById('services-menu-modal');
     if (!modal) return;
+
+    const now = Date.now();
+    if (this._lastServicesToggle && now - this._lastServicesToggle < 350) return;
+    this._lastServicesToggle = now;
+
     const isVisible = modal.classList.contains('open') || modal.classList.contains('active') || (modal.style.display === 'flex' && modal.style.opacity !== '0');
     const show = force !== null ? force : !isVisible;
     if (show) {
       this.closeSosMenu();
+      this._servicesOpenedTimestamp = Date.now();
+
       modal.style.display = 'flex';
+      void modal.offsetWidth; // Force reflow for smooth animation
+
       modal.classList.add('open', 'active');
       modal.style.opacity = '1';
       modal.style.visibility = 'visible';
       modal.style.pointerEvents = 'auto';
+
+      const content = modal.querySelector('.services-drawer-content');
+      if (content) {
+        content.style.transform = 'translateX(0)';
+      }
     } else {
-      this.closeServicesMenu();
+      this.closeServicesMenu(event);
     }
   }
 
-  closeServicesMenu() {
+  closeServicesMenu(event = null) {
+    if (event) {
+      // Prevent instant dismissal from ghost-touch clicks on the overlay
+      if (this._servicesOpenedTimestamp && Date.now() - this._servicesOpenedTimestamp < 400) {
+        return;
+      }
+      if (typeof event.stopPropagation === 'function') event.stopPropagation();
+    }
+
     const modal = document.getElementById('services-menu-modal');
     if (modal) {
+      const content = modal.querySelector('.services-drawer-content');
+      if (content) {
+        content.style.transform = 'translateX(-100%)';
+      }
       modal.classList.remove('open', 'active');
-      modal.style.display = 'none';
-      modal.style.opacity = '';
-      modal.style.visibility = '';
-      modal.style.pointerEvents = '';
+      setTimeout(() => {
+        if (!modal.classList.contains('open')) {
+          modal.style.display = 'none';
+          modal.style.opacity = '';
+          modal.style.visibility = '';
+          modal.style.pointerEvents = '';
+        }
+      }, 250);
     }
   }
 
@@ -9896,35 +9939,56 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
   // S.O.S EMERGENCY & 24H MOBILE CAUCHERA METHODS
   // ========================================================
 
-  toggleSosMenu(force = null) {
-    const now = Date.now();
-    if (this._lastSosToggle && now - this._lastSosToggle < 250) return;
-    this._lastSosToggle = now;
+  toggleSosMenu(force = null, event = null) {
+    if (event) {
+      if (typeof event.stopPropagation === 'function') event.stopPropagation();
+      if (typeof event.preventDefault === 'function') event.preventDefault();
+    }
 
     const modal = document.getElementById('sos-menu-modal');
     if (!modal) return;
+
+    const now = Date.now();
+    if (this._lastSosToggle && now - this._lastSosToggle < 350) return;
+    this._lastSosToggle = now;
+
     const isVisible = modal.classList.contains('open') || modal.classList.contains('active') || (modal.style.display === 'flex' && modal.style.opacity !== '0');
     const show = force !== null ? force : !isVisible;
     if (show) {
       this.closeServicesMenu();
+      this._sosOpenedTimestamp = Date.now();
+
       modal.style.display = 'flex';
+      void modal.offsetWidth; // Force reflow
+
       modal.classList.add('open', 'active');
       modal.style.opacity = '1';
       modal.style.visibility = 'visible';
       modal.style.pointerEvents = 'auto';
     } else {
-      this.closeSosMenu();
+      this.closeSosMenu(event);
     }
   }
 
-  closeSosMenu() {
+  closeSosMenu(event = null) {
+    if (event) {
+      if (this._sosOpenedTimestamp && Date.now() - this._sosOpenedTimestamp < 400) {
+        return;
+      }
+      if (typeof event.stopPropagation === 'function') event.stopPropagation();
+    }
+
     const modal = document.getElementById('sos-menu-modal');
     if (modal) {
       modal.classList.remove('open', 'active');
-      modal.style.display = 'none';
-      modal.style.opacity = '';
-      modal.style.visibility = '';
-      modal.style.pointerEvents = '';
+      setTimeout(() => {
+        if (!modal.classList.contains('open')) {
+          modal.style.display = 'none';
+          modal.style.opacity = '';
+          modal.style.visibility = '';
+          modal.style.pointerEvents = '';
+        }
+      }, 250);
     }
   }
 

@@ -1489,12 +1489,16 @@ class AdminController {
         serviceOrdersDetail = rOrders.length > 0 ? `${rOrders.length} carreras / envíos` : 'Flota activa';
       }
 
+      const servLogoHTML = (serv.logo && (serv.logo.startsWith('/') || serv.logo.endsWith('.svg') || serv.logo.endsWith('.png')))
+        ? `<img src="${serv.logo}" alt="${serv.name}" style="width: 28px; height: 28px; object-fit: contain; border-radius: 6px; flex-shrink: 0;">`
+        : `<span style="font-size: 22px; line-height: 1;">${serv.logo || '🪅'}</span>`;
+
       row.innerHTML = `
-        <td class="shop-title-cell" style="font-weight: 700;">
+        <td class="shop-title-cell" style="font-weight: 700; color: #0F172A !important;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 22px;">${serv.logo}</span>
+            ${servLogoHTML}
             <div>
-              <span style="font-size: 14px; font-weight: 800; color: #0F172A;">${serv.name}</span>
+              <span style="font-size: 14px; font-weight: 800; color: #0F172A !important;">${serv.name}</span>
               <span style="background: ${serv.badgeBg}; color: ${serv.badgeColor}; border: 1px solid ${serv.badgeBorder}; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; margin-left: 6px;">
                 ${serv.badge}
               </span>
@@ -1505,7 +1509,7 @@ class AdminController {
               📍 ${serv.location}
             </span>
           </div>
-          <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748B; max-width: 320px; line-height: 1.3;">
+          <p style="margin: 4px 0 0 0; font-size: 11.5px; color: #334155 !important; font-weight: 600; max-width: 320px; line-height: 1.35;">
             ${serv.description}
           </p>
         </td>
@@ -1516,7 +1520,7 @@ class AdminController {
         </td>
         <td>
           <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
-            <span style="font-size: 11.5px; font-weight: 700; color: #475569;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #334155 !important;">
               ${serv.inventorySummary}
             </span>
             <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); ${serv.inventoryAction}" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(99,102,241,0.35);" title="Gestionar catálogo, proyectos o inventario del servicio">
@@ -1526,7 +1530,7 @@ class AdminController {
         </td>
         <td>
           <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
-            <div style="font-size: 11.5px; font-weight: 700; color: #475569;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #334155 !important;">
               ${serv.infoSummary}
             </div>
             <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); ${serv.infoAction}" style="background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(15,118,110,0.35);" title="Administrar información o parámetros del servicio">
@@ -1539,7 +1543,7 @@ class AdminController {
         </td>
         <td>
           <div style="display: flex; flex-direction: column; gap: 2px;">
-            <span style="font-weight: 800; color: #0F172A; font-size: 12.5px;">${serviceOrdersDetail}</span>
+            <span style="font-weight: 800; color: #0F172A !important; font-size: 12.5px;">${serviceOrdersDetail}</span>
             <span style="font-size: 11px; font-weight: 700; color: #10B981;">⚡ Cotización Directa</span>
           </div>
         </td>
@@ -1622,12 +1626,16 @@ class AdminController {
       };
       const catLabel = categoryMap[est.category] || `🏪 ${est.category || 'Comercio'}`;
 
+      const estLogoHTML = (est.logo && (est.logo.startsWith('/') || est.logo.endsWith('.svg') || est.logo.endsWith('.png') || est.logo.endsWith('.jpg') || est.logo.endsWith('.webp')))
+        ? `<img src="${est.logo}" alt="${est.name}" style="width: 28px; height: 28px; object-fit: cover; border-radius: 6px; flex-shrink: 0;">`
+        : `<span style="font-size: 20px;">${est.logo || '🏪'}</span>`;
+
       row.innerHTML = `
-        <td class="shop-title-cell" style="font-weight: 700;">
+        <td class="shop-title-cell" style="font-weight: 700; color: #0F172A !important;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 20px;">${est.logo || '🏪'}</span>
+            ${estLogoHTML}
             <div>
-              <span style="font-size: 14px; font-weight: 800; color: #0F172A;">${est.name}</span>
+              <span style="font-size: 14px; font-weight: 800; color: #0F172A !important;">${est.name}</span>
               ${disabledBadge}
             </div>
           </div>

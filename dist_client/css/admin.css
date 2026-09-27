@@ -1111,18 +1111,28 @@ body.modal-open {
   font-size: 12.5px !important;
   font-weight: 800 !important;
   letter-spacing: 0.3px !important;
+  color: #334155 !important;
 }
 
 .keys-table td,
 .admin-table td {
   font-size: 13.5px !important;
-  color: #E2E8F0 !important;
+  color: #1E293B !important;
 }
 
 .keys-table .shop-title-cell {
   font-size: 15px !important;
   font-weight: 800 !important;
-  color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+.keys-table .shop-title-cell span {
+  color: #0F172A !important;
+}
+
+.keys-table .shop-title-cell p {
+  color: #475569 !important;
+  font-weight: 600 !important;
 }
 
 .keys-table .shop-category-cell {
@@ -1139,6 +1149,7 @@ body.modal-open {
 #admin-live-orders-tbody td {
   font-size: 13.5px !important;
   line-height: 1.4 !important;
+  color: #E2E8F0 !important;
 }
 
 .service-badge {
