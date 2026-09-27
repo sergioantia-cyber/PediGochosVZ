@@ -87,7 +87,14 @@ const ResinServiceApp = {
     hardware: 'gold', // 'gold' | 'silver'
     customName: '',
     extraCharmId: 'none',
-    quantity: 1
+    quantity: 1,
+    customerName: localStorage.getItem('customer_name') || '',
+    customerPhone: localStorage.getItem('customer_phone') || '',
+    deliveryCity: 'San Antonio del Táchira',
+    deliveryAddress: localStorage.getItem('customer_address') || '',
+    deliveryReference: '',
+    paymentMethod: 'Efectivo en Pesos COP (Contra Entrega / Acordar)',
+    gps: null
   },
 
   init() {
@@ -310,15 +317,8 @@ const ResinServiceApp = {
                 <circle cx="170" cy="45" r="23" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="1" />
                 <line x1="168" y1="19" x2="172" y2="71" stroke="rgba(0,0,0,0.25)" stroke-width="1.5" />
 
-                <!-- Chain Links -->
-                <ellipse id="svg-chain-link-1" cx="166" cy="74" rx="4.5" ry="8" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3" class="svg-metal-element" />
-                <ellipse id="svg-chain-link-2" cx="158" cy="90" rx="4.5" ry="8" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3" class="svg-metal-element" />
-                <ellipse id="svg-chain-link-3" cx="145" cy="106" rx="4.5" ry="8" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3" class="svg-metal-element" />
-
-                <!-- Screw Eye Pin (Cáncamo atornillado a la resina) -->
-                <line id="svg-screw-pin" x1="105" y1="183" x2="105" y2="201" stroke="url(#goldHardwareGrad)" stroke-width="3" stroke-linecap="round" class="svg-metal-element" />
-                <ellipse id="svg-screw-eye" cx="105" cy="177" rx="6" ry="6" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3.5" class="svg-metal-element" />
-                <ellipse id="svg-jump-ring" cx="120" cy="165" rx="5.5" ry="7" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3" transform="rotate(-20 120 165)" class="svg-metal-element" />
+                <!-- Continuous Interlocking Chain Links Container & Screw Eye Pin -->
+                <g id="svg-chain-container"></g>
 
                 <!-- Suede Tassel (Borla de Gamuza colgada de la argolla) -->
                 <g id="svg-tassel-group" transform="translate(60, 82)">
@@ -446,6 +446,71 @@ const ResinServiceApp = {
           </div>
         </div>
 
+        <!-- 6. Delivery & Live GPS Detection Section -->
+        <div class="resin-section-card" id="resin-delivery-section" style="border-left: 3px solid #38BDF8;">
+          <div class="resin-section-title" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>6. Datos de Entrega & Ubicación GPS</span>
+            <span style="font-size: 10px; background: rgba(56, 189, 248, 0.15); color: #38BDF8; padding: 2px 8px; border-radius: 10px; font-weight: 700;">Requerido</span>
+          </div>
+          <p style="font-size: 11.5px; color: #94A3B8; margin-top: 2px; margin-bottom: 12px; line-height: 1.4;">
+            Ingresa tus datos para que el taller de ShelliArt y el repartidor de PediGochos puedan llevarte tu pedido exacto hasta tu puerta.
+          </p>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">TU NOMBRE Y APELLIDO *</label>
+              <input type="text" class="resin-input-text" id="input-resin-customer-name" placeholder="Ej. Camila Pérez" value="${localStorage.getItem('customer_name') || ''}" oninput="ResinServiceApp.handleDeliveryFieldChange('customerName', this.value)">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">TELÉFONO / WHATSAPP *</label>
+              <input type="tel" class="resin-input-text" id="input-resin-customer-phone" placeholder="Ej. 0414 1234567" value="${localStorage.getItem('customer_phone') || ''}" oninput="ResinServiceApp.handleDeliveryFieldChange('customerPhone', this.value)">
+            </div>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">CIUDAD O MUNICIPIO DE ENTREGA *</label>
+            <select class="resin-input-select" id="select-resin-city" onchange="ResinServiceApp.handleDeliveryFieldChange('deliveryCity', this.value)">
+              <option value="San Antonio del Táchira" selected>🇻🇪 San Antonio del Táchira (Frontera)</option>
+              <option value="Ureña">🇻🇪 Pedro María Ureña</option>
+              <option value="Cúcuta (Norte de Santander)">🇨🇴 Cúcuta / Villa del Rosario / Los Patios</option>
+              <option value="San Cristóbal (Táchira)">🇻🇪 San Cristóbal y resto de Táchira</option>
+              <option value="Envío Nacional (Venezuela)">📦 Envío Nacional Venezuela (MRW / Zoom / Tealca)</option>
+              <option value="Envío Nacional (Colombia)">📦 Envío Nacional Colombia (Interrapidísimo / Servientrega)</option>
+            </select>
+          </div>
+
+          <!-- GPS Detection Box -->
+          <div style="margin-bottom: 14px; background: rgba(56, 189, 248, 0.05); border: 1px dashed rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 12px;">
+            <label style="font-size: 11px; color: #38BDF8; font-weight: 800; display: block; margin-bottom: 6px;">📍 DETECTOR GPS EN VIVO (OPCIONAL PERO RECOMENDADO)</label>
+            <button type="button" class="btn-resin-gps" id="btn-resin-gps-detect" onclick="ResinServiceApp.detectLiveGps()">
+              <span id="resin-gps-icon">📡</span>
+              <span id="resin-gps-btn-text">Detectar mi Ubicación GPS en Vivo</span>
+            </button>
+            <div id="resin-gps-status-box" class="resin-gps-status-box" style="display: none;"></div>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">DIRECCIÓN EXACTA DE ENTREGA *</label>
+            <textarea class="resin-textarea" id="input-resin-address" rows="2" placeholder="Calle, carrera, número de casa/apto, urbanización o sector..." oninput="ResinServiceApp.handleDeliveryFieldChange('deliveryAddress', this.value)">${localStorage.getItem('customer_address') || ''}</textarea>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">PUNTO DE REFERENCIA (CASA / LOCAL / FACHADA)</label>
+            <input type="text" class="resin-input-text" id="input-resin-reference" placeholder="Ej. Casa de rejas blancas, frente a la bodega, al lado de la farmacia" oninput="ResinServiceApp.handleDeliveryFieldChange('deliveryReference', this.value)">
+          </div>
+
+          <div>
+            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">MÉTODO DE PAGO PREFERIDO</label>
+            <select class="resin-input-select" id="select-resin-payment" onchange="ResinServiceApp.handleDeliveryFieldChange('paymentMethod', this.value)">
+              <option value="Efectivo en Pesos COP (Contra Entrega / Acordar)" selected>💵 Efectivo en Pesos COP</option>
+              <option value="Transferencia Bancolombia / Nequi">📱 Transferencia Bancolombia / Nequi</option>
+              <option value="Pago Móvil en Bolívares (Tasa del día)">🇻🇪 Pago Móvil en Bolívares (VES)</option>
+              <option value="Efectivo en Divisas USD ($)">💵 Efectivo Divisas USD ($)</option>
+              <option value="Binance USDT / Zelle">🌐 Binance Pay USDT / Zelle</option>
+            </select>
+          </div>
+        </div>
+
       </div>
 
       <!-- Fixed Bottom Price & WhatsApp CTA Bar -->
@@ -558,14 +623,200 @@ const ResinServiceApp = {
   },
 
   getLetterAnchor(letter) {
-    switch (letter) {
+    const l = (letter || 'M').toUpperCase();
+    switch (l) {
+      case 'A': return { x: 170, y: 185 };
+      case 'B': return { x: 130, y: 185 };
+      case 'C': return { x: 160, y: 185 };
+      case 'D': return { x: 130, y: 185 };
+      case 'E': return { x: 130, y: 185 };
+      case 'F': return { x: 130, y: 185 };
+      case 'G': return { x: 160, y: 185 };
+      case 'H': return { x: 120, y: 185 };
+      case 'I': return { x: 170, y: 185 };
+      case 'J': return { x: 185, y: 185 };
+      case 'K': return { x: 120, y: 185 };
+      case 'L': return { x: 125, y: 185 };
       case 'M': return { x: 105, y: 185 };
-      case 'V': return { x: 95, y: 185 };
-      case 'W': return { x: 95, y: 185 };
-      case 'Y': return { x: 105, y: 185 };
+      case 'N': return { x: 115, y: 185 };
+      case 'O': return { x: 170, y: 185 };
+      case 'P': return { x: 130, y: 185 };
+      case 'Q': return { x: 170, y: 185 };
+      case 'R': return { x: 130, y: 185 };
+      case 'S': return { x: 165, y: 185 };
+      case 'T': return { x: 170, y: 185 };
       case 'U': return { x: 110, y: 185 };
-      default:  return { x: 165, y: 185 };
+      case 'V': return { x: 100, y: 185 };
+      case 'W': return { x: 95, y: 185 };
+      case 'X': return { x: 110, y: 185 };
+      case 'Y': return { x: 105, y: 185 };
+      case 'Z': return { x: 125, y: 185 };
+      default:  return { x: 160, y: 185 };
     }
+  },
+
+  renderChain(anchorX, isSilver) {
+    const metalGrad = isSilver ? 'url(#silverHardwareGrad)' : 'url(#goldHardwareGrad)';
+    const highlightColor = isSilver ? '#FFFFFF' : '#FFF9D2';
+    const shadowColor = isSilver ? 'rgba(0,0,0,0.45)' : 'rgba(120,53,15,0.45)';
+
+    // Key ring bottom contact: (170, 72)
+    // Letter top anchor: (anchorX, 185)
+    const p0 = { x: 170, y: 72 };
+    const p2 = { x: anchorX, y: 185 };
+    const dx = p2.x - p0.x;
+    const dy = p2.y - p0.y;
+    // Control point for a natural hanging curve
+    const p1 = { x: p0.x + dx * 0.25, y: p0.y + dy * 0.65 };
+
+    const numLinks = 7;
+    let linksHtml = '';
+
+    for (let i = 0; i < numLinks; i++) {
+      const t = i / (numLinks - 1);
+      const invT = 1 - t;
+      const cx = invT * invT * p0.x + 2 * invT * t * p1.x + t * t * p2.x;
+      const cy = invT * invT * p0.y + 2 * invT * t * p1.y + t * t * p2.y;
+
+      const tx = 2 * invT * (p1.x - p0.x) + 2 * t * (p2.x - p1.x);
+      const ty = 2 * invT * (p1.y - p0.y) + 2 * t * (p2.y - p1.y);
+      const angle = (Math.atan2(tx, ty) * 180) / Math.PI;
+
+      if (i % 2 === 0) {
+        // Facing link (wider oval)
+        linksHtml += `
+          <g transform="rotate(${angle.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})">
+            <ellipse cx="${cx.toFixed(1)}" cy="${(cy + 1).toFixed(1)}" rx="5.8" ry="9.8" fill="none" stroke="${shadowColor}" stroke-width="3.5" opacity="0.6" />
+            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="5.5" ry="9.5" fill="none" stroke="${metalGrad}" stroke-width="3.2" class="svg-metal-element" />
+            <ellipse cx="${(cx - 1).toFixed(1)}" cy="${cy.toFixed(1)}" rx="3.5" ry="7.2" fill="none" stroke="${highlightColor}" stroke-width="0.75" opacity="0.7" />
+          </g>
+        `;
+      } else {
+        // Side/turned link (interlocking angle)
+        const sideAngle = angle + (i % 4 === 1 ? 16 : -16);
+        linksHtml += `
+          <g transform="rotate(${sideAngle.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})">
+            <ellipse cx="${cx.toFixed(1)}" cy="${(cy + 1).toFixed(1)}" rx="3.5" ry="9.2" fill="none" stroke="${shadowColor}" stroke-width="3.2" opacity="0.6" />
+            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="3.2" ry="8.8" fill="none" stroke="${metalGrad}" stroke-width="2.8" class="svg-metal-element" />
+            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="1.8" ry="6.5" fill="none" stroke="${highlightColor}" stroke-width="0.65" opacity="0.6" />
+          </g>
+        `;
+      }
+    }
+
+    // Screw Eye Pin Assembly (Cáncamo atornillado firmemente en la resina de la letra)
+    const eyeletHtml = `
+      <g id="svg-screw-eye-assembly">
+        <!-- Screw eye shadow -->
+        <circle cx="${anchorX}" cy="186.5" r="6.8" fill="none" stroke="${shadowColor}" stroke-width="3.8" opacity="0.6" />
+        <!-- Screw eyelet outer loop -->
+        <circle cx="${anchorX}" cy="185.5" r="6.5" fill="none" stroke="${metalGrad}" stroke-width="3.4" class="svg-metal-element" />
+        <!-- Eyelet inner opening highlight -->
+        <circle cx="${anchorX}" cy="185.5" r="4.2" fill="none" stroke="${highlightColor}" stroke-width="0.75" opacity="0.65" />
+
+        <!-- Threaded screw shaft embedded into resin (y: 191 to 208) -->
+        <line x1="${anchorX}" y1="191" x2="${anchorX}" y2="208" stroke="${shadowColor}" stroke-width="3.8" stroke-linecap="round" opacity="0.5" />
+        <line x1="${anchorX}" y1="190.5" x2="${anchorX}" y2="207.5" stroke="${metalGrad}" stroke-width="3.2" stroke-linecap="round" class="svg-metal-element" />
+        <!-- Screw threads visible through translucent resin -->
+        <line x1="${anchorX - 3}" y1="195" x2="${anchorX + 3}" y2="195" stroke="${highlightColor}" stroke-width="1.2" opacity="0.75" />
+        <line x1="${anchorX - 3}" y1="199" x2="${anchorX + 3}" y2="199" stroke="${highlightColor}" stroke-width="1.2" opacity="0.75" />
+        <line x1="${anchorX - 3}" y1="203" x2="${anchorX + 3}" y2="203" stroke="${highlightColor}" stroke-width="1.2" opacity="0.75" />
+      </g>
+    `;
+
+    return linksHtml + eyeletHtml;
+  },
+
+  handleDeliveryFieldChange(field, val) {
+    this.state[field] = val;
+    if (field === 'customerName') localStorage.setItem('customer_name', val);
+    if (field === 'customerPhone') localStorage.setItem('customer_phone', val);
+    if (field === 'deliveryAddress') localStorage.setItem('customer_address', val);
+    this.updateVisualPreview();
+  },
+
+  detectLiveGps() {
+    const btn = document.getElementById('btn-resin-gps-detect');
+    const icon = document.getElementById('resin-gps-icon');
+    const btnText = document.getElementById('resin-gps-btn-text');
+    const statusBox = document.getElementById('resin-gps-status-box');
+
+    if (!navigator.geolocation) {
+      if (statusBox) {
+        statusBox.style.display = 'block';
+        statusBox.innerHTML = '<span style="color: #F87171;">⚠️ Tu navegador no soporta geolocalización GPS. Por favor escribe tu dirección detallada.</span>';
+      }
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+    if (icon) icon.textContent = '⏳';
+    if (btnText) btnText.textContent = 'Obteniendo satélites GPS...';
+    if (statusBox) {
+      statusBox.style.display = 'block';
+      statusBox.innerHTML = '<span style="color: #38BDF8;">🛰️ Conectando con sensor GPS y satélites... por favor acepta el permiso de ubicación si el navegador lo solicita.</span>';
+    }
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        const acc = Math.round(pos.coords.accuracy || 15);
+        const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+        this.state.gps = {
+          lat,
+          lng,
+          accuracy: acc,
+          mapUrl
+        };
+
+        if (btn) {
+          btn.disabled = false;
+          btn.style.borderColor = '#10B981';
+          btn.style.color = '#10B981';
+          btn.style.background = 'rgba(16, 185, 129, 0.15)';
+        }
+        if (icon) icon.textContent = '✅';
+        if (btnText) btnText.textContent = 'Ubicación GPS Fijada con Éxito';
+
+        if (statusBox) {
+          statusBox.style.display = 'block';
+          statusBox.innerHTML = `
+            <div style="color: #10B981; font-weight: 700; margin-bottom: 2px;">
+              📍 Ubicación GPS Confirmada (Precisión: ±${acc}m)
+            </div>
+            <div style="font-size: 11px; color: #CBD5E1;">
+              Coords: <code>${lat}, ${lng}</code> &nbsp;•&nbsp;
+              <a href="${mapUrl}" target="_blank" rel="noopener noreferrer" style="color: #38BDF8; text-decoration: underline; font-weight: 700;">
+                Abrir en Google Maps ↗
+              </a>
+            </div>
+          `;
+        }
+
+        this.updateVisualPreview();
+      },
+      (err) => {
+        console.warn('Geolocation error:', err);
+        if (btn) btn.disabled = false;
+        if (icon) icon.textContent = '📡';
+        if (btnText) btnText.textContent = 'Reintentar Detección GPS';
+        if (statusBox) {
+          statusBox.style.display = 'block';
+          let msg = 'No pudimos acceder a tu GPS. Por favor revisa los permisos o escribe tu dirección y punto de referencia.';
+          if (err.code === 1) msg = 'Permiso de ubicación denegado. Escribe tu dirección en el campo de texto abajo.';
+          statusBox.innerHTML = `<span style="color: #F87171;">⚠️ ${msg}</span>`;
+        }
+      },
+      options
+    );
   },
 
   updateVisualPreview() {
@@ -675,46 +926,11 @@ const ResinServiceApp = {
       styleInclusions.innerHTML = inclHtml;
     }
 
-    // 5. Hardware Position Anchors & Colors
+    // 5. Hardware Position Anchors & Colors (Continuous Real Interlocking Chain)
     const anchor = this.getLetterAnchor(letter);
-    const screwPin = document.getElementById('svg-screw-pin');
-    const screwEye = document.getElementById('svg-screw-eye');
-    const jumpRing = document.getElementById('svg-jump-ring');
-    const link3 = document.getElementById('svg-chain-link-3');
-    const link2 = document.getElementById('svg-chain-link-2');
-
-    if (screwPin) {
-      screwPin.setAttribute('x1', anchor.x);
-      screwPin.setAttribute('y1', anchor.y - 2);
-      screwPin.setAttribute('x2', anchor.x);
-      screwPin.setAttribute('y2', anchor.y + 16);
-      screwPin.setAttribute('stroke', metalGrad);
-    }
-    if (screwEye) {
-      screwEye.setAttribute('cx', anchor.x);
-      screwEye.setAttribute('cy', anchor.y - 8);
-      screwEye.setAttribute('stroke', metalGrad);
-    }
-    if (jumpRing) {
-      const jx = anchor.x + (170 - anchor.x) * 0.28;
-      const jy = anchor.y - 20;
-      jumpRing.setAttribute('cx', jx);
-      jumpRing.setAttribute('cy', jy);
-      jumpRing.setAttribute('stroke', metalGrad);
-    }
-    if (link3) {
-      const l3x = anchor.x + (170 - anchor.x) * 0.55;
-      const l3y = anchor.y - 34;
-      link3.setAttribute('cx', l3x);
-      link3.setAttribute('cy', l3y);
-      link3.setAttribute('stroke', metalGrad);
-    }
-    if (link2) {
-      const l2x = anchor.x + (170 - anchor.x) * 0.8;
-      const l2y = 86;
-      link2.setAttribute('cx', l2x);
-      link2.setAttribute('cy', l2y);
-      link2.setAttribute('stroke', metalGrad);
+    const chainContainer = document.getElementById('svg-chain-container');
+    if (chainContainer) {
+      chainContainer.innerHTML = this.renderChain(anchor.x, isSilver);
     }
 
     // All hardware strokes
@@ -801,8 +1017,24 @@ const ResinServiceApp = {
     const charmText = (charmObj && charmObj.id !== 'none') ? `${charmObj.icon} ${charmObj.name} (+$${charmObj.extraUsd.toFixed(2)} USD)` : 'Ninguno';
     const hardwareText = this.state.hardware === 'gold' ? 'Dorado de Lujo ✨' : 'Plateado Cromado 🔘';
 
-    const clientName = localStorage.getItem('customer_name') || '';
-    const clientPhone = localStorage.getItem('customer_phone') || '';
+    const clientName = this.state.customerName || localStorage.getItem('customer_name') || '';
+    const clientPhone = this.state.customerPhone || localStorage.getItem('customer_phone') || '';
+    const city = this.state.deliveryCity || 'San Antonio del Táchira';
+    const address = this.state.deliveryAddress || localStorage.getItem('customer_address') || '';
+    const reference = this.state.deliveryReference || '';
+    const payment = this.state.paymentMethod || 'Efectivo en Pesos COP (Contra Entrega / Acordar)';
+    const gps = this.state.gps;
+
+    let deliveryBlock = `📦 *DATOS DE ENTREGA & CONTACTO:*
+👤 *Cliente:* ${clientName || 'Cliente PediGochos'}${clientPhone ? `\n📱 *Teléfono / WhatsApp:* ${clientPhone}` : ''}
+🏙️ *Ciudad / Municipio:* ${city}
+🏠 *Dirección de Entrega:* ${address || 'Por coordinar con el taller'}
+${reference ? `📌 *Punto de Referencia:* ${reference}\n` : ''}💳 *Forma de Pago:* ${payment}`;
+
+    if (gps && gps.mapUrl) {
+      deliveryBlock += `\n📍 *Ubicación GPS Satelital:*
+${gps.mapUrl} (Precisión: ±${gps.accuracy}m)`;
+    }
 
     const text =
 `✨ *¡NUEVO PEDIDO DE LLAVERO EN RESINA - SHELLIART!* ✨
@@ -817,10 +1049,12 @@ const ResinServiceApp = {
 🧸 *Dije Extra (Charm):* ${charmText}
 🔢 *Cantidad:* ${this.state.quantity} unidad(es)
 ━━━━━━━━━━━━━━━━━━━━
-💰 *TOTAL A PAGAR:* $${pricing.totalUsd.toFixed(2)} USD
+💰 *TOTAL ESTIMADO:* $${pricing.totalUsd.toFixed(2)} USD
 💵 *Equivalente:* ~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs
-${clientName ? `👤 *Cliente:* ${clientName}${clientPhone ? ` (${clientPhone})` : ''}\n` : ''}━━━━━━━━━━━━━━━━━━━━
-📍 *Enviado desde PediGochos App* (San Antonio / Cúcuta / Frontera)
+━━━━━━━━━━━━━━━━━━━━
+${deliveryBlock}
+━━━━━━━━━━━━━━━━━━━━
+📍 *Enviado desde PediGochos App*
 💬 *Taller ShelliArt WhatsApp: +57 322 794 9751*
 
 ¿Para cuándo tendrían disponible este pedido para entrega? ¡Muchas gracias!`;
@@ -830,9 +1064,69 @@ ${clientName ? `👤 *Cliente:* ${clientName}${clientPhone ? ` (${clientPhone})`
 
   handleWhatsAppClick(e) {
     if (e) e.preventDefault();
+
+    // 1. Sync fields from DOM
+    const nameInput = document.getElementById('input-resin-customer-name');
+    const phoneInput = document.getElementById('input-resin-customer-phone');
+    const citySelect = document.getElementById('select-resin-city');
+    const addressInput = document.getElementById('input-resin-address');
+    const refInput = document.getElementById('input-resin-reference');
+    const paymentSelect = document.getElementById('select-resin-payment');
+
+    const customerName = (nameInput?.value || this.state.customerName || localStorage.getItem('customer_name') || '').trim();
+    const customerPhone = (phoneInput?.value || this.state.customerPhone || localStorage.getItem('customer_phone') || '').trim();
+    const deliveryCity = (citySelect?.value || this.state.deliveryCity || 'San Antonio del Táchira').trim();
+    const deliveryAddress = (addressInput?.value || this.state.deliveryAddress || localStorage.getItem('customer_address') || '').trim();
+    const deliveryReference = (refInput?.value || this.state.deliveryReference || '').trim();
+    const paymentMethod = (paymentSelect?.value || this.state.paymentMethod || 'Efectivo en Pesos COP').trim();
+
+    this.state.customerName = customerName;
+    this.state.customerPhone = customerPhone;
+    this.state.deliveryCity = deliveryCity;
+    this.state.deliveryAddress = deliveryAddress;
+    this.state.deliveryReference = deliveryReference;
+    this.state.paymentMethod = paymentMethod;
+
+    // 2. Validate required delivery fields
+    let firstErrorEl = null;
+
+    if (!customerName) {
+      if (nameInput) {
+        nameInput.classList.add('field-error-highlight');
+        if (!firstErrorEl) firstErrorEl = nameInput;
+      }
+    } else if (nameInput) {
+      nameInput.classList.remove('field-error-highlight');
+    }
+
+    if (!deliveryAddress) {
+      if (addressInput) {
+        addressInput.classList.add('field-error-highlight');
+        if (!firstErrorEl) firstErrorEl = addressInput;
+      }
+    } else if (addressInput) {
+      addressInput.classList.remove('field-error-highlight');
+    }
+
+    if (firstErrorEl) {
+      firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstErrorEl.focus();
+      alert('⚠️ Por favor completa tu Nombre y Dirección de Entrega para que el taller ShelliArt y PediGochos puedan coordinar la entrega de tu pedido.');
+      return;
+    }
+
+    // Save to localStorage
+    if (customerName) localStorage.setItem('customer_name', customerName);
+    if (customerPhone) localStorage.setItem('customer_phone', customerPhone);
+    if (deliveryAddress) localStorage.setItem('customer_address', deliveryAddress);
+
+    // 3. Register quote and order silently to backend
     this.registerQuoteSilently();
+
+    // 4. Open WhatsApp
     const waText = this.buildWhatsAppMessage();
     const waUrl = `https://wa.me/${this.resinWhatsAppNumber}?text=${waText}`;
+
     try {
       const win = window.open(waUrl, '_blank');
       if (!win) {
@@ -848,8 +1142,8 @@ ${clientName ? `👤 *Cliente:* ${clientName}${clientPhone ? ` (${clientPhone})`
       const pricing = this.calculatePricing();
       const charmObj = this.charms.find(ch => ch.id === this.state.extraCharmId);
       const styleObj = this.styles.find(s => s.id === this.state.styleId);
-      const clientName = localStorage.getItem('customer_name') || 'Cliente WhatsApp';
-      const clientPhone = localStorage.getItem('customer_phone') || '3227949751';
+      const clientName = this.state.customerName || localStorage.getItem('customer_name') || 'Cliente WhatsApp';
+      const clientPhone = this.state.customerPhone || localStorage.getItem('customer_phone') || '3227949751';
 
       const payload = {
         clientName,
@@ -870,7 +1164,13 @@ ${clientName ? `👤 *Cliente:* ${clientName}${clientPhone ? ` (${clientPhone})`
         quantity: this.state.quantity,
         basePriceUsd: pricing.basePrice,
         extrasPriceUsd: pricing.extraCharmPrice,
-        estimatedPriceUsd: pricing.totalUsd
+        estimatedPriceUsd: pricing.totalUsd,
+        deliveryCity: this.state.deliveryCity,
+        deliveryAddress: this.state.deliveryAddress,
+        deliveryReference: this.state.deliveryReference,
+        paymentMethod: this.state.paymentMethod,
+        gps: this.state.gps,
+        gpsMapUrl: this.state.gps?.mapUrl || ''
       };
 
       await fetch('/api/resin-services/quotes', {

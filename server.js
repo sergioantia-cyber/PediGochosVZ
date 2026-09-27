@@ -3777,6 +3777,12 @@ app.post('/api/resin-services/quotes', (req, res) => {
     updatedAt: new Date().toISOString(),
     clientName: body.clientName || 'Cliente',
     clientPhone: body.clientPhone || '',
+    deliveryCity: body.deliveryCity || '',
+    deliveryAddress: body.deliveryAddress || '',
+    deliveryReference: body.deliveryReference || '',
+    paymentMethod: body.paymentMethod || '',
+    gps: body.gps || null,
+    gpsMapUrl: body.gpsMapUrl || (body.gps?.mapUrl || ''),
     productType: body.productType || 'keychain_letter',
     productTitle: body.productTitle || `Llavero de Inicial "${body.letter}"`,
     letter: (body.letter || 'A').toUpperCase(),
@@ -3816,7 +3822,12 @@ app.post('/api/resin-services/quotes', (req, res) => {
           hardwareColor: body.hardwareColor,
           customName: body.customName,
           extraCharm: body.extraCharm,
-          estimatedPriceUsd: body.estimatedPriceUsd
+          estimatedPriceUsd: body.estimatedPriceUsd,
+          deliveryCity: body.deliveryCity || '',
+          deliveryAddress: body.deliveryAddress || '',
+          deliveryReference: body.deliveryReference || '',
+          paymentMethod: body.paymentMethod || '',
+          gpsMapUrl: body.gpsMapUrl || (body.gps?.mapUrl || '')
         }
       }
     ]
