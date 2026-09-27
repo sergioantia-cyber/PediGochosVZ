@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bgCauchera" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#450A0A"/>
+      <stop offset="50%" stop-color="#991B1B"/>
+      <stop offset="100%" stop-color="#DC2626"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="44" fill="url(#bgCauchera)"/>
+  <rect x="8" y="8" width="184" height="184" rx="38" fill="none" stroke="#FCA5A5" stroke-width="2.5" opacity="0.6"/>
+  <!-- Tire & Wrench 24H Symbol -->
+  <g transform="translate(100, 84)">
+    <!-- Outer Tire -->
+    <circle cx="0" cy="0" r="42" fill="#0F172A" stroke="#EF4444" stroke-width="4"/>
+    <!-- Tire Treads -->
+    <circle cx="0" cy="0" r="34" fill="none" stroke="#334155" stroke-width="4" stroke-dasharray="8,6"/>
+    <!-- Rim -->
+    <circle cx="0" cy="0" r="24" fill="#1E293B" stroke="#94A3B8" stroke-width="2"/>
+    <circle cx="0" cy="0" r="8" fill="#EF4444"/>
+    <!-- 24H Badge -->
+    <rect x="14" y="-36" width="34" height="18" rx="6" fill="#EF4444" stroke="#FFF" stroke-width="1.5"/>
+    <text x="31" y="-23" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="10" fill="#FFF">24H</text>
+  </g>
+  <!-- Text Brand -->
+  <text x="100" y="160" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-weight="900" font-size="15" fill="#FFF" letter-spacing="2">CAUCHERA CACHU</text>
+  <text x="100" y="177" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-weight="700" font-size="9" fill="#FCA5A5" letter-spacing="1">AUXILIO VIAL 24/7</text>
+</svg>

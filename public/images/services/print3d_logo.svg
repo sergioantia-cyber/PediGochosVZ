@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bg3D" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="50%" stop-color="#312E81"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="cyanNeon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#818CF8"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="44" fill="url(#bg3D)"/>
+  <rect x="8" y="8" width="184" height="184" rx="38" fill="none" stroke="#6366F1" stroke-width="2.5" opacity="0.6"/>
+  <!-- Isometric 3D Wireframe Cube with Print Head -->
+  <g transform="translate(100, 84)">
+    <!-- Top Face -->
+    <polygon points="0,-40 36,-20 0,0 -36,-20" fill="rgba(56, 189, 248, 0.4)" stroke="#38BDF8" stroke-width="2.5"/>
+    <!-- Left Face -->
+    <polygon points="-36,-20 0,0 0,42 -36,22" fill="rgba(99, 102, 241, 0.5)" stroke="#6366F1" stroke-width="2.5"/>
+    <!-- Right Face -->
+    <polygon points="0,0 36,-20 36,22 0,42" fill="rgba(79, 70, 229, 0.7)" stroke="#818CF8" stroke-width="2.5"/>
+    <!-- Internal Laser / Grid Line -->
+    <line x1="0" y1="0" x2="0" y2="42" stroke="#A5B4FC" stroke-width="2"/>
+    <circle cx="0" cy="0" r="5" fill="#38BDF8"/>
+    <!-- Nozzle above -->
+    <polygon points="-8,-48 8,-48 4,-40 -4,-40" fill="#FBBF24"/>
+    <line x1="0" y1="-40" x2="0" y2="-22" stroke="#FBBF24" stroke-width="2.5" stroke-dasharray="2,2"/>
+  </g>
+  <!-- Text Brand -->
+  <text x="100" y="160" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-weight="900" font-size="15" fill="#FFF" letter-spacing="2">3D LAB MAKER</text>
+  <text x="100" y="177" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-weight="700" font-size="9" fill="#7DD3FC" letter-spacing="1">PROTOTIPADO &amp; STL</text>
+</svg>

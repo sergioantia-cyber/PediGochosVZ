@@ -162,6 +162,7 @@ class MarketplaceController {
 
     await this.loadSystemSettings();
     await this.loadEstablishments();
+    await this.loadServiceEstablishments();
     await this.loadPromotions();
     this.initWebSocket();
     
@@ -169,6 +170,7 @@ class MarketplaceController {
     this.requestAutomaticGPS(false);
 
     this.currentCategory = 'comidas';
+    this.currentServiceCategory = null;
     window.activeFoodTypeFilter = null;
     
     // Set active class on Restaurantes category card by default
@@ -453,6 +455,147 @@ class MarketplaceController {
     }
   }
 
+  async loadServiceEstablishments() {
+    try {
+      const res = await fetch('/api/service-establishments');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          this.serviceEstablishments = data;
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load service establishments from API, using defaults:', e);
+    }
+    this.serviceEstablishments = this.getDefaultServiceEstablishments();
+  }
+
+  getDefaultServiceEstablishments() {
+    return [
+      {
+        id: 'serv-resin',
+        name: 'SHELLIART',
+        displayName: 'ShelliArt Resina',
+        category: 'resina',
+        categoryLabel: 'Arte & Resina',
+        categoryIcon: '✨',
+        slogan: 'Diseño y arte exclusivo en resina epóxica, llaveros A-Z con hojilla de oro 24K, borlas y recuerdos',
+        serviceName: 'Llaveros en Resina Personalizados & Accesorios',
+        logo: '/images/services/shelliart_logo.svg',
+        image: '/images/pinatas/pinata_celebracion.jpg',
+        rating: 5.0,
+        reviewCount: 48,
+        badges: ['💎 Pan de Oro 24K', '✨ Letras A-Z', '🎁 Dijes & Borlas'],
+        actionType: 'resin',
+        ctaText: 'Personalizar en ShelliArt ➔',
+        themeColor: '#EC4899',
+        phone: '+57 322 794 9751',
+        location: 'San Antonio / Estudio ShelliArt'
+      },
+      {
+        id: 'serv-pinatas',
+        name: 'TALLER DE PIÑATAS CREATIVAS',
+        displayName: 'Taller de Piñatas Creativas',
+        category: 'pinatas',
+        categoryLabel: 'Fiestas & Piñatas',
+        categoryIcon: '🪅',
+        slogan: 'Piñatas artesanales 3D, números temáticos con flores, siluetas y mini-piñatas personalizadas',
+        serviceName: 'Piñatas Artesanales por Encargo',
+        logo: '/images/services/pinatas_logo.svg',
+        image: '/images/pinatas/pinata_celebracion.jpg',
+        rating: 5.0,
+        reviewCount: 62,
+        badges: ['🪅 100% Hecho a Mano', '🎉 Cualquier Motivo', '⭐ A Palo o Cintas'],
+        actionType: 'pinatas',
+        ctaText: 'Cotizar en Taller de Piñatas ➔',
+        themeColor: '#F43F5E',
+        phone: '+57 322 784 9751',
+        location: 'San Antonio / Taller Creativo'
+      },
+      {
+        id: 'serv-print3d',
+        name: 'PEDIGOCHOS 3D LAB',
+        displayName: 'PediGochos 3D Lab',
+        category: 'print3d',
+        categoryLabel: 'Tecnología & 3D Lab',
+        categoryIcon: '🖨️',
+        slogan: 'Laboratorio de impresión 3D industrial, prototipado rápido, repuestos automotrices y piezas técnicas',
+        serviceName: 'Laboratorio 3D & Prototipado',
+        logo: '/images/services/print3d_logo.svg',
+        image: '/images/servicios.jpg',
+        rating: 5.0,
+        reviewCount: 35,
+        badges: ['🔄 Visor 3D 360°', '🖨️ PLA • Resina • PETG', '⚡ STL Inmediato'],
+        actionType: 'print3d',
+        ctaText: 'Prototipar en 3D Lab ➔',
+        themeColor: '#6366F1',
+        phone: '+57 322 794 9751',
+        location: 'San Antonio / Laboratorio Central'
+      },
+      {
+        id: 'serv-paint',
+        name: 'TALLER AUTOMOTRIZ SAN ANTONIO',
+        displayName: 'Taller Automotriz San Antonio',
+        category: 'paint',
+        categoryLabel: 'Automotriz & Latonería',
+        categoryIcon: '🎨',
+        slogan: 'Enderezado de chasis, sacado de golpes, latonería profesional y pintura con secado al horno',
+        serviceName: 'Latonería & Pintura al Horno',
+        logo: '/images/services/paint_logo.svg',
+        image: '/images/vehicles/sedan_general.jpg',
+        rating: 4.9,
+        reviewCount: 54,
+        badges: ['🔥 Secado al Horno', '🎨 DuPont / Glasurit', '🛡️ Garantía de Color'],
+        actionType: 'paint',
+        ctaText: 'Cotizar en Taller Automotriz ➔',
+        themeColor: '#EA580C',
+        phone: '+57 322 794 9751',
+        location: 'San Antonio / Taller Central'
+      },
+      {
+        id: 'serv-cauchera',
+        name: 'CAUCHERA CACHU 24/7',
+        displayName: 'Cauchera Cachu 24/7',
+        category: 'cauchera',
+        categoryLabel: 'Auxilio Vial & Montallantas',
+        categoryIcon: '🛞',
+        slogan: 'Montallantas a domicilio las 24 horas. Despinche, parches vulcanizados e inflado con GPS',
+        serviceName: 'Cauchera Móvil & Despinche 24H',
+        logo: '/images/services/cauchera_logo.svg',
+        image: '/images/servicios.jpg',
+        rating: 5.0,
+        reviewCount: 89,
+        badges: ['🔴 Guardia Activa 24/7', '📍 Auxilio por GPS', '⏱️ 15-20 min'],
+        actionType: 'cauchera',
+        ctaText: 'Solicitar Auxilio Inmediato ➔',
+        themeColor: '#EF4444',
+        phone: '+57 322 794 9751',
+        location: 'San Antonio / Ureña / Cobertura Total'
+      },
+      {
+        id: 'serv-ride',
+        name: 'PEDIGOCHOS MÓVIL',
+        displayName: 'PediGochos Móvil',
+        category: 'movil',
+        categoryLabel: 'Transporte & Movilidad',
+        categoryIcon: '🛵',
+        slogan: 'Tu transporte rápido y seguro en San Antonio. Moto Taxi, Auto estándar y Vehículo de Lujo',
+        serviceName: 'Carreras Express & Movilidad',
+        logo: '/images/services/movil_logo.svg',
+        image: '/images/vehicles/moto_clasica.jpg',
+        rating: 4.9,
+        reviewCount: 140,
+        badges: ['⚡ Tarifa Automática GPS', '🛵 Moto Taxi', '🚗 Auto & Lujo'],
+        actionType: 'ride',
+        ctaText: 'Pedir Móvil Ahora ➔',
+        themeColor: '#FF6B00',
+        phone: '+57 322 794 9751',
+        location: 'San Antonio / Táchira'
+      }
+    ];
+  }
+
   async loadPromotions() {
     try {
       const res = await fetch('/api/promotions');
@@ -528,6 +671,9 @@ class MarketplaceController {
   // Navigation
   selectCategory(category) {
     this.currentCategory = category;
+    if (category === 'servicios') {
+      this.currentServiceCategory = null;
+    }
     window.activeFoodTypeFilter = null; // Always reset filter so Food Categories Grid shows first for comidas
     
     // Update active class in categories tabs (DeliverCity style)
@@ -551,6 +697,69 @@ class MarketplaceController {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 60);
+  }
+
+  selectServiceCategory(categoryKey) {
+    this.currentServiceCategory = categoryKey;
+    this.renderEstablishments();
+    setTimeout(() => {
+      const target = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 60);
+  }
+
+  resetServiceCategory() {
+    this.currentServiceCategory = null;
+    this.renderEstablishments();
+    setTimeout(() => {
+      const target = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 60);
+  }
+
+  executeServiceAction(actionType) {
+    switch (actionType) {
+      case 'resin':
+        if (typeof ResinServiceApp !== 'undefined' && ResinServiceApp.open) {
+          ResinServiceApp.open();
+        } else {
+          alert('Cargando servicio ShelliArt Resina...');
+        }
+        break;
+      case 'pinatas':
+        if (typeof PinataServiceApp !== 'undefined' && PinataServiceApp.open) {
+          PinataServiceApp.open();
+        } else {
+          alert('Cargando servicio Taller de Piñatas...');
+        }
+        break;
+      case 'print3d':
+        if (typeof Print3DServiceApp !== 'undefined' && Print3DServiceApp.open) {
+          Print3DServiceApp.open();
+        } else {
+          alert('Cargando servicio PediGochos 3D Lab...');
+        }
+        break;
+      case 'paint':
+        if (typeof PaintServiceApp !== 'undefined' && PaintServiceApp.open) {
+          PaintServiceApp.open();
+        } else {
+          alert('Cargando Taller Automotriz San Antonio...');
+        }
+        break;
+      case 'cauchera':
+        this.openCaucheraModal();
+        break;
+      case 'ride':
+        this.openRideModal();
+        break;
+      default:
+        console.warn('Tipo de servicio no reconocido:', actionType);
+    }
   }
 
   updateFloatingAndHeaderSos(isInSubCategoryOrStore) {
@@ -922,12 +1131,11 @@ class MarketplaceController {
     const titleEl = document.getElementById('establishments-title');
     if (titleEl) titleEl.innerHTML = displayTitle;
 
-    // Special dedicated rendering for Servicios category (Cauchera 24/7, PediGochos Móvil, Pintura, 3D Lab & ShelliArt Resina)
+    // Special dedicated rendering for Servicios category with 2-stage flow (Categories Hub & Company-Protagonist Establishments)
     if (this.currentCategory === 'servicios' && !filtered) {
       const allRestHeader = document.getElementById('all-restaurants-header');
       const allRestTitle = document.getElementById('all-restaurants-title-text');
       if (allRestHeader) allRestHeader.style.display = 'block';
-      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (6)';
 
       const promoSection = document.getElementById('daily-promotions-section');
       if (promoSection) {
@@ -944,197 +1152,309 @@ class MarketplaceController {
         featSection.classList.add('hidden');
       }
 
-      grid.innerHTML = `
-        <!-- Cauchera Cachu 24/7 -->
-        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openCaucheraModal()" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(239, 68, 68, 0.5); cursor: pointer;">
-          <div class="service-card-main-flex">
-            <div class="service-card-icon-box" style="background: rgba(239, 68, 68, 0.22); border: 2px solid #EF4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.45);">
-              🛞
+      const servicesList = (this.serviceEstablishments && this.serviceEstablishments.length > 0)
+        ? this.serviceEstablishments
+        : this.getDefaultServiceEstablishments();
+
+      // STAGE 1: Visual Grid of Service Categories (Hub)
+      if (!this.currentServiceCategory) {
+        if (allRestTitle) allRestTitle.textContent = 'Categorías de Servicios Disponibles (6)';
+
+        const serviceCategories = [
+          {
+            key: 'resina',
+            name: 'Arte & Resina Epóxica',
+            icon: '✨',
+            color: '#EC4899',
+            gradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(236, 72, 153, 0.55)',
+            glow: 'rgba(236, 72, 153, 0.35)',
+            desc: 'Llaveros letras A-Z personalizados con hojilla de oro 24K, borlas, dijes y recuerdos para eventos.',
+            businessName: 'SHELLIART',
+            badge: '💎 Pan de Oro 24K',
+            actionText: 'Ver Empresa ➔'
+          },
+          {
+            key: 'pinatas',
+            name: 'Fiestas & Piñatas Creativas',
+            icon: '🪅',
+            color: '#F43F5E',
+            gradient: 'linear-gradient(135deg, rgba(244, 63, 94, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(244, 63, 94, 0.55)',
+            glow: 'rgba(244, 63, 94, 0.35)',
+            desc: 'Piñatas artesanales 3D, números temáticos florales, siluetas a medida y mini-piñatas.',
+            businessName: 'Taller de Piñatas Creativas',
+            badge: '🎉 100% Hecho a Mano',
+            actionText: 'Ver Taller ➔'
+          },
+          {
+            key: 'print3d',
+            name: 'Tecnología & 3D Lab',
+            icon: '🖨️',
+            color: '#6366F1',
+            gradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(99, 102, 241, 0.55)',
+            glow: 'rgba(99, 102, 241, 0.35)',
+            desc: 'Laboratorio de impresión 3D industrial, prototipado rápido, repuestos y visor 360° en vivo.',
+            businessName: 'PediGochos 3D Lab',
+            badge: '🔄 Visor 3D 360°',
+            actionText: 'Ver Laboratorio ➔'
+          },
+          {
+            key: 'paint',
+            name: 'Automotriz & Latonería',
+            icon: '🎨',
+            color: '#EA580C',
+            gradient: 'linear-gradient(135deg, rgba(234, 88, 12, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(234, 88, 12, 0.55)',
+            glow: 'rgba(234, 88, 12, 0.35)',
+            desc: 'Sacado de golpes, enderezada de chasis, latonería profesional y pintura con secado al horno.',
+            businessName: 'Taller Automotriz San Antonio',
+            badge: '🔥 Secado al Horno',
+            actionText: 'Ver Taller ➔'
+          },
+          {
+            key: 'cauchera',
+            name: 'Auxilio Vial & Montallantas 24/7',
+            icon: '🛞',
+            color: '#EF4444',
+            gradient: 'linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(239, 68, 68, 0.55)',
+            glow: 'rgba(239, 68, 68, 0.35)',
+            desc: 'Montallantas móvil a domicilio las 24 horas. Despinche express, vulcanizado e inflado con GPS.',
+            businessName: 'Cauchera Cachu 24/7',
+            badge: '🔴 Guardia Activa 24/7',
+            actionText: 'Ver Servicio 24/7 ➔'
+          },
+          {
+            key: 'movil',
+            name: 'Transporte & Movilidad',
+            icon: '🛵',
+            color: '#FF6B00',
+            gradient: 'linear-gradient(135deg, rgba(255, 107, 0, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(255, 107, 0, 0.55)',
+            glow: 'rgba(255, 107, 0, 0.35)',
+            desc: 'Tu transporte seguro y rápido en San Antonio: Moto Taxi, Auto estándar y Vehículo de Lujo.',
+            businessName: 'PediGochos Móvil',
+            badge: '⚡ Tarifa Automática GPS',
+            actionText: 'Ver Flota Móvil ➔'
+          }
+        ];
+
+        let html = `
+          <div style="grid-column: 1 / -1; margin-bottom: 6px; padding: 16px 20px; background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1.5px solid rgba(255, 107, 0, 0.3); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">Explora Servicios Especializados</h3>
+              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Selecciona una categoría para ver los establecimientos y empresas aliadas</p>
             </div>
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
-                <h4 class="service-card-title">
-                  🛞 Cauchera Cachu 24/7
-                </h4>
-                <span class="service-card-badge" style="background: #EF4444; color: #FFF; box-shadow: 0 2px 8px rgba(239,68,68,0.4);">
-                  🔴 24/7 ACTIVO
-                </span>
-              </div>
-              <p class="service-card-desc">
-                Cauchera Móvil a Domicilio. Despinche y auxilio vial para motos, autos y camionetas con GPS las 24 horas.
-              </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); padding: 3px 9px; border-radius: 8px;">
-                  ⭐ 5.0 • Auxilio Inmediato
-                </span>
-                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); border: 1px solid #EF4444; box-shadow: 0 3px 10px rgba(239,68,68,0.35);">
-                  Solicitar Auxilio ➔
-                </span>
+            <button type="button" onclick="MarketplaceApp.selectServiceCategory('all')" style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.22); color: #FFF; padding: 9px 16px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+              <span>🌟</span> Ver Todas las Empresas (6)
+            </button>
+          </div>
+        `;
+
+        serviceCategories.forEach(cat => {
+          html += `
+            <div class="est-row-card service-row-card" onclick="MarketplaceApp.selectServiceCategory('${cat.key}')" style="background: ${cat.gradient}; border: 1.5px solid ${cat.border}; cursor: pointer; padding: 18px; border-radius: 20px; transition: all 0.25s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+              <div class="service-card-main-flex" style="display: flex; gap: 14px; align-items: center;">
+                <div class="service-card-icon-box" style="background: rgba(15, 23, 42, 0.75); border: 2px solid ${cat.color}; box-shadow: 0 0 20px ${cat.glow}; font-size: 38px; width: 74px; height: 74px; min-width: 74px; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  ${cat.icon}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                    <h4 style="font-size: 17.5px; font-weight: 900; color: #FFFFFF; margin: 0; letter-spacing: -0.2px;">
+                      ${cat.name}
+                    </h4>
+                    <span style="font-size: 11px; font-weight: 800; background: ${cat.color}; color: #FFF; padding: 3px 8px; border-radius: 7px; letter-spacing: 0.3px;">
+                      ${cat.badge}
+                    </span>
+                  </div>
+                  <div style="font-size: 12.5px; color: ${cat.color}; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                    <span>🏢 Empresa:</span> <span style="color: #FFF; text-transform: uppercase;">${cat.businessName}</span>
+                  </div>
+                  <p style="font-size: 13px; color: #CBD5E1; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    ${cat.desc}
+                  </p>
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                    <span style="font-size: 11.5px; font-weight: 700; color: #94A3B8;">
+                      1 Empresa Disponible
+                    </span>
+                    <span style="font-size: 12.5px; font-weight: 900; color: #FFF; background: linear-gradient(135deg, ${cat.color} 0%, rgba(15,23,42,0.95) 160%); border: 1px solid ${cat.color}; padding: 6px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 10px ${cat.glow};">
+                      ${cat.actionText}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
+          `;
+        });
+
+        // Add Merchant Registration Invite
+        html += `
+          <div style="grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
+            <p style="font-size: 12.5px; color: #94A3B8; margin: 0 0 10px 0;">
+              ¿Ofreces un servicio técnico, grúa, cerrajería o profesional en San Antonio?
+            </p>
+            <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 8px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
+              ➕ Solicitar Registro de Servicio
+            </button>
+          </div>
+        `;
+
+        grid.innerHTML = html;
+        return;
+      }
+
+      // STAGE 2: Establishments in Selected Category (or All)
+      const targetCategory = this.currentServiceCategory;
+      const targetEstablishments = (targetCategory && targetCategory !== 'all')
+        ? servicesList.filter(e => e.category === targetCategory)
+        : servicesList;
+
+      if (allRestTitle) {
+        const catMap = {
+          'all': 'Todas las Empresas de Servicios',
+          'resina': 'Empresas de Arte & Resina',
+          'pinatas': 'Talleres de Piñatas & Fiestas',
+          'print3d': 'Laboratorios de Impresión 3D',
+          'paint': 'Talleres Automotriz & Latonería',
+          'cauchera': 'Centros de Auxilio Vial & Montallantas',
+          'movil': 'Flotas de Transporte & Movilidad'
+        };
+        allRestTitle.textContent = `${catMap[targetCategory] || 'Empresas de Servicios'} (${targetEstablishments.length})`;
+      }
+
+      const catPills = [
+        { key: 'all', label: '🌟 Todas' },
+        { key: 'resina', label: '✨ Arte & Resina' },
+        { key: 'pinatas', label: '🪅 Piñatas' },
+        { key: 'print3d', label: '🖨️ 3D Lab' },
+        { key: 'paint', label: '🎨 Automotriz' },
+        { key: 'cauchera', label: '🛞 Auxilio 24/7' },
+        { key: 'movil', label: '🛵 Transporte' }
+      ];
+
+      let html = `
+        <div style="grid-column: 1 / -1; margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+            <button type="button" onclick="MarketplaceApp.resetServiceCategory()" style="background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.22); color: #FFF; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;">
+              <span>⬅️</span> Volver a Categorías
+            </button>
+            <span style="font-size: 12px; color: #94A3B8; font-weight: 700;">
+              ${targetEstablishments.length} establecimiento${targetEstablishments.length !== 1 ? 's' : ''} disponible${targetEstablishments.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch;" class="no-scrollbar">
+            ${catPills.map(p => `
+              <button type="button" onclick="MarketplaceApp.selectServiceCategory('${p.key}')" style="background: ${(this.currentServiceCategory || 'all') === p.key ? 'linear-gradient(135deg, #FF6B00 0%, #EA580C 100%)' : 'rgba(30, 41, 59, 0.7)'}; color: ${(this.currentServiceCategory || 'all') === p.key ? '#FFF' : '#CBD5E1'}; border: 1.5px solid ${(this.currentServiceCategory || 'all') === p.key ? '#FF6B00' : 'rgba(255,255,255,0.1)'}; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: all 0.2s ease;">
+                ${p.label}
+              </button>
+            `).join('')}
           </div>
         </div>
+      `;
 
-        <!-- PediGochos Móvil (Vehículos de Diferentes Gamas) -->
-        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openRideModal()" style="background: linear-gradient(135deg, rgba(255, 107, 0, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(255, 107, 0, 0.5); cursor: pointer;">
-          <div class="service-card-main-flex">
-            <div class="service-card-icon-box" style="background: rgba(255, 107, 0, 0.22); border: 2px solid #FF6B00; box-shadow: 0 0 20px rgba(255, 107, 0, 0.45);">
-              🛵
-            </div>
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
-                <h4 class="service-card-title">
-                  PediGochos Móvil
-                </h4>
-                <span class="service-card-badge" style="background: #FF6B00; color: #FFF; box-shadow: 0 2px 8px rgba(255,107,0,0.4);">
-                  ⚡ EN VIVO
-                </span>
-              </div>
-              <p class="service-card-desc">
-                Vehículos de diferentes gamas: <strong>Moto Taxi</strong>, <strong>Auto</strong> y <strong>Lujo</strong>. Tarifa automática por GPS.
-              </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 11.5px; font-weight: 800; color: #60A5FA; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); padding: 3px 9px; border-radius: 8px;">
-                  ⭐ 4.9 • Transporte Seguro
-                </span>
-                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); border: 1px solid #FF6B00; box-shadow: 0 3px 10px rgba(255,107,0,0.35);">
-                  Pedir Móvil ➔
-                </span>
-              </div>
-            </div>
+      if (targetEstablishments.length === 0) {
+        html += `
+          <div style="grid-column: 1 / -1; padding: 36px 20px; text-align: center; background: rgba(30, 41, 59, 0.6); border: 1.5px solid rgba(255,255,255,0.08); border-radius: 18px;">
+            <span style="font-size: 40px; display: block; margin-bottom: 8px;">🔍</span>
+            <h4 style="font-size: 16px; font-weight: 800; color: #FFF; margin: 0 0 6px 0;">No hay empresas en esta categoría aún</h4>
+            <p style="font-size: 13px; color: #94A3B8; margin: 0 0 14px 0;">¿Conoces o tienes un negocio en este rubro?</p>
+            <button type="button" onclick="MarketplaceApp.resetServiceCategory()" style="background: #FF6B00; color: #FFF; border: none; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer;">
+              Ver Otras Categorías
+            </button>
           </div>
-        </div>
+        `;
+      } else {
+        targetEstablishments.forEach(est => {
+          const color = est.themeColor || '#FF6B00';
+          const badgesHtml = (est.badges || []).map(b => `
+            <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #E2E8F0; padding: 3px 8px; border-radius: 7px; font-size: 11px; font-weight: 700;">
+              ${b}
+            </span>
+          `).join('');
 
-        <!-- Latonería y Pintura -->
-        <div class="est-row-card service-row-card" onclick="PaintServiceApp ? PaintServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(234, 88, 12, 0.55); cursor: pointer;">
-          <div class="service-card-main-flex">
-            <div class="service-card-icon-box" style="background: rgba(234, 88, 12, 0.22); border: 2px solid #EA580C; box-shadow: 0 0 20px rgba(234, 88, 12, 0.45);">
-              🎨
-            </div>
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
-                <h4 class="service-card-title">
-                  Latonería y Pintura
-                </h4>
-                <span class="service-card-badge" style="background: #EA580C; color: #FFF; box-shadow: 0 2px 8px rgba(234,88,12,0.4);">
-                  🔥 AL HORNO
-                </span>
+          const cleanPhone = (est.phone || '+573227949751').replace(/[^0-9]/g, '');
+
+          html += `
+            <div class="est-row-card service-row-card" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1.5px solid ${color}60; border-radius: 20px; padding: 18px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden;">
+              
+              <!-- Subtle Accent Glow Line at Top -->
+              <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, ${color}, transparent);"></div>
+
+              <!-- Top: Business Identity Header (PROTAGONIST BUSINESS NAME) -->
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 58px; height: 58px; border-radius: 16px; overflow: hidden; background: #0B0F19; border: 2px solid ${color}; box-shadow: 0 0 16px ${color}50; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 4px;">
+                  <img src="${est.logo}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src='/images/services/shelliart_logo.svg'">
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                    <h3 style="font-size: 19px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.2px; margin: 0; text-transform: uppercase;">
+                      ${est.name}
+                    </h3>
+                    <span style="font-size: 10.5px; font-weight: 800; background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.45); color: #34D399; padding: 3px 8px; border-radius: 6px;">
+                      🟢 OFICIAL
+                    </span>
+                  </div>
+                  <div style="font-size: 12.5px; color: ${color}; font-weight: 800; margin-top: 2px;">
+                    ${est.categoryIcon || '✨'} ${est.categoryLabel} • <span style="color: #94A3B8; font-weight: 600;">${est.serviceName}</span>
+                  </div>
+                </div>
               </div>
-              <p class="service-card-desc">
-                Sacado de golpes, latonería profesional y pintura con secado al horno en talleres certificados.
+
+              <!-- Middle: Real Photo / Fallback Banner until Owner Modifies in Admin -->
+              <div style="position: relative; width: 100%; height: 140px; border-radius: 14px; overflow: hidden; background: #0F172A; border: 1px solid rgba(255,255,255,0.08);">
+                <img src="${est.image}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/servicios.jpg'">
+                <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%);"></div>
+                <div style="position: absolute; bottom: 8px; left: 10px; right: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                  <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); padding: 3px 9px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.35);">
+                    ⭐ ${Number(est.rating || 5.0).toFixed(1)} (${est.reviewCount || 45}+)
+                  </span>
+                  <span style="font-size: 11px; font-weight: 700; color: #CBD5E1; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
+                    📍 ${est.location || 'San Antonio'}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Slogan / Personality -->
+              <p style="font-size: 13px; color: #CBD5E1; margin: 0; line-height: 1.45; font-weight: 500;">
+                ${est.slogan}
               </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 11.5px; font-weight: 800; color: #FDBA74; background: rgba(234, 88, 12, 0.16); border: 1px solid rgba(234, 88, 12, 0.35); padding: 3px 9px; border-radius: 8px;">
-                  ⭐ 4.9 • Garantía de Color
-                </span>
-                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%); border: 1px solid #EA580C; box-shadow: 0 3px 10px rgba(234,88,12,0.35);">
-                  Cotizar ➔
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Impresión 3D & Prototipado ("PediGochos 3D Lab") -->
-        <div class="est-row-card service-row-card" onclick="Print3DServiceApp ? Print3DServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(99, 102, 241, 0.55); cursor: pointer;">
-          <div class="service-card-main-flex">
-            <div class="service-card-icon-box" style="background: rgba(99, 102, 241, 0.22); border: 2px solid #6366F1; box-shadow: 0 0 20px rgba(99, 102, 241, 0.45);">
-              🖨️
-            </div>
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
-                <h4 class="service-card-title">
-                  PediGochos 3D Lab
-                </h4>
-                <span class="service-card-badge" style="background: #6366F1; color: #FFF; box-shadow: 0 2px 8px rgba(99,102,241,0.4);">
-                  🔄 VISOR 3D 360°
-                </span>
+              <!-- Specialty Badges -->
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${badgesHtml}
               </div>
-              <p class="service-card-desc">
-                Impresión 3D de coleccionables, repuestos automotrices, llaveros y prototipado con cotización inmediata.
-              </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 11.5px; font-weight: 800; color: #A5B4FC; background: rgba(99, 102, 241, 0.16); border: 1px solid rgba(99, 102, 241, 0.35); padding: 3px 9px; border-radius: 8px;">
-                  ⭐ 5.0 • PLA • Resina • PETG
-                </span>
-                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); border: 1px solid #6366F1; box-shadow: 0 3px 10px rgba(99,102,241,0.35);">
-                  Explorar 3D ➔
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Llaveros en Resina Personalizados ("ShelliArt Resina") -->
-        <div class="est-row-card service-row-card" onclick="ResinServiceApp ? ResinServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(236, 72, 153, 0.55); cursor: pointer;">
-          <div class="service-card-main-flex">
-            <div class="service-card-icon-box" style="background: rgba(236, 72, 153, 0.22); border: 2px solid #EC4899; box-shadow: 0 0 20px rgba(236, 72, 153, 0.45);">
-              ✨
-            </div>
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
-                <h4 class="service-card-title">
-                  Llaveros en Resina Personalizados
-                </h4>
-                <span class="service-card-badge" style="background: #EC4899; color: #FFF; box-shadow: 0 2px 8px rgba(236,72,153,0.4);">
-                  💎 SHELLIART A-Z
-                </span>
+              <!-- Footer CTA Buttons -->
+              <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                <button type="button" onclick="MarketplaceApp.executeServiceAction('${est.actionType}')" style="flex: 1; background: linear-gradient(135deg, ${color} 0%, rgba(15, 23, 42, 0.95) 160%); border: 1.5px solid ${color}; color: #FFF; padding: 11px 16px; border-radius: 12px; font-size: 13.5px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px ${color}40; letter-spacing: -0.2px;">
+                  <span>${est.ctaText}</span>
+                </button>
+                <button type="button" onclick="window.open('https://wa.me/${cleanPhone}?text=Hola,%20quisiera%20consultar%20sobre%20${encodeURIComponent(est.name)}', '_blank')" style="background: rgba(37, 211, 102, 0.15); border: 1.5px solid #25D366; color: #25D366; padding: 10px 14px; border-radius: 12px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Consultar por WhatsApp">
+                  💬
+                </button>
               </div>
-              <p class="service-card-desc">
-                Diseña tu llavero personalizado con letras A-Z, hojilla de oro 24K, borlas, glitter y pigmentos cristalinos.
-              </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 11.5px; font-weight: 800; color: #FBCFE8; background: rgba(236, 72, 153, 0.16); border: 1px solid rgba(236, 72, 153, 0.35); padding: 3px 9px; border-radius: 8px;">
-                  ⭐ 5.0 • Pan de Oro • Borlas • Dijes
-                </span>
-                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%); border: 1px solid #EC4899; box-shadow: 0 3px 10px rgba(236,72,153,0.35);">
-                  Personalizar ➔
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Piñatas Personalizadas ("Tus Piñatas a Medida") -->
-        <div class="est-row-card service-row-card" onclick="PinataServiceApp ? PinataServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(244, 63, 94, 0.55); cursor: pointer;">
-          <div class="service-card-main-flex">
-            <div class="service-card-icon-box" style="background: rgba(244, 63, 94, 0.22); border: 2px solid #F43F5E; box-shadow: 0 0 20px rgba(244, 63, 94, 0.45);">
-              🪅
             </div>
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
-                <h4 class="service-card-title">
-                  Piñatas Personalizadas
-                </h4>
-                <span class="service-card-badge" style="background: #F43F5E; color: #FFF; box-shadow: 0 2px 8px rgba(244,63,94,0.4);">
-                  🎉 A MEDIDA
-                </span>
-              </div>
-              <p class="service-card-desc">
-                Piñatas artesanales 3D, números temáticos con flores, siluetas y mini-piñatas. Romper a palo o cintas.
-              </p>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 11.5px; font-weight: 800; color: #FDA4AF; background: rgba(244, 63, 94, 0.16); border: 1px solid rgba(244, 63, 94, 0.35); padding: 3px 9px; border-radius: 8px;">
-                  ⭐ 5.0 • 100% Hecho a Mano • Cualquier Motivo
-                </span>
-                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%); border: 1px solid #F43F5E; box-shadow: 0 3px 10px rgba(244,63,94,0.35);">
-                  Personalizar ➔
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+          `;
+        });
+      }
 
-        <!-- Invite to Register Another Service -->
+      // Add Merchant Registration Invite
+      html += `
         <div style="grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
-          <p style="font-size: 12px; color: #94A3B8; margin: 0 0 10px 0;">
+          <p style="font-size: 12.5px; color: #94A3B8; margin: 0 0 10px 0;">
             ¿Ofreces un servicio técnico, grúa, cerrajería o profesional en San Antonio?
           </p>
-          <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer;">
+          <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 8px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
             ➕ Solicitar Registro de Servicio
           </button>
         </div>
       `;
+
+      grid.innerHTML = html;
       return;
     }
 

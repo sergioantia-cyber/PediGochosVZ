@@ -1845,6 +1845,107 @@ app.post('/api/upload-payment-receipt', (req, res) => {
   }
 });
 
+// Universal Image Upload Endpoint (base64 to static /uploads/${folder}/${filename})
+app.post('/api/upload-image', (req, res) => {
+  try {
+    const { imageBase64, folder = 'general', fileName } = req.body;
+    if (!imageBase64) {
+      return res.status(400).json({ error: 'No image payload provided' });
+    }
+
+    const matches = imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    let buffer;
+    let extension = 'jpg';
+
+    if (matches && matches.length === 3) {
+      const mime = matches[1];
+      if (mime.includes('png')) extension = 'png';
+      else if (mime.includes('webp')) extension = 'webp';
+      else if (mime.includes('svg')) extension = 'svg';
+      buffer = Buffer.from(matches[2], 'base64');
+    } else {
+      buffer = Buffer.from(imageBase64, 'base64');
+    }
+
+    const safeFolder = String(folder).replace(/[^a-zA-Z0-9_-]/g, '') || 'general';
+    const safeFileName = `img_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}.${extension}`;
+    const uploadDir = path.join(__dirname, 'public/uploads', safeFolder);
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadDir, safeFileName);
+    fs.writeFileSync(filePath, buffer);
+
+    const relativeUrl = `/uploads/${safeFolder}/${safeFileName}`;
+    res.json({ success: true, url: relativeUrl });
+  } catch (err) {
+    console.error('Error in /api/upload-image:', err);
+    res.status(500).json({ error: 'Error guardando imagen en el servidor' });
+  }
+});
+
+// ==========================================
+// SERVICE ESTABLISHMENTS ENDPOINTS
+// ==========================================
+const SERVICE_ESTABLISHMENTS_FILE = path.join(__dirname, 'service_establishments.json');
+
+function readServiceEstablishments() {
+  try {
+    if (!fs.existsSync(SERVICE_ESTABLISHMENTS_FILE)) {
+      return [];
+    }
+    const data = fs.readFileSync(SERVICE_ESTABLISHMENTS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error('Error reading service establishments:', err);
+    return [];
+  }
+}
+
+function writeServiceEstablishments(items) {
+  try {
+    fs.writeFileSync(SERVICE_ESTABLISHMENTS_FILE, JSON.stringify(items, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Error writing service establishments:', err);
+    return false;
+  }
+}
+
+// GET all service establishments
+app.get('/api/service-establishments', (req, res) => {
+  const establishments = readServiceEstablishments();
+  res.json(establishments);
+});
+
+// PUT / UPDATE single service establishment
+app.put('/api/service-establishments/:id', (req, res) => {
+  const { id } = req.params;
+  const updates = req.body || {};
+  let establishments = readServiceEstablishments();
+  const index = establishments.findIndex(e => e.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Establecimiento de servicio no encontrado' });
+  }
+
+  establishments[index] = {
+    ...establishments[index],
+    ...updates,
+    updatedAt: new Date().toISOString()
+  };
+
+  writeServiceEstablishments(establishments);
+
+  // Broadcast update via WebSocket
+  const payload = JSON.stringify({ type: 'SERVICE_ESTABLISHMENT_UPDATED', establishment: establishments[index] });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, establishment: establishments[index] });
+});
+
 // GET payment methods for an establishment (with global defaults fallback)
 app.get('/api/establishments/:id/payment-methods', (req, res) => {
   const { id } = req.params;

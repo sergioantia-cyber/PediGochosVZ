@@ -51,33 +51,57 @@ function normalizeStoreName(name) {
 
 const SPECIALIZED_SERVICES = [
   {
-    id: 'serv-paint',
-    name: 'Latonería y Pintura Automotriz',
-    logo: '🎨',
+    id: 'serv-resin',
+    name: 'SHELLIART (Arte & Recuerdos en Resina)',
+    logo: '/images/services/shelliart_logo.svg',
     category: 'servicios',
-    badge: 'Taller Especializado',
+    badge: 'ShelliArt Resina',
     badgeColor: '#EC4899',
     badgeBg: 'rgba(236, 72, 153, 0.15)',
     badgeBorder: 'rgba(236, 72, 153, 0.4)',
-    location: 'San Antonio / Taller Central',
-    description: 'Pintura horneada, enderezado de chasis, pulitura y personalización automotriz',
-    inventorySummary: '🎨 Catálogo de Pinturas & Acabados',
-    inventoryBtnText: 'Gestionar Taller & Solicitudes',
-    inventoryAction: 'AdminApp.openPaintAdminModal()',
+    location: 'San Antonio / Estudio ShelliArt',
+    description: 'Artesanías en resina epóxica, recuerdos de eventos, llaveros A-Z con pan de oro 24K y borlas',
+    inventorySummary: '✨ Fichas de Diseño & Modelos',
+    inventoryBtnText: 'Gestionar Fichas & Catálogo',
+    inventoryAction: 'AdminApp.openResinAdminModal()',
     infoSummary: '📱 WhatsApp: +57 322 794 9751',
     infoBtnText: 'Modificar Info',
-    infoAction: 'AdminApp.openPaintAdminModal()',
+    infoAction: 'AdminApp.openResinAdminModal()',
     statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
-    ordersSummary: '🚗 Cotizaciones en Línea',
+    ordersSummary: '📋 Fichas de Clientes',
     actionButtons: [
-      { text: '🎨 Taller', action: 'AdminApp.openPaintAdminModal()', bg: '#EC4899', color: '#FFF', title: 'Abrir gestión de Latonería y Pintura' },
-      { text: '💬 Chat', action: 'AdminApp.openPaintAdminModal()', bg: '#6366F1', color: '#FFF', title: 'Ver mensajes y cotizaciones' }
+      { text: '✨ Fichas', action: 'AdminApp.openResinAdminModal()', bg: '#06B6D4', color: '#FFF', title: 'Ver fichas de resina' },
+      { text: '🖼️ Catálogo', action: 'AdminApp.openResinAdminModal()', bg: '#10B981', color: '#FFF', title: 'Ver catálogo de ShelliArt' }
+    ]
+  },
+  {
+    id: 'serv-pinatas',
+    name: 'Taller de Piñatas Creativas (Piñatas a Medida)',
+    logo: '/images/services/pinatas_logo.svg',
+    category: 'servicios',
+    badge: 'Taller Artesanal',
+    badgeColor: '#F59E0B',
+    badgeBg: 'rgba(245, 158, 11, 0.15)',
+    badgeBorder: 'rgba(245, 158, 11, 0.4)',
+    location: 'San Antonio / Taller Creativo',
+    description: 'Piñatas personalizadas con foto, tamaño, descripción y catálogo festivo listo para pedir',
+    inventorySummary: '🪅 Catálogo de Piñatas & Tamaños',
+    inventoryBtnText: 'Gestionar Catálogo Piñatas',
+    inventoryAction: "AdminApp.openPinatasAdminModal('inventory')",
+    infoSummary: '📲 Cotizaciones: +57 322 784 9751',
+    infoBtnText: 'Modificar Info',
+    infoAction: "AdminApp.openPinatasAdminModal('orders')",
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
+    ordersSummary: '🎉 Cotizaciones +573227849751',
+    actionButtons: [
+      { text: '🪅 Catálogo', action: "AdminApp.openPinatasAdminModal('inventory')", bg: '#F59E0B', color: '#1E293B', title: 'Ver catálogo de piñatas y tamaños' },
+      { text: '📱 WhatsApp', action: "window.open('https://wa.me/573227849751', '_blank')", bg: '#25D366', color: '#FFF', title: 'Contactar al WhatsApp de Piñatas (+573227849751)' }
     ]
   },
   {
     id: 'serv-print3d',
-    name: '3D Lab - Impresión & Prototipado',
-    logo: '🖨️',
+    name: 'PediGochos 3D Lab (Laboratorio Maker & STL)',
+    logo: '/images/services/print3d_logo.svg',
     category: 'servicios',
     badge: 'Laboratorio 3D',
     badgeColor: '#8B5CF6',
@@ -99,57 +123,33 @@ const SPECIALIZED_SERVICES = [
     ]
   },
   {
-    id: 'serv-resin',
-    name: 'ShelliArt - Resina & Recuerdos',
-    logo: '✨',
+    id: 'serv-paint',
+    name: 'Taller Automotriz San Antonio (Latonería & Pintura al Horno)',
+    logo: '/images/services/paint_logo.svg',
     category: 'servicios',
-    badge: 'Artesanía & Acabados',
-    badgeColor: '#06B6D4',
-    badgeBg: 'rgba(6, 182, 212, 0.15)',
-    badgeBorder: 'rgba(6, 182, 212, 0.4)',
-    location: 'San Antonio / Estudio ShelliArt',
-    description: 'Artesanías en resina epóxica, recuerdos de eventos, llaveros y cuadros personalizados',
-    inventorySummary: '✨ Fichas de Diseño & Modelos',
-    inventoryBtnText: 'Gestionar Fichas & Catálogo',
-    inventoryAction: 'AdminApp.openResinAdminModal()',
+    badge: 'Taller Especializado',
+    badgeColor: '#EC4899',
+    badgeBg: 'rgba(236, 72, 153, 0.15)',
+    badgeBorder: 'rgba(236, 72, 153, 0.4)',
+    location: 'San Antonio / Taller Central',
+    description: 'Pintura horneada, enderezado de chasis, pulitura y personalización automotriz',
+    inventorySummary: '🎨 Catálogo de Pinturas & Acabados',
+    inventoryBtnText: 'Gestionar Taller & Solicitudes',
+    inventoryAction: 'AdminApp.openPaintAdminModal()',
     infoSummary: '📱 WhatsApp: +57 322 794 9751',
     infoBtnText: 'Modificar Info',
-    infoAction: 'AdminApp.openResinAdminModal()',
+    infoAction: 'AdminApp.openPaintAdminModal()',
     statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
-    ordersSummary: '📋 Fichas de Clientes',
+    ordersSummary: '🚗 Cotizaciones en Línea',
     actionButtons: [
-      { text: '✨ Fichas', action: 'AdminApp.openResinAdminModal()', bg: '#06B6D4', color: '#FFF', title: 'Ver fichas de resina' },
-      { text: '🖼️ Catálogo', action: 'AdminApp.openResinAdminModal()', bg: '#10B981', color: '#FFF', title: 'Ver catálogo de ShelliArt' }
-    ]
-  },
-  {
-    id: 'serv-pinatas',
-    name: 'Piñatas Personalizadas & Catálogo',
-    logo: '🪅',
-    category: 'servicios',
-    badge: 'Taller de Piñatas',
-    badgeColor: '#F59E0B',
-    badgeBg: 'rgba(245, 158, 11, 0.15)',
-    badgeBorder: 'rgba(245, 158, 11, 0.4)',
-    location: 'San Antonio / Taller Creativo',
-    description: 'Piñatas personalizadas con foto, tamaño, descripción y catálogo festivo listo para pedir',
-    inventorySummary: '🪅 Catálogo de Piñatas & Tamaños',
-    inventoryBtnText: 'Gestionar Catálogo Piñatas',
-    inventoryAction: "AdminApp.openPinatasAdminModal('inventory')",
-    infoSummary: '📲 Cotizaciones: +57 322 784 9751',
-    infoBtnText: 'Modificar Info',
-    infoAction: "AdminApp.openPinatasAdminModal('orders')",
-    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
-    ordersSummary: '🎉 Cotizaciones +573227849751',
-    actionButtons: [
-      { text: '🪅 Catálogo', action: "AdminApp.openPinatasAdminModal('inventory')", bg: '#F59E0B', color: '#1E293B', title: 'Ver catálogo de piñatas y tamaños' },
-      { text: '📱 WhatsApp', action: "window.open('https://wa.me/573227849751', '_blank')", bg: '#25D366', color: '#FFF', title: 'Contactar al WhatsApp de Piñatas (+573227849751)' }
+      { text: '🎨 Taller', action: 'AdminApp.openPaintAdminModal()', bg: '#EC4899', color: '#FFF', title: 'Abrir gestión de Latonería y Pintura' },
+      { text: '💬 Chat', action: 'AdminApp.openPaintAdminModal()', bg: '#6366F1', color: '#FFF', title: 'Ver mensajes y cotizaciones' }
     ]
   },
   {
     id: 'serv-cauchera',
-    name: 'Cauchera Móvil 24/7 & Vulcanizadora',
-    logo: '🛞',
+    name: 'Cauchera Cachu 24/7 (Auxilio Vial Inmediato)',
+    logo: '/images/services/cauchera_logo.svg',
     category: 'servicios',
     badge: 'Auxilio Vial Móvil',
     badgeColor: '#EF4444',
@@ -172,12 +172,12 @@ const SPECIALIZED_SERVICES = [
   },
   {
     id: 'serv-ride',
-    name: 'Mototaxi & Auto Express (Movilidad)',
-    logo: '🛵',
+    name: 'PediGochos Móvil (Transporte Moto & Autos)',
+    logo: '/images/services/movil_logo.svg',
     category: 'servicios',
     badge: 'Flota de Transporte',
-    badgeColor: '#10B981',
-    badgeBg: 'rgba(16, 185, 129, 0.15)',
+    badgeColor: '#FF6B00',
+    badgeBg: 'rgba(255, 107, 0, 0.15)',
     badgeBorder: 'rgba(16, 185, 129, 0.4)',
     location: 'San Antonio / Ureña / San Cristóbal',
     description: 'Traslados urbanos en moto y auto, carreras inmediatas y envíos de paquetería express',
@@ -8854,12 +8854,13 @@ class AdminController {
     const name = document.getElementById('edit-pinata-name')?.value.trim();
     const category = document.getElementById('edit-pinata-category')?.value;
     const size = document.getElementById('edit-pinata-size')?.value;
-    const price = parseFloat(document.getElementById('edit-pinata-price')?.value);
-    const image = document.getElementById('edit-pinata-image')?.value.trim();
-    const desc = document.getElementById('edit-pinata-desc')?.value.trim();
+    let price = parseFloat(document.getElementById('edit-pinata-price')?.value);
+    if (isNaN(price) || price <= 0) price = 18.0;
+    const image = document.getElementById('edit-pinata-image')?.value.trim() || '/images/pinatas/pinata_celebracion.jpg';
+    const desc = document.getElementById('edit-pinata-desc')?.value.trim() || 'Piñata artesanal personalizada.';
 
-    if (!id || !name || !image || isNaN(price)) {
-      alert('Por favor completa todos los campos obligatorios.');
+    if (!id || !name) {
+      alert('Por favor completa al menos el Nombre del Modelo.');
       return;
     }
 
@@ -8913,6 +8914,42 @@ class AdminController {
     }
   }
 
+  async handlePinataFileSelect(event, target = 'add') {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Show loading preview immediately
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = e.target.result;
+      const previewEl = document.getElementById(target === 'add' ? 'admin-pinata-add-preview-img' : 'edit-pinata-preview-img');
+      const inputEl = document.getElementById(target === 'add' ? 'admin-pinata-input-image' : 'edit-pinata-image');
+      if (previewEl) previewEl.src = dataUrl;
+      if (inputEl) inputEl.value = dataUrl; // fallback immediately
+
+      // Upload to server to get permanent /uploads/pinatas/ URL
+      try {
+        const res = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageBase64: dataUrl,
+            folder: 'pinatas',
+            fileName: file.name
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          if (inputEl) inputEl.value = data.url;
+          if (previewEl) previewEl.src = data.url;
+        }
+      } catch (err) {
+        console.warn('Could not upload image to server, preserving data URL:', err);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
   toggleAddPinataForm(forceState) {
     const form = document.getElementById('admin-pinata-add-form');
     if (!form) return;
@@ -8925,16 +8962,23 @@ class AdminController {
 
   async saveNewPinataProduct() {
     const name = document.getElementById('admin-pinata-input-name')?.value.trim();
-    const size = document.getElementById('admin-pinata-input-size')?.value;
-    const category = document.getElementById('admin-pinata-input-category')?.value;
-    const price = parseFloat(document.getElementById('admin-pinata-input-price')?.value);
-    const image = document.getElementById('admin-pinata-input-image')?.value.trim();
-    const desc = document.getElementById('admin-pinata-input-desc')?.value.trim();
-
-    if (!name || !image || isNaN(price)) {
-      alert('Por favor completa todos los campos obligatorios (Nombre, Tamaño, Foto y Precio).');
+    if (!name) {
+      alert('Por favor ingresa al menos el Nombre del Modelo de la piñata.');
       return;
     }
+
+    let price = parseFloat(document.getElementById('admin-pinata-input-price')?.value);
+    if (isNaN(price) || price <= 0) {
+      price = 18.0; // Smart default so adding is ultra fast with just name and photo!
+    }
+
+    const size = document.getElementById('admin-pinata-input-size')?.value || 'Mediana (~80 cm)';
+    const category = document.getElementById('admin-pinata-input-category')?.value || 'personajes';
+    let image = document.getElementById('admin-pinata-input-image')?.value.trim();
+    if (!image) {
+      image = '/images/pinatas/pinata_celebracion.jpg';
+    }
+    const desc = document.getElementById('admin-pinata-input-desc')?.value.trim() || 'Piñata artesanal personalizada.';
 
     const payload = {
       name,
@@ -8957,10 +9001,18 @@ class AdminController {
       if (data.success) {
         this.toggleAddPinataForm(false);
         // Clean inputs
-        document.getElementById('admin-pinata-input-name').value = '';
-        document.getElementById('admin-pinata-input-price').value = '';
-        document.getElementById('admin-pinata-input-image').value = '';
-        document.getElementById('admin-pinata-input-desc').value = '';
+        const nameInput = document.getElementById('admin-pinata-input-name');
+        const priceInput = document.getElementById('admin-pinata-input-price');
+        const imgInput = document.getElementById('admin-pinata-input-image');
+        const descInput = document.getElementById('admin-pinata-input-desc');
+        const fileInput = document.getElementById('admin-pinata-add-file-input');
+        const previewEl = document.getElementById('admin-pinata-add-preview-img');
+        if (nameInput) nameInput.value = '';
+        if (priceInput) priceInput.value = '';
+        if (imgInput) imgInput.value = '';
+        if (descInput) descInput.value = '';
+        if (fileInput) fileInput.value = '';
+        if (previewEl) previewEl.src = '/images/pinatas/pinata_celebracion.jpg';
         this.loadPinatasCatalog();
       } else {
         alert(data.error || 'Error al guardar producto.');
