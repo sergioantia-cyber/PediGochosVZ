@@ -1,7 +1,18 @@
 /* ==========================================================================
    Impresión 3D & Prototipado ("PediGochos 3D Lab") - Styles
    PediGochos Specialized Services Module
+   Mobile-First & 100% Fluid Responsive Design
    ========================================================================== */
+
+/* Universal Box-Sizing for 3D Lab components */
+.print3d-modal,
+.print3d-detail-modal,
+.print3d-chat-modal,
+.print3d-modal *,
+.print3d-detail-modal *,
+.print3d-chat-modal * {
+  box-sizing: border-box;
+}
 
 /* Fullscreen 3D Lab Modal */
 .print3d-modal {
@@ -10,7 +21,10 @@
   z-index: 99990;
   background-color: #0B0F19;
   color: #F8FAFC;
+  width: 100vw;
+  max-width: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
@@ -25,59 +39,87 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(11, 15, 25, 0.95);
+  background: rgba(11, 15, 25, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 12px 16px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-header {
+    padding: 12px 18px;
+    gap: 14px;
+  }
 }
 
 .print3d-header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
 }
 
 .print3d-back-btn {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #F8FAFC;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  font-size: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .print3d-back-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateX(-2px);
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateX(-1px);
+}
+
+.print3d-title-wrap {
+  min-width: 0;
+  flex: 1;
 }
 
 .print3d-title-wrap h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 800;
   color: #FFFFFF;
   letter-spacing: -0.3px;
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 640px) {
+  .print3d-title-wrap h2 {
+    font-size: 17px;
+  }
 }
 
 .print3d-title-wrap p {
   margin: 2px 0 0 0;
-  font-size: 11.5px;
+  font-size: 11px;
   color: #94A3B8;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Search Bar in Header or Hero */
@@ -87,9 +129,10 @@
   gap: 8px;
   background: #1E293B;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 8px 14px;
-  margin-bottom: 20px;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  width: 100%;
 }
 
 .print3d-search-bar input {
@@ -98,7 +141,8 @@
   border: none;
   outline: none;
   color: #FFF;
-  font-size: 13px;
+  font-size: 12.5px;
+  min-width: 0;
 }
 
 /* Body Container */
@@ -107,20 +151,35 @@
   max-width: 1120px;
   width: 100%;
   margin: 0 auto;
-  padding: 16px;
-  box-sizing: border-box;
+  padding: 12px;
+  overflow-x: hidden;
+}
+
+@media (min-width: 640px) {
+  .print3d-body {
+    padding: 18px;
+  }
 }
 
 /* Hero Section */
 .print3d-hero-card {
   background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
   border: 1.5px solid rgba(129, 140, 248, 0.35);
-  border-radius: 20px;
-  padding: 22px;
-  margin-bottom: 24px;
+  border-radius: 16px;
+  padding: 14px 14px;
+  margin-bottom: 16px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-hero-card {
+    border-radius: 20px;
+    padding: 22px;
+    margin-bottom: 22px;
+  }
 }
 
 .print3d-hero-badge {
@@ -130,46 +189,74 @@
   background: rgba(99, 102, 241, 0.18);
   color: #A5B4FC;
   border: 1px solid rgba(99, 102, 241, 0.4);
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 16px;
+  font-size: 10.5px;
   font-weight: 800;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .print3d-hero-title {
-  margin: 0 0 8px 0;
-  font-size: 23px;
+  margin: 0 0 6px 0;
+  font-size: 17.5px;
   font-weight: 900;
   color: #FFFFFF;
   line-height: 1.25;
 }
 
+@media (min-width: 640px) {
+  .print3d-hero-title {
+    font-size: 23px;
+    margin-bottom: 8px;
+  }
+}
+
 .print3d-hero-desc {
-  margin: 0 0 16px 0;
-  font-size: 13.5px;
+  margin: 0 0 12px 0;
+  font-size: 12px;
   color: #CBD5E1;
-  line-height: 1.5;
+  line-height: 1.45;
   max-width: 650px;
+}
+
+@media (min-width: 640px) {
+  .print3d-hero-desc {
+    font-size: 13.5px;
+    margin-bottom: 16px;
+  }
 }
 
 .print3d-hero-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  padding-top: 14px;
+  gap: 10px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (min-width: 640px) {
+  .print3d-hero-stats {
+    gap: 16px;
+    padding-top: 14px;
+  }
 }
 
 .print3d-stat-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 11px;
   color: #E2E8F0;
   font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .print3d-stat-item {
+    font-size: 12px;
+    gap: 8px;
+  }
 }
 
 /* Category Filter Chips */
@@ -177,10 +264,11 @@
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 12px;
-  margin-bottom: 20px;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .print3d-filter-scroll::-webkit-scrollbar {
@@ -191,9 +279,9 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #94A3B8;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 12.5px;
+  padding: 7px 13px;
+  border-radius: 18px;
+  font-size: 11.5px;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
@@ -201,6 +289,15 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .print3d-filter-btn {
+    padding: 8px 16px;
+    font-size: 12.5px;
+    border-radius: 20px;
+  }
 }
 
 .print3d-filter-btn:hover {
@@ -218,62 +315,67 @@
 /* Product Catalog Grid */
 .print3d-catalog-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  margin-bottom: 28px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+  width: 100%;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 600px) {
   .print3d-catalog-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .print3d-catalog-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
   }
 }
 
 .print3d-card {
   background: #1E293B;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  border-radius: 18px;
   overflow: hidden;
   transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
+  width: 100%;
 }
 
 .print3d-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
 }
 
 .print3d-card-preview {
   position: relative;
-  height: 180px;
+  height: 160px;
   background: #0F172A;
   display: flex;
   align-items: center;
   justify-content: center;
   background-size: cover;
   background-position: center;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-card-preview {
+    height: 190px;
+  }
 }
 
 .print3d-card-badge-mat {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.88);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #A5B4FC;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 800;
   padding: 3px 8px;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .print3d-badge-3d {
@@ -282,10 +384,10 @@
   right: 10px;
   background: #6366F1;
   color: #FFF;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 900;
   padding: 3px 8px;
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -293,22 +395,36 @@
 }
 
 .print3d-card-content {
-  padding: 16px;
+  padding: 14px;
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .print3d-card-content {
+    padding: 16px;
+  }
 }
 
 .print3d-card-title {
   margin: 0 0 6px 0;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 800;
   color: #FFFFFF;
+  line-height: 1.35;
+}
+
+@media (min-width: 640px) {
+  .print3d-card-title {
+    font-size: 15.5px;
+  }
 }
 
 .print3d-card-desc {
-  margin: 0 0 12px 0;
-  font-size: 12px;
+  margin: 0 0 10px 0;
+  font-size: 11.5px;
   color: #94A3B8;
   line-height: 1.4;
   flex: 1;
@@ -317,23 +433,23 @@
 .print3d-card-specs {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: 5px;
+  margin-bottom: 12px;
 }
 
 .print3d-pill-spec {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #CBD5E1;
-  font-size: 10.5px;
-  padding: 2px 7px;
+  font-size: 10px;
+  padding: 2px 6px;
   border-radius: 6px;
   font-weight: 600;
 }
 
 .print3d-card-footer {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 12px;
+  padding-top: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -346,14 +462,14 @@
 }
 
 .print3d-price-label {
-  font-size: 10px;
+  font-size: 9.5px;
   color: #94A3B8;
   text-transform: uppercase;
   font-weight: 700;
 }
 
 .print3d-price-val {
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 900;
   color: #38BDF8;
 }
@@ -362,16 +478,17 @@
   background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
   color: #FFF;
   border: none;
-  padding: 7px 14px;
+  padding: 7px 12px;
   border-radius: 10px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
   transition: transform 0.2s;
+  white-space: nowrap;
 }
 
 .btn-open-3d-detail:hover {
@@ -380,15 +497,22 @@
 
 /* Custom STL Upload Card */
 .print3d-custom-upload-card {
-  grid-column: 1 / -1;
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(30, 41, 59, 0.8) 100%);
   border: 2px dashed rgba(99, 102, 241, 0.45);
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 18px 14px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
   margin-top: 10px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-custom-upload-card {
+    padding: 24px;
+    border-radius: 20px;
+  }
 }
 
 .print3d-custom-upload-card:hover {
@@ -407,7 +531,10 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  width: 100vw;
+  max-width: 100%;
 }
 
 .print3d-detail-modal.hidden {
@@ -418,14 +545,60 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(11, 15, 25, 0.95);
+  background: rgba(11, 15, 25, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 12px 16px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-detail-header {
+    padding: 12px 18px;
+  }
+}
+
+.print3d-detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.print3d-detail-title-block {
+  min-width: 0;
+  flex: 1;
+}
+
+.print3d-detail-header-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #FFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 640px) {
+  .print3d-detail-header-title {
+    font-size: 15px;
+  }
+}
+
+.print3d-detail-header-sub {
+  font-size: 10px;
+  color: #94A3B8;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .print3d-detail-grid {
@@ -433,16 +606,18 @@
   max-width: 1180px;
   width: 100%;
   margin: 0 auto;
-  padding: 16px;
+  padding: 12px;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-  box-sizing: border-box;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  overflow-x: hidden;
 }
 
 @media (min-width: 860px) {
   .print3d-detail-grid {
-    grid-template-columns: 1.15fr 1fr;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    padding: 20px;
+    gap: 24px;
   }
 }
 
@@ -450,35 +625,49 @@
 .print3d-viewer-column {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .print3d-viewer-box {
   position: relative;
   width: 100%;
-  height: 380px;
+  max-width: 100%;
+  height: 270px;
   background: radial-gradient(circle, #1E293B 0%, #0F172A 100%);
   border: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 640px) {
+  .print3d-viewer-box {
+    height: 380px;
+    border-radius: 22px;
+  }
 }
 
 @media (min-width: 860px) {
   .print3d-viewer-box {
-    height: 480px;
+    height: 470px;
+    border-radius: 24px;
   }
 }
 
 /* Google <model-viewer> element */
 model-viewer {
   width: 100%;
+  max-width: 100%;
   height: 100%;
   --poster-color: transparent;
   outline: none;
+  touch-action: pan-y;
 }
 
-/* Fallback Canvas for WebGL / Three.js preview */
+/* Fallback Canvas for WebGL preview */
 .print3d-canvas-fallback {
   width: 100%;
   height: 100%;
@@ -488,11 +677,19 @@ model-viewer {
 /* Overlay controls on top of viewer */
 .print3d-viewer-top-actions {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 10px;
+  right: 10px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   z-index: 10;
+}
+
+@media (min-width: 640px) {
+  .print3d-viewer-top-actions {
+    top: 14px;
+    right: 14px;
+    gap: 8px;
+  }
 }
 
 .btn-viewer-tool {
@@ -500,15 +697,24 @@ model-viewer {
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #FFF;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  font-size: 15px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+@media (min-width: 640px) {
+  .btn-viewer-tool {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 15px;
+  }
 }
 
 .btn-viewer-tool:hover {
@@ -523,48 +729,68 @@ model-viewer {
 
 .print3d-360-badge {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  top: 10px;
+  left: 10px;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #38BDF8;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 3px 8px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   z-index: 10;
   pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .print3d-360-badge {
+    top: 14px;
+    left: 14px;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
 }
 
 /* Toggle 3D vs Real Photos */
 .print3d-view-toggle-bar {
   position: absolute;
-  bottom: 14px;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.92);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
-  padding: 3px;
+  border-radius: 18px;
+  padding: 2px;
   z-index: 10;
+  max-width: 90%;
 }
 
 .print3d-toggle-btn {
   background: transparent;
   border: none;
   color: #94A3B8;
-  padding: 6px 14px;
-  border-radius: 16px;
-  font-size: 11.5px;
+  padding: 5px 11px;
+  border-radius: 14px;
+  font-size: 10.5px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .print3d-toggle-btn {
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 11.5px;
+  }
 }
 
 .print3d-toggle-btn.active {
@@ -576,25 +802,40 @@ model-viewer {
 .print3d-filament-box {
   background: #1E293B;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  padding: 14px 16px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-filament-box {
+    border-radius: 18px;
+    padding: 14px 16px;
+  }
 }
 
 .print3d-filament-swatches {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .print3d-color-swatch {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   cursor: pointer;
   position: relative;
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 640px) {
+  .print3d-color-swatch {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 .print3d-color-swatch:hover {
@@ -611,41 +852,76 @@ model-viewer {
 .print3d-config-column {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-config-column {
+    gap: 16px;
+  }
 }
 
 .print3d-detail-title {
   margin: 0 0 6px 0;
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 900;
   color: #FFFFFF;
+  line-height: 1.3;
+}
+
+@media (min-width: 640px) {
+  .print3d-detail-title {
+    font-size: 21px;
+  }
 }
 
 .print3d-dimensions-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.35);
   color: #7DD3FC;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-dimensions-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+    gap: 8px;
+  }
 }
 
 /* Scale Selector */
 .print3d-scale-box {
   background: #1E293B;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 14px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-scale-box {
+    border-radius: 16px;
+    padding: 14px;
+  }
 }
 
 .print3d-scale-buttons {
   display: flex;
-  gap: 8px;
-  margin: 10px 0;
+  gap: 6px;
+  margin: 8px 0;
+  width: 100%;
 }
 
 .print3d-btn-scale {
@@ -653,12 +929,21 @@ model-viewer {
   background: #0F172A;
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #E2E8F0;
-  padding: 8px;
-  border-radius: 10px;
-  font-size: 12px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  font-size: 11px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .print3d-btn-scale {
+    padding: 8px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
 }
 
 .print3d-btn-scale:hover {
@@ -674,37 +959,53 @@ model-viewer {
 .print3d-scale-slider-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  width: 100%;
 }
 
 .print3d-scale-slider {
   flex: 1;
   accent-color: #6366F1;
   cursor: pointer;
+  min-width: 0;
 }
 
 /* Material Selector */
 .print3d-materials-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 8px;
+  width: 100%;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 640px) {
   .print3d-materials-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 .print3d-mat-card {
   background: #0F172A;
   border: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 12px 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
   cursor: pointer;
   transition: all 0.2s;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-mat-card {
+    text-align: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 12px 10px;
+    border-radius: 14px;
+  }
 }
 
 .print3d-mat-card:hover {
@@ -717,10 +1018,16 @@ model-viewer {
 }
 
 .print3d-mat-name {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 800;
   color: #FFF;
   display: block;
+}
+
+@media (min-width: 640px) {
+  .print3d-mat-name {
+    font-size: 12.5px;
+  }
 }
 
 .print3d-mat-sub {
@@ -728,21 +1035,30 @@ model-viewer {
   color: #94A3B8;
   margin-top: 2px;
   display: block;
+  line-height: 1.3;
 }
 
 /* Quantity & Volume Discounts */
 .print3d-qty-box {
   background: #1E293B;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 14px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-qty-box {
+    border-radius: 16px;
+    padding: 14px;
+  }
 }
 
 .print3d-qty-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
 .print3d-qty-stepper {
@@ -750,7 +1066,7 @@ model-viewer {
   align-items: center;
   background: #0F172A;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -758,9 +1074,9 @@ model-viewer {
   background: transparent;
   border: none;
   color: #FFF;
-  width: 36px;
-  height: 36px;
-  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  font-size: 15px;
   font-weight: 900;
   cursor: pointer;
   display: flex;
@@ -773,8 +1089,8 @@ model-viewer {
 }
 
 .print3d-qty-value {
-  padding: 0 12px;
-  font-size: 14px;
+  padding: 0 10px;
+  font-size: 13px;
   font-weight: 900;
   color: #FFF;
 }
@@ -783,9 +1099,9 @@ model-viewer {
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid #10B981;
   color: #6EE7B7;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
   font-weight: 800;
 }
 
@@ -793,36 +1109,53 @@ model-viewer {
 .print3d-pricing-card {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(30, 41, 59, 0.8));
   border: 1.5px solid rgba(99, 102, 241, 0.4);
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 12px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-pricing-card {
+    border-radius: 18px;
+    padding: 16px;
+  }
 }
 
 .print3d-pricing-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
-  font-size: 12.5px;
+  margin-bottom: 5px;
+  font-size: 12px;
   color: #CBD5E1;
 }
 
 .print3d-total-usd {
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 900;
   color: #38BDF8;
+}
+
+@media (min-width: 640px) {
+  .print3d-total-usd {
+    font-size: 22px;
+  }
 }
 
 /* Double Contact CTAs */
 .print3d-cta-row {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
 }
 
-@media (min-width: 500px) {
+@media (min-width: 600px) {
   .print3d-cta-row {
     flex-direction: row;
+    gap: 10px;
+    margin-top: 10px;
   }
 }
 
@@ -831,17 +1164,27 @@ model-viewer {
   background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
   color: #FFF;
   border: none;
-  padding: 13px;
-  border-radius: 14px;
+  padding: 11px 14px;
+  border-radius: 12px;
   font-weight: 900;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
   transition: transform 0.2s;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .btn-print3d-chat {
+    padding: 13px;
+    border-radius: 14px;
+    font-size: 13px;
+    gap: 8px;
+  }
 }
 
 .btn-print3d-wa {
@@ -849,41 +1192,57 @@ model-viewer {
   background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
   color: #FFF;
   border: none;
-  padding: 13px;
-  border-radius: 14px;
+  padding: 11px 14px;
+  border-radius: 12px;
   font-weight: 900;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
   transition: transform 0.2s;
   text-decoration: none;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .btn-print3d-wa {
+    padding: 13px;
+    border-radius: 14px;
+    font-size: 13px;
+    gap: 8px;
+  }
 }
 
 /* Cross Selling in Detail */
 .print3d-similar-section {
-  grid-column: 1 / -1;
-  margin-top: 24px;
-  padding-top: 20px;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 16px;
+  padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .print3d-similar-scroll {
   display: flex;
-  gap: 14px;
+  gap: 10px;
   overflow-x: auto;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
+  width: 100%;
+  max-width: 100%;
   -webkit-overflow-scrolling: touch;
 }
 
 .print3d-similar-card {
-  min-width: 170px;
+  min-width: 150px;
+  max-width: 100%;
+  flex-shrink: 0;
   background: #1E293B;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s;
@@ -895,10 +1254,17 @@ model-viewer {
 }
 
 .print3d-similar-thumb {
-  height: 110px;
+  height: 95px;
   background-size: cover;
   background-position: center;
   background-color: #0F172A;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-similar-thumb {
+    height: 110px;
+  }
 }
 
 /* ==========================================================================
@@ -911,6 +1277,9 @@ model-viewer {
   background: #0B0F19;
   display: flex;
   flex-direction: column;
+  width: 100vw;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .print3d-chat-modal.hidden {
@@ -918,13 +1287,20 @@ model-viewer {
 }
 
 .print3d-chat-header {
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: #1E293B;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-chat-header {
+    padding: 12px 16px;
+  }
 }
 
 .print3d-chat-body {
@@ -941,11 +1317,19 @@ model-viewer {
 .print3d-quote-sheet {
   background: linear-gradient(135deg, #1E1B4B, #0F172A);
   border-bottom: 1.5px solid rgba(99, 102, 241, 0.4);
-  padding: 14px 16px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-quote-sheet {
+    padding: 14px 16px;
+    gap: 10px;
+  }
 }
 
 .print3d-sheet-top {
@@ -957,36 +1341,53 @@ model-viewer {
 
 .print3d-sheet-specs {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
-  font-size: 11.5px;
+  font-size: 11px;
   color: #CBD5E1;
 }
 
 @media (min-width: 600px) {
   .print3d-sheet-specs {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    font-size: 11.5px;
   }
 }
 
 .print3d-messages-area {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   -webkit-overflow-scrolling: touch;
 }
 
+@media (min-width: 640px) {
+  .print3d-messages-area {
+    padding: 16px;
+    gap: 12px;
+  }
+}
+
 .print3d-msg-bubble {
-  max-width: 80%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  font-size: 13px;
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 12.5px;
   line-height: 1.4;
   position: relative;
   word-break: break-word;
+}
+
+@media (min-width: 640px) {
+  .print3d-msg-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+  }
 }
 
 .print3d-msg-incoming {
@@ -1006,12 +1407,20 @@ model-viewer {
 }
 
 .print3d-chat-input-bar {
-  padding: 12px 16px;
+  padding: 10px 12px;
   background: #1E293B;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .print3d-chat-input-bar {
+    padding: 12px 16px;
+    gap: 10px;
+  }
 }
 
 .print3d-chat-input-bar input {
@@ -1019,23 +1428,25 @@ model-viewer {
   background: #0F172A;
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #FFF;
-  padding: 10px 14px;
-  border-radius: 20px;
-  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 18px;
+  font-size: 12.5px;
   outline: none;
+  min-width: 0;
 }
 
 .btn-send-print3d-msg {
   background: #6366F1;
   color: #FFF;
   border: none;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  font-size: 16px;
+  font-size: 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  flex-shrink: 0;
 }

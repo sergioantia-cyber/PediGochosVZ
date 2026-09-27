@@ -10,7 +10,7 @@ if (!fs.existsSync(distDir)) {
 }
 
 // Copy public directories
-const foldersToCopy = ['css', 'js', 'images'];
+const foldersToCopy = ['css', 'js', 'images', 'models'];
 foldersToCopy.forEach(folder => {
   const src = path.join(publicDir, folder);
   const dest = path.join(distDir, folder);

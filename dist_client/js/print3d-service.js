@@ -46,93 +46,33 @@ const Print3DServiceApp = {
   products: [
     {
       id: 'print-1',
-      slug: 'soporte-celular-volante',
-      title: 'Soporte Celular Ergonómico para Auto / Moto',
-      category: 'repuestos',
+      slug: 'soporte-celular-auto-moto',
+      title: 'Soporte Universal de Celular para Auto & Moto (PETG)',
+      category: 'soportes',
       material: 'petg',
-      baseDimensions: { x: 8.5, y: 7.2, z: 9.0 }, // cm
+      baseDimensions: { x: 8.5, y: 7.0, z: 9.5 }, // cm
       basePriceUsd: 12.0,
       estPrintHours: 4.5,
-      weightGrams: 65,
-      image: '/images/servicios.jpg',
-      modelGlb: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb', // Reliable 3D asset test
-      desc: 'Soporte de alta durabilidad para sujetar smartphone en salpicadero o manillar. Resistente a vibraciones y exposición solar prolongada.',
-      tags: ['Resistente UV', 'Antivibración', 'Grip Firme']
+      weightGrams: 68,
+      image: '/images/services/soporte_celular_3d.jpg',
+      modelGlb: '/models/soporte_celular.glb',
+      desc: 'Soporte ergonómico reforzado para auto y moto en PETG técnico. Resiste altas temperaturas solares (hasta 85°C) y vibraciones continuas en carretera o manillar con fijación precisa y paso de cable de carga integrado.',
+      tags: ['Resistente 85°C', 'Antivibración Moto', 'PETG Reforzado']
     },
     {
       id: 'print-2',
-      slug: 'dragon-articulado-3d',
-      title: 'Dragón Articulado Legendario (Print-in-Place)',
-      category: 'coleccionables',
+      slug: 'llavero-personalizado-pedigochos',
+      title: 'Llavero Personalizado PediGochos / Emprendedores 3D',
+      category: 'personalizados',
       material: 'pla',
-      baseDimensions: { x: 32.0, y: 8.0, z: 6.5 },
-      basePriceUsd: 18.0,
-      estPrintHours: 8.0,
-      weightGrams: 110,
-      image: '/images/burger_royale.jpg',
-      modelGlb: 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
-      desc: 'Figura coleccionable totalmente articulada impresa en una sola pieza continua. Movimiento flexible suave ideal para regalo o escritorio.',
-      tags: ['100% Articulado', 'Coleccionable', 'Sin Ensamblaje']
-    },
-    {
-      id: 'print-3',
-      slug: 'engranaje-repuesto-industrial',
-      title: 'Engranaje de Reemplazo & Repuestos Mecánicos',
-      category: 'repuestos',
-      material: 'petg',
-      baseDimensions: { x: 6.0, y: 6.0, z: 2.5 },
-      basePriceUsd: 9.5,
-      estPrintHours: 2.5,
-      weightGrams: 35,
-      image: '/images/ferreteria.jpg',
-      modelGlb: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
-      desc: 'Fabricación precisa de dientes y tolerancias para piezas descatalogadas de licuadoras, taladros, elevavidrios o maquinaria.',
-      tags: ['Tolerancia 0.1mm', 'Alta Torsión', 'A Medida']
-    },
-    {
-      id: 'print-4',
-      slug: 'llavero-pedigochos-turbo',
-      title: 'Llaveros Personalizados & Merch con Relieve',
-      category: 'llaveros',
-      material: 'pla',
-      baseDimensions: { x: 5.5, y: 3.0, z: 0.6 },
+      baseDimensions: { x: 6.2, y: 2.5, z: 0.8 },
       basePriceUsd: 3.5,
       estPrintHours: 0.8,
-      weightGrams: 15,
-      image: '/images/burger_royale.jpg',
-      modelGlb: 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
-      desc: 'Llaveros corporativos y souvenirs con logo en dos colores o relieve tridimensional. Descuentos por volumen para negocios.',
-      tags: ['Doble Color', 'Empresarial', 'Bajo Costo']
-    },
-    {
-      id: 'print-5',
-      slug: 'soporte-auriculares-gamer',
-      title: 'Soporte Minimalista para Auriculares Gamer / DJ',
-      category: 'soportes',
-      material: 'pla',
-      baseDimensions: { x: 12.0, y: 14.0, z: 24.0 },
-      basePriceUsd: 16.0,
-      estPrintHours: 7.0,
-      weightGrams: 140,
-      image: '/images/servicios.jpg',
-      modelGlb: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
-      desc: 'Diseño geométrico moderno con base pesada antiderrapante y curvatura que cuida la diadema de tus audífonos.',
-      tags: ['Estilo Gamer', 'Base Firme', 'Geométrico']
-    },
-    {
-      id: 'print-6',
-      slug: 'maceta-geometrica-voronoi',
-      title: 'Maceta Geométrica Facetada & Lámpara Decorativa',
-      category: 'decoracion',
-      material: 'pla',
-      baseDimensions: { x: 10.0, y: 10.0, z: 9.5 },
-      basePriceUsd: 11.0,
-      estPrintHours: 5.0,
-      weightGrams: 85,
-      image: '/images/burger_royale.jpg',
-      modelGlb: 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
-      desc: 'Maceta con patrón poligonal para suculentas o portavelas con drenaje oculto. Hermoso brillo en acabados seda y mármol.',
-      tags: ['Diseño Poligonal', 'Decoración', 'Con Drenaje']
+      weightGrams: 18,
+      image: '/images/services/llavero_3d_pedigochos.jpg',
+      modelGlb: '/models/llavero_pedigochos.glb',
+      desc: 'Llavero tridimensional de alta resolución en relieve bicapa (doble color). Personalizable con tu logo corporativo, marca o nombre. Incluye aro metálico de acero inoxidable reforzado. Descuento especial por volumen para negocios.',
+      tags: ['Doble Color', 'Relieve 3D', 'Aro Metálico']
     }
   ],
 
@@ -294,22 +234,13 @@ const Print3DServiceApp = {
         <!-- Filter Chips -->
         <div class="print3d-filter-scroll">
           <button type="button" class="print3d-filter-btn active" onclick="Print3DServiceApp.filterCategory('all', this)">
-            ✨ Todos los Diseños
-          </button>
-          <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('coleccionables', this)">
-            🐉 Coleccionables & Figuras
-          </button>
-          <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('llaveros', this)">
-            🔑 Llaveros & Merch
-          </button>
-          <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('repuestos', this)">
-            ⚙️ Piezas Funcionales & Repuestos
-          </button>
-          <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('decoracion', this)">
-            🏺 Decoración & Hogar
+            ✨ Todos los Diseños (2)
           </button>
           <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('soportes', this)">
-            📱 Soportes & Gadgets
+            📱 Soportes & Auto/Moto
+          </button>
+          <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('personalizados', this)">
+            🔑 Llaveros & Merch
           </button>
         </div>
 
@@ -429,13 +360,16 @@ const Print3DServiceApp = {
     div.className = 'print3d-detail-modal';
     div.innerHTML = `
       <header class="print3d-detail-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <button type="button" class="print3d-back-btn" onclick="Print3DServiceApp.closeDetail()">←</button>
-          <h3 id="print3d-detail-nav-title" style="margin: 0; font-size: 15px; font-weight: 800; color: #FFF;">
-            Visor 3D Interactivo
-          </h3>
+        <div class="print3d-detail-header-left">
+          <button type="button" class="print3d-back-btn" onclick="Print3DServiceApp.closeDetail()" title="Volver al Catálogo">←</button>
+          <div class="print3d-detail-title-block">
+            <h3 id="print3d-detail-nav-title" class="print3d-detail-header-title">
+              Visor 3D Interactivo
+            </h3>
+            <span class="print3d-detail-header-sub">PediGochos 3D Lab • 360°</span>
+          </div>
         </div>
-        <button type="button" class="print3d-back-btn" onclick="Print3DServiceApp.closeDetail()">✕</button>
+        <button type="button" class="print3d-back-btn" onclick="Print3DServiceApp.closeDetail()" title="Cerrar">✕</button>
       </header>
 
       <main class="print3d-detail-grid" id="print3d-detail-content">
@@ -586,8 +520,11 @@ const Print3DServiceApp = {
           <div class="print3d-materials-grid">
             ${Object.entries(this.materials).map(([key, mat]) => `
               <div class="print3d-mat-card ${this.configState.materialKey === key ? 'selected' : ''}" onclick="Print3DServiceApp.selectMaterial('${key}')">
-                <strong class="print3d-mat-name">${mat.name}</strong>
-                <span class="print3d-mat-sub">${mat.desc}</span>
+                <div style="min-width: 0; flex: 1;">
+                  <strong class="print3d-mat-name">${mat.name}</strong>
+                  <span class="print3d-mat-sub">${mat.desc}</span>
+                </div>
+                <span class="print3d-card-badge-mat" style="position: static; margin-left: 6px; white-space: nowrap; align-self: center;">${mat.badge}</span>
               </div>
             `).join('')}
           </div>
