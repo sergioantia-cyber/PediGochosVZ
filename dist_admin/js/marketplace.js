@@ -1231,21 +1231,29 @@ class MarketplaceController {
 
     list.forEach(est => {
       const card = document.createElement('div');
-      card.className = 'est-row-card';
+      card.className = 'est-row-card est-brand-card';
       const isOpen = this.isEstablishmentOpen(est);
+      const brand = this.getEstablishmentBrandTheme(est);
 
       if (!isOpen) {
-        card.style.opacity = '0.75';
-        card.style.filter = 'grayscale(0.3)';
+        card.style.opacity = '0.78';
+        card.style.filter = 'grayscale(0.25)';
       }
 
       card.onclick = () => this.openEstablishment(est.id);
+
+      // Set CSS custom variables for dynamic brand styling
+      card.style.setProperty('--card-brand-tint', brand.cardTint);
+      card.style.setProperty('--card-brand-border', brand.cardBorder);
+      card.style.setProperty('--card-brand-glow', brand.cardGlow);
+      card.style.background = brand.cardBg;
+      card.style.borderColor = brand.cardBorder;
 
       // Determine representation photo
       const photoUrl = est.logoImage || (est.products && est.products[0] ? est.products[0].image : null);
       let imgHTML = '';
       if (photoUrl) {
-        imgHTML = `<img src="${photoUrl}" alt="${est.name}" class="est-row-img" style="object-fit: contain; width: 100%; height: 100%; padding: 4px; box-sizing: border-box;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'">`;
+        imgHTML = `<img src="${photoUrl}" alt="${est.name}" class="est-row-img" style="object-fit: contain; width: 100%; height: 100%; padding: 3px; box-sizing: border-box;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'">`;
       }
 
       const deliveryTimeStr = this.getFormattedDeliveryTime(est);
@@ -1261,8 +1269,10 @@ class MarketplaceController {
       const ratingVal = est.avgRating ? parseFloat(est.avgRating).toFixed(1) : '4.9';
       const totalRev = est.totalReviews !== undefined ? est.totalReviews : Math.floor(10 + Math.random() * 25);
 
+      const descSnippet = (est.description || '').split('.')[0] || est.description || '';
+
       card.innerHTML = `
-        <div class="est-row-img-wrapper">
+        <div class="est-row-img-wrapper" style="background: ${brand.logoBg}; border: 1.5px solid ${brand.logoBorder}; box-shadow: 0 4px 14px ${brand.logoShadow};">
           ${imgHTML}
           <div class="est-row-img-placeholder hidden">${est.logo || '🏪'}</div>
           ${closedBadge}
@@ -1270,22 +1280,412 @@ class MarketplaceController {
         </div>
         <div class="est-row-info">
           <div class="est-row-header-flex">
-            <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">${est.name}</h4>
-            <div class="est-row-rating" onclick="event.stopPropagation(); MarketplaceApp.openReviewsListModal('${est.id}')" style="cursor: pointer;">
-              ⭐ ${ratingVal} (${totalRev})
+            <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; color: #FFFFFF; font-weight: 900; font-size: 14px;">${est.name}</h4>
+            <div class="est-row-rating" onclick="event.stopPropagation(); MarketplaceApp.openReviewsListModal('${est.id}')" style="cursor: pointer; background: rgba(255, 170, 0, 0.16); border: 1px solid rgba(255, 170, 0, 0.35); color: #FFAA00;">
+              ⭐ ${ratingVal} <span style="opacity: 0.85; font-size: 9.5px;">(${totalRev})</span>
             </div>
           </div>
-          <div class="est-row-desc">
-            ${this.capitalize(est.category)} • ${est.description.split('.')[0] || est.description}
+          <div class="est-row-desc" style="color: #94A3B8; font-size: 11.5px; margin: 2px 0;">
+            <span class="est-pill-category" style="background: ${brand.pillBg}; color: ${brand.pillColor}; border: 1px solid ${brand.pillBorder}; padding: 1.5px 6px; border-radius: 5px; font-size: 10px; font-weight: 800; margin-right: 5px; display: inline-block;">
+              ${brand.categoryTag}
+            </span>
+            <span>${descSnippet}</span>
           </div>
-          <div class="est-row-details-row">
-            <span style="color: #94A3B8; font-weight: 700; display: flex; align-items: center; gap: 4px;">${deliveryTimeStr}</span>
-            <span class="free-delivery" style="background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid #3B82F6; padding: 1.5px 6px; border-radius: 6px; font-weight: 800;">${isOpen ? '🚲 ' + this.formatPesos(est.delivery_fee || 5000) : '🔴 Cerrado'}</span>
+          <div class="est-row-details-row" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="color: #94A3B8; font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 3px;">
+                ⏱️ ${deliveryTimeStr}
+              </span>
+              <span class="free-delivery" style="background: ${isOpen ? 'rgba(59, 130, 246, 0.15)' : 'rgba(239, 68, 68, 0.15)'}; color: ${isOpen ? '#60A5FA' : '#F87171'}; border: 1px solid ${isOpen ? 'rgba(59, 130, 246, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; padding: 1.5px 7px; border-radius: 6px; font-weight: 800; font-size: 10.5px;">
+                ${isOpen ? '🛵 ' + this.formatPesos(est.delivery_fee || 5000) : '🔴 Cerrado'}
+              </span>
+            </div>
+            
+            <!-- BOTÓN BONITO PERSONALIZADO CON LA ESTÉTICA DE CADA LOGO -->
+            <button type="button" class="btn-brand-menu-cta" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')" style="background: ${brand.btnGradient}; color: ${brand.btnTextColor || '#FFFFFF'}; border: 1px solid ${brand.btnBorder || 'rgba(255,255,255,0.25)'}; box-shadow: 0 3px 10px ${brand.btnShadow}; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.22s ease;">
+              <span style="font-size: 12px;">${brand.btnIcon}</span>
+              <span>${brand.btnText}</span>
+              <span class="cta-arrow" style="font-size: 10px; opacity: 0.9;">➔</span>
+            </button>
           </div>
         </div>
       `;
       grid.appendChild(card);
     });
+  }
+
+  getEstablishmentBrandTheme(est) {
+    if (!est) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, #1E2330 50%, #151821 100%)',
+        cardBorder: 'rgba(255, 107, 0, 0.35)',
+        cardGlow: 'rgba(255, 107, 0, 0.18)',
+        cardTint: 'rgba(255, 107, 0, 0.12)',
+        logoBg: '#12141C',
+        logoBorder: 'rgba(255, 107, 0, 0.55)',
+        logoShadow: 'rgba(255, 107, 0, 0.25)',
+        pillBg: 'rgba(255, 107, 0, 0.16)',
+        pillColor: '#FF8C00',
+        pillBorder: 'rgba(255, 107, 0, 0.35)',
+        categoryTag: '🍔 Comidas',
+        btnText: 'Ver Menú',
+        btnIcon: '🍔',
+        btnGradient: 'linear-gradient(135deg, #FF6B00 0%, #EA580C 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(255, 107, 0, 0.35)'
+      };
+    }
+
+    const normName = (est.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const estId = String(est.id || '').toLowerCase();
+
+    // 1. Karritos De Manuel
+    if (normName.includes('karritos') || normName.includes('carritos') || normName.includes('manuel') || estId.includes('manuel')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(255, 94, 0, 0.15) 0%, rgba(30, 36, 48, 0.95) 45%, #181C26 100%)',
+        cardBorder: 'rgba(255, 107, 0, 0.45)',
+        cardGlow: 'rgba(255, 94, 0, 0.22)',
+        cardTint: 'rgba(255, 94, 0, 0.15)',
+        logoBg: '#101116',
+        logoBorder: '#FF5E00',
+        logoShadow: 'rgba(255, 94, 0, 0.35)',
+        pillBg: 'rgba(255, 94, 0, 0.18)',
+        pillColor: '#FFA000',
+        pillBorder: 'rgba(255, 160, 0, 0.4)',
+        categoryTag: '🍔 Comidas Rápidas',
+        btnText: 'Ver Menú & Pedir',
+        btnIcon: '🍔',
+        btnGradient: 'linear-gradient(135deg, #FF5E00 0%, #EA580C 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(255, 94, 0, 0.4)'
+      };
+    }
+
+    // 2. Patacon Fire
+    if (normName.includes('patacon') || normName.includes('fire') || estId.includes('patacon')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(24, 38, 32, 0.95) 45%, #131F1B 100%)',
+        cardBorder: 'rgba(16, 185, 129, 0.45)',
+        cardGlow: 'rgba(16, 185, 129, 0.22)',
+        cardTint: 'rgba(16, 185, 129, 0.14)',
+        logoBg: '#052219',
+        logoBorder: '#10B981',
+        logoShadow: 'rgba(16, 185, 129, 0.35)',
+        pillBg: 'rgba(16, 185, 129, 0.18)',
+        pillColor: '#34D399',
+        pillBorder: 'rgba(52, 211, 153, 0.4)',
+        categoryTag: '🍌 Patacón Criollo',
+        btnText: 'Ver Menú Criollo',
+        btnIcon: '🍌',
+        btnGradient: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(16, 185, 129, 0.4)'
+      };
+    }
+
+    // 3. Frutihelados Gourmet / Fruty Del Bosque
+    if (normName.includes('frutihelado') || normName.includes('fruty') || normName.includes('bosque') || normName.includes('helado') || estId.includes('frutihelado') || estId.includes('fruty')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(244, 63, 94, 0.15) 0%, rgba(38, 26, 36, 0.95) 45%, #1F151F 100%)',
+        cardBorder: 'rgba(244, 63, 94, 0.45)',
+        cardGlow: 'rgba(244, 63, 94, 0.22)',
+        cardTint: 'rgba(244, 63, 94, 0.15)',
+        logoBg: '#230815',
+        logoBorder: '#F43F5E',
+        logoShadow: 'rgba(244, 63, 94, 0.35)',
+        pillBg: 'rgba(244, 63, 94, 0.18)',
+        pillColor: '#FB7185',
+        pillBorder: 'rgba(251, 113, 133, 0.4)',
+        categoryTag: '🍨 Helados & Dulces',
+        btnText: 'Ver Dulces & Helados',
+        btnIcon: '🍨',
+        btnGradient: 'linear-gradient(135deg, #E11D48 0%, #F43F5E 50%, #FB7185 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(244, 63, 94, 0.4)'
+      };
+    }
+
+    // 4. Burger Grill Puente Sucre
+    if (normName.includes('burger grill') || normName.includes('puente sucre') || normName.includes('grill') || estId.includes('puente-sucre')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(38, 24, 26, 0.95) 45%, #1F1416 100%)',
+        cardBorder: 'rgba(220, 38, 38, 0.45)',
+        cardGlow: 'rgba(220, 38, 38, 0.22)',
+        cardTint: 'rgba(220, 38, 38, 0.15)',
+        logoBg: '#210606',
+        logoBorder: '#DC2626',
+        logoShadow: 'rgba(220, 38, 38, 0.35)',
+        pillBg: 'rgba(220, 38, 38, 0.18)',
+        pillColor: '#F87171',
+        pillBorder: 'rgba(248, 113, 113, 0.4)',
+        categoryTag: '🔥 Burgers & Parrilla',
+        btnText: 'Ver Burgers & Grill',
+        btnIcon: '🔥',
+        btnGradient: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(220, 38, 38, 0.4)'
+      };
+    }
+
+    // 5. Latinos Burguer
+    if (normName.includes('latinos') || estId.includes('latinos')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(38, 32, 24, 0.95) 45%, #1F1A13 100%)',
+        cardBorder: 'rgba(245, 158, 11, 0.45)',
+        cardGlow: 'rgba(245, 158, 11, 0.22)',
+        cardTint: 'rgba(245, 158, 11, 0.15)',
+        logoBg: '#241403',
+        logoBorder: '#F59E0B',
+        logoShadow: 'rgba(245, 158, 11, 0.35)',
+        pillBg: 'rgba(245, 158, 11, 0.18)',
+        pillColor: '#FBBF24',
+        pillBorder: 'rgba(251, 191, 36, 0.4)',
+        categoryTag: '🍔 Smash Burgers',
+        btnText: 'Ordenar en Latinos',
+        btnIcon: '🍔',
+        btnGradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(245, 158, 11, 0.4)'
+      };
+    }
+
+    // 6. La casa de los batidos
+    if (normName.includes('batidos') || estId.includes('batidos')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(32, 26, 42, 0.95) 45%, #181423 100%)',
+        cardBorder: 'rgba(139, 92, 246, 0.45)',
+        cardGlow: 'rgba(139, 92, 246, 0.22)',
+        cardTint: 'rgba(139, 92, 246, 0.15)',
+        logoBg: '#160829',
+        logoBorder: '#8B5CF6',
+        logoShadow: 'rgba(139, 92, 246, 0.35)',
+        pillBg: 'rgba(139, 92, 246, 0.18)',
+        pillColor: '#A78BFA',
+        pillBorder: 'rgba(167, 139, 250, 0.4)',
+        categoryTag: '🥤 Batidos & Smoothies',
+        btnText: 'Ver Batidos & Bebidas',
+        btnIcon: '🥤',
+        btnGradient: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(139, 92, 246, 0.4)'
+      };
+    }
+
+    // 7. Míster Cachapa
+    if (normName.includes('cachapa') || estId.includes('cachapa')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(202, 138, 4, 0.15) 0%, rgba(36, 32, 22, 0.95) 45%, #1E1B11 100%)',
+        cardBorder: 'rgba(202, 138, 4, 0.45)',
+        cardGlow: 'rgba(202, 138, 4, 0.22)',
+        cardTint: 'rgba(202, 138, 4, 0.15)',
+        logoBg: '#211802',
+        logoBorder: '#EAB308',
+        logoShadow: 'rgba(234, 179, 8, 0.35)',
+        pillBg: 'rgba(202, 138, 4, 0.18)',
+        pillColor: '#FACC15',
+        pillBorder: 'rgba(250, 204, 21, 0.4)',
+        categoryTag: '🌽 Cachapas con Queso',
+        btnText: 'Pedir Cachapas 🌽',
+        btnIcon: '🌽',
+        btnGradient: 'linear-gradient(135deg, #CA8A04 0%, #EAB308 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(202, 138, 4, 0.4)'
+      };
+    }
+
+    // 8. Mak Pizza
+    if (normName.includes('pizza') || estId.includes('pizza')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(225, 29, 72, 0.15) 0%, rgba(38, 24, 28, 0.95) 45%, #1F1317 100%)',
+        cardBorder: 'rgba(225, 29, 72, 0.45)',
+        cardGlow: 'rgba(225, 29, 72, 0.22)',
+        cardTint: 'rgba(225, 29, 72, 0.15)',
+        logoBg: '#24040E',
+        logoBorder: '#E11D48',
+        logoShadow: 'rgba(225, 29, 72, 0.35)',
+        pillBg: 'rgba(225, 29, 72, 0.18)',
+        pillColor: '#FB7185',
+        pillBorder: 'rgba(251, 113, 133, 0.4)',
+        categoryTag: '🍕 Pizzas & Calzones',
+        btnText: 'Ver Pizzas & Promos',
+        btnIcon: '🍕',
+        btnGradient: 'linear-gradient(135deg, #E11D48 0%, #BE123C 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(225, 29, 72, 0.4)'
+      };
+    }
+
+    // 9. Arepera Sabor Venezolano / Boki Arepas
+    if (normName.includes('arepa') || normName.includes('venezolano') || estId.includes('arepa')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(38, 30, 24, 0.95) 45%, #1F1813 100%)',
+        cardBorder: 'rgba(249, 115, 22, 0.45)',
+        cardGlow: 'rgba(249, 115, 22, 0.22)',
+        cardTint: 'rgba(249, 115, 22, 0.15)',
+        logoBg: '#211003',
+        logoBorder: '#F97316',
+        logoShadow: 'rgba(249, 115, 22, 0.35)',
+        pillBg: 'rgba(249, 115, 22, 0.18)',
+        pillColor: '#FB923C',
+        pillBorder: 'rgba(251, 146, 60, 0.4)',
+        categoryTag: '🫓 Arepas Tradicionales',
+        btnText: 'Ver Arepas & Rellenos',
+        btnIcon: '🫓',
+        btnGradient: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(249, 115, 22, 0.4)'
+      };
+    }
+
+    // 10. Shawarma Dunes
+    if (normName.includes('shawarma') || normName.includes('dunes') || estId.includes('shawarma')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(32, 24, 40, 0.95) 45%, #191222 100%)',
+        cardBorder: 'rgba(124, 58, 237, 0.45)',
+        cardGlow: 'rgba(124, 58, 237, 0.22)',
+        cardTint: 'rgba(124, 58, 237, 0.15)',
+        logoBg: '#18072E',
+        logoBorder: '#7C3AED',
+        logoShadow: 'rgba(124, 58, 237, 0.35)',
+        pillBg: 'rgba(124, 58, 237, 0.18)',
+        pillColor: '#A78BFA',
+        pillBorder: 'rgba(167, 139, 250, 0.4)',
+        categoryTag: '🌯 Shawarma & Kebab',
+        btnText: 'Ver Shawarmas',
+        btnIcon: '🌯',
+        btnGradient: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(124, 58, 237, 0.4)'
+      };
+    }
+
+    // 11. Luchos Burguer / Boby Burgers
+    if (normName.includes('lucho') || normName.includes('boby')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(234, 88, 12, 0.15) 0%, rgba(38, 28, 24, 0.95) 45%, #1F1713 100%)',
+        cardBorder: 'rgba(234, 88, 12, 0.45)',
+        cardGlow: 'rgba(234, 88, 12, 0.22)',
+        cardTint: 'rgba(234, 88, 12, 0.15)',
+        logoBg: '#210C02',
+        logoBorder: '#EA580C',
+        logoShadow: 'rgba(234, 88, 12, 0.35)',
+        pillBg: 'rgba(234, 88, 12, 0.18)',
+        pillColor: '#FB923C',
+        pillBorder: 'rgba(251, 146, 60, 0.4)',
+        categoryTag: '🍔 Hamburguesas BBQ',
+        btnText: 'Ver Carta de Burgers',
+        btnIcon: '🍔',
+        btnGradient: 'linear-gradient(135deg, #EA580C 0%, #C2410C 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(234, 88, 12, 0.4)'
+      };
+    }
+
+    // 12. Tanos Resto Bar
+    if (normName.includes('tano') || normName.includes('bar')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(24, 32, 44, 0.95) 45%, #121924 100%)',
+        cardBorder: 'rgba(2, 132, 199, 0.45)',
+        cardGlow: 'rgba(2, 132, 199, 0.22)',
+        cardTint: 'rgba(2, 132, 199, 0.15)',
+        logoBg: '#031728',
+        logoBorder: '#0284C7',
+        logoShadow: 'rgba(2, 132, 199, 0.35)',
+        pillBg: 'rgba(2, 132, 199, 0.18)',
+        pillColor: '#38BDF8',
+        pillBorder: 'rgba(56, 189, 248, 0.4)',
+        categoryTag: '🍽️ Resto Bar & Grill',
+        btnText: 'Ver Platos & Bebidas',
+        btnIcon: '🍽️',
+        btnGradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(2, 132, 199, 0.4)'
+      };
+    }
+
+    // 13. Café Plaza
+    if (normName.includes('cafe') || normName.includes('plaza')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(146, 64, 14, 0.15) 0%, rgba(36, 28, 22, 0.95) 45%, #1E1610 100%)',
+        cardBorder: 'rgba(146, 64, 14, 0.45)',
+        cardGlow: 'rgba(146, 64, 14, 0.22)',
+        cardTint: 'rgba(146, 64, 14, 0.15)',
+        logoBg: '#1C0D05',
+        logoBorder: '#92400E',
+        logoShadow: 'rgba(146, 64, 14, 0.35)',
+        pillBg: 'rgba(146, 64, 14, 0.18)',
+        pillColor: '#F59E0B',
+        pillBorder: 'rgba(245, 158, 11, 0.4)',
+        categoryTag: '☕ Café & Repostería',
+        btnText: 'Ver Cafés & Carta',
+        btnIcon: '☕',
+        btnGradient: 'linear-gradient(135deg, #92400E 0%, #B45309 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(146, 64, 14, 0.4)'
+      };
+    }
+
+    // 14. Zeus Burger
+    if (normName.includes('zeus')) {
+      return {
+        cardBg: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(22, 28, 44, 0.95) 45%, #101626 100%)',
+        cardBorder: 'rgba(37, 99, 235, 0.45)',
+        cardGlow: 'rgba(37, 99, 235, 0.22)',
+        cardTint: 'rgba(37, 99, 235, 0.15)',
+        logoBg: '#05112B',
+        logoBorder: '#2563EB',
+        logoShadow: 'rgba(37, 99, 235, 0.35)',
+        pillBg: 'rgba(37, 99, 235, 0.18)',
+        pillColor: '#60A5FA',
+        pillBorder: 'rgba(96, 165, 250, 0.4)',
+        categoryTag: '⚡ Zeus Burgers',
+        btnText: 'Ver Menú Olímpico',
+        btnIcon: '⚡',
+        btnGradient: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+        btnTextColor: '#FFFFFF',
+        btnBorder: 'rgba(255, 255, 255, 0.25)',
+        btnShadow: 'rgba(37, 99, 235, 0.4)'
+      };
+    }
+
+    // Dynamic fallback for any other restaurant / shop based on themeColor or category
+    const cat = (est.category || '').toLowerCase();
+    const primaryColor = est.themeColor || (cat === 'farmacias' ? '#059669' : (cat === 'mercados' ? '#10B981' : (cat === 'ferreterias' ? '#D97706' : (cat === 'servicios' ? '#8B5CF6' : '#FF6B00'))));
+    const icon = est.logo || (cat === 'farmacias' ? '💊' : (cat === 'mercados' ? '🛒' : (cat === 'ferreterias' ? '🛠️' : (cat === 'servicios' ? '🛵' : '🍔'))));
+
+    return {
+      cardBg: `linear-gradient(135deg, ${primaryColor}22 0%, #1E2330 45%, #151821 100%)`,
+      cardBorder: `${primaryColor}66`,
+      cardGlow: `${primaryColor}33`,
+      cardTint: `${primaryColor}22`,
+      logoBg: '#12141C',
+      logoBorder: primaryColor,
+      logoShadow: `${primaryColor}55`,
+      pillBg: `${primaryColor}25`,
+      pillColor: '#FFFFFF',
+      pillBorder: `${primaryColor}66`,
+      categoryTag: `${icon} ${this.capitalize(est.category || 'Comercio')}`,
+      btnText: 'Ver Catálogo & Pedir',
+      btnIcon: icon,
+      btnGradient: `linear-gradient(135deg, ${primaryColor} 0%, #EA580C 100%)`,
+      btnTextColor: '#FFFFFF',
+      btnBorder: 'rgba(255, 255, 255, 0.25)',
+      btnShadow: `${primaryColor}66`
+    };
   }
 
   getSessionSeed() {

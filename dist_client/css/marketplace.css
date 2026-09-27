@@ -4296,5 +4296,76 @@ body {
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 
+/* ==========================================================================
+   ESTABLECIMIENTOS BRAND CARDS & BOTONES BONITOS CON ESTÉTICA DE CADA LOGO
+   ========================================================================== */
+.est-brand-card {
+  position: relative;
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease !important;
+  overflow: visible !important;
+}
 
+.est-brand-card:hover {
+  transform: translateY(-2.5px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42), 0 0 16px var(--card-brand-glow, rgba(255, 107, 0, 0.22)) !important;
+  border-color: var(--card-brand-border, rgba(255, 107, 0, 0.6)) !important;
+}
 
+.est-brand-card .est-row-img-wrapper {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+}
+
+.est-brand-card:hover .est-row-img-wrapper {
+  transform: scale(1.05);
+}
+
+.btn-brand-menu-cta {
+  font-family: inherit;
+  font-weight: 800;
+  letter-spacing: -0.1px;
+  user-select: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+  outline: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.btn-brand-menu-cta:hover {
+  transform: translateY(-1.5px) scale(1.04);
+  filter: brightness(1.12);
+}
+
+.btn-brand-menu-cta:active {
+  transform: translateY(0.5px) scale(0.97);
+}
+
+.btn-brand-menu-cta .cta-arrow {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.btn-brand-menu-cta:hover .cta-arrow {
+  transform: translateX(3px);
+}
+
+.est-brand-card:hover .btn-brand-menu-cta {
+  filter: brightness(1.08);
+}
+
+@media (max-width: 480px) {
+  .est-brand-card {
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+  .btn-brand-menu-cta {
+    padding: 3.5px 8px !important;
+    font-size: 10px !important;
+    gap: 4px !important;
+  }
+  .btn-brand-menu-cta span:first-child {
+    font-size: 11px !important;
+  }
+}
