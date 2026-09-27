@@ -8744,7 +8744,8 @@ class AdminController {
     try {
       const res = await fetch('/api/pinata-services/catalog');
       const catalog = await res.json();
-      this.renderPinatasCatalogAdmin(catalog);
+      this.pinatasCatalogCache = Array.isArray(catalog) ? catalog : [];
+      this.renderPinatasCatalogAdmin(this.pinatasCatalogCache);
     } catch (e) {
       console.warn('Could not load pinatas catalog in admin:', e);
     }
@@ -8768,28 +8769,148 @@ class AdminController {
     }
 
     container.innerHTML = catalog.map(item => `
-      <div style="background: #172033; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;">
-        <div style="width: 100%; aspect-ratio: 16/10; position: relative; background: #0F172A;">
-          <img src="${item.image}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/pinatas/pinata_celebracion.jpg'">
-          <span style="position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); color: #FFF; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">
+      <div onclick="AdminApp.openEditPinataModal('${item.id}')" style="background: #172033; border: 1.5px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.25);" onmouseenter="this.style.borderColor='rgba(244,63,94,0.6)'; this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.transform='none'">
+        <div style="width: 100%; height: 180px; position: relative; background: #0F172A; flex-shrink: 0; overflow: hidden;">
+          <img src="${item.image}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='/images/pinatas/pinata_celebracion.jpg'">
+          <span style="position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #FDA4AF; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(244,63,94,0.3); text-transform: uppercase;">
+            ${item.categoryLabel || item.category || 'Piñata'}
+          </span>
+          <span style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
             ${item.size || 'Mediana'}
           </span>
         </div>
-        <div style="padding: 10px 12px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; gap: 8px;">
+        <div style="padding: 12px 14px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; gap: 10px; background: #172033;">
           <div>
-            <h5 style="margin: 0 0 2px 0; font-size: 13px; font-weight: 800; color: #FFF;">${item.name}</h5>
-            <span style="font-size: 10.5px; color: #94A3B8; text-transform: uppercase;">${item.categoryLabel || item.category}</span>
-            <p style="margin: 4px 0 0 0; font-size: 11px; color: #CBD5E1; line-height: 1.3;">${item.desc || ''}</p>
+            <h5 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 800; color: #FFF; line-height: 1.3;">${item.name}</h5>
+            <p style="margin: 0; font-size: 11.5px; color: #94A3B8; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${item.desc || 'Sin descripción adicional.'}</p>
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; margin-top: auto;">
-            <strong style="color: #F43F5E; font-size: 13px;">$${item.basePriceUsd} USD</strong>
-            <button type="button" onclick="AdminApp.deletePinataProduct('${item.id}', '${item.name.replace(/'/g, "\\'")}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #FCA5A5; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; cursor: pointer;" title="Eliminar del catálogo">
-              🗑️ Eliminar
-            </button>
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; margin-top: auto; gap: 8px;">
+            <div>
+              <span style="font-size: 10px; color: #94A3B8; display: block; font-weight: 600;">Precio Base</span>
+              <strong style="color: #F43F5E; font-size: 15px; font-weight: 900;">$${item.basePriceUsd} USD</strong>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;" onclick="event.stopPropagation()">
+              <button type="button" onclick="AdminApp.openEditPinataModal('${item.id}')" style="background: rgba(59, 130, 246, 0.18); border: 1px solid rgba(59, 130, 246, 0.4); color: #93C5FD; font-size: 11px; font-weight: 800; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Editar especificaciones">
+                <span>✏️</span> Editar
+              </button>
+              <button type="button" onclick="AdminApp.deletePinataProduct('${item.id}', '${(item.name || '').replace(/'/g, "\\'")}')" style="background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.4); color: #FCA5A5; font-size: 11px; font-weight: 800; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Eliminar del catálogo">
+                <span>🗑️</span> Eliminar
+              </button>
+            </div>
           </div>
         </div>
       </div>
     `).join('');
+  }
+
+  openEditPinataModal(pinataId) {
+    const item = (this.pinatasCatalogCache || []).find(p => String(p.id) === String(pinataId));
+    if (!item) return;
+
+    this.currentEditingPinata = item;
+
+    const modal = document.getElementById('admin-pinata-edit-modal');
+    const idInput = document.getElementById('edit-pinata-id');
+    const nameInput = document.getElementById('edit-pinata-name');
+    const catInput = document.getElementById('edit-pinata-category');
+    const sizeInput = document.getElementById('edit-pinata-size');
+    const priceInput = document.getElementById('edit-pinata-price');
+    const imageInput = document.getElementById('edit-pinata-image');
+    const previewImg = document.getElementById('edit-pinata-preview-img');
+    const descInput = document.getElementById('edit-pinata-desc');
+    const modalTitle = document.getElementById('admin-pinata-edit-modal-title');
+
+    if (idInput) idInput.value = item.id;
+    if (nameInput) nameInput.value = item.name || '';
+    if (catInput) catInput.value = item.category || 'personajes';
+    if (sizeInput) sizeInput.value = item.size || 'Mediana (~80 cm)';
+    if (priceInput) priceInput.value = item.basePriceUsd || 0;
+    if (imageInput) imageInput.value = item.image || '';
+    if (previewImg) previewImg.src = item.image || '/images/pinatas/pinata_celebracion.jpg';
+    if (descInput) descInput.value = item.desc || '';
+    if (modalTitle) modalTitle.textContent = `Modificar: ${item.name || 'Piñata'}`;
+
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  closeEditPinataModal() {
+    const modal = document.getElementById('admin-pinata-edit-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+    this.currentEditingPinata = null;
+  }
+
+  async savePinataProductEdits() {
+    const id = document.getElementById('edit-pinata-id')?.value;
+    const name = document.getElementById('edit-pinata-name')?.value.trim();
+    const category = document.getElementById('edit-pinata-category')?.value;
+    const size = document.getElementById('edit-pinata-size')?.value;
+    const price = parseFloat(document.getElementById('edit-pinata-price')?.value);
+    const image = document.getElementById('edit-pinata-image')?.value.trim();
+    const desc = document.getElementById('edit-pinata-desc')?.value.trim();
+
+    if (!id || !name || !image || isNaN(price)) {
+      alert('Por favor completa todos los campos obligatorios.');
+      return;
+    }
+
+    const payload = {
+      name,
+      title: name,
+      category,
+      size,
+      basePriceUsd: price,
+      priceRange: `$${price - 2} - $${price + 4} USD`,
+      image,
+      desc
+    };
+
+    try {
+      const res = await fetch(`/api/pinata-services/catalog/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.closeEditPinataModal();
+        this.loadPinatasCatalog();
+      } else {
+        alert(data.error || 'Error al actualizar el producto.');
+      }
+    } catch (e) {
+      alert('Error de conexión al actualizar piñata.');
+    }
+  }
+
+  async deleteCurrentEditingPinata() {
+    if (!this.currentEditingPinata) return;
+    const { id, name } = this.currentEditingPinata;
+    if (!confirm(`¿Eliminar definitivamente "${name}" del inventario de piñatas?`)) return;
+
+    try {
+      const res = await fetch(`/api/pinata-services/catalog/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.closeEditPinataModal();
+        this.loadPinatasCatalog();
+      } else {
+        alert(data.error || 'Error al eliminar el producto.');
+      }
+    } catch (e) {
+      alert('Error de conexión al eliminar producto.');
+    }
   }
 
   toggleAddPinataForm(forceState) {

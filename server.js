@@ -4127,6 +4127,37 @@ app.delete('/api/pinata-services/catalog/:id', (req, res) => {
   res.json({ success: true, message: 'Producto eliminado del catálogo' });
 });
 
+// PUT / UPDATE single product in Piñatas catalog
+app.put('/api/pinata-services/catalog/:id', (req, res) => {
+  const { id } = req.params;
+  const updates = req.body || {};
+  let catalog = readPinatasCatalog();
+  const index = catalog.findIndex(it => it.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Producto no encontrado' });
+  }
+
+  const category = updates.category || catalog[index].category;
+  const categoryLabel = category === 'numeros' ? 'Números & Letras' : (category === 'figuras3d' ? 'Figuras Esculturales 3D' : (category === 'mini' ? 'Mini-Piñatas' : (category === 'eventos' ? 'Eventos Especiales' : 'Personajes Infantiles')));
+
+  catalog[index] = {
+    ...catalog[index],
+    ...updates,
+    categoryLabel,
+    basePriceUsd: parseFloat(updates.basePriceUsd) || catalog[index].basePriceUsd,
+    updatedAt: new Date().toISOString()
+  };
+
+  writePinatasCatalog(catalog);
+
+  const payload = JSON.stringify({ type: 'PINATA_CATALOG_UPDATE', items: catalog });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, item: catalog[index] });
+});
+
 // PUT / UPDATE Piñatas catalog (Bulk update or toggle)
 app.put('/api/pinata-services/catalog', (req, res) => {
   const items = req.body;

@@ -3318,11 +3318,93 @@
           </form>
         </div>
 
-        <!-- Inventory List Grid -->
-        <div id="admin-pinatas-catalog-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;">
+        <!-- Inventory List Grid - Spacious & Uncut -->
+        <div id="admin-pinatas-catalog-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; align-items: stretch;" class="premium-scroll">
           <div style="text-align: center; color: #94A3B8; padding: 30px; grid-column: 1 / -1;">⏳ Cargando catálogo de piñatas...</div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: Modificar Ficha Técnica de Piñata -->
+  <div id="admin-pinata-edit-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99999; padding: 14px;" onclick="if(event.target === this) AdminApp.closeEditPinataModal()">
+    <div style="background: #0F172A; border: 1.5px solid rgba(244, 63, 94, 0.45); border-radius: 20px; width: 100%; max-width: 620px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
+      <div style="padding: 16px 20px; background: linear-gradient(135deg, #881337 0%, #4C0519 100%); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">🪅</span>
+          <div>
+            <h3 id="admin-pinata-edit-modal-title" style="margin: 0; font-size: 16px; font-weight: 900; color: #FFF;">Modificar Piñata</h3>
+            <span style="font-size: 11px; color: #FDA4AF;">Edición de precio, tamaño, categoría y detalles</span>
+          </div>
+        </div>
+        <button type="button" onclick="AdminApp.closeEditPinataModal()" style="background: rgba(255,255,255,0.1); border: none; color: #94A3B8; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer;">✕</button>
+      </div>
+
+      <form id="admin-pinata-edit-form" onsubmit="event.preventDefault(); AdminApp.savePinataProductEdits();" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto;" class="premium-scroll">
+        <input type="hidden" id="edit-pinata-id">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Nombre del Modelo *</label>
+            <input type="text" id="edit-pinata-name" required style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 9px 12px; border-radius: 10px; font-size: 13px; box-sizing: border-box; font-weight: 700;">
+          </div>
+          <div>
+            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Categoría *</label>
+            <select id="edit-pinata-category" required style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 9px 12px; border-radius: 10px; font-size: 13px; box-sizing: border-box;">
+              <option value="personajes">Personajes Infantiles</option>
+              <option value="numeros">Números & Letras</option>
+              <option value="figuras3d">Figuras Esculturales 3D</option>
+              <option value="mini">Mini-Piñatas</option>
+              <option value="eventos">Eventos Especiales</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Tamaño *</label>
+            <select id="edit-pinata-size" required style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 9px 12px; border-radius: 10px; font-size: 13px; box-sizing: border-box;">
+              <option value="Mediana (~80 cm)">Mediana (~80 cm) - Estándar</option>
+              <option value="Pequeña (~50 cm)">Pequeña (~50 cm)</option>
+              <option value="Grande (~1 metro o más)">Grande (~1 metro o más)</option>
+              <option value="Mini-Piñata">Mini-Piñata</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Precio Base ($ USD) *</label>
+            <input type="number" step="0.5" id="edit-pinata-price" required style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #F43F5E; padding: 9px 12px; border-radius: 10px; font-size: 14px; box-sizing: border-box; font-weight: 900;">
+          </div>
+        </div>
+
+        <!-- Foto URL y Previsualización -->
+        <div>
+          <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Foto del Producto (URL de Imagen) *</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <div style="width: 60px; height: 60px; border-radius: 10px; overflow: hidden; background: #0B0F19; border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0;">
+              <img id="edit-pinata-preview-img" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/pinatas/pinata_celebracion.jpg'">
+            </div>
+            <input type="text" id="edit-pinata-image" oninput="document.getElementById('edit-pinata-preview-img').src = this.value.trim()" required style="flex: 1; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 9px 12px; border-radius: 10px; font-size: 12.5px; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Descripción Detallada</label>
+          <textarea id="edit-pinata-desc" rows="3" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 9px 12px; border-radius: 10px; font-size: 12.5px; box-sizing: border-box; line-height: 1.4; resize: vertical;"></textarea>
+        </div>
+
+        <!-- Footer Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px; margin-top: 6px; flex-wrap: wrap; gap: 8px;">
+          <button type="button" onclick="AdminApp.deleteCurrentEditingPinata()" style="background: rgba(239, 68, 68, 0.18); border: 1.5px solid #EF4444; color: #FCA5A5; font-size: 12px; font-weight: 800; padding: 8px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="Eliminar piñata del catálogo">
+            <span>🗑️</span> Eliminar Piñata
+          </button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" onclick="AdminApp.closeEditPinataModal()" style="background: rgba(255,255,255,0.08); border: none; color: #CBD5E1; padding: 8px 16px; border-radius: 8px; font-size: 12.5px; cursor: pointer;">Cancelar</button>
+            <button type="submit" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 800; font-size: 12.5px; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+              💾 Guardar Cambios
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 
