@@ -9,7 +9,7 @@
     "slogan": "Diseño y arte exclusivo en resina epóxica, llaveros A-Z con hojilla de oro 24K, borlas y recuerdos",
     "serviceName": "Llaveros en Resina Personalizados & Accesorios",
     "logo": "/images/services/shelliart_logo.svg",
-    "image": "/images/pinatas/pinata_celebracion.jpg",
+    "image": "/images/services/shelliart_banner.jpg",
     "rating": 5.0,
     "reviewCount": 48,
     "badges": [
@@ -25,15 +25,15 @@
   },
   {
     "id": "serv-pinatas",
-    "name": "TALLER DE PIÑATAS CREATIVAS",
-    "displayName": "Taller de Piñatas Creativas",
+    "name": "CREACIONES LOLA",
+    "displayName": "Creaciones Lola",
     "category": "pinatas",
     "categoryLabel": "Fiestas & Piñatas",
     "categoryIcon": "🎉",
-    "slogan": "Piñatas artesanales 3D, números temáticos con flores, siluetas y mini-piñatas personalizadas",
-    "serviceName": "Piñatas Artesanales por Encargo",
-    "logo": "/images/services/pinatas_logo.svg",
-    "image": "/images/pinatas/pinata_celebracion.jpg",
+    "slogan": "Piñatas artesanales 3D, números temáticos con flores, siluetas y modelos personalizados por encargo",
+    "serviceName": "Piñatas Personalizadas & Fiestas",
+    "logo": "/images/services/creaciones_lola_logo.svg",
+    "image": "/images/services/creaciones_lola_banner.png",
     "rating": 5.0,
     "reviewCount": 62,
     "badges": [
@@ -42,10 +42,10 @@
       "🎈 A Palo o Cintas"
     ],
     "actionType": "pinatas",
-    "ctaText": "Cotizar en Taller de Piñatas ➔",
+    "ctaText": "Cotizar en Creaciones Lola ➔",
     "themeColor": "#F43F5E",
     "phone": "+57 322 784 9751",
-    "location": "San Antonio / Taller Creativo"
+    "location": "San Antonio / Taller Creaciones Lola"
   },
   {
     "id": "serv-print3d",

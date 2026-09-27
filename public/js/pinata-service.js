@@ -1564,9 +1564,9 @@ Hola, ¿podrían confirmarme la disponibilidad y precio final para esta piñata?
           <button type="button" class="pinata-close-btn" onclick="PinataServiceApp.closeChatModal()" style="font-size: 14px;">←</button>
           <div>
             <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #FFF; display: flex; align-items: center; gap: 6px;">
-              <span>🪅</span> Chat con Taller de Piñatas
+              <span>🎉</span> Chat con Creaciones Lola
             </h3>
-            <span style="font-size: 11px; color: #34D399; font-weight: 700;">🟢 En Taller • Creadora Artesanal</span>
+            <span style="font-size: 11px; color: #34D399; font-weight: 700;">🟢 En Taller • Creaciones Lola</span>
           </div>
         </div>
         <button type="button" onclick="PinataServiceApp.closeChatModal()" style="background: none; border: none; color: #94A3B8; font-size: 18px; cursor: pointer;">✕</button>

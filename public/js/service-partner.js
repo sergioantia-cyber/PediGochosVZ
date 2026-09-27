@@ -84,8 +84,8 @@ const ServicePartnerApp = {
       case 'pinatas':
         return {
           id: 'pinatas',
-          title: 'Taller de Piñatas • Tus Piñatas a Medida',
-          icon: '🪅',
+          title: 'Creaciones Lola • Piñatas Personalizadas',
+          icon: '🎉',
           catalogEndpoint: '/api/pinata-services/catalog',
           quotesEndpoint: '/api/pinata-services/quotes',
           statsEndpoint: '/api/pinata-services/stats',
@@ -93,12 +93,12 @@ const ServicePartnerApp = {
           wsQuoteMsg: 'PINATA_QUOTE_MESSAGE',
           wsQuoteUpdate: 'PINATA_QUOTE_UPDATE',
           wsCatalogUpdate: 'PINATA_CATALOG_UPDATE',
-          roleName: 'Taller de Piñatas',
+          roleName: 'Creaciones Lola',
           presets: [
             "👋 ¡Hola! Tu diseño y temática están hermosos, con gusto podemos elaborarla.",
             "✂️ Estructura armada y en proceso de empapelado y secado artesanal.",
             "🎨 Detallando relieves, flecos y accesorios temáticos.",
-            "🪅 ¡Tu piñata está lista! Perfecta para tu fiesta."
+            "🎉 ¡Tu piñata de Creaciones Lola está lista! Perfecta para tu fiesta."
           ]
         };
       case 'paint':
