@@ -519,7 +519,7 @@
 .categories-grid-delivercity {
   display: grid;
   grid-template-columns: 1.35fr 1fr;
-  grid-template-rows: 78px 78px 78px;
+  grid-template-rows: 90px 90px;
   gap: 12px;
 }
 
@@ -607,7 +607,7 @@
    Hero Restaurantes Card - Standout Dominant Bento Box
    ========================================================================== */
 .card-restaurantes {
-  grid-row: 1 / span 3 !important;
+  grid-row: 1 / span 2 !important;
   grid-column: 1 / 2 !important;
   height: 100% !important;
   min-height: 100% !important;
@@ -737,12 +737,11 @@
 }
 
 .card-servicios {
-  grid-row: 2 / 3 !important;
-  grid-column: 2 / 3 !important;
+  display: none !important;
 }
 
 .card-ferreterias {
-  grid-row: 3 / 4 !important;
+  grid-row: 2 / 3 !important;
   grid-column: 2 / 3 !important;
 }
 
@@ -2116,7 +2115,7 @@ body {
 
   .categories-grid-delivercity {
     grid-template-columns: 1.25fr 1fr !important;
-    grid-template-rows: 70px 70px 70px !important;
+    grid-template-rows: 78px 78px !important;
     gap: 8px !important;
   }
 
@@ -2125,7 +2124,7 @@ body {
   }
 
   .card-restaurantes {
-    grid-row: 1 / span 3 !important;
+    grid-row: 1 / span 2 !important;
     grid-column: 1 / 2 !important;
     height: 100% !important;
     min-height: 100% !important;
@@ -2146,12 +2145,11 @@ body {
   }
 
   .card-servicios {
-    grid-row: 2 / 3 !important;
-    grid-column: 2 / 3 !important;
+    display: none !important;
   }
 
   .card-ferreterias {
-    grid-row: 3 / 4 !important;
+    grid-row: 2 / 3 !important;
     grid-column: 2 / 3 !important;
   }
 
