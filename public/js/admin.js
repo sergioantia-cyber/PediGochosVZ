@@ -157,17 +157,17 @@ const SPECIALIZED_SERVICES = [
     badgeBorder: 'rgba(239, 68, 68, 0.4)',
     location: 'San Antonio / Ureña / Cobertura Total',
     description: 'Despinche a domicilio 24 horas, parches, inflado, cambio de tripas para motos y autos',
-    inventorySummary: '🛞 Asistencia Vial 24 Horas',
-    inventoryBtnText: 'Ver Solicitudes de Cauchera',
-    inventoryAction: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})",
+    inventorySummary: '🛞 Asistencia Vial & Tarifas',
+    inventoryBtnText: 'Gestionar Tarifas & Auxilios',
+    inventoryAction: 'AdminApp.openCaucheraAdminModal()',
     infoSummary: '🚨 Guardia Activa Ininterrumpida',
     infoBtnText: 'Modificar Info',
-    infoAction: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})",
+    infoAction: 'AdminApp.openCaucheraAdminModal()',
     statusBadge: '<span style="background: rgba(239, 68, 68, 0.15); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; animation: pulse 2s infinite;">🚨 Guardia 24/7</span>',
     ordersSummary: '🛞 Despinches & Auxilio',
     actionButtons: [
-      { text: '🛞 Solicitudes', action: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})", bg: '#EF4444', color: '#FFF', title: 'Ver solicitudes de despinche' },
-      { text: '🛵 Auxilio', action: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})", bg: '#F59E0B', color: '#1E293B', title: 'Despacho de vulcanizador' }
+      { text: '🛞 Panel 24/7', action: 'AdminApp.openCaucheraAdminModal()', bg: '#EF4444', color: '#FFF', title: 'Abrir panel de control de Cauchera' },
+      { text: '📋 Solicitudes', action: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})", bg: '#F59E0B', color: '#1E293B', title: 'Ver pedidos de cauchera en la tabla' }
     ]
   },
   {
@@ -191,7 +191,7 @@ const SPECIALIZED_SERVICES = [
     ordersSummary: '🛵 Carreras & Rutas',
     actionButtons: [
       { text: '🛵 Conductores', action: 'AdminApp.openRegisterDriverModal()', bg: '#10B981', color: '#FFF', title: 'Registrar o gestionar conductores' },
-      { text: '💬 Chat Grupal', action: 'AdminApp.toggleDriverChatModal()', bg: '#6366F1', color: '#FFF', title: 'Abrir chat con conductores' }
+      { text: '💬 Chat Grupal', action: 'AdminApp.openDriverChatModal()', bg: '#6366F1', color: '#FFF', title: 'Abrir chat con conductores' }
     ]
   }
 ];
@@ -1161,21 +1161,27 @@ class AdminController {
     const modal = document.getElementById('admin-driver-chat-modal');
     if (!modal) return;
     modal.classList.remove('hidden');
+    modal.classList.add('active');
     modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
     this.isDriverChatModalOpen = true;
     this.driverChatUnreadCount = 0;
     this.updateDriverChatUnreadUI();
     this.renderDriverChat();
     this.scrollDriverChatToBottom();
+    this.checkModalOpenState();
   }
 
   closeDriverChatModal() {
     const modal = document.getElementById('admin-driver-chat-modal');
     if (modal) {
       modal.classList.add('hidden');
+      modal.classList.remove('active');
       modal.style.display = 'none';
     }
     this.isDriverChatModalOpen = false;
+    this.checkModalOpenState();
   }
 
   toggleDriverChatModal() {
@@ -1470,8 +1476,7 @@ class AdminController {
         if (serv.id === 'serv-paint') AdminApp.openPaintAdminModal();
         else if (serv.id === 'serv-print3d') AdminApp.openPrint3DAdminModal();
         else if (serv.id === 'serv-resin') AdminApp.openResinAdminModal();
-        else if (serv.id === 'serv-pinatas') AdminApp.openPinatasAdminModal('orders');
-        else if (serv.id === 'serv-cauchera') { AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'}); }
+        else if (serv.id === 'serv-cauchera') AdminApp.openCaucheraAdminModal();
         else if (serv.id === 'serv-ride') { AdminApp.setOrdersFilter('ride'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'}); }
       };
 
@@ -7937,6 +7942,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'flex';
       modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
     }
     const badge = document.getElementById('admin-paint-badge');
     if (badge) badge.style.display = 'none';
@@ -7948,6 +7955,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'none';
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
     }
   }
 
@@ -8102,6 +8111,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'flex';
       modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
     }
     const badge = document.getElementById('admin-print3d-badge');
     if (badge) badge.style.display = 'none';
@@ -8113,6 +8124,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'none';
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
     }
   }
 
@@ -8261,6 +8274,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'flex';
       modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
     }
     const badge = document.getElementById('admin-resin-badge');
     if (badge) badge.style.display = 'none';
@@ -8272,6 +8287,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'none';
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
     }
   }
 
@@ -8428,6 +8445,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'flex';
       modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
     }
     const badge = document.getElementById('admin-pinatas-badge');
     if (badge) badge.style.display = 'none';
@@ -8444,6 +8463,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'none';
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
     }
   }
 
@@ -8777,6 +8798,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'flex';
       modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
     }
     this.loadQuoteChatMessages();
   }
@@ -8787,6 +8810,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'none';
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
     }
   }
 
@@ -8850,6 +8875,158 @@ class AdminController {
   }
 
   // ==========================================
+  // Cauchera Móvil 24/7 Admin Control
+  // ==========================================
+  openCaucheraAdminModal() {
+    const modal = document.getElementById('admin-cauchera-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+
+    try {
+      const savedPhone = localStorage.getItem('pedigochos_cauchera_phone') || '+57 322 794 9751';
+      const savedMoto = localStorage.getItem('pedigochos_cauchera_price_moto') || '10000';
+      const savedAuto = localStorage.getItem('pedigochos_cauchera_price_auto') || '15000';
+      const savedNight = localStorage.getItem('pedigochos_cauchera_price_night') || '5000';
+
+      const phoneInp = document.getElementById('admin-cauchera-phone');
+      const motoInp = document.getElementById('admin-cauchera-price-moto');
+      const autoInp = document.getElementById('admin-cauchera-price-auto');
+      const nightInp = document.getElementById('admin-cauchera-price-night');
+
+      if (phoneInp) phoneInp.value = savedPhone;
+      if (motoInp) motoInp.value = savedMoto;
+      if (autoInp) autoInp.value = savedAuto;
+      if (nightInp) nightInp.value = savedNight;
+    } catch(e) {}
+
+    this.renderCaucheraModalOrders();
+  }
+
+  closeCaucheraAdminModal() {
+    const modal = document.getElementById('admin-cauchera-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  saveCaucheraSettings() {
+    const phone = document.getElementById('admin-cauchera-phone')?.value.trim() || '+57 322 794 9751';
+    const priceMoto = document.getElementById('admin-cauchera-price-moto')?.value.trim() || '10000';
+    const priceAuto = document.getElementById('admin-cauchera-price-auto')?.value.trim() || '15000';
+    const priceNight = document.getElementById('admin-cauchera-price-night')?.value.trim() || '5000';
+
+    try {
+      localStorage.setItem('pedigochos_cauchera_phone', phone);
+      localStorage.setItem('pedigochos_cauchera_price_moto', priceMoto);
+      localStorage.setItem('pedigochos_cauchera_price_auto', priceAuto);
+      localStorage.setItem('pedigochos_cauchera_price_night', priceNight);
+      this.showToast('✅ Parámetros de Cauchera 24/7 guardados correctamente.');
+    } catch(e) {
+      alert('Error guardando parámetros: ' + e.message);
+    }
+  }
+
+  renderCaucheraModalOrders() {
+    const listEl = document.getElementById('admin-cauchera-orders-list');
+    if (!listEl) return;
+
+    const caucheraOrders = (this.orders || []).filter(o => this.isCaucheraOrder(o));
+    const total = caucheraOrders.length;
+    const pending = caucheraOrders.filter(o => {
+      const s = (o.status || '').toLowerCase();
+      return s === 'pendiente' || s === 'solicitado';
+    }).length;
+    const road = caucheraOrders.filter(o => {
+      const s = (o.status || '').toLowerCase();
+      return s === 'en camino' || s === 'preparando' || s === 'asignado';
+    }).length;
+    const done = caucheraOrders.filter(o => {
+      const s = (o.status || '').toLowerCase();
+      return s === 'entregado' || s === 'completado' || s === 'finalizado';
+    }).length;
+
+    const kpiTotal = document.getElementById('admin-cauchera-kpi-total');
+    const kpiPending = document.getElementById('admin-cauchera-kpi-pending');
+    const kpiRoad = document.getElementById('admin-cauchera-kpi-road');
+    const kpiDone = document.getElementById('admin-cauchera-kpi-done');
+
+    if (kpiTotal) kpiTotal.textContent = total;
+    if (kpiPending) kpiPending.textContent = pending;
+    if (kpiRoad) kpiRoad.textContent = road;
+    if (kpiDone) kpiDone.textContent = done;
+
+    if (caucheraOrders.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 24px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 6px;">🛞</span>
+          <strong style="color: #FFF; font-size: 13px;">No hay auxilios de cauchera registrados</strong>
+          <p style="margin: 4px 0 0 0; font-size: 11.5px; color: #94A3B8;">
+            Las solicitudes de auxilio vial enviadas desde la app de clientes aparecerán aquí automáticamente en tiempo real.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = caucheraOrders.slice(0, 20).map(o => {
+      const cName = o.customerName || o.deliveryDetails?.name || 'Cliente';
+      const cPhone = o.customerPhone || o.deliveryDetails?.phone || '';
+      const address = o.deliveryDetails?.destination || o.deliveryDetails?.address || o.deliveryDetails?.origin || 'San Antonio del Táchira';
+      const vehicle = o.deliveryDetails?.vehicle || o.items?.[0]?.name || 'Vehículo';
+      const status = o.status || 'Pendiente';
+      const totalAmount = this.formatPesos(o.total || o.deliveryFee || 10000);
+      const cleanPhone = (cPhone || '').replace(/\D/g, '');
+
+      return `
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">🛞</span>
+              <strong style="color: #FFF; font-size: 13px;">#${o.id || o.deliveryDetails?.code || 'AUX'} - ${cName}</strong>
+              <span style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">
+                ${vehicle}
+              </span>
+            </div>
+            <span style="font-weight: 900; color: #10B981; font-size: 13px;">${totalAmount}</span>
+          </div>
+
+          <div style="font-size: 12px; color: #CBD5E1; display: flex; align-items: center; gap: 6px;">
+            <span>📍</span>
+            <span>${address}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 4px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              ${cleanPhone ? `
+                <a href="https://wa.me/${cleanPhone}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                  <span>💬</span> WhatsApp (${cPhone})
+                </a>
+              ` : `<span style="font-size: 11px; color: #94A3B8;">${cPhone || 'Sin teléfono'}</span>`}
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span style="font-size: 11px; color: #94A3B8;">Estado: <b style="color: #FBBF24;">${status}</b></span>
+              <button type="button" onclick="AdminApp.updateOrderStatus('${o.id}', 'en camino')" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #F59E0B; color: #FDE68A; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                🛵 Despachar
+              </button>
+              <button type="button" onclick="AdminApp.updateOrderStatus('${o.id}', 'entregado')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981; color: #6EE7B7; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                ✅ Atendido
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ==========================================
   // Merchant Registration Leads & Custom Fit Management
   // ==========================================
   handleMerchantLeadWs(data) {
@@ -8873,6 +9050,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'flex';
       modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
     }
     const badge = document.getElementById('admin-merchant-leads-badge');
     if (badge) {
@@ -8887,6 +9066,8 @@ class AdminController {
     if (modal) {
       modal.style.display = 'none';
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
     }
   }
 

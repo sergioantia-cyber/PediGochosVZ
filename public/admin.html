@@ -533,8 +533,8 @@
                 Auxilio vial de despinchado y cambio de neumáticos de motos y autos a domicilio en tiempo real.
               </p>
             </div>
-            <button type="button" onclick="AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})" style="background: linear-gradient(135deg, #D97706 0%, #B45309 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(217,119,6,0.35);">
-              <span>🛞</span> Ver Solicitudes de Cauchera
+            <button type="button" onclick="AdminApp.openCaucheraAdminModal()" style="background: linear-gradient(135deg, #D97706 0%, #B45309 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(217,119,6,0.35);">
+              <span>🛞</span> Administrar Cauchera 24/7
             </button>
           </div>
 
@@ -551,9 +551,14 @@
                 Traslados de pasajeros, encomiendas exprés y asignación de motorizados en ruta activa.
               </p>
             </div>
-            <button type="button" onclick="AdminApp.setOrdersFilter('movil'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5,150,105,0.35);">
-              <span>🛵</span> Ver Carreras & Encomiendas
-            </button>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" onclick="AdminApp.openRegisterDriverModal()" style="flex: 1; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #FFF; border: none; font-weight: 800; padding: 10px 6px; border-radius: 10px; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 4px 12px rgba(5,150,105,0.35);" title="Gestionar y dar de alta conductores">
+                <span>🛵</span> Flota
+              </button>
+              <button type="button" onclick="AdminApp.openDriverChatModal()" style="flex: 1; background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: #FFF; border: none; font-weight: 800; padding: 10px 6px; border-radius: 10px; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 4px 12px rgba(99,102,241,0.35);" title="Abrir canal grupal de chat con conductores">
+                <span>💬</span> Chat
+              </button>
+            </div>
           </div>
 
         </div>
@@ -3044,7 +3049,7 @@
   </div>
 
   <!-- Admin Paint & Bodywork Monitoring Modal -->
-  <div id="admin-paint-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;">
+  <div id="admin-paint-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;" onclick="if(event.target === this) AdminApp.closePaintAdminModal()">
     <div style="background: #0F172A; border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 20px; width: 100%; max-width: 920px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
       <!-- Header -->
       <div style="padding: 16px 20px; background: #1E293B; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
@@ -3086,7 +3091,7 @@
   </div>
 
   <!-- Admin 3D Lab Monitoring Modal -->
-  <div id="admin-print3d-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;">
+  <div id="admin-print3d-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;" onclick="if(event.target === this) AdminApp.closePrint3DAdminModal()">
     <div style="background: #0B0F19; border: 1.5px solid rgba(99, 102, 241, 0.4); border-radius: 20px; width: 100%; max-width: 920px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
       <!-- Header -->
       <div style="padding: 16px 20px; background: #1E1B4B; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
@@ -3128,7 +3133,7 @@
   </div>
 
   <!-- Admin ShelliArt Resina Monitoring Modal -->
-  <div id="admin-resin-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;">
+  <div id="admin-resin-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;" onclick="if(event.target === this) AdminApp.closeResinAdminModal()">
     <div style="background: #0F131F; border: 1.5px solid rgba(244, 114, 182, 0.4); border-radius: 20px; width: 100%; max-width: 920px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
       <!-- Header -->
       <div style="padding: 16px 20px; background: linear-gradient(135deg, #831843 0%, #500724 100%); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
@@ -3170,7 +3175,7 @@
   </div>
 
   <!-- Admin Piñatas Personalizadas Monitoring & Inventory Modal -->
-  <div id="admin-pinatas-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;">
+  <div id="admin-pinatas-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;" onclick="if(event.target === this) AdminApp.closePinatasAdminModal()">
     <div style="background: #0F131F; border: 1.5px solid rgba(244, 63, 94, 0.4); border-radius: 20px; width: 100%; max-width: 940px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
       <!-- Header -->
       <div style="padding: 16px 20px; background: linear-gradient(135deg, #881337 0%, #4C0519 100%); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
@@ -3303,7 +3308,7 @@
   </div>
 
   <!-- Admin Live Chat Inspector Modal (for Paint & 3D Lab) -->
-  <div id="admin-quote-chat-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99999; padding: 14px;">
+  <div id="admin-quote-chat-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99999; padding: 14px;" onclick="if(event.target === this) AdminApp.closeQuoteChatInspector()">
     <div style="background: #0B0F19; border: 1.5px solid rgba(255, 255, 255, 0.2); border-radius: 20px; width: 100%; max-width: 680px; height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
       <!-- Header -->
       <div style="padding: 14px 18px; background: #1E293B; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
@@ -3327,8 +3332,10 @@
         </button>
       </form>
     </div>
+  </div>
+
   <!-- Modal Admin: Registro de Comercios, Test Diagnósticos & Fits Personalizados -->
-  <div id="admin-merchant-leads-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;">
+  <div id="admin-merchant-leads-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;" onclick="if(event.target === this) AdminApp.closeMerchantLeadsModal()">
     <div style="background: #0F131F; border: 1.5px solid rgba(255, 107, 0, 0.4); border-radius: 20px; width: 100%; max-width: 960px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
       <!-- Header -->
       <div style="padding: 16px 20px; background: linear-gradient(135deg, #7C2D12 0%, #431407 100%); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
@@ -3367,6 +3374,88 @@
       <!-- Leads List Feed -->
       <div id="admin-merchant-leads-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; background: #0B0F19;">
         <div style="text-align: center; color: #94A3B8; padding: 30px;">⏳ Cargando leads de comercios...</div>
+      </div>
+    </div>
+  </div>
+  <!-- Admin Cauchera Móvil 24/7 Control & Dispatch Modal -->
+  <div id="admin-cauchera-modal" class="modal-overlay hidden" style="display: none; align-items: center; justify-content: center; z-index: 99998; padding: 14px;" onclick="if(event.target === this) AdminApp.closeCaucheraAdminModal()">
+    <div style="background: #0F131F; border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: 20px; width: 100%; max-width: 920px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+      <!-- Header -->
+      <div style="padding: 16px 20px; background: linear-gradient(135deg, #78350F 0%, #451A03 100%); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">🛞</span>
+          <div>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #FFF;">Panel de Control: Cauchera Móvil 24/7 & Vulcanizadora</h3>
+            <span style="font-size: 11px; color: #FDE68A;">Despinche a domicilio, parches en frío, tripas nuevas y auxilio vial inmediato con GPS</span>
+          </div>
+        </div>
+        <button type="button" onclick="AdminApp.closeCaucheraAdminModal()" style="background: rgba(255,255,255,0.1); border: none; color: #94A3B8; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div style="padding: 14px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: rgba(15, 19, 31, 0.95); border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #94A3B8; font-weight: 800; text-transform: uppercase;">TOTAL AUXILIOS</span>
+          <div id="admin-cauchera-kpi-total" style="font-size: 18px; font-weight: 900; color: #FFF; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #FCA5A5; font-weight: 800; text-transform: uppercase;">PENDIENTES</span>
+          <div id="admin-cauchera-kpi-pending" style="font-size: 18px; font-weight: 900; color: #EF4444; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #FDE68A; font-weight: 800; text-transform: uppercase;">EN CAMINO</span>
+          <div id="admin-cauchera-kpi-road" style="font-size: 18px; font-weight: 900; color: #F59E0B; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 10px; text-align: center;">
+          <span style="font-size: 10px; color: #6EE7B7; font-weight: 800; text-transform: uppercase;">COMPLETADOS</span>
+          <div id="admin-cauchera-kpi-done" style="font-size: 18px; font-weight: 900; color: #10B981; margin-top: 2px;">0</div>
+        </div>
+      </div>
+
+      <!-- Content Area: Solicitudes & Settings -->
+      <div style="flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;">
+        <!-- Configuración Rápida de Tarifas y WhatsApp -->
+        <div style="background: #182032; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+            <strong style="color: #FBBF24; font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+              <span>⚙️</span> Parámetros del Vulcanizador Móvil
+            </strong>
+            <button type="button" onclick="AdminApp.saveCaucheraSettings()" style="background: #10B981; color: #FFF; border: none; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer;">
+              💾 Guardar Parámetros
+            </button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px; font-weight: 700;">📱 Teléfono Auxilio / WhatsApp</label>
+              <input type="text" id="admin-cauchera-phone" placeholder="+57 322 794 9751" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px; font-weight: 700;">🏍️ Tarifa Despinche Moto (COP)</label>
+              <input type="number" id="admin-cauchera-price-moto" placeholder="10000" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px; font-weight: 700;">🚗 Tarifa Despinche Auto (COP)</label>
+              <input type="number" id="admin-cauchera-price-auto" placeholder="15000" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px; font-weight: 700;">🌙 Recargo Nocturno (COP)</label>
+              <input type="number" id="admin-cauchera-price-night" placeholder="5000" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; box-sizing: border-box;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Solicitudes en Vivo Feed -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: #FFF; font-size: 13.5px;">🛞 Solicitudes de Cauchera en Tiempo Real</strong>
+            <button type="button" onclick="AdminApp.setOrdersFilter('cauchera'); AdminApp.closeCaucheraAdminModal(); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})" style="background: rgba(245,158,11,0.15); color: #FBBF24; border: 1px solid rgba(245,158,11,0.3); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              🔍 Ver en Tabla General
+            </button>
+          </div>
+          <div id="admin-cauchera-orders-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="text-align: center; color: #94A3B8; padding: 20px;">Cargando solicitudes...</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

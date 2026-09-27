@@ -643,14 +643,15 @@ body.modal-open {
   box-sizing: border-box !important;
 }
 
-.modal-overlay.active {
+.modal-overlay.active,
+.modal-overlay.open {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
   visibility: visible !important;
 }
 
-.modal-overlay:not(.active) {
+.modal-overlay:not(.active):not(.open):not([style*="display: flex"]):not([style*="display: block"]) {
   display: none !important;
   pointer-events: none !important;
   visibility: hidden !important;
@@ -663,6 +664,17 @@ body.modal-open {
 #menu-tables-modal { z-index: 3000 !important; }
 #admin-all-stores-map-modal { z-index: 3800 !important; }
 #admin-register-driver-modal { z-index: 3900 !important; }
+#admin-paint-modal,
+#admin-print3d-modal,
+#admin-resin-modal,
+#admin-pinatas-modal,
+#admin-cauchera-modal,
+#admin-merchant-leads-modal {
+  z-index: 99998 !important;
+}
+#admin-quote-chat-modal {
+  z-index: 99999 !important;
+}
 #admin-store-qr-modal { z-index: 3950 !important; }
 #product-modal { z-index: 4000 !important; }
 #daily-options-modal { z-index: 4100 !important; }
