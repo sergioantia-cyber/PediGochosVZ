@@ -122,26 +122,7 @@
             <span>🎵</span>
             <span>Sonidos</span>
           </button>
-          <button type="button" id="btn-header-paint-services" class="btn-logout" onclick="AdminApp.openPaintAdminModal()" style="background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #ffffff; font-weight: 800; border: 1px solid #EF4444; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35); position: relative;" title="Cotizaciones y Chat de Latonería y Pintura">
-            <span>🎨</span>
-            <span>Latonería y Pintura</span>
-            <span id="admin-paint-badge" style="display: none; background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
-          </button>
-          <button type="button" id="btn-header-print3d-services" class="btn-logout" onclick="AdminApp.openPrint3DAdminModal()" style="background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%); color: #ffffff; font-weight: 800; border: 1px solid #6366F1; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35); position: relative;" title="Cotizaciones y Pedidos 3D Lab">
-            <span>🖨️</span>
-            <span>3D Lab</span>
-            <span id="admin-print3d-badge" style="display: none; background: #6366F1; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
-          </button>
-          <button type="button" id="btn-header-resin-services" class="btn-logout" onclick="AdminApp.openResinAdminModal()" style="background: linear-gradient(135deg, #DB2777 0%, #9D174D 100%); color: #ffffff; font-weight: 800; border: 1px solid #F472B6; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(219, 39, 119, 0.35); position: relative;" title="Pedidos y Fichas Técnicas: ShelliArt Resina">
-            <span>✨</span>
-            <span>ShelliArt Resina</span>
-            <span id="admin-resin-badge" style="display: none; background: #F472B6; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
-          </button>
-          <button type="button" id="btn-header-pinatas-services" class="btn-logout" onclick="AdminApp.openPinatasAdminModal()" style="background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%); color: #ffffff; font-weight: 800; border: 1px solid #F43F5E; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(225, 29, 72, 0.35); position: relative;" title="Control de Pedidos & Inventario: Piñatas Personalizadas">
-            <span>🪅</span>
-            <span>Piñatas</span>
-            <span id="admin-pinatas-badge" style="display: none; background: #F43F5E; color: #FFF; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
-          </button>
+
           <button type="button" id="btn-header-merchant-leads" class="btn-logout" onclick="AdminApp.openMerchantLeadsModal()" style="background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #ffffff; font-weight: 800; border: 1px solid #F97316; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(255, 107, 0, 0.35); position: relative;" title="Leads & Fichas Técnicas de Comercios Registrados">
             <span>🏪</span>
             <span>Comercios & Fits</span>
@@ -165,32 +146,58 @@
     <!-- Main Workspace -->
     <main class="admin-main-workspace">
       
-      <!-- Left Column: Registration Form & System Settings -->
-      <section class="admin-form-column">
-
-        <!-- Store GPS Location Registration Warning Banner (Disappears once GPS is captured) -->
-        <div id="store-gps-warning-banner" class="hidden" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.15)); border: 2px dashed #F59E0B; border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; color: #fff; box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
-          <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 260px;">
-            <span style="font-size: 28px;">📡</span>
-            <div>
-              <h4 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 800; color: #F59E0B;">⚠️ ¡Ubicación Exacta del Restaurante No Registrada!</h4>
-              <p style="margin: 0; font-size: 12.5px; color: #CBD5E1; line-height: 1.4;">Para calcular la distancia exacta de envío en tiempo real desde tu restaurante hasta la casa del cliente, presiona el botón a continuación para registrar la ubicación GPS exacta de tu local.</p>
+      <!-- Card 1: Restaurantes y Comercios Activos (Control Central de Establecimientos e Inventarios) -->
+      <div class="admin-card" id="admin-restaurants-card" style="margin-bottom: 24px; border: 1.5px solid rgba(255, 107, 0, 0.4); border-radius: 18px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.06);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 26px;">🏪</span>
+              <h3 style="margin: 0; font-size: 19px; font-weight: 900; color: #0F172A;">Restaurantes y Comercios Activos</h3>
             </div>
+            <p class="card-subtitle" style="margin: 4px 0 0 0; font-size: 12.5px;">Control central de cartas, inventario de productos, categorías, horarios y claves de acceso.</p>
           </div>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <button type="button" id="btn-capture-store-gps" onclick="AdminApp.captureCurrentStoreGPS()" style="background: #F59E0B; color: #1E293B; border: none; font-weight: 900; padding: 10px 18px; border-radius: 10px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);">
-              📡 Capturar GPS / Registrar Ubicación del Local
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button type="button" id="btn-toggle-new-est" onclick="AdminApp.toggleNewEstablishmentForm()" style="background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #FFF; border: none; font-weight: 800; padding: 10px 18px; border-radius: 10px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(255, 107, 0, 0.35); transition: all 0.25s ease;">
+              <span>➕</span> Registrar Nuevo Restaurante / Comercio
+            </button>
+            <button type="button" onclick="AdminApp.openAllStoresMapModal()" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; font-weight: 800; padding: 10px 16px; border-radius: 10px; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+              🗺️ Ver Mapa Global
             </button>
           </div>
         </div>
 
-        <div class="admin-card">
-          <h3>📋 Registrar Nuevo Establecimiento</h3>
-          <p class="card-subtitle">Rellena los datos para agregar un nuevo comercio al marketplace.</p>
-          <hr class="card-divider">
+        <!-- Collapsible New Establishment Registration Panel -->
+        <div id="collapsible-new-est-panel" style="display: none; background: #F8FAFC; border: 2px dashed #CBD5E1; border-radius: 16px; padding: 22px; margin: 16px 0 24px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.06); transition: all 0.3s ease;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 24px;">📋</span>
+              <div>
+                <h4 style="margin: 0; color: #0F172A; font-size: 16px; font-weight: 900;">Registrar Nuevo Comercio o Restaurante</h4>
+                <p style="margin: 2px 0 0 0; color: #64748B; font-size: 12px;">Rellena los datos para agregar un nuevo establecimiento al marketplace de PediGochos.</p>
+              </div>
+            </div>
+            <button type="button" onclick="AdminApp.toggleNewEstablishmentForm(false)" style="background: #E2E8F0; color: #334155; border: 1px solid #CBD5E1; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer;">
+              ✕ Plegar / Ocultar
+            </button>
+          </div>
+
+          <!-- Store GPS Location Registration Warning Banner -->
+          <div id="store-gps-warning-banner" class="hidden" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.15)); border: 2px dashed #F59E0B; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; color: #1E293B; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 260px;">
+              <span style="font-size: 26px;">📡</span>
+              <div>
+                <h4 style="margin: 0 0 4px 0; font-size: 14.5px; font-weight: 800; color: #D97706;">⚠️ ¡Ubicación Exacta del Restaurante No Registrada!</h4>
+                <p style="margin: 0; font-size: 12px; color: #475569; line-height: 1.4;">Para calcular la distancia exacta de envío en tiempo real desde tu restaurante hasta la casa del cliente, presiona el botón a continuación para registrar la ubicación GPS exacta de tu local.</p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button type="button" id="btn-capture-store-gps" onclick="AdminApp.captureCurrentStoreGPS()" style="background: #F59E0B; color: #1E293B; border: none; font-weight: 900; padding: 9px 16px; border-radius: 8px; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);">
+                📡 Capturar GPS del Local
+              </button>
+            </div>
+          </div>
 
           <form id="reg-est-form" onsubmit="AdminApp.handleRegisterSubmit(event)">
-            
             <div class="form-group">
               <label for="reg-name">Nombre del Comercio <span class="required">*</span></label>
               <input type="text" id="reg-name" required placeholder="Ej. Pizzería Di Napoli">
@@ -312,177 +319,323 @@
             </button>
           </form>
         </div>
-      </section>
 
-      <!-- Right Column: Active Establishments List and Private Keys -->
-      <section class="admin-list-column">
+        <!-- Category Filter Bar and Live Search -->
+        <div class="category-filter-toolbar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 16px 0 18px 0; padding: 12px 14px; background: #F8FAFC; border-radius: 14px; border: 1px solid #E2E8F0;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="admin-category-filter-pills">
+            <button type="button" class="btn-category-pill active" data-cat="all" onclick="AdminApp.setCategoryFilter('all')">
+              🌟 Todas <span class="cat-pill-count" id="cat-count-all">0</span>
+            </button>
+            <button type="button" class="btn-category-pill" data-cat="comidas" onclick="AdminApp.setCategoryFilter('comidas')">
+              🍔 Restaurantes <span class="cat-pill-count" id="cat-count-comidas">0</span>
+            </button>
+            <button type="button" class="btn-category-pill" data-cat="farmacias" onclick="AdminApp.setCategoryFilter('farmacias')">
+              💊 Farmacias <span class="cat-pill-count" id="cat-count-farmacias">0</span>
+            </button>
+            <button type="button" class="btn-category-pill" data-cat="mercados" onclick="AdminApp.setCategoryFilter('mercados')">
+              🛒 Mercados <span class="cat-pill-count" id="cat-count-mercados">0</span>
+            </button>
+            <button type="button" class="btn-category-pill" data-cat="ferreterias" onclick="AdminApp.setCategoryFilter('ferreterias')">
+              🛠️ Ferreterías <span class="cat-pill-count" id="cat-count-ferreterias">0</span>
+            </button>
+            <button type="button" class="btn-category-pill" data-cat="servicios" onclick="AdminApp.setCategoryFilter('servicios')">
+              🪅 Servicios <span class="cat-pill-count" id="cat-count-servicios">0</span>
+            </button>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; min-width: 250px; flex: 1; max-width: 360px;">
+            <input type="text" id="admin-store-search-input" oninput="AdminApp.handleStoreSearch(this.value)" placeholder="🔍 Buscar comercio o clave..." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 12.5px; outline: none; background: #FFF;">
+          </div>
+        </div>
 
-        <!-- Card: Centro de Pedidos y Solicitudes en Vivo (Diferenciación Restaurantes vs Móviles) -->
-        <div class="admin-card" id="admin-live-orders-card" style="margin-bottom: 24px; border: 1.5px solid rgba(255, 107, 0, 0.4); background: linear-gradient(135deg, #1A1F2C 0%, #151822 100%); border-radius: 18px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: #fff;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+        <div class="table-container premium-scroll">
+          <table class="keys-table">
+            <thead>
+              <tr>
+                <th>Establecimiento & Ubicación</th>
+                <th>Categoría</th>
+                <th>Inventario & Menú</th>
+                <th>Información del Comercio</th>
+                <th>Estado</th>
+                <th>Pedidos & Ventas</th>
+                <th style="text-align: center;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="keys-table-body">
+              <!-- Filled dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Card 2: Chat de Domiciliarios en Vivo (Interacción directa Dueño - Repartidores) -->
+      <div class="admin-card" id="admin-driver-chat-card" style="margin-bottom: 24px; border: 1.5px solid rgba(16, 185, 129, 0.4); background: linear-gradient(135deg, #131E2C 0%, #0F172A 100%); border-radius: 18px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); color: #fff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 22px;">💬</span>
+              <h3 style="margin: 0; color: #FFF; font-size: 17px; font-weight: 900;">Chat de Domiciliarios & Repartidores</h3>
+              <span class="live-active-light-badge" style="padding: 3px 8px; font-size: 10px; background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3);" title="Conexión bidireccional en tiempo real">
+                <span class="green-pulse-dot"></span> EN VIVO
+              </span>
+            </div>
+            <p class="card-subtitle" style="margin: 4px 0 0 0; font-size: 12px; color: #94A3B8;">
+              Canal grupal sincronizado en tiempo real con <strong>Yoxman</strong> y todos los domiciliarios. Puedes enviar instrucciones o anuncios directos.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" onclick="AdminApp.toggleDriverChatModal()" style="background: rgba(255,255,255,0.08); color: #CBD5E1; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+              🗖 Pantalla Completa
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Quick Filter Pills -->
+        <div class="chat-filters-bar" style="margin-bottom: 12px; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;">
+          <button type="button" class="chat-filter-btn active" data-filter="all" onclick="AdminApp.setDriverChatFilter('all')">
+            🔘 Todos <span class="chat-filter-badge" id="admin-chat-count-all">0</span>
+          </button>
+          <button type="button" class="chat-filter-btn" data-filter="ride" onclick="AdminApp.setDriverChatFilter('ride')">
+            🛵 Carreras <span class="chat-filter-badge" id="admin-chat-count-ride">0</span>
+          </button>
+          <button type="button" class="chat-filter-btn" data-filter="food" onclick="AdminApp.setDriverChatFilter('food')">
+            🍔 Comida <span class="chat-filter-badge" id="admin-chat-count-food">0</span>
+          </button>
+          <button type="button" class="chat-filter-btn" data-filter="parcel" onclick="AdminApp.setDriverChatFilter('parcel')">
+            📦 Encomiendas <span class="chat-filter-badge" id="admin-chat-count-parcel">0</span>
+          </button>
+          <button type="button" class="chat-filter-btn" data-filter="messages" onclick="AdminApp.setDriverChatFilter('messages')">
+            💬 Mensajes <span class="chat-filter-badge" id="admin-chat-count-messages">0</span>
+          </button>
+        </div>
+
+        <!-- Chat Feed Container -->
+        <div id="admin-driver-chat-feed" class="driver-chat-feed premium-scroll" style="height: 380px; max-height: 480px; background: #0B1120; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; overflow-y: auto;">
+          <div style="text-align: center; color: #94A3B8; padding: 30px 10px;">
+            <p style="margin-top: 10px; font-size: 12.5px;">⏳ Conectando con el chat de domiciliarios...</p>
+          </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <form class="driver-chat-input-bar" onsubmit="event.preventDefault(); AdminApp.sendDriverChatMessage(false);" style="margin-top: 12px; background: #161F33; border-radius: 12px; padding: 8px 12px; display: flex; gap: 8px; border: 1px solid rgba(255,255,255,0.1);">
+          <input type="text" id="admin-driver-chat-input" placeholder="Escribe un mensaje al grupo de domiciliarios como Dueño..." autocomplete="off" style="flex: 1; background: transparent; border: none; color: #FFF; font-size: 13px; outline: none;">
+          <button type="submit" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">
+            <span>👑</span> Enviar
+          </button>
+        </form>
+      </div>
+
+      <!-- Card 3: Servicios Especializados y Asistencia -->
+      <div class="admin-card" id="admin-services-manager-card" style="margin-bottom: 24px; border: 1.5px solid rgba(168, 85, 247, 0.4); background: linear-gradient(135deg, #181829 0%, #0F111E 100%); border-radius: 18px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); color: #fff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 24px;">🛵</span>
+              <h3 style="margin: 0; color: #FFF; font-size: 18px; font-weight: 900;">Servicios Especializados y Asistencia</h3>
+              <span style="background: rgba(168, 85, 247, 0.2); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.4); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 8px;">
+                ⚙️ ALTA PRIORIDAD
+              </span>
+            </div>
+            <p class="card-subtitle" style="margin: 4px 0 0 0; font-size: 12.5px; color: #94A3B8;">
+              Control de cotizaciones, fichas técnicas, pedidos personalizados y solicitudes en vivo por categoría de servicio.
+            </p>
+          </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+          
+          <!-- 1. Latonería y Pintura -->
+          <div style="background: rgba(220, 38, 38, 0.1); border: 1.5px solid rgba(239, 68, 68, 0.35); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
             <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 22px;">📦</span>
-                <h3 style="margin: 0; color: #FFF; font-size: 17px; font-weight: 900;">Centro de Pedidos y Solicitudes</h3>
-                <span class="live-active-light-badge" style="padding: 3px 8px; font-size: 10px;" title="Actualización en tiempo real vía WebSocket">
-                  <span class="green-pulse-dot"></span> EN VIVO
-                </span>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 22px;">🎨</span>
+                  <strong style="color: #F87171; font-size: 15px;">Latonería y Pintura</strong>
+                </div>
+                <span id="admin-paint-badge" style="display: none; background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
               </div>
-              <p class="card-subtitle" style="margin: 4px 0 0 0; font-size: 12px; color: #94A3B8;">
-                Monitoreo y despacho diferenciado: <strong>Pedidos de Restaurantes</strong> vs <strong>Solicitudes de Vehículos (Moto / Auto)</strong>.
+              <p style="margin: 0; font-size: 12px; color: #CBD5E1; line-height: 1.4;">
+                Cotizaciones con fotos de choques, pintura automotriz, piezas y chat de negociación en vivo.
               </p>
             </div>
-
-            <!-- Filtros: Todos / Restaurantes / Vehículos / Cauchera / Resina / Pintura / 3D -->
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;" class="order-filter-pill-group">
-              <button type="button" class="btn-filter-pill active" id="filter-pill-all" onclick="AdminApp.setOrdersFilter('all')">
-                🌟 Todos (<span id="filter-count-all">0</span>)
-              </button>
-              <button type="button" class="btn-filter-pill pill-restaurant" id="filter-pill-restaurant" onclick="AdminApp.setOrdersFilter('restaurant')">
-                🍔 Restaurantes (<span id="filter-count-restaurant">0</span>)
-              </button>
-              <button type="button" class="btn-filter-pill pill-ride" id="filter-pill-ride" onclick="AdminApp.setOrdersFilter('ride')">
-                🛵 Vehículos (<span id="filter-count-ride">0</span>)
-              </button>
-              <button type="button" class="btn-filter-pill pill-cauchera" id="filter-pill-cauchera" onclick="AdminApp.setOrdersFilter('cauchera')">
-                🛞 Cauchera Cachu (<span id="filter-count-cauchera">0</span>)
-              </button>
-              <button type="button" class="btn-filter-pill pill-resin" id="filter-pill-resin" onclick="AdminApp.setOrdersFilter('resin')" style="border-color: rgba(244, 114, 182, 0.4); color: #F472B6;">
-                ✨ Resina (<span id="filter-count-resin">0</span>)
-              </button>
-              <button type="button" class="btn-filter-pill pill-paint" id="filter-pill-paint" onclick="AdminApp.setOrdersFilter('paint')" style="border-color: rgba(245, 158, 11, 0.4); color: #F59E0B;">
-                🎨 Latonería y Pintura (<span id="filter-count-paint">0</span>)
-              </button>
-              <button type="button" class="btn-filter-pill pill-print3d" id="filter-pill-print3d" onclick="AdminApp.setOrdersFilter('print3d')" style="border-color: rgba(56, 189, 248, 0.4); color: #38BDF8;">
-                🖨️ 3D Lab (<span id="filter-count-print3d">0</span>)
-              </button>
-            </div>
+            <button type="button" onclick="AdminApp.openPaintAdminModal()" style="background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(220,38,38,0.35);">
+              <span>🎨</span> Administrar Latonería
+            </button>
           </div>
 
-          <!-- Buscador y Métricas Rápidas -->
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
-            <input type="text" id="admin-orders-search-input" oninput="AdminApp.filterLiveOrdersList()" placeholder="🔍 Buscar por cliente, teléfono, destino, restaurante o código..." style="flex: 1; min-width: 240px; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #FFF; font-size: 12.5px;">
-            <div style="display: flex; gap: 8px; align-items: center; font-size: 11.5px; font-weight: 800; flex-wrap: wrap;">
-              <span id="badge-stat-restaurants" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid rgba(255, 107, 0, 0.3); padding: 4px 10px; border-radius: 12px;">🍔 Restaurantes: 0</span>
-              <span id="badge-stat-rides" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 12px;">🛵 Vehículos: 0</span>
-              <span id="badge-stat-cauchera" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 12px;">🛞 Cauchera: 0</span>
-              <span id="badge-stat-resin" style="background: rgba(244, 114, 182, 0.15); color: #F472B6; border: 1px solid rgba(244, 114, 182, 0.3); padding: 4px 10px; border-radius: 12px;">✨ Resina: 0</span>
-            </div>
-          </div>
-
-          <!-- Tabla de Pedidos y Solicitudes -->
-          <div class="table-container premium-scroll" style="max-height: 440px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;">
-            <table class="keys-table" style="width: 100%;">
-              <thead>
-                <tr>
-                  <th style="width: 130px;">Tipo / Servicio</th>
-                  <th style="width: 90px;">Código</th>
-                  <th>Cliente & Teléfono</th>
-                  <th>Detalle del Pedido / Ruta GPS</th>
-                  <th style="width: 110px;">Total</th>
-                  <th style="width: 130px;">Estado</th>
-                  <th style="text-align: center; width: 140px;">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="admin-live-orders-tbody">
-                <tr>
-                  <td colspan="7" style="text-align: center; padding: 24px; color: #94A3B8;">
-                    ⏳ Cargando centro de pedidos y solicitudes en tiempo real...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Card: Chat de Domiciliarios en Vivo (Interacción directa Dueño - Repartidores) -->
-        <div class="admin-card" id="admin-driver-chat-card" style="margin-bottom: 24px; border: 1.5px solid rgba(16, 185, 129, 0.4); background: linear-gradient(135deg, #131E2C 0%, #0F172A 100%); border-radius: 18px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); color: #fff;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+          <!-- 2. 3D Lab -->
+          <div style="background: rgba(79, 70, 229, 0.1); border: 1.5px solid rgba(99, 102, 241, 0.35); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
             <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 22px;">💬</span>
-                <h3 style="margin: 0; color: #FFF; font-size: 17px; font-weight: 900;">Chat de Domiciliarios & Repartidores</h3>
-                <span class="live-active-light-badge" style="padding: 3px 8px; font-size: 10px; background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3);" title="Conexión bidireccional en tiempo real">
-                  <span class="green-pulse-dot"></span> EN VIVO
-                </span>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 22px;">🖨️</span>
+                  <strong style="color: #818CF8; font-size: 15px;">3D Lab Impresión</strong>
+                </div>
+                <span id="admin-print3d-badge" style="display: none; background: #6366F1; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
               </div>
-              <p class="card-subtitle" style="margin: 4px 0 0 0; font-size: 12px; color: #94A3B8;">
-                Canal grupal sincronizado en tiempo real con <strong>Yoxman</strong> y todos los domiciliarios. Puedes enviar instrucciones o anuncios directos.
+              <p style="margin: 0; font-size: 12px; color: #CBD5E1; line-height: 1.4;">
+                Pedidos de piezas 3D, cotizador automático por gramo y hora de máquina, y archivos STL.
               </p>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <button type="button" onclick="AdminApp.toggleDriverChatModal()" style="background: rgba(255,255,255,0.08); color: #CBD5E1; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                🗖 Pantalla Completa
-              </button>
-            </div>
-          </div>
-
-          <!-- Chat Quick Filter Pills -->
-          <div class="chat-filters-bar" style="margin-bottom: 12px; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;">
-            <button type="button" class="chat-filter-btn active" data-filter="all" onclick="AdminApp.setDriverChatFilter('all')">
-              🔘 Todos <span class="chat-filter-badge" id="admin-chat-count-all">0</span>
-            </button>
-            <button type="button" class="chat-filter-btn" data-filter="ride" onclick="AdminApp.setDriverChatFilter('ride')">
-              🛵 Carreras <span class="chat-filter-badge" id="admin-chat-count-ride">0</span>
-            </button>
-            <button type="button" class="chat-filter-btn" data-filter="food" onclick="AdminApp.setDriverChatFilter('food')">
-              🍔 Comida <span class="chat-filter-badge" id="admin-chat-count-food">0</span>
-            </button>
-            <button type="button" class="chat-filter-btn" data-filter="parcel" onclick="AdminApp.setDriverChatFilter('parcel')">
-              📦 Encomiendas <span class="chat-filter-badge" id="admin-chat-count-parcel">0</span>
-            </button>
-            <button type="button" class="chat-filter-btn" data-filter="messages" onclick="AdminApp.setDriverChatFilter('messages')">
-              💬 Mensajes <span class="chat-filter-badge" id="admin-chat-count-messages">0</span>
+            <button type="button" onclick="AdminApp.openPrint3DAdminModal()" style="background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(79,70,229,0.35);">
+              <span>🖨️</span> Administrar 3D Lab
             </button>
           </div>
 
-          <!-- Chat Feed Container -->
-          <div id="admin-driver-chat-feed" class="driver-chat-feed premium-scroll" style="height: 380px; max-height: 480px; background: #0B1120; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; overflow-y: auto;">
-            <div style="text-align: center; color: #94A3B8; padding: 30px 10px;">
-              <p style="margin-top: 10px; font-size: 12.5px;">⏳ Conectando con el chat de domiciliarios...</p>
-            </div>
-          </div>
-
-          <!-- Chat Input Bar -->
-          <form class="driver-chat-input-bar" onsubmit="event.preventDefault(); AdminApp.sendDriverChatMessage(false);" style="margin-top: 12px; background: #161F33; border-radius: 12px; padding: 8px 12px; display: flex; gap: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <input type="text" id="admin-driver-chat-input" placeholder="Escribe un mensaje al grupo de domiciliarios como Dueño..." autocomplete="off" style="flex: 1; background: transparent; border: none; color: #FFF; font-size: 13px; outline: none;">
-            <button type="submit" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">
-              <span>👑</span> Enviar
-            </button>
-          </form>
-        </div>
-
-        <div class="admin-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
+          <!-- 3. ShelliArt Resina -->
+          <div style="background: rgba(219, 39, 119, 0.1); border: 1.5px solid rgba(244, 114, 182, 0.35); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
             <div>
-              <h3 style="margin: 0;">🔑 Establecimientos Registrados y Claves de Acceso</h3>
-              <p class="card-subtitle" style="margin-top: 4px;">Listado de todos los comercios del sistema con sus códigos de vinculación privados.</p>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 22px;">✨</span>
+                  <strong style="color: #F472B6; font-size: 15px;">ShelliArt Resina</strong>
+                </div>
+                <span id="admin-resin-badge" style="display: none; background: #F472B6; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
+              </div>
+              <p style="margin: 0; font-size: 12px; color: #CBD5E1; line-height: 1.4;">
+                Creaciones en resina epóxica, personalización de colores, llaveros, tablas y fichas técnicas.
+              </p>
             </div>
-            <button type="button" onclick="AdminApp.openAllStoresMapModal()" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; font-weight: 800; padding: 8px 14px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-              🗺️ Ver Mapa Global de Comercios
+            <button type="button" onclick="AdminApp.openResinAdminModal()" style="background: linear-gradient(135deg, #DB2777 0%, #9D174D 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(219,39,119,0.35);">
+              <span>✨</span> Administrar ShelliArt
             </button>
           </div>
-          <hr class="card-divider">
 
-          <div class="table-container premium-scroll">
-            <table class="keys-table">
-              <thead>
-                <tr>
-                  <th>Establecimiento</th>
-                  <th>Categoría</th>
-                  <th>Pedidos</th>
-                  <th>Último Pedido / Estado</th>
-                  <th>Dinero Generado</th>
-                  <th>Clave de Vinculación (Admin)</th>
-                  <th style="text-align: center;">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="keys-table-body">
-                <!-- Filled dynamically via JS -->
-              </tbody>
-            </table>
+          <!-- 4. Piñatas Personalizadas -->
+          <div style="background: rgba(225, 29, 72, 0.1); border: 1.5px solid rgba(244, 63, 94, 0.35); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 22px;">🪅</span>
+                  <strong style="color: #FB7185; font-size: 15px;">Piñatas por Encargo</strong>
+                </div>
+                <span id="admin-pinatas-badge" style="display: none; background: #F43F5E; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 10px; border: 1.5px solid #FFF;">0</span>
+              </div>
+              <p style="margin: 0; font-size: 12px; color: #CBD5E1; line-height: 1.4;">
+                Piñatas personalizadas temáticas, selección de medidas y cotizaciones directas a WhatsApp.
+              </p>
+            </div>
+            <button type="button" onclick="AdminApp.openPinatasAdminModal()" style="background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(225,29,72,0.35);">
+              <span>🪅</span> Administrar Piñatas
+            </button>
+          </div>
+
+          <!-- 5. Cauchera 24/7 -->
+          <div style="background: rgba(217, 119, 6, 0.1); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 22px;">🛞</span>
+                  <strong style="color: #FBBF24; font-size: 15px;">Cauchera Móvil 24/7</strong>
+                </div>
+              </div>
+              <p style="margin: 0; font-size: 12px; color: #CBD5E1; line-height: 1.4;">
+                Auxilio vial de despinchado y cambio de neumáticos de motos y autos a domicilio en tiempo real.
+              </p>
+            </div>
+            <button type="button" onclick="AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})" style="background: linear-gradient(135deg, #D97706 0%, #B45309 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(217,119,6,0.35);">
+              <span>🛞</span> Ver Solicitudes de Cauchera
+            </button>
+          </div>
+
+          <!-- 6. Movilidad Urbana -->
+          <div style="background: rgba(5, 150, 105, 0.1); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 22px;">🛵</span>
+                  <strong style="color: #34D399; font-size: 15px;">Mototaxi & Auto Express</strong>
+                </div>
+              </div>
+              <p style="margin: 0; font-size: 12px; color: #CBD5E1; line-height: 1.4;">
+                Traslados de pasajeros, encomiendas exprés y asignación de motorizados en ruta activa.
+              </p>
+            </div>
+            <button type="button" onclick="AdminApp.setOrdersFilter('movil'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5,150,105,0.35);">
+              <span>🛵</span> Ver Carreras & Encomiendas
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Card 4: Centro de Pedidos y Solicitudes en Vivo (Diferenciación Restaurantes vs Móviles) -->
+      <div class="admin-card" id="admin-live-orders-card" style="margin-bottom: 24px; border: 1.5px solid rgba(255, 107, 0, 0.4); background: linear-gradient(135deg, #1A1F2C 0%, #151822 100%); border-radius: 18px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: #fff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 22px;">📦</span>
+              <h3 style="margin: 0; color: #FFF; font-size: 17px; font-weight: 900;">Centro de Pedidos y Solicitudes</h3>
+              <span class="live-active-light-badge" style="padding: 3px 8px; font-size: 10px;" title="Actualización en tiempo real vía WebSocket">
+                <span class="green-pulse-dot"></span> EN VIVO
+              </span>
+            </div>
+            <p class="card-subtitle" style="margin: 4px 0 0 0; font-size: 12px; color: #94A3B8;">
+              Monitoreo y despacho diferenciado: <strong>Pedidos de Restaurantes</strong> vs <strong>Solicitudes de Vehículos (Moto / Auto)</strong>.
+            </p>
+          </div>
+
+          <!-- Filtros: Todos / Restaurantes / Vehículos / Cauchera / Resina / Pintura / 3D -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;" class="order-filter-pill-group">
+            <button type="button" class="btn-filter-pill active" id="filter-pill-all" onclick="AdminApp.setOrdersFilter('all')">
+              🌟 Todos (<span id="filter-count-all">0</span>)
+            </button>
+            <button type="button" class="btn-filter-pill pill-restaurant" id="filter-pill-restaurant" onclick="AdminApp.setOrdersFilter('restaurant')">
+              🍔 Restaurantes (<span id="filter-count-restaurant">0</span>)
+            </button>
+            <button type="button" class="btn-filter-pill pill-ride" id="filter-pill-ride" onclick="AdminApp.setOrdersFilter('ride')">
+              🛵 Vehículos (<span id="filter-count-ride">0</span>)
+            </button>
+            <button type="button" class="btn-filter-pill pill-cauchera" id="filter-pill-cauchera" onclick="AdminApp.setOrdersFilter('cauchera')">
+              🛞 Cauchera Cachu (<span id="filter-count-cauchera">0</span>)
+            </button>
+            <button type="button" class="btn-filter-pill pill-resin" id="filter-pill-resin" onclick="AdminApp.setOrdersFilter('resin')" style="border-color: rgba(244, 114, 182, 0.4); color: #F472B6;">
+              ✨ Resina (<span id="filter-count-resin">0</span>)
+            </button>
+            <button type="button" class="btn-filter-pill pill-paint" id="filter-pill-paint" onclick="AdminApp.setOrdersFilter('paint')" style="border-color: rgba(245, 158, 11, 0.4); color: #F59E0B;">
+              🎨 Latonería y Pintura (<span id="filter-count-paint">0</span>)
+            </button>
+            <button type="button" class="btn-filter-pill pill-print3d" id="filter-pill-print3d" onclick="AdminApp.setOrdersFilter('print3d')" style="border-color: rgba(56, 189, 248, 0.4); color: #38BDF8;">
+              🖨️ 3D Lab (<span id="filter-count-print3d">0</span>)
+            </button>
           </div>
         </div>
+
+        <!-- Buscador y Métricas Rápidas -->
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
+          <input type="text" id="admin-orders-search-input" oninput="AdminApp.filterLiveOrdersList()" placeholder="🔍 Buscar por cliente, teléfono, destino, restaurante o código..." style="flex: 1; min-width: 240px; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #FFF; font-size: 12.5px;">
+          <div style="display: flex; gap: 8px; align-items: center; font-size: 11.5px; font-weight: 800; flex-wrap: wrap;">
+            <span id="badge-stat-restaurants" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid rgba(255, 107, 0, 0.3); padding: 4px 10px; border-radius: 12px;">🍔 Restaurantes: 0</span>
+            <span id="badge-stat-rides" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 12px;">🛵 Vehículos: 0</span>
+            <span id="badge-stat-cauchera" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 12px;">🛞 Cauchera: 0</span>
+            <span id="badge-stat-resin" style="background: rgba(244, 114, 182, 0.15); color: #F472B6; border: 1px solid rgba(244, 114, 182, 0.3); padding: 4px 10px; border-radius: 12px;">✨ Resina: 0</span>
+          </div>
+        </div>
+
+        <!-- Tabla de Pedidos y Solicitudes -->
+        <div class="table-container premium-scroll" style="max-height: 440px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;">
+          <table class="keys-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th style="width: 130px;">Tipo / Servicio</th>
+                <th style="width: 90px;">Código</th>
+                <th>Cliente & Teléfono</th>
+                <th>Detalle del Pedido / Ruta GPS</th>
+                <th style="width: 110px;">Total</th>
+                <th style="width: 130px;">Estado</th>
+                <th style="text-align: center; width: 140px;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-live-orders-tbody">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 24px; color: #94A3B8;">
+                  ⏳ Cargando centro de pedidos y solicitudes en tiempo real...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
         <!-- Card: Flota de Repartidores & Motorizados (Driver App Manager) -->
         <div class="admin-card" style="margin-top: 20px;">
@@ -627,9 +780,6 @@
             </table>
           </div>
         </div>
-      </section>
-
-
 
     </main>
   </div>

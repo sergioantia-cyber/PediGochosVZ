@@ -61,6 +61,8 @@ class AdminController {
     this.driverChatFilter = 'all';
     this.driverChatUnreadCount = 0;
     this.isDriverChatModalOpen = false;
+    this.activeCategoryFilter = 'all';
+    this.searchEstablishmentQuery = '';
 
     // Clear any stale cached establishments - server is authoritative
     try {
@@ -1121,6 +1123,63 @@ class AdminController {
     document.getElementById('admin-panel').classList.add('hidden');
   }
 
+  toggleNewEstablishmentForm(force = null) {
+    const panel = document.getElementById('collapsible-new-est-panel');
+    const btn = document.getElementById('btn-toggle-new-est');
+    if (!panel) return;
+    const isHidden = panel.style.display === 'none' || panel.classList.contains('hidden');
+    const shouldOpen = force !== null ? force : isHidden;
+
+    if (shouldOpen) {
+      panel.style.display = 'block';
+      panel.classList.remove('hidden');
+      if (btn) {
+        btn.innerHTML = '<span>▲</span> Plegar Formulario';
+        btn.style.background = '#475569';
+      }
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      panel.style.display = 'none';
+      panel.classList.add('hidden');
+      if (btn) {
+        btn.innerHTML = '<span>➕</span> Registrar Nuevo Restaurante / Comercio';
+        btn.style.background = 'linear-gradient(135deg, #FF6B00 0%, #EA580C 100%)';
+      }
+    }
+  }
+
+  setCategoryFilter(cat) {
+    this.activeCategoryFilter = cat;
+    document.querySelectorAll('.btn-category-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
+    });
+    this.renderTable();
+  }
+
+  handleStoreSearch(query) {
+    this.searchEstablishmentQuery = (query || '').toLowerCase().trim();
+    this.renderTable();
+  }
+
+  openMenuEditorForShop(shopId) {
+    const est = (this.establishments || []).find(e => e.id === shopId);
+    if (!est) return;
+    this.activeShopId = shopId;
+    this.modifyMenuAndTables();
+    this.switchModalTab('menu');
+  }
+
+  openEditShopModalFor(shopId) {
+    const est = (this.establishments || []).find(e => e.id === shopId);
+    if (!est) return;
+    this.activeShopId = shopId;
+    this.openEditShopModal();
+  }
+
+  showEstablishmentActions(id) {
+    this.openEstActionModal(id);
+  }
+
   renderTable() {
     this.updateSaveButtonState();
     this.renderAnalyticsPro();
@@ -1139,27 +1198,80 @@ class AdminController {
       return true;
     });
 
+    // Compute category counts
+    const counts = {
+      all: uniqueEsts.length,
+      comidas: 0,
+      farmacias: 0,
+      mercados: 0,
+      ferreterias: 0,
+      servicios: 0
+    };
+    uniqueEsts.forEach(e => {
+      const c = (e.category || '').toLowerCase();
+      if (counts[c] !== undefined) {
+        counts[c]++;
+      } else {
+        counts.servicios++;
+      }
+    });
+
+    const setBadgeCount = (id, count) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = count;
+    };
+    setBadgeCount('cat-count-all', counts.all);
+    setBadgeCount('cat-count-comidas', counts.comidas);
+    setBadgeCount('cat-count-farmacias', counts.farmacias);
+    setBadgeCount('cat-count-mercados', counts.mercados);
+    setBadgeCount('cat-count-ferreterias', counts.ferreterias);
+    setBadgeCount('cat-count-servicios', counts.servicios);
+
+    // Filter by active category
+    const activeFilter = this.activeCategoryFilter || 'all';
+    let filteredEsts = uniqueEsts;
+    if (activeFilter !== 'all') {
+      filteredEsts = filteredEsts.filter(e => {
+        const c = (e.category || '').toLowerCase();
+        if (activeFilter === 'servicios') {
+          return c === 'servicios' || !['comidas', 'farmacias', 'mercados', 'ferreterias'].includes(c);
+        }
+        return c === activeFilter;
+      });
+    }
+
+    // Filter by search query
+    if (this.searchEstablishmentQuery) {
+      filteredEsts = filteredEsts.filter(e => {
+        const name = (e.name || '').toLowerCase();
+        const loc = (e.location || '').toLowerCase();
+        const key = (e.linkKey || '').toLowerCase();
+        return name.includes(this.searchEstablishmentQuery) || loc.includes(this.searchEstablishmentQuery) || key.includes(this.searchEstablishmentQuery);
+      });
+    }
+
     // Sort: Active/Enabled restaurants at the top, Disabled restaurants at the bottom
-    const sortedEsts = [...uniqueEsts].sort((a, b) => {
+    filteredEsts.sort((a, b) => {
       const aDis = a.disabled === true ? 1 : 0;
       const bDis = b.disabled === true ? 1 : 0;
       if (aDis !== bDis) return aDis - bDis;
       return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' });
     });
-    this.establishments = sortedEsts;
 
-    if (this.establishments.length === 0) {
+    if (filteredEsts.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
-            No hay comercios registrados en la plataforma.
+          <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+            No se encontraron establecimientos en la categoría seleccionada o filtro de búsqueda.
           </td>
         </tr>
       `;
+      this.loadDriversTable();
+      this.loadAdminMasterCatalogTable();
       return;
     }
 
-    this.establishments.forEach(est => {
+    filteredEsts.forEach(est => {
       const estOrders = this.orders.filter(o => o.establishmentId === est.id || o.establishment_id === est.id);
       const ordersCount = estOrders.length;
       const totalRevenue = estOrders.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -1217,6 +1329,15 @@ class AdminController {
            <button type="button" onclick="event.stopPropagation(); AdminApp.openClearModifiersModal('${est.id}')" style="background: rgba(239, 68, 68, 0.15); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.4); font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; box-shadow: 0 2px 6px rgba(239,68,68,0.2);" title="Eliminar o limpiar adicionales de este restaurante">🗑️ Limpiar Adicionales</button>`
         : '';
 
+      const categoryMap = {
+        'comidas': '🍔 Comidas',
+        'farmacias': '💊 Farmacias',
+        'mercados': '🛒 Mercados',
+        'ferreterias': '🛠️ Ferreterías',
+        'servicios': '🪅 Servicios'
+      };
+      const catLabel = categoryMap[est.category] || `🏪 ${est.category || 'Comercio'}`;
+
       row.innerHTML = `
         <td class="shop-title-cell" style="font-weight: 700;">
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -1232,35 +1353,60 @@ class AdminController {
             </span>
             ${missingPricesBadge}
             <button type="button" onclick="event.stopPropagation(); AdminApp.openStoreMapSingle('${est.id}')" style="background: #10B981; color: #FFFFFF; border: none; font-size: 10.5px; font-weight: 800; padding: 3px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; box-shadow: 0 2px 6px rgba(16,185,129,0.3);">
-              🗺️ Ver en Mapa
+              🗺️ Ver Mapa
             </button>
           </div>
         </td>
-        <td><span class="shop-category-cell">${est.category}</span></td>
-        <td style="font-weight: 700; color: #0F172A;">${ordersCount}</td>
-        <td>${lastOrderHTML}</td>
-        <td style="font-weight: 800; color: var(--primary);">${this.formatPesos(totalRevenue)}</td>
-        <td class="shop-key-cell" style="font-family: monospace; font-size: 13px; font-weight: 800; white-space: nowrap;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="color: #D97706; font-weight: 800;">${est.linkKey}</span>
-            <button type="button" onclick="event.stopPropagation(); AdminApp.promptChangeLinkKey('${est.id}', '${est.name.replace(/'/g, "\\'")}', '${est.linkKey}')" title="Cambiar clave de vinculación" style="background: rgba(245, 158, 11, 0.15); color: #B45309; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 2px 6px; font-size: 11px; cursor: pointer;">✏️</button>
+        <td>
+          <span class="shop-category-cell" style="background: rgba(255, 107, 0, 0.12); color: #EA580C; border: 1px solid rgba(255, 107, 0, 0.3); font-weight: 800; padding: 4px 10px; border-radius: 8px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px;">
+            ${catLabel}
+          </span>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #475569;">
+              📦 ${(est.products || []).length} productos en carta
+            </span>
+            <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openMenuEditorForShop('${est.id}')" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(99,102,241,0.35);" title="Modificar productos, inventario, precios y categorías">
+              <span>📦</span> Modificar Inventario / Menú
+            </button>
+          </div>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11.5px; font-weight: 700; color: #475569;">🔑 Clave: <b style="color: #D97706; font-family: monospace;">${est.linkKey}</b></span>
+              <button type="button" onclick="event.stopPropagation(); AdminApp.promptChangeLinkKey('${est.id}', '${est.name.replace(/'/g, "\\'")}', '${est.linkKey}')" title="Cambiar clave de vinculación" style="background: rgba(245, 158, 11, 0.15); color: #B45309; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 1px 5px; font-size: 10px; cursor: pointer;">✏️</button>
+            </div>
+            <div style="font-size: 11px; color: #64748B;">
+              🛵 Envío: <b style="color: #0F172A;">${this.formatPesos(est.delivery_fee || 0)}</b>
+            </div>
+            <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openEditShopModalFor('${est.id}')" style="background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(15,118,110,0.35);" title="Modificar nombre, logo, portada, horarios, costos y ubicación GPS">
+              <span>⚙️</span> Modificar Info
+            </button>
+          </div>
+        </td>
+        <td>
+          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.toggleDisableEstablishment('${est.id}')" style="background-color: ${est.disabled ? '#FEF3C7' : '#DCFCE7'}; color: ${est.disabled ? '#B45309' : '#15803D'}; border: 1px solid ${est.disabled ? '#FCD34D' : '#86EFAC'}; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 800; cursor: pointer; display: inline-block;">
+            ${est.disabled ? '🚫 Deshabilitado' : '🟢 Habilitado'}
+          </button>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-weight: 800; color: #0F172A; font-size: 12.5px;">${ordersCount} pedidos</span>
+            <span style="font-weight: 800; color: var(--primary); font-size: 12.5px;">${this.formatPesos(totalRevenue)}</span>
+            <div style="margin-top: 2px;">${lastOrderHTML}</div>
           </div>
         </td>
         <td style="text-align: center; white-space: nowrap;">
-          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openStoreKitchen('${est.id}')" style="background-color: #F59E0B; color: #1E293B; border: none; font-size: 12px; padding: 6px 12px; border-radius: var(--radius-sm); font-weight: 800; margin: 0 2px; width: auto; display: inline-block; cursor: pointer; box-shadow: 0 2px 6px rgba(245,158,11,0.35);" title="Abrir cocina de este comercio en vivo">
-            🍳 Cocina (KDS)
+          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openStoreKitchen('${est.id}')" style="background-color: #F59E0B; color: #1E293B; border: none; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 800; margin: 0 2px; width: auto; display: inline-block; cursor: pointer; box-shadow: 0 2px 6px rgba(245,158,11,0.35);" title="Abrir cocina de este comercio en vivo (KDS)">
+            🍳 KDS
           </button>
-          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openStoreQRModal('${est.id}')" style="background-color: #6366F1; color: #FFFFFF; border: none; font-size: 12px; padding: 6px 12px; border-radius: var(--radius-sm); font-weight: 800; margin: 0 2px; width: auto; display: inline-block; cursor: pointer; box-shadow: 0 2px 6px rgba(99,102,241,0.3);">
-            📱 QR & Link
+          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openStoreQRModal('${est.id}')" style="background-color: #6366F1; color: #FFFFFF; border: none; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 800; margin: 0 2px; width: auto; display: inline-block; cursor: pointer; box-shadow: 0 2px 6px rgba(99,102,241,0.3);" title="Ver enlace y QR para compartir">
+            📱 QR
           </button>
-          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openStoreMapSingle('${est.id}')" style="background-color: #10B981; color: #FFFFFF; border: none; font-size: 12px; padding: 6px 12px; border-radius: var(--radius-sm); font-weight: 800; margin: 0 2px; width: auto; display: inline-block; cursor: pointer; box-shadow: 0 2px 6px rgba(16,185,129,0.25);">
-            🗺️ Ubicación GPS
-          </button>
-          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.toggleDisableEstablishment('${est.id}')" style="background-color: ${est.disabled ? '#FEF3C7' : '#F3F4F6'}; color: ${est.disabled ? '#D97706' : '#374151'}; border: 1px solid ${est.disabled ? '#FCD34D' : '#D1D5DB'}; font-size: 12px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 700; margin: 0 2px; width: auto; display: inline-block; cursor: pointer;">
-            ${est.disabled ? '🟢 Habilitar' : '🚫 Deshabilitar'}
-          </button>
-          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.deleteEstablishment('${est.id}', '${est.name}')" style="background-color: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; font-size: 12px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 700; margin: 0 2px; width: auto; display: inline-block; cursor: pointer;">
-            🗑️ Eliminar
+          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.deleteEstablishment('${est.id}', '${est.name}')" style="background-color: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 700; margin: 0 2px; width: auto; display: inline-block; cursor: pointer;" title="Eliminar este comercio del sistema">
+            🗑️
           </button>
         </td>
       `;
@@ -3227,6 +3373,7 @@ class AdminController {
         document.getElementById('reg-logo-file').value = '';
         document.getElementById('reg-banner-file').value = '';
         this.generateRandomLinkKey();
+        this.toggleNewEstablishmentForm(false);
 
         // Reload data from api
         await this.reloadData();
