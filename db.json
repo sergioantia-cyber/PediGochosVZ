@@ -2084,7 +2084,7 @@
       "location_lng": null,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": true
+      "disabled": false
     },
     {
       "id": "latinos-burguer-1786162629597",
@@ -10511,7 +10511,7 @@
       "location_lng": null,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": true
+      "disabled": false
     },
     {
       "id": "tanos-resto-bar-1786032587502",
@@ -11025,7 +11025,7 @@
       "location_lng": null,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": true
+      "disabled": false
     },
     {
       "id": "mak-pizza-1784350135697",
@@ -20212,7 +20212,7 @@
       "location_lng": null,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": true
+      "disabled": false
     },
     {
       "id": "zeus-burger-1786252888630",
@@ -20853,7 +20853,7 @@
       "location_lng": null,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": true
+      "disabled": false
     },
     {
       "id": "cafe-plaza-1788116700000",

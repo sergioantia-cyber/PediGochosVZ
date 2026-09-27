@@ -284,7 +284,7 @@ async function syncFromSupabase() {
         try {
           const cloudDisabled = await disRes.json();
           const localDisabled = readDisabledStores();
-          const mergedDisabled = { ...cloudDisabled, ...localDisabled };
+          const mergedDisabled = { ...localDisabled, ...cloudDisabled };
           writeDisabledStores(mergedDisabled);
           console.log('🎉 disabled_stores.json restored and merged from Supabase Storage!');
         } catch(e) {}
@@ -296,7 +296,7 @@ async function syncFromSupabase() {
         try {
           const cloudGps = await gpsRes.json();
           const localGps = readStoreGps();
-          const mergedGps = { ...cloudGps, ...localGps };
+          const mergedGps = { ...localGps, ...cloudGps };
           writeStoreGps(mergedGps);
           console.log('🎉 store_gps.json restored and merged from Supabase Storage!');
         } catch(e) {}
@@ -326,8 +326,8 @@ async function syncFromSupabase() {
         try {
           const cloudGpsDel = await gpsDelRes.json();
           const localGpsDel = readGpsDeleted();
-          // Merge: local entries win (local deletions stay), cloud deletions also respected
-          const mergedGpsDel = { ...cloudGpsDel, ...localGpsDel };
+          // Merge: cloud and local deletions both respected, cloud takes precedence
+          const mergedGpsDel = { ...localGpsDel, ...cloudGpsDel };
           writeGpsDeleted(mergedGpsDel);
           // Remove any entries in storeGpsMap that are in the deleted blacklist
           const storeGpsMap = readStoreGps();
