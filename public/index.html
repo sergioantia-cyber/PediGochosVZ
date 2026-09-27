@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="/images/logo-pedigochos.png">
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
   <link rel="stylesheet" href="/css/common.css?v=231">
-  <link rel="stylesheet" href="/css/marketplace.css?v=231">
+  <link rel="stylesheet" href="/css/marketplace.css?v=235">
   <link rel="stylesheet" href="/css/paint-service.css?v=232">
   <link rel="stylesheet" href="/css/print3d-service.css?v=232">
   <link rel="stylesheet" href="/css/resin-service.css?v=233">
@@ -1267,7 +1267,7 @@
   <div class="floating-left-actions-container">
     
     <!-- Top Button: S.O.S Emergencias (Arriba del de servicios) -->
-    <button type="button" id="floating-sos-btn" class="floating-fab-btn fab-sos" onclick="MarketplaceApp.toggleSosMenu()" title="Centro de Emergencias y Auxilio Vial S.O.S">
+    <button type="button" id="floating-sos-btn" class="floating-fab-btn fab-sos" onclick="MarketplaceApp.toggleSosMenu(null, event)" title="Centro de Emergencias y Auxilio Vial S.O.S">
       <span class="sos-halo-pulse"></span>
       <span class="fab-inner-content">
         <span class="fab-icon">🚨</span>
@@ -1276,7 +1276,7 @@
     </button>
 
     <!-- Bottom Button: Menú de Servicios (Abajo a la izquierda) -->
-    <button type="button" id="floating-services-btn" class="floating-fab-btn fab-services" onclick="MarketplaceApp.toggleServicesMenu()" title="Menú de Todos los Servicios">
+    <button type="button" id="floating-services-btn" class="floating-fab-btn fab-services" onclick="MarketplaceApp.toggleServicesMenu(null, event)" title="Menú de Todos los Servicios">
       <span class="fab-inner-content">
         <span class="fab-icon">🛵</span>
         <span class="fab-label">SERVICIOS</span>
@@ -1288,7 +1288,7 @@
   <!-- ========================================================
        MODAL: MENÚ DESPLEGABLE DE LA IZQUIERDA (SERVICIOS Y MOVILIDAD)
        ======================================================== -->
-  <div id="services-menu-modal" class="services-drawer-overlay" onclick="if(event.target === this) MarketplaceApp.closeServicesMenu();" style="display: none;">
+  <div id="services-menu-modal" class="services-drawer-overlay" onclick="if(event.target === this) MarketplaceApp.closeServicesMenu(event);" style="display: none; z-index: 999999;">
     <div class="services-drawer-content">
       
       <!-- Drawer Header -->
@@ -1307,6 +1307,18 @@
 
       <!-- Drawer Scrollable Body -->
       <div style="padding: 14px 14px 28px 14px; display: flex; flex-direction: column; gap: 14px;">
+
+        <!-- Acceso directo destacado a la sección completa de Servicios -->
+        <div class="drawer-subitem" onclick="MarketplaceApp.closeServicesMenu(); MarketplaceApp.selectCategory('servicios');" style="background: linear-gradient(135deg, rgba(255, 107, 0, 0.25) 0%, rgba(217, 83, 0, 0.15) 100%); border: 1.5px solid #FF6B00; border-radius: 14px; padding: 11px 13px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">🛵</span>
+            <div>
+              <div style="font-size: 13.5px; font-weight: 900; color: #FFF;">Ver Todos los Servicios</div>
+              <div style="font-size: 10.5px; color: #FDBA74;">Catálogo interactivo en pantalla completa</div>
+            </div>
+          </div>
+          <span style="font-size: 11px; font-weight: 900; color: #FFF; background: #FF6B00; padding: 4px 10px; border-radius: 8px;">Ir ➔</span>
+        </div>
 
         <!-- Categoría Desplegable Principal: Movilidad 🚗 -->
         <div style="background: rgba(255, 255, 255, 0.03); border: 1.5px solid rgba(255, 107, 0, 0.4); border-radius: 18px; padding: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.35);">
@@ -1532,7 +1544,7 @@
   <!-- ========================================================
        MODAL: MENÚ DE BURBUJAS DE SERVICIOS Y EMERGENCIAS S.O.S
        ======================================================== -->
-  <div id="sos-menu-modal" class="modal-overlay" onclick="if(event.target === this) MarketplaceApp.closeSosMenu();" style="display: none; align-items: flex-end; justify-content: center; z-index: 999999; backdrop-filter: blur(10px); background: rgba(5, 7, 15, 0.85);">
+  <div id="sos-menu-modal" class="modal-overlay" onclick="if(event.target === this) MarketplaceApp.closeSosMenu(event);" style="display: none; align-items: flex-end; justify-content: center; z-index: 999999; backdrop-filter: blur(10px); background: rgba(5, 7, 15, 0.85);">
     <div class="sos-sheet-container" style="width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; background: linear-gradient(180deg, #1A1E29 0%, #0F121C 100%); border-top-left-radius: 28px; border-top-right-radius: 28px; border-top: 2.5px solid #EF4444; box-shadow: 0 -10px 40px rgba(239, 68, 68, 0.35); padding: 20px 18px 28px 18px; color: #FFF; animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
       
       <!-- Sheet Header -->
@@ -2002,11 +2014,11 @@
   <script src="/js/print3d-service.js?v=232"></script>
   <script src="/js/resin-service.js?v=233"></script>
   <script src="/js/pinata-service.js?v=234"></script>
-  <script src="/js/marketplace.js?v=232"></script>
+  <script src="/js/marketplace.js?v=235"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=231').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=235').then((reg) => {
           reg.update();
         }).catch(() => {});
       });
