@@ -6329,12 +6329,13 @@ class MarketplaceController {
       return minFee;
     }
     const dist = parseFloat(distanceKm);
-    // Base rate covers the initial 2.5 km
-    if (dist <= 2.5) {
+    // Distancia base que cubre la tarifa mínima de $5.000 COP (reducida de 2.5 km a 1.0 km)
+    const baseDistanceLimit = 1.0;
+    if (dist <= baseDistanceLimit) {
       return minFee;
     }
-    // Beyond 2.5 km: base fee + $1.500 COP per each extra km (rounded to nearest 100 COP)
-    const extraKm = dist - 2.5;
+    // A partir de 1.0 km: tarifa base + $1.500 COP por cada km adicional (redondeado a la centena más cercana)
+    const extraKm = dist - baseDistanceLimit;
     const extraFee = Math.round((extraKm * 1500) / 100) * 100;
     return minFee + extraFee;
   }
