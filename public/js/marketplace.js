@@ -796,7 +796,6 @@ class MarketplaceController {
 
     const foodCategories = [
       { id: 'all', name: 'Todos', icon: '⭐' },
-      { id: 'servicios', name: 'Servicios', icon: '🛠️' },
       { id: 'hamburguesas', name: 'Burgers', icon: '🍔' },
       { id: 'perros', name: 'Perros', icon: '🌭' },
       { id: 'pizzas', name: 'Pizzas', icon: '🍕' },
@@ -838,142 +837,6 @@ class MarketplaceController {
   // Legacy fallback grid
   renderFoodCategoriesGrid() {
     this.renderFoodBubbleCarousel();
-  }
-
-  // ==========================================================================
-  // SERVICIOS ESPECIALIZADOS (Mismo formato y tarjetas que restaurantes)
-  // ==========================================================================
-  getServicesList() {
-    return [
-      {
-        id: 'cauchera-24h',
-        name: 'Cauchera Cachu 24/7',
-        category: 'servicios',
-        categoryLabel: 'Servicios • Auxilio Vial 24H',
-        rating: '5.0',
-        reviews: '52',
-        image: '/images/servicios.jpg',
-        badge: '🔴 24/7 ACTIVO',
-        description: 'Cauchera móvil y auxilio vial las 24 horas a domicilio. Despinche para motos, autos y camionetas con GPS.',
-        deliveryTime: '⏱️ Inmediato • Domicilio',
-        ctaText: 'Solicitar Auxilio ➔',
-        action: () => MarketplaceApp.openCaucheraModal()
-      },
-      {
-        id: 'pedigochos-movil',
-        name: 'PediGochos Móvil',
-        category: 'servicios',
-        categoryLabel: 'Servicios • Movilidad & Taxi',
-        rating: '4.9',
-        reviews: '84',
-        image: '/images/vehicles/sedan_general.jpg',
-        badge: '⚡ EN VIVO',
-        description: 'Vehículos de diferentes gamas: Moto Taxi, Auto Estándar y Lujo con cálculo de tarifa por GPS en tiempo real.',
-        deliveryTime: '⏱️ 5 a 15 min',
-        ctaText: 'Pedir Móvil ➔',
-        action: () => MarketplaceApp.openRideModal()
-      },
-      {
-        id: 'latoneria-pintura',
-        name: 'Latonería y Pintura Automotriz',
-        category: 'servicios',
-        categoryLabel: 'Servicios • Taller Certificado',
-        rating: '4.9',
-        reviews: '38',
-        image: '/images/vehicles/chevrolet_aveo.jpg',
-        badge: '🔥 AL HORNO',
-        description: 'Cotizador interactivo para autos y motos: sacado de golpes, latonería y pintura con secado al horno.',
-        deliveryTime: '⏱️ Presupuesto en Minutos',
-        ctaText: 'Cotizar Pintura ➔',
-        action: () => (window.PaintServiceApp ? window.PaintServiceApp.open() : alert('Cargando servicio...'))
-      },
-      {
-        id: '3d-lab',
-        name: 'PediGochos 3D Lab',
-        category: 'servicios',
-        categoryLabel: 'Servicios • Prototipado 3D',
-        rating: '5.0',
-        reviews: '29',
-        image: '/images/servicios.jpg',
-        badge: '🔄 VISOR 3D 360°',
-        description: 'Impresión 3D de piezas automotrices, coleccionables, llaveros y prototipos a medida con visor interactivo.',
-        deliveryTime: '⏱️ 24 a 48 horas',
-        ctaText: 'Explorar 3D ➔',
-        action: () => (window.Print3DServiceApp ? window.Print3DServiceApp.open() : alert('Cargando servicio...'))
-      },
-      {
-        id: 'shelliart-resina',
-        name: 'Llaveros en Resina Personalizados',
-        category: 'servicios',
-        categoryLabel: 'Servicios • ShelliArt',
-        rating: '5.0',
-        reviews: '46',
-        image: '/images/servicios.jpg',
-        badge: '💎 A-Z CON ORO',
-        description: 'Llaveros y recuerdos personalizados en resina epóxica cristalina con iniciales A-Z, hojilla de oro 24K y borlas.',
-        deliveryTime: '⏱️ 1 a 3 días',
-        ctaText: 'Personalizar ➔',
-        action: () => (window.ResinServiceApp ? window.ResinServiceApp.open() : alert('Cargando servicio...'))
-      },
-      {
-        id: 'pinatas-personalizadas',
-        name: 'Piñatas Personalizadas',
-        category: 'servicios',
-        categoryLabel: 'Servicios • Por Encargo',
-        rating: '5.0',
-        reviews: '31',
-        image: '/images/pinatas/pinata_celebracion.jpg',
-        badge: '🪅 A MEDIDA',
-        description: 'Piñatas artesanales 3D, números temáticos y a medida por encargo con 2 a 5 días de anticipación.',
-        deliveryTime: '⏱️ 2 a 5 días hábiles',
-        ctaText: 'Cotizar Piñata ➔',
-        action: () => (window.PinataServiceApp ? window.PinataServiceApp.open() : alert('Cargando servicio...'))
-      }
-    ];
-  }
-
-  createServiceCardElement(srv) {
-    const card = document.createElement('div');
-    card.className = 'est-row-card';
-    card.style.cursor = 'pointer';
-    card.onclick = srv.action;
-
-    card.innerHTML = `
-      <div class="est-row-img-wrapper">
-        <img src="${srv.image}" alt="${srv.name}" class="est-row-img" style="object-fit: cover; width: 100%; height: 100%; border-radius: 8px;" onerror="this.src='/images/servicios.jpg'">
-        <span class="est-traffic-badge" style="background: rgba(255, 107, 0, 0.95); color: #FFF; padding: 2px 4px; border-radius: 5px; font-size: 8px; font-weight: 900; position: absolute; top: 2px; left: 2px; right: 2px; text-align: center; z-index: 2;">
-          ${srv.badge}
-        </span>
-      </div>
-      <div class="est-row-info">
-        <div class="est-row-header-flex">
-          <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">${srv.name}</h4>
-          <div class="est-row-rating">
-            ⭐ ${srv.rating} (${srv.reviews})
-          </div>
-        </div>
-        <div class="est-row-desc">
-          ${srv.categoryLabel} • ${srv.description}
-        </div>
-        <div class="est-row-details-row">
-          <span style="color: #94A3B8; font-weight: 700; display: flex; align-items: center; gap: 4px;">${srv.deliveryTime}</span>
-          <span class="free-delivery" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 1.5px 6px; border-radius: 6px; font-weight: 800;">
-            ${srv.ctaText}
-          </span>
-        </div>
-      </div>
-    `;
-    return card;
-  }
-
-  renderServicesList(targetGridId = 'home-services-grid') {
-    const grid = document.getElementById(targetGridId);
-    if (!grid) return;
-    grid.innerHTML = '';
-    const services = this.getServicesList();
-    services.forEach(srv => {
-      grid.appendChild(this.createServiceCardElement(srv));
-    });
   }
 
   // Render lists
@@ -1059,12 +922,12 @@ class MarketplaceController {
     const titleEl = document.getElementById('establishments-title');
     if (titleEl) titleEl.innerHTML = displayTitle;
 
-    // Special dedicated rendering for Servicios category (Cauchera 24/7, PediGochos Móvil, Pintura, 3D Lab, ShelliArt Resina, Piñatas)
+    // Special dedicated rendering for Servicios category (Cauchera 24/7, PediGochos Móvil, Pintura, 3D Lab & ShelliArt Resina)
     if (this.currentCategory === 'servicios' && !filtered) {
       const allRestHeader = document.getElementById('all-restaurants-header');
       const allRestTitle = document.getElementById('all-restaurants-title-text');
       if (allRestHeader) allRestHeader.style.display = 'block';
-      if (allRestTitle) allRestTitle.textContent = 'Servicios Especializados (6)';
+      if (allRestTitle) allRestTitle.textContent = 'Servicios Registrados (6)';
 
       const promoSection = document.getElementById('daily-promotions-section');
       if (promoSection) {
@@ -1081,23 +944,197 @@ class MarketplaceController {
         featSection.classList.add('hidden');
       }
 
-      const homeServicesSec = document.getElementById('home-services-section');
-      if (homeServicesSec) homeServicesSec.style.display = 'none';
+      grid.innerHTML = `
+        <!-- Cauchera Cachu 24/7 -->
+        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openCaucheraModal()" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(239, 68, 68, 0.5); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(239, 68, 68, 0.22); border: 2px solid #EF4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.45);">
+              🛞
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
+                  🛞 Cauchera Cachu 24/7
+                </h4>
+                <span class="service-card-badge" style="background: #EF4444; color: #FFF; box-shadow: 0 2px 8px rgba(239,68,68,0.4);">
+                  🔴 24/7 ACTIVO
+                </span>
+              </div>
+              <p class="service-card-desc">
+                Cauchera Móvil a Domicilio. Despinche y auxilio vial para motos, autos y camionetas con GPS las 24 horas.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); padding: 3px 9px; border-radius: 8px;">
+                  ⭐ 5.0 • Auxilio Inmediato
+                </span>
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); border: 1px solid #EF4444; box-shadow: 0 3px 10px rgba(239,68,68,0.35);">
+                  Solicitar Auxilio ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      this.renderServicesList('establishments-grid');
+        <!-- PediGochos Móvil (Vehículos de Diferentes Gamas) -->
+        <div class="est-row-card service-row-card" onclick="MarketplaceApp.openRideModal()" style="background: linear-gradient(135deg, rgba(255, 107, 0, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(255, 107, 0, 0.5); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(255, 107, 0, 0.22); border: 2px solid #FF6B00; box-shadow: 0 0 20px rgba(255, 107, 0, 0.45);">
+              🛵
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
+                  PediGochos Móvil
+                </h4>
+                <span class="service-card-badge" style="background: #FF6B00; color: #FFF; box-shadow: 0 2px 8px rgba(255,107,0,0.4);">
+                  ⚡ EN VIVO
+                </span>
+              </div>
+              <p class="service-card-desc">
+                Vehículos de diferentes gamas: <strong>Moto Taxi</strong>, <strong>Auto</strong> y <strong>Lujo</strong>. Tarifa automática por GPS.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #60A5FA; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); padding: 3px 9px; border-radius: 8px;">
+                  ⭐ 4.9 • Transporte Seguro
+                </span>
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); border: 1px solid #FF6B00; box-shadow: 0 3px 10px rgba(255,107,0,0.35);">
+                  Pedir Móvil ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      // Invite to Register Another Service
-      const inviteDiv = document.createElement('div');
-      inviteDiv.style.cssText = 'grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;';
-      inviteDiv.innerHTML = `
-        <p style="font-size: 12px; color: #94A3B8; margin: 0 0 10px 0;">
-          ¿Ofreces un servicio técnico, grúa, cerrajería o profesional en San Antonio?
-        </p>
-        <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer;">
-          ➕ Solicitar Registro de Servicio
-        </button>
+        <!-- Latonería y Pintura -->
+        <div class="est-row-card service-row-card" onclick="PaintServiceApp ? PaintServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(234, 88, 12, 0.55); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(234, 88, 12, 0.22); border: 2px solid #EA580C; box-shadow: 0 0 20px rgba(234, 88, 12, 0.45);">
+              🎨
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
+                  Latonería y Pintura
+                </h4>
+                <span class="service-card-badge" style="background: #EA580C; color: #FFF; box-shadow: 0 2px 8px rgba(234,88,12,0.4);">
+                  🔥 AL HORNO
+                </span>
+              </div>
+              <p class="service-card-desc">
+                Sacado de golpes, latonería profesional y pintura con secado al horno en talleres certificados.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #FDBA74; background: rgba(234, 88, 12, 0.16); border: 1px solid rgba(234, 88, 12, 0.35); padding: 3px 9px; border-radius: 8px;">
+                  ⭐ 4.9 • Garantía de Color
+                </span>
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%); border: 1px solid #EA580C; box-shadow: 0 3px 10px rgba(234,88,12,0.35);">
+                  Cotizar ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Impresión 3D & Prototipado ("PediGochos 3D Lab") -->
+        <div class="est-row-card service-row-card" onclick="Print3DServiceApp ? Print3DServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(99, 102, 241, 0.55); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(99, 102, 241, 0.22); border: 2px solid #6366F1; box-shadow: 0 0 20px rgba(99, 102, 241, 0.45);">
+              🖨️
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
+                  PediGochos 3D Lab
+                </h4>
+                <span class="service-card-badge" style="background: #6366F1; color: #FFF; box-shadow: 0 2px 8px rgba(99,102,241,0.4);">
+                  🔄 VISOR 3D 360°
+                </span>
+              </div>
+              <p class="service-card-desc">
+                Impresión 3D de coleccionables, repuestos automotrices, llaveros y prototipado con cotización inmediata.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #A5B4FC; background: rgba(99, 102, 241, 0.16); border: 1px solid rgba(99, 102, 241, 0.35); padding: 3px 9px; border-radius: 8px;">
+                  ⭐ 5.0 • PLA • Resina • PETG
+                </span>
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); border: 1px solid #6366F1; box-shadow: 0 3px 10px rgba(99,102,241,0.35);">
+                  Explorar 3D ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Llaveros en Resina Personalizados ("ShelliArt Resina") -->
+        <div class="est-row-card service-row-card" onclick="ResinServiceApp ? ResinServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(236, 72, 153, 0.55); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(236, 72, 153, 0.22); border: 2px solid #EC4899; box-shadow: 0 0 20px rgba(236, 72, 153, 0.45);">
+              ✨
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
+                  Llaveros en Resina Personalizados
+                </h4>
+                <span class="service-card-badge" style="background: #EC4899; color: #FFF; box-shadow: 0 2px 8px rgba(236,72,153,0.4);">
+                  💎 SHELLIART A-Z
+                </span>
+              </div>
+              <p class="service-card-desc">
+                Diseña tu llavero personalizado con letras A-Z, hojilla de oro 24K, borlas, glitter y pigmentos cristalinos.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #FBCFE8; background: rgba(236, 72, 153, 0.16); border: 1px solid rgba(236, 72, 153, 0.35); padding: 3px 9px; border-radius: 8px;">
+                  ⭐ 5.0 • Pan de Oro • Borlas • Dijes
+                </span>
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%); border: 1px solid #EC4899; box-shadow: 0 3px 10px rgba(236,72,153,0.35);">
+                  Personalizar ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Piñatas Personalizadas ("Tus Piñatas a Medida") -->
+        <div class="est-row-card service-row-card" onclick="PinataServiceApp ? PinataServiceApp.open() : alert('Cargando servicio...')" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.16) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(244, 63, 94, 0.55); cursor: pointer;">
+          <div class="service-card-main-flex">
+            <div class="service-card-icon-box" style="background: rgba(244, 63, 94, 0.22); border: 2px solid #F43F5E; box-shadow: 0 0 20px rgba(244, 63, 94, 0.45);">
+              🪅
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+                <h4 class="service-card-title">
+                  Piñatas Personalizadas
+                </h4>
+                <span class="service-card-badge" style="background: #F43F5E; color: #FFF; box-shadow: 0 2px 8px rgba(244,63,94,0.4);">
+                  🎉 A MEDIDA
+                </span>
+              </div>
+              <p class="service-card-desc">
+                Piñatas artesanales 3D, números temáticos con flores, siluetas y mini-piñatas. Romper a palo o cintas.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #FDA4AF; background: rgba(244, 63, 94, 0.16); border: 1px solid rgba(244, 63, 94, 0.35); padding: 3px 9px; border-radius: 8px;">
+                  ⭐ 5.0 • 100% Hecho a Mano • Cualquier Motivo
+                </span>
+                <span class="service-card-cta-btn" style="color: #FFF; background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%); border: 1px solid #F43F5E; box-shadow: 0 3px 10px rgba(244,63,94,0.35);">
+                  Personalizar ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invite to Register Another Service -->
+        <div style="grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
+          <p style="font-size: 12px; color: #94A3B8; margin: 0 0 10px 0;">
+            ¿Ofreces un servicio técnico, grúa, cerrajería o profesional en San Antonio?
+          </p>
+          <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer;">
+            ➕ Solicitar Registro de Servicio
+          </button>
+        </div>
       `;
-      grid.appendChild(inviteDiv);
       return;
     }
 
@@ -1152,8 +1189,6 @@ class MarketplaceController {
     grid.innerHTML = '';
 
     if (list.length === 0) {
-      const homeServicesSec = document.getElementById('home-services-section');
-      if (homeServicesSec) homeServicesSec.style.display = 'none';
       const activeName = (window.activeFoodTypeFilter && categoryNames[window.activeFoodTypeFilter]) 
         ? categoryNames[window.activeFoodTypeFilter] 
         : (this.capitalize(this.currentCategory) || 'esta categoría');
@@ -1251,17 +1286,6 @@ class MarketplaceController {
       `;
       grid.appendChild(card);
     });
-
-    // Control visibility of Home Services Section (below restaurants on main comidas page)
-    const homeServicesSec = document.getElementById('home-services-section');
-    if (homeServicesSec) {
-      if (this.currentCategory === 'comidas' && !filtered && (!window.activeFoodTypeFilter || window.activeFoodTypeFilter === 'all')) {
-        homeServicesSec.style.display = 'block';
-        this.renderServicesList('home-services-grid');
-      } else {
-        homeServicesSec.style.display = 'none';
-      }
-    }
   }
 
   getSessionSeed() {
@@ -1455,11 +1479,6 @@ class MarketplaceController {
   filterRestaurantsByFoodType(foodTypeId) {
     if (!foodTypeId) {
       this.showFoodCategoriesGrid();
-      return;
-    }
-
-    if (foodTypeId === 'servicios') {
-      this.selectCategory('servicios');
       return;
     }
 
@@ -5256,25 +5275,6 @@ class MarketplaceController {
     });
 
     this.renderEstablishments(filtered);
-
-    // Also match specialized services
-    const matchingServices = this.getServicesList().filter(s => {
-      return (s.name || '').toLowerCase().includes(query) ||
-             (s.description || '').toLowerCase().includes(query) ||
-             (s.categoryLabel || '').toLowerCase().includes(query);
-    });
-
-    if (matchingServices.length > 0) {
-      const grid = document.getElementById('establishments-grid');
-      if (grid) {
-        if (filtered.length === 0) {
-          grid.innerHTML = '';
-        }
-        matchingServices.forEach(srv => {
-          grid.appendChild(this.createServiceCardElement(srv));
-        });
-      }
-    }
   }
 
   openTermsModal(e) {
