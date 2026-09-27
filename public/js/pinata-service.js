@@ -132,11 +132,13 @@ const PinataServiceApp = {
     modal.innerHTML = `
       <!-- Header -->
       <header class="pinata-header">
-        <div class="pinata-header-brand">
-          <div class="pinata-brand-icon">🪅</div>
+        <div class="pinata-header-brand" style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; overflow: hidden; background: #0B0F19; border: 1.5px solid #F43F5E; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 2px;">
+            <img src="/images/services/creaciones_lola_logo.svg" alt="Creaciones Lola" style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
           <div>
-            <h2>Piñatas <span>Personalizadas</span></h2>
-            <p>100% Hechas a Mano • Cualquier Motivo o Personaje</p>
+            <h2>CREACIONES <span>LOLA</span></h2>
+            <p>Piñatas Artesanales 3D • 100% Hechas a Mano • Por Encargo</p>
           </div>
         </div>
         <button type="button" class="pinata-close-btn" onclick="PinataServiceApp.close()" title="Cerrar">✕</button>

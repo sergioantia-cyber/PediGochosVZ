@@ -8803,6 +8803,24 @@ class AdminController {
     `).join('');
   }
 
+  formatPinataSizeText(val) {
+    const cm = parseInt(val, 10) || 80;
+    let desc = 'Mediana';
+    if (cm < 40) desc = 'Mini-Piñata';
+    else if (cm <= 65) desc = 'Pequeña';
+    else if (cm <= 90) desc = 'Mediana';
+    else if (cm <= 120) desc = 'Grande (~1m)';
+    else desc = 'Gigante';
+    return `${cm} cm (${desc})`;
+  },
+
+  updatePinataSizeLabel(target, value) {
+    const formatted = this.formatPinataSizeText(value);
+    const elId = target === 'add' ? 'admin-pinata-size-val' : 'edit-pinata-size-val';
+    const el = document.getElementById(elId);
+    if (el) el.textContent = formatted;
+  },
+
   openEditPinataModal(pinataId) {
     const item = (this.pinatasCatalogCache || []).find(p => String(p.id) === String(pinataId));
     if (!item) return;
@@ -8823,7 +8841,12 @@ class AdminController {
     if (idInput) idInput.value = item.id;
     if (nameInput) nameInput.value = item.name || '';
     if (catInput) catInput.value = item.category || 'personajes';
-    if (sizeInput) sizeInput.value = item.size || 'Mediana (~80 cm)';
+    if (sizeInput) {
+      const match = (item.size || '').match(/(\d+)\s*cm/i) || (item.size || '').match(/(\d+)/);
+      const cmVal = match ? parseInt(match[1], 10) : 80;
+      sizeInput.value = cmVal;
+      this.updatePinataSizeLabel('edit', cmVal);
+    }
     if (priceInput) priceInput.value = item.basePriceUsd || 0;
     if (imageInput) imageInput.value = item.image || '';
     if (previewImg) previewImg.src = item.image || '/images/pinatas/pinata_celebracion.jpg';
@@ -8836,7 +8859,7 @@ class AdminController {
       modal.classList.add('active');
       this.checkModalOpenState();
     }
-  }
+  },
 
   closeEditPinataModal() {
     const modal = document.getElementById('admin-pinata-edit-modal');
@@ -8847,13 +8870,14 @@ class AdminController {
       this.checkModalOpenState();
     }
     this.currentEditingPinata = null;
-  }
+  },
 
   async savePinataProductEdits() {
     const id = document.getElementById('edit-pinata-id')?.value;
     const name = document.getElementById('edit-pinata-name')?.value.trim();
     const category = document.getElementById('edit-pinata-category')?.value;
-    const size = document.getElementById('edit-pinata-size')?.value;
+    const rawSize = document.getElementById('edit-pinata-size')?.value || '80';
+    const size = this.formatPinataSizeText(rawSize);
     let price = parseFloat(document.getElementById('edit-pinata-price')?.value);
     if (isNaN(price) || price <= 0) price = 18.0;
     const image = document.getElementById('edit-pinata-image')?.value.trim() || '/images/pinatas/pinata_celebracion.jpg';
@@ -8972,7 +8996,8 @@ class AdminController {
       price = 18.0; // Smart default so adding is ultra fast with just name and photo!
     }
 
-    const size = document.getElementById('admin-pinata-input-size')?.value || 'Mediana (~80 cm)';
+    const rawSize = document.getElementById('admin-pinata-input-size')?.value || '80';
+    const size = this.formatPinataSizeText(rawSize);
     const category = document.getElementById('admin-pinata-input-category')?.value || 'personajes';
     let image = document.getElementById('admin-pinata-input-image')?.value.trim();
     if (!image) {
@@ -9007,11 +9032,14 @@ class AdminController {
         const descInput = document.getElementById('admin-pinata-input-desc');
         const fileInput = document.getElementById('admin-pinata-add-file-input');
         const previewEl = document.getElementById('admin-pinata-add-preview-img');
+        const sizeInput = document.getElementById('admin-pinata-input-size');
         if (nameInput) nameInput.value = '';
         if (priceInput) priceInput.value = '';
         if (imgInput) imgInput.value = '';
         if (descInput) descInput.value = '';
         if (fileInput) fileInput.value = '';
+        if (sizeInput) sizeInput.value = '80';
+        this.updatePinataSizeLabel('add', 80);
         if (previewEl) previewEl.src = '/images/pinatas/pinata_celebracion.jpg';
         this.loadPinatasCatalog();
       } else {

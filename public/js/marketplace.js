@@ -1422,15 +1422,17 @@ class MarketplaceController {
                 </div>
               </div>
 
-              <!-- Middle: Real Photo / Fallback Banner until Owner Modifies in Admin -->
-              <div style="position: relative; width: 100%; height: 140px; border-radius: 14px; overflow: hidden; background: #0F172A; border: 1px solid rgba(255,255,255,0.08);">
-                <img src="${est.image}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/servicios.jpg'">
-                <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%);"></div>
-                <div style="position: absolute; bottom: 8px; left: 10px; right: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                  <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); padding: 3px 9px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.35);">
-                    ⭐ ${Number(est.rating || 5.0).toFixed(1)} (${est.reviewCount || 45}+)
+              <!-- Middle: Real Photo / Fallback Banner - 100% Visible & Aesthetic Frame -->
+              <div style="width: 100%; border-radius: 14px; overflow: hidden; background: #070B14; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 16px rgba(0,0,0,0.35); display: flex; flex-direction: column;">
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.45) 0%, #070B14 100%);">
+                  <img src="${est.image}" alt="${est.name}" style="width: 100%; height: auto; max-height: 240px; object-fit: contain; display: block;" onerror="this.src='/images/servicios.jpg'">
+                </div>
+                <!-- Clean Meta Sub-Bar (100% Unobstructed Artwork) -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(15, 23, 42, 0.92); border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 8px; flex-wrap: wrap;">
+                  <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; display: inline-flex; align-items: center; gap: 4px;">
+                    ⭐ ${Number(est.rating || 5.0).toFixed(1)} <span style="color: #94A3B8; font-weight: 600; font-size: 10.5px;">(${est.reviewCount || 45}+ opiniones)</span>
                   </span>
-                  <span style="font-size: 11px; font-weight: 700; color: #CBD5E1; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
+                  <span style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: inline-flex; align-items: center; gap: 4px;">
                     📍 ${est.location || 'San Antonio'}
                   </span>
                 </div>

@@ -3282,13 +3282,20 @@
               <input type="text" id="admin-pinata-input-name" placeholder="Ej: Piñata Mario Bros 3D" required style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
             </div>
             <div>
-              <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Tamaño</label>
-              <select id="admin-pinata-input-size" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
-                <option value="Mediana (~80 cm)">Mediana (~80 cm) - Recomendada</option>
-                <option value="Pequeña (~50 cm)">Pequeña (~50 cm)</option>
-                <option value="Grande (~1 metro o más)">Grande (~1 metro o más)</option>
-                <option value="Mini-Piñata">Mini-Piñata (Recuerdo)</option>
-              </select>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; margin: 0;">Tamaño (Altura Exacta):</label>
+                <span id="admin-pinata-size-val" style="font-size: 11px; color: #FDA4AF; font-weight: 900; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.45); padding: 2px 7px; border-radius: 6px;">80 cm (Mediana)</span>
+              </div>
+              <div style="background: #0F172A; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; gap: 4px;">
+                <input type="range" id="admin-pinata-input-size" min="20" max="180" step="5" value="80" oninput="AdminApp.updatePinataSizeLabel('add', this.value)" style="width: 100%; accent-color: #F43F5E; cursor: pointer; margin: 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94A3B8; font-weight: 700;">
+                  <span>20cm</span>
+                  <span>50cm</span>
+                  <span style="color: #FDA4AF;">80cm</span>
+                  <span>120cm</span>
+                  <span>180cm</span>
+                </div>
+              </div>
             </div>
             <div>
               <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Categoría</label>
@@ -3374,13 +3381,20 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Tamaño *</label>
-            <select id="edit-pinata-size" required style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 9px 12px; border-radius: 10px; font-size: 13px; box-sizing: border-box;">
-              <option value="Mediana (~80 cm)">Mediana (~80 cm) - Estándar</option>
-              <option value="Pequeña (~50 cm)">Pequeña (~50 cm)</option>
-              <option value="Grande (~1 metro o más)">Grande (~1 metro o más)</option>
-              <option value="Mini-Piñata">Mini-Piñata</option>
-            </select>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; margin: 0;">Tamaño (Altura Exacta) *</label>
+              <span id="edit-pinata-size-val" style="font-size: 11.5px; color: #FDA4AF; font-weight: 900; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.45); padding: 2px 8px; border-radius: 6px;">80 cm (Mediana)</span>
+            </div>
+            <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 5px;">
+              <input type="range" id="edit-pinata-size" min="20" max="180" step="5" value="80" oninput="AdminApp.updatePinataSizeLabel('edit', this.value)" style="width: 100%; accent-color: #F43F5E; cursor: pointer; margin: 0;">
+              <div style="display: flex; justify-content: space-between; font-size: 9.5px; color: #94A3B8; font-weight: 700;">
+                <span>20cm</span>
+                <span>50cm</span>
+                <span style="color: #FDA4AF;">80cm</span>
+                <span>120cm</span>
+                <span>180cm</span>
+              </div>
+            </div>
           </div>
           <div>
             <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Precio Base ($ USD) *</label>
