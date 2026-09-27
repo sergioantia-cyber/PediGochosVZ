@@ -5294,6 +5294,21 @@ class MarketplaceController {
     }
   }
 
+  calculateSubtotal() {
+    if (!this.cart || !Array.isArray(this.cart.items)) return 0;
+    return this.cart.items.reduce((sum, item) => {
+      let itemSubtotal = 0;
+      if (item.subtotal_combined != null) {
+        itemSubtotal = this.normalizeCopPrice(item.subtotal_combined);
+      } else if (item.unit_total_calculated != null) {
+        itemSubtotal = this.normalizeCopPrice(item.unit_total_calculated * (item.quantity || 1));
+      } else {
+        itemSubtotal = this.normalizeCopPrice((item.price || 0) * (item.quantity || 1));
+      }
+      return sum + itemSubtotal;
+    }, 0);
+  }
+
   checkBeveragesAndPrompt() {
     const pizzasWithoutCrust = this.getPizzasWithoutSpecialCrustInCart();
     const hasBeverages = this.cart.items.some(i => this.isDrinkOrBeverage(i));
@@ -5566,6 +5581,8 @@ class MarketplaceController {
 
     const shopIds = Object.keys(groupedItems);
     let lastCreatedOrderId = null;
+    // Generate 4-digit security code for delivery
+    const deliverySecurityCode = this.orderType === 'delivery' ? Math.floor(1000 + Math.random() * 9000).toString() : null;
     
     try {
       const promises = shopIds.map(async (shopId) => {
@@ -5575,8 +5592,6 @@ class MarketplaceController {
         if (this.orderType === 'delivery') {
           shopDeliveryCost = this.calculateShopDeliveryFee(this.calculatedDistanceKm, shop.delivery_fee);
         }
-        // Generate random 4-digit security code for delivery
-        const randomCode = this.orderType === 'delivery' ? Math.floor(1000 + Math.random() * 9000).toString() : null;
         
         const userEmail = this.currentUser?.email || localStorage.getItem('pedigochos_user_email') || null;
         const userId = this.currentUser?.id || localStorage.getItem('pedigochos_user_id') || null;
@@ -5600,13 +5615,14 @@ class MarketplaceController {
           paymentNotes,
           paymentReceiptUrl: paymentReceiptUrl || null,
           customerName,
+          customerPhone: phone,
           customerEmail: userEmail ? String(userEmail).toLowerCase().trim() : null,
           userId: userId || null,
           tableNumber: tableNumber ? parseInt(tableNumber, 10) : null,
           deliveryDetails: this.orderType === 'delivery' ? { 
             phone, 
             address, 
-            code: randomCode,
+            code: deliverySecurityCode,
             latitude: this.selectedLatitude,
             longitude: this.selectedLongitude,
             distanceKm: this.calculatedDistanceKm,
@@ -5640,7 +5656,6 @@ class MarketplaceController {
         const queue = JSON.parse(rawQueue);
         shopIds.forEach(shopId => {
           const shop = groupedItems[shopId];
-          const randomCode = Math.floor(100 + Math.random() * 900);
           queue.push({
             id: 'ord-off-' + Date.now() + Math.floor(Math.random() * 1000),
             establishmentId: shop.id,
@@ -5652,12 +5667,32 @@ class MarketplaceController {
             paymentNotes,
             customerName,
             tableNumber,
-            deliveryDetails: { phone, address, code: randomCode }
+            deliveryDetails: { phone, address, code: deliverySecurityCode, latitude: this.selectedLatitude, longitude: this.selectedLongitude }
           });
         });
         localStorage.setItem('pending_offline_orders', JSON.stringify(queue));
         this.addGochoPoints(25);
-        this.showToast('📴 Pedido guardado sin conexión. Se enviará automáticamente al reconectar.');
+        this.showToast('📴 Pedido guardado sin conexión. Abriendo WhatsApp oficial...');
+
+        // Also launch WhatsApp in offline mode
+        const waMessage = this.buildRestaurantOrderWhatsAppMessage([], {
+          customerName,
+          phone,
+          orderType: this.orderType,
+          address,
+          tableNumber,
+          paymentMethod,
+          paymentNotes,
+          paymentReceiptUrl,
+          distanceKm: this.calculatedDistanceKm,
+          latitude: this.selectedLatitude,
+          longitude: this.selectedLongitude,
+          code: deliverySecurityCode,
+          shopMap: groupedItems
+        });
+        const waUrl = `https://wa.me/573227949751?text=${encodeURIComponent(waMessage)}`;
+        this.openWhatsAppUrl(waUrl);
+
         this.clearCart();
         this.closeCartModal();
         this.goHome();
@@ -5684,7 +5719,11 @@ class MarketplaceController {
         tableNumber,
         paymentMethod,
         paymentNotes,
+        paymentReceiptUrl,
         distanceKm: this.calculatedDistanceKm,
+        latitude: this.selectedLatitude,
+        longitude: this.selectedLongitude,
+        code: deliverySecurityCode,
         shopMap: groupedItems
       });
       const officialWaNumber = '573227949751';
@@ -5756,24 +5795,38 @@ class MarketplaceController {
       }
     } catch(e) {}
 
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = waUrl;
+      return;
+    }
+
     try {
-      const a = document.createElement('a');
-      a.href = waUrl;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 200);
+      const win = window.open(waUrl, '_blank');
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        window.location.href = waUrl;
+      }
     } catch(err) {
-      window.open(waUrl, '_blank') || (window.location.href = waUrl);
+      window.location.href = waUrl;
     }
   }
 
   buildRestaurantOrderWhatsAppMessage(createdOrders, context = {}) {
-    const orders = Array.isArray(createdOrders) ? createdOrders : (createdOrders ? [createdOrders] : []);
+    let orders = Array.isArray(createdOrders) && createdOrders.length > 0 
+      ? createdOrders 
+      : (createdOrders && createdOrders.id ? [createdOrders] : []);
+
+    if (orders.length === 0 && context.shopMap) {
+      orders = Object.values(context.shopMap).map(shop => ({
+        establishmentId: shop.id,
+        establishmentName: shop.name,
+        items: shop.items,
+        total: (shop.items || []).reduce((sum, it) => sum + this.normalizeCopPrice(it.subtotal_combined || ((it.unit_total_calculated || it.price || 0) * (it.quantity || 1))), 0) + (shop.delivery_fee || 0)
+      }));
+    }
     if (orders.length === 0) return '';
 
-    const firstOrder = orders[0];
+    const firstOrder = orders[0] || {};
     const customerName = context.customerName || firstOrder.customerName || 'Cliente PediGochos';
     const phone = context.phone || firstOrder.customerPhone || (firstOrder.deliveryDetails && firstOrder.deliveryDetails.phone) || 'N/A';
     const orderType = context.orderType || firstOrder.orderType || 'delivery';
@@ -5798,18 +5851,21 @@ class MarketplaceController {
     if (orderType === 'delivery') {
       const deliv = firstOrder.deliveryDetails || {};
       const address = deliv.address || context.address || 'Dirección acordada';
-      const securityCode = deliv.code || context.code || 'N/A';
+      const securityCode = context.code || deliv.code || 'N/A';
       lines.push(`📍 *Dirección de Entrega:* ${address}`);
       lines.push(`🔐 *Código de Seguridad:* *${securityCode}*`);
       if (deliv.distanceKm || context.distanceKm) {
         const dist = Number(deliv.distanceKm || context.distanceKm).toFixed(1);
         lines.push(`📏 *Distancia Estimada:* ${dist} km`);
       }
-      if (deliv.latitude && deliv.longitude) {
-        lines.push(`🗺️ *Ubicación GPS:* https://www.google.com/maps?q=${deliv.latitude},${deliv.longitude}`);
+      const lat = deliv.latitude || context.latitude;
+      const lng = deliv.longitude || context.longitude;
+      if (lat && lng) {
+        lines.push(`🗺️ *Ubicación GPS:* https://www.google.com/maps?q=${lat},${lng}`);
       }
-      if (deliv.housePhotoUrl) {
-        lines.push(`🏠 *Foto de Fachada:* ${deliv.housePhotoUrl}`);
+      const facade = deliv.housePhotoUrl || context.housePhotoUrl;
+      if (facade) {
+        lines.push(`🏠 *Foto de Fachada:* ${facade}`);
       }
     }
 
@@ -5825,13 +5881,16 @@ class MarketplaceController {
       lines.push(`🆔 *Código de Comanda:* #${orderCode}`);
       lines.push(`🛒 *Artículos Solicitados:*`);
 
-      if (ord.items && ord.items.length > 0) {
-        ord.items.forEach(it => {
+      const items = (ord.items && ord.items.length > 0) ? ord.items : (context.shopMap && context.shopMap[ord.establishmentId]?.items) || [];
+      if (items && items.length > 0) {
+        items.forEach(it => {
           const qty = it.quantity || 1;
-          const subtotalPrice = this.formatPesos(this.normalizeCopPrice(it.subtotal_combined || ((it.price || 0) * qty)));
-          lines.push(`  • *${qty}x ${it.name}* (${subtotalPrice})`);
-          if (it.specifications && it.specifications.trim()) {
-            lines.push(`    ↳ _${it.specifications}_`);
+          const itemName = it.name || it.product_name || (it.product && it.product.name) || 'Producto';
+          const subtotalPrice = this.formatPesos(this.normalizeCopPrice(it.subtotal_combined || ((it.unit_total_calculated || it.price || 0) * qty)));
+          lines.push(`  • *${qty}x ${itemName}* (${subtotalPrice})`);
+          const specs = it.specifications || (it.selected_specifications ? this.getSpecsStringForKitchen(it.selected_specifications) : '');
+          if (specs && specs.trim()) {
+            lines.push(`    ↳ _${specs}_`);
           }
         });
       }
@@ -5852,8 +5911,9 @@ class MarketplaceController {
     if (paymentNotes) {
       lines.push(`📝 *Detalles:* ${paymentNotes}`);
     }
-    if (firstOrder.paymentReceiptUrl) {
-      lines.push(`📎 *Comprobante Adjunto:* ${firstOrder.paymentReceiptUrl}`);
+    const receipt = firstOrder.paymentReceiptUrl || context.paymentReceiptUrl;
+    if (receipt) {
+      lines.push(`📎 *Comprobante Adjunto:* ${receipt}`);
     }
     lines.push(`💰 *TOTAL A PAGAR:* *${this.formatPesos(grandTotal)}*`);
 

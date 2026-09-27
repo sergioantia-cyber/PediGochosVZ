@@ -8750,7 +8750,7 @@ class AdminController {
   // ==========================================
   async loadPinatasCatalog() {
     try {
-      const res = await fetch('/api/pinata-services/catalog');
+      const res = await fetch(`/api/pinata-services/catalog?t=${Date.now()}`);
       const catalog = await res.json();
       this.pinatasCatalogCache = Array.isArray(catalog) ? catalog : [];
       this.renderPinatasCatalogAdmin(this.pinatasCatalogCache);
@@ -8959,14 +8959,15 @@ class AdminController {
       if (previewEl) previewEl.src = dataUrl;
       if (inputEl) inputEl.value = dataUrl; // fallback immediately
 
-      // Upload to server to get permanent /uploads/pinatas/ URL
+      // Upload to server and Supabase Cloud Storage
       try {
         const res = await fetch('/api/upload-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             imageBase64: dataUrl,
-            folder: 'pinatas',
+            folder: 'services/pinatas',
+            establishmentId: 'serv-pinatas',
             fileName: file.name
           })
         });
