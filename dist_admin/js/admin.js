@@ -8812,14 +8812,14 @@ class AdminController {
     else if (cm <= 120) desc = 'Grande (~1m)';
     else desc = 'Gigante';
     return `${cm} cm (${desc})`;
-  },
+  }
 
   updatePinataSizeLabel(target, value) {
     const formatted = this.formatPinataSizeText(value);
     const elId = target === 'add' ? 'admin-pinata-size-val' : 'edit-pinata-size-val';
     const el = document.getElementById(elId);
     if (el) el.textContent = formatted;
-  },
+  }
 
   openEditPinataModal(pinataId) {
     const item = (this.pinatasCatalogCache || []).find(p => String(p.id) === String(pinataId));
@@ -8859,7 +8859,7 @@ class AdminController {
       modal.classList.add('active');
       this.checkModalOpenState();
     }
-  },
+  }
 
   closeEditPinataModal() {
     const modal = document.getElementById('admin-pinata-edit-modal');
@@ -8870,7 +8870,7 @@ class AdminController {
       this.checkModalOpenState();
     }
     this.currentEditingPinata = null;
-  },
+  }
 
   async savePinataProductEdits() {
     const id = document.getElementById('edit-pinata-id')?.value;
