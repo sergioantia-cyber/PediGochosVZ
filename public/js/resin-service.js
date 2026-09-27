@@ -77,11 +77,11 @@ const ResinServiceApp = {
 
   // Current customization state
   state: {
-    letter: 'S',
+    letter: 'M',
     styleId: 'bicolor',
     baseColorHex: '#F472B6',
     baseColorName: 'Rosa Pastel',
-    inclusions: 'Hojas de Oro 24K + Glitter',
+    inclusions: 'Bicolor con Glitter & Hoja de Oro',
     tasselName: 'Rosa Pastel',
     tasselHex: '#F472B6',
     hardware: 'gold', // 'gold' | 'silver'
@@ -186,27 +186,165 @@ const ResinServiceApp = {
           <span class="resin-live-tag">🟢 Vista Previa en Vivo</span>
 
           <div class="keychain-visual-wrapper">
-            <!-- Metallic Ring -->
-            <div class="keychain-ring-top" id="mockup-ring"></div>
-            <!-- Metallic Link -->
-            <div class="keychain-chain-link" id="mockup-chain"></div>
+            <svg id="resin-keychain-svg" viewBox="0 0 340 430" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <!-- Hardware Gradients -->
+                <linearGradient id="goldHardwareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FFF5BA" />
+                  <stop offset="25%" stop-color="#FACC15" />
+                  <stop offset="55%" stop-color="#CA8A04" />
+                  <stop offset="85%" stop-color="#EAB308" />
+                  <stop offset="100%" stop-color="#854D0E" />
+                </linearGradient>
 
-            <!-- Big Resin Letter -->
-            <div class="resin-letter-glyph-box" id="mockup-letter-box">
-              <div class="flakes-layer" id="mockup-flakes"></div>
-              <span class="resin-big-char" id="mockup-big-char">S</span>
-              <div class="resin-custom-name-tag hidden" id="mockup-custom-name">SOFÍA</div>
-            </div>
+                <linearGradient id="silverHardwareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FFFFFF" />
+                  <stop offset="30%" stop-color="#E2E8F0" />
+                  <stop offset="60%" stop-color="#94A3B8" />
+                  <stop offset="90%" stop-color="#CBD5E1" />
+                  <stop offset="100%" stop-color="#475569" />
+                </linearGradient>
 
-            <!-- Accessories: Tassel & Extra Charm -->
-            <div class="keychain-accessories-row">
-              <div class="keychain-tassel" id="mockup-tassel" title="Borla de gamuza"></div>
-              <div class="keychain-charm-badge hidden" id="mockup-charm">💖 Corazón</div>
-            </div>
+                <!-- Specular Liquid Gloss Highlight -->
+                <linearGradient id="liquidGlossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="rgba(255, 255, 255, 0.75)" />
+                  <stop offset="45%" stop-color="rgba(255, 255, 255, 0.25)" />
+                  <stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)" />
+                </linearGradient>
+
+                <!-- Gold Glitter & Flakes Pattern (matches real photo) -->
+                <pattern id="goldGlitterPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <rect width="40" height="40" fill="#CA8A04" />
+                  <circle cx="6" cy="8" r="1.8" fill="#FEF08A" />
+                  <circle cx="18" cy="4" r="1.2" fill="#FFF" />
+                  <circle cx="28" cy="12" r="2.2" fill="#FACC15" />
+                  <circle cx="34" cy="24" r="1.5" fill="#FEF08A" />
+                  <circle cx="12" cy="26" r="2.5" fill="#FDE047" />
+                  <circle cx="22" cy="34" r="1.8" fill="#FFF" />
+                  <circle cx="4" cy="36" r="1.2" fill="#EAB308" />
+                  <polygon points="14,14 19,16 17,21 12,18" fill="#FEF08A" opacity="0.95" />
+                  <polygon points="26,2 30,6 28,10 24,6" fill="#FDE047" opacity="0.9" />
+                  <polygon points="2,18 7,20 5,24 1,22" fill="#FEF08A" opacity="0.85" />
+                  <polygon points="22,18 29,22 26,28 20,24" fill="#F59E0B" opacity="0.95" />
+                  <polygon points="8,32 14,35 12,39 6,37" fill="#FEF08A" opacity="0.9" />
+                  <polygon points="30,30 36,33 34,38 28,35" fill="#FDE047" opacity="0.95" />
+                  <path d="M 20,10 L 21,12 L 23,13 L 21,14 L 20,16 L 19,14 L 17,13 L 19,12 Z" fill="#FFF" opacity="0.9" />
+                  <path d="M 10,22 L 10.5,23.5 L 12,24 L 10.5,24.5 L 10,26 L 9.5,24.5 L 8,24 L 9.5,23.5 Z" fill="#FFF" opacity="0.9" />
+                </pattern>
+
+                <!-- Chunky Iridescent Glitter Pattern -->
+                <pattern id="chunkyGlitterPattern" width="45" height="45" patternUnits="userSpaceOnUse">
+                  <circle cx="10" cy="12" r="2.5" fill="rgba(255,255,255,0.85)" />
+                  <circle cx="32" cy="8" r="3.2" fill="rgba(253,224,71,0.9)" />
+                  <circle cx="22" cy="24" r="2" fill="rgba(255,255,255,0.95)" />
+                  <circle cx="8" cy="34" r="3" fill="rgba(251,113,133,0.85)" />
+                  <circle cx="36" cy="36" r="2.8" fill="rgba(253,224,71,0.9)" />
+                  <polygon points="16,6 19,8 19,12 16,14 13,12 13,8" fill="rgba(254,240,138,0.85)" />
+                  <polygon points="36,20 39,22 39,26 36,28 33,26 33,22" fill="rgba(255,255,255,0.9)" />
+                  <polygon points="26,36 29,38 29,42 26,44 23,42 23,38" fill="rgba(253,224,71,0.85)" />
+                  <polygon points="4,22 7,24 7,28 4,30 1,28 1,24" fill="rgba(244,114,182,0.8)" />
+                </pattern>
+
+                <!-- Silver Glacial Flakes Pattern -->
+                <pattern id="silverGlitterPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <rect width="40" height="40" fill="#64748B" />
+                  <circle cx="8" cy="10" r="1.8" fill="#FFF" />
+                  <circle cx="26" cy="14" r="2.5" fill="#E2E8F0" />
+                  <circle cx="16" cy="30" r="2.2" fill="#FFF" />
+                  <polygon points="12,4 18,7 15,12 9,9" fill="#FFF" opacity="0.95" />
+                  <polygon points="24,22 31,25 28,31 21,28" fill="#CBD5E1" opacity="0.95" />
+                  <polygon points="4,20 10,23 7,28 1,25" fill="#FFF" opacity="0.9" />
+                  <path d="M 22,8 L 23,10 L 25,11 L 23,12 L 22,14 L 21,12 L 19,11 L 21,10 Z" fill="#FFF" />
+                </pattern>
+
+                <!-- Master Letter ClipPath (The letter itself is the resin mold!) -->
+                <clipPath id="resin-letter-clip">
+                  <text id="svg-clip-char" x="170" y="340" text-anchor="middle" font-family="'Arial Black', 'Montserrat', Impact, sans-serif" font-weight="900" font-size="205">${this.state.letter}</text>
+                </clipPath>
+
+                <!-- Soft Ambient Surface Contact Shadow -->
+                <filter id="softContactShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="8" result="blur" />
+                  <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0" />
+                </filter>
+              </defs>
+
+              <!-- 1. Ambient Drop Shadow on Table/Surface -->
+              <text id="svg-shadow-char" x="172" y="352" text-anchor="middle" font-family="'Arial Black', 'Montserrat', Impact, sans-serif" font-weight="900" font-size="205" fill="#000000" filter="url(#softContactShadow)">${this.state.letter}</text>
+
+              <!-- 2. Physical 3D Cast Depth / Molded Sidewalls -->
+              <g id="svg-resin-depth-layers">
+                <text id="svg-depth-4" x="170" y="348" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="#831843">${this.state.letter}</text>
+                <text id="svg-depth-3" x="170" y="346" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="#9D174D">${this.state.letter}</text>
+                <text id="svg-depth-2" x="170" y="344" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="#BE185D">${this.state.letter}</text>
+                <text id="svg-depth-1" x="170" y="342" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="#DB2777">${this.state.letter}</text>
+              </g>
+
+              <!-- 3. Front Face: PURE RESIN CAST AS THE LETTER -->
+              <g clip-path="url(#resin-letter-clip)" id="svg-front-face-group">
+                <!-- Base Color Resin Layer -->
+                <rect id="svg-resin-base-fill" x="10" y="120" width="320" height="250" fill="${this.state.baseColorHex}" />
+                
+                <!-- Base Resin Glitter Sprinkles -->
+                <rect id="svg-resin-base-glitter" x="10" y="120" width="320" height="250" fill="url(#chunkyGlitterPattern)" opacity="0.8" />
+
+                <!-- Inclusions & Internal Styling (e.g. Diagonal Gold Wave for Bicolor) -->
+                <g id="svg-style-inclusions"></g>
+
+                <!-- Liquid Meniscus Beveled Border (Simulates rounded mold edge) -->
+                <text id="svg-meniscus-char" x="170" y="340" text-anchor="middle" font-family="'Arial Black', 'Montserrat', Impact, sans-serif" font-weight="900" font-size="205" fill="none" stroke="rgba(255, 255, 255, 0.65)" stroke-width="3" stroke-linejoin="round">${this.state.letter}</text>
+
+                <!-- Signature Mirror-Gloss Specular Highlight (Wet Resin Reflection) -->
+                <path d="M 50,150 Q 170,210 290,165 L 290,205 Q 170,250 50,195 Z" fill="url(#liquidGlossGrad)" opacity="0.65" pointer-events="none" />
+                <ellipse cx="120" cy="315" rx="35" ry="12" fill="rgba(255,255,255,0.22)" transform="rotate(-18 120 315)" pointer-events="none" />
+                <ellipse cx="225" cy="315" rx="35" ry="12" fill="rgba(255,255,255,0.22)" transform="rotate(-18 225 315)" pointer-events="none" />
+              </g>
+
+              <!-- Optional Custom Name in Sealed Vinyl Lettering -->
+              <text id="svg-custom-name" x="170" y="278" text-anchor="middle" font-family="'Caveat', 'Brush Script MT', 'Dancing Script', cursive, sans-serif" font-weight="700" font-size="30" fill="#FFFFFF" stroke="#0F172A" stroke-width="0.75" filter="drop-shadow(0 2px 5px rgba(0,0,0,0.8))" class="hidden"></text>
+
+              <!-- 4. Real Hardware Assembly -->
+              <g id="svg-hardware-group">
+                <!-- Top Split Key Ring (Argolla plana de llavero) -->
+                <circle cx="170" cy="45" r="26" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="7" class="svg-metal-element" />
+                <circle cx="170" cy="45" r="23" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="1" />
+                <line x1="168" y1="19" x2="172" y2="71" stroke="rgba(0,0,0,0.25)" stroke-width="1.5" />
+
+                <!-- Chain Links -->
+                <ellipse id="svg-chain-link-1" cx="166" cy="74" rx="4.5" ry="8" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3" class="svg-metal-element" />
+                <ellipse id="svg-chain-link-2" cx="158" cy="90" rx="4.5" ry="8" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3" class="svg-metal-element" />
+                <ellipse id="svg-chain-link-3" cx="145" cy="106" rx="4.5" ry="8" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3" class="svg-metal-element" />
+
+                <!-- Screw Eye Pin (Cáncamo atornillado a la resina) -->
+                <line id="svg-screw-pin" x1="105" y1="183" x2="105" y2="201" stroke="url(#goldHardwareGrad)" stroke-width="3" stroke-linecap="round" class="svg-metal-element" />
+                <ellipse id="svg-screw-eye" cx="105" cy="177" rx="6" ry="6" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3.5" class="svg-metal-element" />
+                <ellipse id="svg-jump-ring" cx="120" cy="165" rx="5.5" ry="7" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="3" transform="rotate(-20 120 165)" class="svg-metal-element" />
+
+                <!-- Suede Tassel (Borla de Gamuza colgada de la argolla) -->
+                <g id="svg-tassel-group" transform="translate(60, 82)">
+                  <ellipse cx="25" cy="5" rx="4" ry="5.5" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="2.5" transform="rotate(15 25 5)" class="svg-metal-element" />
+                  <path d="M 16,10 Q 25,6 34,10 L 37,24 Q 25,28 13,24 Z" fill="url(#goldHardwareGrad)" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))" class="svg-metal-element" />
+                  <ellipse cx="25" cy="11" rx="9" ry="2.5" fill="#FFF5BA" opacity="0.6" />
+                  <path id="svg-tassel-body" d="M 14,24 Q 25,28 36,24 L 42,78 Q 25,84 8,78 Z" fill="${this.state.tasselHex}" filter="drop-shadow(0 4px 8px rgba(0,0,0,0.35))" />
+                  <line x1="16" y1="28" x2="14" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+                  <line x1="22" y1="28" x2="21" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+                  <line x1="28" y1="28" x2="29" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+                  <line x1="34" y1="28" x2="36" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+                  <line x1="18" y1="28" x2="16" y2="76" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
+                  <line x1="24" y1="28" x2="23" y2="78" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
+                </g>
+
+                <!-- Extra Charm (Dije Opcional) -->
+                <g id="svg-charm-group" transform="translate(205, 95)" class="hidden">
+                  <ellipse cx="15" cy="5" rx="3.5" ry="5" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="2.5" class="svg-metal-element" />
+                  <g id="svg-charm-graphic"></g>
+                </g>
+              </g>
+            </svg>
           </div>
 
           <div style="font-size: 11.5px; color: #FDA4AF; font-weight: 700; margin-top: 6px;">
-            ✨ Brillo espejo cristalino con protección anti-amarilleo UV
+            ✨ Llavero artesanal vaciado en molde 3D de resina epóxica pura
           </div>
         </div>
 
@@ -214,11 +352,11 @@ const ResinServiceApp = {
         <div class="resin-section-card">
           <div class="resin-section-title">
             <span>1. Elige tu Letra / Inicial</span>
-            <span class="badge-opt">Letra Activa: <strong id="lbl-active-letter" style="color: #FFF; font-size: 14px;">S</strong></span>
+            <span class="badge-opt">Letra Activa: <strong id="lbl-active-letter" style="color: #FFF; font-size: 14px;">${this.state.letter}</strong></span>
           </div>
           <div class="alphabet-grid" id="resin-alphabet-grid">
             ${this.alphabet.map(char => `
-              <button type="button" class="btn-letter-pick ${char === 'S' ? 'active' : ''}" onclick="ResinServiceApp.setLetter('${char}')">
+              <button type="button" class="btn-letter-pick ${char === this.state.letter ? 'active' : ''}" onclick="ResinServiceApp.setLetter('${char}')">
                 ${char}
               </button>
             `).join('')}
@@ -406,60 +544,230 @@ const ResinServiceApp = {
     return { basePrice, extraCharmPrice, totalUsd, totalCop, totalBs };
   },
 
-  updateVisualPreview() {
-    // 1. Big Char
-    const bigCharEl = document.getElementById('mockup-big-char');
-    if (bigCharEl) bigCharEl.textContent = this.state.letter;
+  adjustColor(hex, lum) {
+    hex = String(hex).replace(/[^0-9a-f]/gi, '');
+    if (hex.length < 6) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    lum = lum || 0;
+    let rgb = '#', c, i;
+    for (i = 0; i < 3; i++) {
+      c = parseInt(hex.substr(i * 2, 2), 16);
+      c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+      rgb += ('00' + c).substr(c.length);
+    }
+    return rgb;
+  },
 
-    // 2. Letter Box background styling according to style & color
-    const box = document.getElementById('mockup-letter-box');
-    const flakes = document.getElementById('mockup-flakes');
-    if (box) {
-      const c = this.state.baseColorHex;
-      switch (this.state.styleId) {
-        case 'bicolor':
-          box.style.background = `linear-gradient(135deg, ${c} 0%, ${c} 48%, rgba(255,255,255,0.2) 52%, rgba(255,255,255,0.08) 100%)`;
-          if (flakes) flakes.style.opacity = '1';
-          break;
-        case 'gold_flakes':
-          box.style.background = `linear-gradient(135deg, ${c} 0%, rgba(234, 179, 8, 0.4) 100%)`;
-          if (flakes) flakes.style.opacity = '1';
-          break;
-        case 'silver_flakes':
-          box.style.background = `linear-gradient(135deg, ${c} 0%, rgba(203, 213, 225, 0.5) 100%)`;
-          if (flakes) flakes.style.opacity = '0.9';
-          break;
-        case 'glitter_full':
-          box.style.background = `linear-gradient(135deg, ${c} 0%, #EC4899 100%)`;
-          if (flakes) flakes.style.opacity = '1';
-          break;
-        case 'flowers':
-          box.style.background = `linear-gradient(135deg, rgba(255,255,255,0.2) 0%, ${c} 100%)`;
-          if (flakes) flakes.style.opacity = '0.6';
-          break;
-        case 'crystal':
-        default:
-          box.style.background = `linear-gradient(135deg, rgba(255,255,255,0.15) 0%, ${c} 100%)`;
-          if (flakes) flakes.style.opacity = '0.2';
-          break;
+  getLetterAnchor(letter) {
+    switch (letter) {
+      case 'M': return { x: 105, y: 185 };
+      case 'V': return { x: 95, y: 185 };
+      case 'W': return { x: 95, y: 185 };
+      case 'Y': return { x: 105, y: 185 };
+      case 'U': return { x: 110, y: 185 };
+      default:  return { x: 165, y: 185 };
+    }
+  },
+
+  updateVisualPreview() {
+    const letter = this.state.letter || 'M';
+    const c = this.state.baseColorHex || '#F472B6';
+    const isSilver = this.state.hardware === 'silver';
+    const metalGrad = isSilver ? 'url(#silverHardwareGrad)' : 'url(#goldHardwareGrad)';
+
+    // 1. Update text for all layers of the 3D letter
+    const clipChar = document.getElementById('svg-clip-char');
+    const shadowChar = document.getElementById('svg-shadow-char');
+    const meniscusChar = document.getElementById('svg-meniscus-char');
+    if (clipChar) clipChar.textContent = letter;
+    if (shadowChar) shadowChar.textContent = letter;
+    if (meniscusChar) meniscusChar.textContent = letter;
+
+    // 2. Update 3D depth layers
+    const cDark = this.adjustColor(c, -0.55);
+    const cMid = this.adjustColor(c, -0.38);
+    const cLight = this.adjustColor(c, -0.22);
+    const cShine = this.adjustColor(c, -0.08);
+
+    const d4 = document.getElementById('svg-depth-4');
+    const d3 = document.getElementById('svg-depth-3');
+    const d2 = document.getElementById('svg-depth-2');
+    const d1 = document.getElementById('svg-depth-1');
+
+    if (d4) { d4.textContent = letter; d4.setAttribute('fill', cDark); }
+    if (d3) { d3.textContent = letter; d3.setAttribute('fill', cMid); }
+    if (d2) { d2.textContent = letter; d2.setAttribute('fill', cLight); }
+    if (d1) { d1.textContent = letter; d1.setAttribute('fill', cShine); }
+
+    // 3. Base resin color & glitter
+    const baseRect = document.getElementById('svg-resin-base-fill');
+    const baseGlitter = document.getElementById('svg-resin-base-glitter');
+    if (baseRect) baseRect.setAttribute('fill', c);
+
+    // 4. Inclusions according to style
+    const styleInclusions = document.getElementById('svg-style-inclusions');
+    if (styleInclusions) {
+      let inclHtml = '';
+      if (this.state.styleId === 'bicolor') {
+        // Diagonal gold glitter wave like user's photo
+        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.85');
+        inclHtml = `
+          <path d="M 0,210 Q 170,270 340,220 L 340,295 Q 170,345 0,285 Z" fill="url(#goldGlitterPattern)" />
+          <path d="M 0,206 Q 170,266 340,216 L 340,222 Q 170,272 0,212 Z" fill="#FDE047" opacity="0.6" />
+          <path d="M 0,283 Q 170,343 340,293 L 340,299 Q 170,349 0,289 Z" fill="#FDE047" opacity="0.6" />
+        `;
+      } else if (this.state.styleId === 'gold_flakes') {
+        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.35');
+        inclHtml = `
+          <rect x="0" y="120" width="340" height="250" fill="url(#goldGlitterPattern)" opacity="0.85" />
+          <polygon points="90,210 115,225 105,245 80,230" fill="#FEF08A" opacity="0.95" />
+          <polygon points="190,195 210,205 200,225 180,215" fill="#FDE047" opacity="0.9" />
+          <polygon points="230,280 255,295 240,320 215,300" fill="#FEF08A" opacity="0.95" />
+          <polygon points="120,300 145,310 135,330 110,320" fill="#F59E0B" opacity="0.9" />
+          <polygon points="150,230 170,240 160,260 140,250" fill="#FEF08A" opacity="0.9" />
+        `;
+      } else if (this.state.styleId === 'silver_flakes') {
+        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.2');
+        inclHtml = `
+          <rect x="0" y="120" width="340" height="250" fill="url(#silverGlitterPattern)" opacity="0.85" />
+          <polygon points="85,210 110,225 100,245 75,230" fill="#FFFFFF" opacity="0.95" />
+          <polygon points="190,200 210,210 200,230 180,220" fill="#E2E8F0" opacity="0.9" />
+          <polygon points="225,275 250,290 235,315 210,295" fill="#FFFFFF" opacity="0.95" />
+          <polygon points="125,295 150,305 140,325 115,315" fill="#CBD5E1" opacity="0.9" />
+        `;
+      } else if (this.state.styleId === 'glitter_full') {
+        if (baseGlitter) baseGlitter.setAttribute('opacity', '1');
+        inclHtml = `
+          <rect x="0" y="120" width="340" height="250" fill="url(#chunkyGlitterPattern)" opacity="0.9" />
+        `;
+      } else if (this.state.styleId === 'flowers') {
+        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.2');
+        inclHtml = `
+          <g transform="translate(100, 240)">
+            <circle cx="0" cy="0" r="14" fill="#FEF08A" opacity="0.95" />
+            <circle cx="0" cy="0" r="6" fill="#F59E0B" />
+            <ellipse cx="0" cy="-18" rx="6" ry="10" fill="#FFF" opacity="0.95" />
+            <ellipse cx="14" cy="-12" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(45 14 -12)" />
+            <ellipse cx="18" cy="0" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(90 18 0)" />
+            <ellipse cx="14" cy="12" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(135 14 12)" />
+            <ellipse cx="0" cy="18" rx="6" ry="10" fill="#FFF" opacity="0.95" />
+            <ellipse cx="-14" cy="12" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(-135 -14 12)" />
+            <ellipse cx="-18" cy="0" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(-90 -18 0)" />
+            <ellipse cx="-14" cy="-12" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(-45 -14 -12)" />
+          </g>
+          <g transform="translate(210, 260) scale(0.75)">
+            <circle cx="0" cy="0" r="14" fill="#FDA4AF" opacity="0.95" />
+            <circle cx="0" cy="0" r="6" fill="#FB7185" />
+            <ellipse cx="0" cy="-18" rx="6" ry="10" fill="#FFF" opacity="0.9" />
+            <ellipse cx="18" cy="0" rx="6" ry="10" fill="#FFF" opacity="0.9" transform="rotate(90 18 0)" />
+            <ellipse cx="0" cy="18" rx="6" ry="10" fill="#FFF" opacity="0.9" />
+            <ellipse cx="-18" cy="0" rx="6" ry="10" fill="#FFF" opacity="0.9" transform="rotate(-90 -18 0)" />
+          </g>
+          <path d="M 140,290 Q 155,270 170,275 Q 160,295 140,290 Z" fill="#34D399" opacity="0.85" />
+          <path d="M 180,210 Q 195,195 210,200 Q 200,215 180,210 Z" fill="#34D399" opacity="0.85" />
+        `;
+      } else { // crystal
+        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.15');
+        inclHtml = `
+          <ellipse cx="140" cy="240" rx="40" ry="15" fill="rgba(255,255,255,0.25)" transform="rotate(-25 140 240)" />
+          <ellipse cx="200" cy="270" rx="50" ry="20" fill="rgba(255,255,255,0.2)" transform="rotate(15 200 270)" />
+        `;
+      }
+      styleInclusions.innerHTML = inclHtml;
+    }
+
+    // 5. Hardware Position Anchors & Colors
+    const anchor = this.getLetterAnchor(letter);
+    const screwPin = document.getElementById('svg-screw-pin');
+    const screwEye = document.getElementById('svg-screw-eye');
+    const jumpRing = document.getElementById('svg-jump-ring');
+    const link3 = document.getElementById('svg-chain-link-3');
+    const link2 = document.getElementById('svg-chain-link-2');
+
+    if (screwPin) {
+      screwPin.setAttribute('x1', anchor.x);
+      screwPin.setAttribute('y1', anchor.y - 2);
+      screwPin.setAttribute('x2', anchor.x);
+      screwPin.setAttribute('y2', anchor.y + 16);
+      screwPin.setAttribute('stroke', metalGrad);
+    }
+    if (screwEye) {
+      screwEye.setAttribute('cx', anchor.x);
+      screwEye.setAttribute('cy', anchor.y - 8);
+      screwEye.setAttribute('stroke', metalGrad);
+    }
+    if (jumpRing) {
+      const jx = anchor.x + (170 - anchor.x) * 0.28;
+      const jy = anchor.y - 20;
+      jumpRing.setAttribute('cx', jx);
+      jumpRing.setAttribute('cy', jy);
+      jumpRing.setAttribute('stroke', metalGrad);
+    }
+    if (link3) {
+      const l3x = anchor.x + (170 - anchor.x) * 0.55;
+      const l3y = anchor.y - 34;
+      link3.setAttribute('cx', l3x);
+      link3.setAttribute('cy', l3y);
+      link3.setAttribute('stroke', metalGrad);
+    }
+    if (link2) {
+      const l2x = anchor.x + (170 - anchor.x) * 0.8;
+      const l2y = 86;
+      link2.setAttribute('cx', l2x);
+      link2.setAttribute('cy', l2y);
+      link2.setAttribute('stroke', metalGrad);
+    }
+
+    // All hardware strokes
+    document.querySelectorAll('.svg-metal-element').forEach(el => {
+      if (el.tagName === 'circle' || el.tagName === 'ellipse' || el.tagName === 'line') {
+        el.setAttribute('stroke', metalGrad);
+      } else {
+        el.setAttribute('fill', metalGrad);
+      }
+    });
+
+    // 6. Tassel position & color
+    const tasselGroup = document.getElementById('svg-tassel-group');
+    if (tasselGroup) {
+      const tx = Math.max(20, Math.min(anchor.x - 45, 125));
+      tasselGroup.setAttribute('transform', `translate(${tx}, 82)`);
+    }
+    const tasselBody = document.getElementById('svg-tassel-body');
+    if (tasselBody) {
+      tasselBody.setAttribute('fill', this.state.tasselHex || '#F472B6');
+    }
+
+    // 7. Extra Charm
+    const charmGroup = document.getElementById('svg-charm-group');
+    const charmGraphic = document.getElementById('svg-charm-graphic');
+    const charmObj = this.charms.find(ch => ch.id === this.state.extraCharmId);
+    if (charmGroup) {
+      if (charmObj && charmObj.id !== 'none') {
+        charmGroup.classList.remove('hidden');
+        if (charmGraphic) {
+          if (charmObj.id === 'corazon') {
+            charmGraphic.innerHTML = `
+              <path d="M 15,10 C 15,10 10,2 3,6 C -4,10 0,22 15,32 C 30,22 34,10 27,6 C 20,2 15,10 15,10 Z" fill="${metalGrad}" />
+              <path d="M 15,12 C 15,12 11,5 5,8 C -1,11 2,21 15,29 C 28,21 31,11 25,8 C 19,5 15,12 15,12 Z" fill="#F43F5E" />
+            `;
+          } else if (charmObj.id === 'huesito') {
+            charmGraphic.innerHTML = `
+              <path d="M 5,12 C 2,9 2,5 5,2 C 8,-1 12,-1 15,2 C 18,-1 22,-1 25,2 C 28,5 28,9 25,12 L 25,18 C 28,21 28,25 25,28 C 22,31 18,31 15,28 C 12,31 8,31 5,28 C 2,25 2,21 5,18 Z" fill="${metalGrad}" />
+            `;
+          } else { // estrella
+            charmGraphic.innerHTML = `
+              <polygon points="15,2 19,11 29,12 21,19 24,29 15,23 6,29 9,19 1,12 11,11" fill="${metalGrad}" />
+              <circle cx="15" cy="16" r="3" fill="#FFF" opacity="0.8" />
+            `;
+          }
+        }
+      } else {
+        charmGroup.classList.add('hidden');
       }
     }
 
-    // 3. Hardware Ring and Chain
-    const ring = document.getElementById('mockup-ring');
-    const chain = document.getElementById('mockup-chain');
-    const isSilver = this.state.hardware === 'silver';
-    if (ring) ring.classList.toggle('silver-metal', isSilver);
-    if (chain) chain.classList.toggle('silver-metal', isSilver);
-
-    // 4. Tassel color
-    const tassel = document.getElementById('mockup-tassel');
-    if (tassel) {
-      tassel.style.backgroundColor = this.state.tasselHex;
-    }
-
-    // 5. Custom name overlay
-    const nameEl = document.getElementById('mockup-custom-name');
+    // 8. Custom Name overlay
+    const nameEl = document.getElementById('svg-custom-name');
     if (nameEl) {
       if (this.state.customName) {
         nameEl.textContent = this.state.customName.toUpperCase();
@@ -469,26 +777,14 @@ const ResinServiceApp = {
       }
     }
 
-    // 6. Charm badge
-    const charmEl = document.getElementById('mockup-charm');
-    const charmObj = this.charms.find(ch => ch.id === this.state.extraCharmId);
-    if (charmEl) {
-      if (charmObj && charmObj.id !== 'none') {
-        charmEl.textContent = `${charmObj.icon} ${charmObj.name}`;
-        charmEl.classList.remove('hidden');
-      } else {
-        charmEl.classList.add('hidden');
-      }
-    }
-
-    // 7. Pricing
+    // 9. Pricing
     const pricing = this.calculatePricing();
     const usdEl = document.getElementById('resin-total-usd');
     const copEl = document.getElementById('resin-total-cop');
     if (usdEl) usdEl.textContent = `$${pricing.totalUsd.toFixed(2)} USD`;
     if (copEl) copEl.textContent = `~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs`;
 
-    // 8. WhatsApp Link Pre-generation
+    // 10. WhatsApp Link Pre-generation
     const waLink = document.getElementById('btn-resin-wa-link');
     if (waLink) {
       const waText = this.buildWhatsAppMessage();
