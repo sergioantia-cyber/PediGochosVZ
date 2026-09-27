@@ -3823,8 +3823,26 @@ body {
   transition: opacity 0.25s, transform 0.25s;
 }
 
-.floating-left-actions-container.hidden {
+.floating-left-actions-container.hidden,
+body.in-establishment .floating-left-actions-container,
+body.in-establishment #floating-sos-btn,
+body.in-establishment #floating-services-btn,
+body:has(#establishment-view.active) .floating-left-actions-container,
+body:has(#establishment-view.active) #floating-sos-btn,
+body:has(#establishment-view.active) #floating-services-btn,
+#establishment-view.active ~ .floating-left-actions-container,
+body:has(#pinata-service-modal:not(.hidden)) .floating-left-actions-container,
+body:has(#print3d-catalog-modal:not(.hidden)) .floating-left-actions-container,
+body:has(#paint-service-modal:not(.hidden)) .floating-left-actions-container,
+body:has(#resin-service-modal:not(.hidden)) .floating-left-actions-container,
+body:has(#cauchera-modal.open) .floating-left-actions-container,
+body:has(#cauchera-modal.active) .floating-left-actions-container,
+body:has(#ride-modal.open) .floating-left-actions-container,
+body:has(#ride-modal.active) .floating-left-actions-container {
   display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .floating-fab-btn {
@@ -4000,14 +4018,7 @@ body {
   box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
 }
 
-/* Responsive adjustment for floating button on desktop/mobile */
-@media (max-width: 600px) {
-  .floating-sos-btn {
-    bottom: 76px;
-    right: 14px;
-    width: 54px;
-    height: 54px;
-}
+
 
 /* S.O.S Modal & Sub-modals Visibility and Sheet styling */
 #sos-menu-modal,

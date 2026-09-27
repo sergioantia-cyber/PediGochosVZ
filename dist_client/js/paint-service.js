@@ -804,6 +804,9 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
   },
 
   open() {
+    if (typeof MarketplaceApp !== 'undefined' && MarketplaceApp.updateFloatingAndHeaderSos) {
+      MarketplaceApp.updateFloatingAndHeaderSos(true);
+    }
     const modal = document.getElementById('paint-service-modal');
     if (!modal) {
       this.renderMainModalMarkup();
@@ -824,6 +827,9 @@ ${quote.notes ? `📝 *Observaciones:* ${quote.notes}\n` : ''}━━━━━━
       if (window.location.hash.includes('pintura-automotriz')) {
         window.history.pushState({}, '', window.location.pathname);
       }
+    }
+    if (typeof MarketplaceApp !== 'undefined' && MarketplaceApp.updateFloatingAndHeaderSos && !MarketplaceApp.selectedEstablishment) {
+      MarketplaceApp.updateFloatingAndHeaderSos(false);
     }
   },
 

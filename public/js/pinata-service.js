@@ -103,6 +103,9 @@ const PinataServiceApp = {
   },
 
   open() {
+    if (typeof MarketplaceApp !== 'undefined' && MarketplaceApp.updateFloatingAndHeaderSos) {
+      MarketplaceApp.updateFloatingAndHeaderSos(true);
+    }
     let modal = document.getElementById('pinata-service-modal');
     if (!modal) {
       this.renderMainModalMarkup();
@@ -122,6 +125,9 @@ const PinataServiceApp = {
     if (modal) modal.classList.add('hidden');
     if (window.location.hash.startsWith('#servicios/pinatas')) {
       window.history.pushState(null, '', window.location.pathname);
+    }
+    if (typeof MarketplaceApp !== 'undefined' && MarketplaceApp.updateFloatingAndHeaderSos && !MarketplaceApp.selectedEstablishment) {
+      MarketplaceApp.updateFloatingAndHeaderSos(false);
     }
   },
 

@@ -734,6 +734,7 @@ class MarketplaceController {
   }
 
   executeServiceAction(actionType) {
+    this.updateFloatingAndHeaderSos(true);
     switch (actionType) {
       case 'resin':
         if (typeof ResinServiceApp !== 'undefined' && ResinServiceApp.open) {
@@ -777,20 +778,40 @@ class MarketplaceController {
   updateFloatingAndHeaderSos(isInSubCategoryOrStore) {
     const floatingContainer = document.querySelector('.floating-left-actions-container');
     const headerSosBtn = document.getElementById('header-sos-btn');
+    const floatingSos = document.getElementById('floating-sos-btn');
+    const floatingServices = document.getElementById('floating-services-btn');
 
     if (isInSubCategoryOrStore) {
+      document.body.classList.add('in-establishment');
       if (floatingContainer) {
         floatingContainer.classList.add('hidden');
         floatingContainer.style.setProperty('display', 'none', 'important');
+      }
+      if (floatingSos) {
+        floatingSos.classList.add('hidden');
+        floatingSos.style.setProperty('display', 'none', 'important');
+      }
+      if (floatingServices) {
+        floatingServices.classList.add('hidden');
+        floatingServices.style.setProperty('display', 'none', 'important');
       }
       if (headerSosBtn) {
         headerSosBtn.classList.remove('hidden');
         headerSosBtn.style.removeProperty('display');
       }
     } else {
+      document.body.classList.remove('in-establishment');
       if (floatingContainer) {
         floatingContainer.classList.remove('hidden');
         floatingContainer.style.removeProperty('display');
+      }
+      if (floatingSos) {
+        floatingSos.classList.remove('hidden');
+        floatingSos.style.removeProperty('display');
+      }
+      if (floatingServices) {
+        floatingServices.classList.remove('hidden');
+        floatingServices.style.removeProperty('display');
       }
       if (headerSosBtn) {
         headerSosBtn.classList.add('hidden');
@@ -9311,6 +9332,9 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
       modal.style.visibility = '';
       modal.style.pointerEvents = '';
     }
+    if (!this.selectedEstablishment) {
+      this.updateFloatingAndHeaderSos(false);
+    }
   }
 
   refreshRideOriginGPS() {
@@ -10156,6 +10180,9 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
     }
     const suggBox = document.getElementById('cauchera-suggestions-box');
     if (suggBox) suggBox.style.display = 'none';
+    if (!this.selectedEstablishment) {
+      this.updateFloatingAndHeaderSos(false);
+    }
   }
 
   isNightRateActive() {

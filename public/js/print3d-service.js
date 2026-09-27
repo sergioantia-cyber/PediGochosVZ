@@ -160,6 +160,9 @@ const Print3DServiceApp = {
   },
 
   open() {
+    if (typeof MarketplaceApp !== 'undefined' && MarketplaceApp.updateFloatingAndHeaderSos) {
+      MarketplaceApp.updateFloatingAndHeaderSos(true);
+    }
     let modal = document.getElementById('print3d-catalog-modal');
     if (!modal) {
       this.renderCatalogModalMarkup();
@@ -175,6 +178,9 @@ const Print3DServiceApp = {
     if (modal) modal.classList.add('hidden');
     if (window.location.hash.includes('impresion-3d')) {
       window.history.pushState({}, '', window.location.pathname);
+    }
+    if (typeof MarketplaceApp !== 'undefined' && MarketplaceApp.updateFloatingAndHeaderSos && !MarketplaceApp.selectedEstablishment) {
+      MarketplaceApp.updateFloatingAndHeaderSos(false);
     }
   },
 
