@@ -1164,80 +1164,92 @@ class MarketplaceController {
           {
             key: 'resina',
             name: 'Arte & Resina Epóxica',
-            icon: '✨',
+            iconImg: '/images/services/cat_resina.svg',
             color: '#EC4899',
             gradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(236, 72, 153, 0.55)',
             glow: 'rgba(236, 72, 153, 0.35)',
-            desc: 'Llaveros letras A-Z personalizados con hojilla de oro 24K, borlas, dijes y recuerdos para eventos.',
-            businessName: 'SHELLIART',
             badge: '💎 Pan de Oro 24K',
-            actionText: 'Ver Empresa ➔'
+            items: [
+              'Llaveros letras A-Z personalizados en resina epóxica',
+              'Diseños con hojilla de oro 24K, borlas y dijes variados',
+              'Recuerdos únicos para fiestas, aniversarios y eventos'
+            ]
           },
           {
             key: 'pinatas',
             name: 'Fiestas & Piñatas Creativas',
-            icon: '🪅',
+            iconImg: '/images/services/cat_pinatas.svg',
             color: '#F43F5E',
             gradient: 'linear-gradient(135deg, rgba(244, 63, 94, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(244, 63, 94, 0.55)',
             glow: 'rgba(244, 63, 94, 0.35)',
-            desc: 'Piñatas artesanales 3D, números temáticos florales, siluetas a medida y mini-piñatas.',
-            businessName: 'Taller de Piñatas Creativas',
             badge: '🎉 100% Hecho a Mano',
-            actionText: 'Ver Taller ➔'
+            items: [
+              'Piñatas artesanales 3D y siluetas con temática personalizada',
+              'Números temáticos decorados con flores para cumpleaños',
+              'Mini-piñatas de mesa y recuerdos festivos por encargo'
+            ]
           },
           {
             key: 'print3d',
-            name: 'Tecnología & 3D Lab',
-            icon: '🖨️',
+            name: 'Tecnología & Impresión 3D',
+            iconImg: '/images/services/cat_print3d.svg',
             color: '#6366F1',
             gradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(99, 102, 241, 0.55)',
             glow: 'rgba(99, 102, 241, 0.35)',
-            desc: 'Laboratorio de impresión 3D industrial, prototipado rápido, repuestos y visor 360° en vivo.',
-            businessName: 'PediGochos 3D Lab',
             badge: '🔄 Visor 3D 360°',
-            actionText: 'Ver Laboratorio ➔'
+            items: [
+              'Prototipado rápido y fabricación de piezas técnicas a medida',
+              'Repuestos automotrices descatalogados y soportes plásticos',
+              'Coleccionables, modelos STL y visor interactivo 3D en vivo'
+            ]
           },
           {
             key: 'paint',
             name: 'Automotriz & Latonería',
-            icon: '🎨',
+            iconImg: '/images/services/cat_paint.svg',
             color: '#EA580C',
             gradient: 'linear-gradient(135deg, rgba(234, 88, 12, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(234, 88, 12, 0.55)',
             glow: 'rgba(234, 88, 12, 0.35)',
-            desc: 'Sacado de golpes, enderezada de chasis, latonería profesional y pintura con secado al horno.',
-            businessName: 'Taller Automotriz San Antonio',
             badge: '🔥 Secado al Horno',
-            actionText: 'Ver Taller ➔'
+            items: [
+              'Sacado de golpes en frío y desabollado profesional',
+              'Latonería general y enderezada de chasis automotriz',
+              'Pintura computarizada bicapa con secado al horno garantizado'
+            ]
           },
           {
             key: 'cauchera',
             name: 'Auxilio Vial & Montallantas 24/7',
-            icon: '🛞',
+            iconImg: '/images/services/cat_cauchera.svg',
             color: '#EF4444',
             gradient: 'linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(239, 68, 68, 0.55)',
             glow: 'rgba(239, 68, 68, 0.35)',
-            desc: 'Montallantas móvil a domicilio las 24 horas. Despinche express, vulcanizado e inflado con GPS.',
-            businessName: 'Cauchera Cachu 24/7',
             badge: '🔴 Guardia Activa 24/7',
-            actionText: 'Ver Servicio 24/7 ➔'
+            items: [
+              'Montallantas a domicilio para motos, autos y camionetas 24H',
+              'Despinche express en ruta con parches vulcanizados de alta durabilidad',
+              'Asistencia y auxilio vial inmediato con geolocalización GPS'
+            ]
           },
           {
             key: 'movil',
             name: 'Transporte & Movilidad',
-            icon: '🛵',
+            iconImg: '/images/services/cat_movil.svg',
             color: '#FF6B00',
             gradient: 'linear-gradient(135deg, rgba(255, 107, 0, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(255, 107, 0, 0.55)',
             glow: 'rgba(255, 107, 0, 0.35)',
-            desc: 'Tu transporte seguro y rápido en San Antonio: Moto Taxi, Auto estándar y Vehículo de Lujo.',
-            businessName: 'PediGochos Móvil',
             badge: '⚡ Tarifa Automática GPS',
-            actionText: 'Ver Flota Móvil ➔'
+            items: [
+              'Moto Taxi express para traslados urbanos rápidos y económicos',
+              'Carreras cómodas y seguras en autos estándar',
+              'Vehículos ejecutivos y de gama lujo con tarifa automática por GPS'
+            ]
           }
         ];
 
@@ -1245,23 +1257,30 @@ class MarketplaceController {
           <div style="grid-column: 1 / -1; margin-bottom: 6px; padding: 16px 20px; background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1.5px solid rgba(255, 107, 0, 0.3); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
             <div>
               <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">Explora Servicios Especializados</h3>
-              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Selecciona una categoría para ver los establecimientos y empresas aliadas</p>
+              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Selecciona una categoría para ver los productos, servicios y cotizaciones disponibles</p>
             </div>
             <button type="button" onclick="MarketplaceApp.selectServiceCategory('all')" style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.22); color: #FFF; padding: 9px 16px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
-              <span>🌟</span> Ver Todas las Empresas (6)
+              <span>🌟</span> Ver Todos los Servicios (6)
             </button>
           </div>
         `;
 
         serviceCategories.forEach(cat => {
+          const itemsHtml = cat.items.map(item => `
+            <div style="display: flex; align-items: flex-start; gap: 7px; margin-bottom: 5px;">
+              <span style="color: ${cat.color}; font-size: 11px; margin-top: 1px; flex-shrink: 0;">✦</span>
+              <span style="font-size: 12px; color: #E2E8F0; font-weight: 600; line-height: 1.35;">${item}</span>
+            </div>
+          `).join('');
+
           html += `
             <div class="est-row-card service-row-card" onclick="MarketplaceApp.selectServiceCategory('${cat.key}')" style="background: ${cat.gradient}; border: 1.5px solid ${cat.border}; cursor: pointer; padding: 18px; border-radius: 20px; transition: all 0.25s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-              <div class="service-card-main-flex" style="display: flex; gap: 14px; align-items: center;">
-                <div class="service-card-icon-box" style="background: rgba(15, 23, 42, 0.75); border: 2px solid ${cat.color}; box-shadow: 0 0 20px ${cat.glow}; font-size: 38px; width: 74px; height: 74px; min-width: 74px; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  ${cat.icon}
+              <div class="service-card-main-flex" style="display: flex; gap: 14px; align-items: flex-start;">
+                <div class="service-card-icon-box" style="background: rgba(15, 23, 42, 0.75); border: 2px solid ${cat.color}; box-shadow: 0 0 20px ${cat.glow}; width: 68px; height: 68px; min-width: 68px; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 10px;">
+                  <img src="${cat.iconImg}" alt="${cat.name}" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <div style="flex: 1; min-width: 0;">
-                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
                     <h4 style="font-size: 17.5px; font-weight: 900; color: #FFFFFF; margin: 0; letter-spacing: -0.2px;">
                       ${cat.name}
                     </h4>
@@ -1269,18 +1288,18 @@ class MarketplaceController {
                       ${cat.badge}
                     </span>
                   </div>
-                  <div style="font-size: 12.5px; color: ${cat.color}; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
-                    <span>🏢 Empresa:</span> <span style="color: #FFF; text-transform: uppercase;">${cat.businessName}</span>
+                  
+                  <!-- Lo que encuentras en esta categoría (sin nombres de negocios) -->
+                  <div style="margin-bottom: 12px;">
+                    ${itemsHtml}
                   </div>
-                  <p style="font-size: 13px; color: #CBD5E1; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                    ${cat.desc}
-                  </p>
+
                   <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                     <span style="font-size: 11.5px; font-weight: 700; color: #94A3B8;">
-                      1 Empresa Disponible
+                      Servicios Disponibles
                     </span>
                     <span style="font-size: 12.5px; font-weight: 900; color: #FFF; background: linear-gradient(135deg, ${cat.color} 0%, rgba(15,23,42,0.95) 160%); border: 1px solid ${cat.color}; padding: 6px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 10px ${cat.glow};">
-                      ${cat.actionText}
+                      Explorar Servicios ➔
                     </span>
                   </div>
                 </div>

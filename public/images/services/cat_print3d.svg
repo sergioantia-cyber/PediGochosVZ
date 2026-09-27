@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="p3dGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+  <!-- Gantry Frame -->
+  <rect x="18" y="16" width="64" height="6" rx="3" fill="#E2E8F0"/>
+  <rect x="22" y="20" width="5" height="64" rx="2" fill="#94A3B8"/>
+  <rect x="73" y="20" width="5" height="64" rx="2" fill="#94A3B8"/>
+  <rect x="14" y="80" width="72" height="8" rx="3" fill="#334155"/>
+  <!-- Extruder carriage & nozzle -->
+  <rect x="42" y="18" width="16" height="14" rx="3" fill="#6366F1" stroke="#FFF" stroke-width="1.5"/>
+  <polygon points="46,32 54,32 50,39" fill="#F59E0B"/>
+  <circle cx="50" cy="41" r="1.5" fill="#38BDF8"/>
+  <!-- Isometric 3D Cube being printed -->
+  <g transform="translate(50, 60)">
+    <!-- Top face -->
+    <polygon points="0,-16 16,-8 0,0 -16,-8" fill="#A5B4FC" stroke="#FFF" stroke-width="1"/>
+    <!-- Left face -->
+    <polygon points="-16,-8 0,0 0,16 -16,8" fill="url(#p3dGrad)" stroke="#FFF" stroke-width="1"/>
+    <!-- Right face -->
+    <polygon points="0,0 16,-8 16,8 0,16" fill="#4338CA" stroke="#FFF" stroke-width="1"/>
+  </g>
+</svg>
