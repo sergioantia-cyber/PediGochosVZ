@@ -810,11 +810,63 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
     try {
       const res = await fetch(`/api/pinata-services/catalog?t=${Date.now()}`);
       this.catalog = await res.json();
+      this.renderFilterBar();
       this.renderGallery();
     } catch(e) {
       console.warn('Error loading pinatas catalog:', e);
+      this.renderFilterBar();
       this.renderGallery();
     }
+  },
+
+  formatCategoryBadge(lbl) {
+    if (!lbl) return 'Piñata';
+    const clean = String(lbl).trim();
+    const map = {
+      'personajes': '👑 Personajes',
+      'numeros': '🔢 Números',
+      'figuras3d': '🦄 Figuras 3D',
+      'mini': '✨ Mini',
+      'eventos': '🎉 Eventos'
+    };
+    return map[clean.toLowerCase()] || clean;
+  },
+
+  renderFilterBar() {
+    const bar = document.querySelector('.pinata-filter-bar');
+    if (!bar) return;
+
+    const standardIds = ['all', 'personajes', 'numeros', 'figuras3d', 'mini', 'eventos'];
+    const customCats = new Map();
+    (this.catalog || []).forEach(it => {
+      const cats = Array.isArray(it.categories) ? it.categories : (it.category ? it.category.split(',').map(s=>s.trim()) : []);
+      const labels = Array.isArray(it.categoryLabels) ? it.categoryLabels : [];
+      cats.forEach((c, i) => {
+        const cClean = String(c).trim();
+        const cLower = cClean.toLowerCase();
+        if (!standardIds.includes(cLower)) {
+          if (!customCats.has(cLower)) {
+            customCats.set(cLower, labels[i] || cClean);
+          }
+        }
+      });
+    });
+
+    let extraButtons = '';
+    customCats.forEach((lbl, id) => {
+      const isActive = this.currentFilter === id ? ' active' : '';
+      extraButtons += `<button type="button" class="pinata-filter-chip${isActive}" data-filter="${id}" onclick="PinataServiceApp.filterGallery('${id}', this)">${lbl}</button>`;
+    });
+
+    bar.innerHTML = `
+      <button type="button" class="pinata-filter-chip${this.currentFilter === 'all' ? ' active' : ''}" data-filter="all" onclick="PinataServiceApp.filterGallery('all', this)">Todas</button>
+      <button type="button" class="pinata-filter-chip${this.currentFilter === 'personajes' ? ' active' : ''}" data-filter="personajes" onclick="PinataServiceApp.filterGallery('personajes', this)">Personajes</button>
+      <button type="button" class="pinata-filter-chip${this.currentFilter === 'numeros' ? ' active' : ''}" data-filter="numeros" onclick="PinataServiceApp.filterGallery('numeros', this)">Números & Letras</button>
+      <button type="button" class="pinata-filter-chip${this.currentFilter === 'figuras3d' ? ' active' : ''}" data-filter="figuras3d" onclick="PinataServiceApp.filterGallery('figuras3d', this)">Figuras 3D</button>
+      <button type="button" class="pinata-filter-chip${this.currentFilter === 'mini' ? ' active' : ''}" data-filter="mini" onclick="PinataServiceApp.filterGallery('mini', this)">Mini-Piñatas</button>
+      <button type="button" class="pinata-filter-chip${this.currentFilter === 'eventos' ? ' active' : ''}" data-filter="eventos" onclick="PinataServiceApp.filterGallery('eventos', this)">Eventos Especiales</button>
+      ${extraButtons}
+    `;
   },
 
   filterGallery(filter, btn) {
@@ -831,7 +883,19 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
 
     const filtered = this.currentFilter === 'all' 
       ? this.catalog 
-      : this.catalog.filter(it => it.category === this.currentFilter || (this.currentFilter === 'mini' && it.sizeId === 'mini'));
+      : this.catalog.filter(it => {
+          if (this.currentFilter === 'mini' && (it.sizeId === 'mini' || (it.size && it.size.toLowerCase().includes('mini')))) return true;
+          
+          const itemCats = Array.isArray(it.categories) && it.categories.length > 0
+            ? it.categories
+            : (it.category ? it.category.split(',').map(s => s.trim()) : []);
+          
+          if (itemCats.some(c => c.toLowerCase() === this.currentFilter.toLowerCase())) return true;
+          if (it.category && it.category.toLowerCase().includes(this.currentFilter.toLowerCase())) return true;
+          if (it.categoryLabel && it.categoryLabel.toLowerCase().includes(this.currentFilter.toLowerCase())) return true;
+          
+          return false;
+        });
 
     if (counter) {
       counter.textContent = `${filtered.length} modelos`;
@@ -849,11 +913,23 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
       return;
     }
 
-    container.innerHTML = filtered.map(item => `
+    container.innerHTML = filtered.map(item => {
+      const catLabels = (Array.isArray(item.categoryLabels) && item.categoryLabels.length > 0)
+        ? item.categoryLabels
+        : (item.categoryLabel ? item.categoryLabel.split('•').map(s => s.trim()) : (Array.isArray(item.categories) ? item.categories : [item.category || 'Piñata']));
+
+      return `
       <div class="pinata-sample-card">
-        <div class="pinata-sample-img-wrap">
+        <div class="pinata-sample-img-wrap" style="position: relative;">
           <img src="${item.image}" alt="${item.name}" class="pinata-sample-img" loading="lazy" onerror="this.src='/images/pinatas/pinata_celebracion.jpg'">
           <span class="pinata-sample-size-tag">${item.size || 'Mediana'}</span>
+          <div style="position: absolute; bottom: 8px; left: 8px; display: flex; flex-wrap: wrap; gap: 4px; max-width: 85%; z-index: 2;">
+            ${catLabels.map(lbl => `
+              <span style="background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(4px); color: #FDA4AF; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 5px; border: 1px solid rgba(244,63,94,0.35); text-transform: uppercase; white-space: nowrap;">
+                ${this.formatCategoryBadge(lbl)}
+              </span>
+            `).join('')}
+          </div>
         </div>
         <div class="pinata-sample-info">
           <div>
@@ -868,7 +944,8 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
           </div>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
   },
 
   openWizardForSample(sampleId) {

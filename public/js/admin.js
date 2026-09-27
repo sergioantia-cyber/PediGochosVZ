@@ -8776,14 +8776,23 @@ class AdminController {
       return;
     }
 
-    container.innerHTML = catalog.map(item => `
+    container.innerHTML = catalog.map(item => {
+      const catLabels = (Array.isArray(item.categoryLabels) && item.categoryLabels.length > 0)
+        ? item.categoryLabels
+        : (item.categoryLabel ? item.categoryLabel.split('•').map(s => s.trim()) : (Array.isArray(item.categories) ? item.categories : [item.category || 'Piñata']));
+
+      return `
       <div onclick="AdminApp.openEditPinataModal('${item.id}')" style="background: #172033; border: 1.5px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.25);" onmouseenter="this.style.borderColor='rgba(244,63,94,0.6)'; this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.transform='none'">
         <div style="width: 100%; height: 180px; position: relative; background: #0F172A; flex-shrink: 0; overflow: hidden;">
           <img src="${item.image}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='/images/pinatas/pinata_celebracion.jpg'">
-          <span style="position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #FDA4AF; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(244,63,94,0.3); text-transform: uppercase;">
-            ${item.categoryLabel || item.category || 'Piñata'}
-          </span>
-          <span style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="position: absolute; top: 8px; left: 8px; display: flex; flex-wrap: wrap; gap: 4px; max-width: 75%; z-index: 2;">
+            ${catLabels.map(lbl => `
+              <span style="background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(4px); color: #FDA4AF; font-size: 9.5px; font-weight: 800; padding: 2.5px 7px; border-radius: 6px; border: 1px solid rgba(244,63,94,0.45); text-transform: uppercase; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                ${this.formatPinataCategoryBadgeLabel(lbl)}
+              </span>
+            `).join('')}
+          </div>
+          <span style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); z-index: 2;">
             ${item.size || 'Mediana'}
           </span>
         </div>
@@ -8808,7 +8817,122 @@ class AdminController {
           </div>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
+  }
+
+  getPinataPresetCategories() {
+    return [
+      { id: 'personajes', label: '👑 Personajes Infantiles' },
+      { id: 'numeros', label: '🔢 Números & Letras' },
+      { id: 'figuras3d', label: '🦄 Figuras Esculturales 3D' },
+      { id: 'mini', label: '✨ Mini-Piñatas' },
+      { id: 'eventos', label: '🎉 Eventos Especiales' }
+    ];
+  }
+
+  formatPinataCategoryBadgeLabel(idOrLabel) {
+    if (!idOrLabel) return 'Piñata';
+    const clean = String(idOrLabel).trim();
+    const presets = this.getPinataPresetCategories();
+    const found = presets.find(p => p.id === clean.toLowerCase() || p.label.toLowerCase() === clean.toLowerCase());
+    return found ? found.label : clean;
+  }
+
+  renderPinataCategoryChips(target = 'add') {
+    const containerId = target === 'add' ? 'admin-pinata-add-chips-container' : 'admin-pinata-edit-chips-container';
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (target === 'add' && (!this.pinataAddCategories || !this.pinataAddCategories.length)) {
+      this.pinataAddCategories = ['personajes'];
+    }
+    if (target === 'edit' && (!this.pinataEditCategories || !this.pinataEditCategories.length)) {
+      this.pinataEditCategories = ['personajes'];
+    }
+
+    const currentList = target === 'add' ? this.pinataAddCategories : this.pinataEditCategories;
+    const presets = this.getPinataPresetCategories();
+
+    // Collect all options: presets + any custom ones
+    const allOptions = [...presets];
+    currentList.forEach(item => {
+      const match = presets.find(p => p.id === item || p.label === item);
+      if (!match && !allOptions.some(o => o.id === item)) {
+        allOptions.push({ id: item, label: `✨ ${item}`, isCustom: true });
+      }
+    });
+
+    container.innerHTML = allOptions.map(cat => {
+      const isSelected = currentList.includes(cat.id);
+      if (isSelected) {
+        return `
+          <button type="button" onclick="AdminApp.togglePinataCategory('${target}', '${cat.id}')" style="background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%); color: #FFF; border: 1.5px solid #FDA4AF; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(244,63,94,0.4); transition: all 0.15s ease;">
+            <span>✓</span> ${cat.label}
+            ${cat.isCustom ? `<span onclick="event.stopPropagation(); AdminApp.removeCustomPinataCategory('${target}', '${cat.id}')" style="margin-left: 4px; padding: 0 4px; background: rgba(0,0,0,0.35); border-radius: 4px; font-size: 10px;" title="Eliminar categoría manual">✕</span>` : ''}
+          </button>
+        `;
+      } else {
+        return `
+          <button type="button" onclick="AdminApp.togglePinataCategory('${target}', '${cat.id}')" style="background: rgba(255,255,255,0.06); color: #CBD5E1; border: 1px solid rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(244,63,94,0.5)'; this.style.color='#FDA4AF'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.15)'; this.style.color='#CBD5E1'">
+            <span>+</span> ${cat.label}
+            ${cat.isCustom ? `<span onclick="event.stopPropagation(); AdminApp.removeCustomPinataCategory('${target}', '${cat.id}')" style="margin-left: 4px; padding: 0 4px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 10px;" title="Eliminar categoría manual">✕</span>` : ''}
+          </button>
+        `;
+      }
+    }).join('');
+  }
+
+  togglePinataCategory(target, catId) {
+    let list = target === 'add' ? this.pinataAddCategories : this.pinataEditCategories;
+    if (!Array.isArray(list)) list = [];
+
+    if (list.includes(catId)) {
+      if (list.length > 1) {
+        list = list.filter(c => c !== catId);
+      } else {
+        this.showToast('⚠️ La piñata debe tener al menos una categoría seleccionada.');
+        return;
+      }
+    } else {
+      list.push(catId);
+    }
+
+    if (target === 'add') this.pinataAddCategories = list;
+    else this.pinataEditCategories = list;
+
+    this.renderPinataCategoryChips(target);
+  }
+
+  addCustomPinataCategory(target = 'add') {
+    const inputId = target === 'add' ? 'admin-pinata-add-custom-cat' : 'admin-pinata-edit-custom-cat';
+    const inputEl = document.getElementById(inputId);
+    const val = inputEl ? inputEl.value.trim() : '';
+    if (!val) return;
+
+    const parts = val.split(',').map(s => s.trim()).filter(Boolean);
+    let list = target === 'add' ? (this.pinataAddCategories || []) : (this.pinataEditCategories || []);
+    parts.forEach(p => {
+      if (!list.includes(p)) list.push(p);
+    });
+
+    if (target === 'add') this.pinataAddCategories = list;
+    else this.pinataEditCategories = list;
+
+    if (inputEl) inputEl.value = '';
+    this.renderPinataCategoryChips(target);
+  }
+
+  removeCustomPinataCategory(target, catId) {
+    let list = target === 'add' ? this.pinataAddCategories : this.pinataEditCategories;
+    if (!Array.isArray(list)) list = [];
+    list = list.filter(c => c !== catId);
+    if (list.length === 0) list = ['personajes'];
+
+    if (target === 'add') this.pinataAddCategories = list;
+    else this.pinataEditCategories = list;
+
+    this.renderPinataCategoryChips(target);
   }
 
   formatPinataSizeText(val) {
@@ -8838,7 +8962,6 @@ class AdminController {
     const modal = document.getElementById('admin-pinata-edit-modal');
     const idInput = document.getElementById('edit-pinata-id');
     const nameInput = document.getElementById('edit-pinata-name');
-    const catInput = document.getElementById('edit-pinata-category');
     const sizeInput = document.getElementById('edit-pinata-size');
     const priceInput = document.getElementById('edit-pinata-price');
     const imageInput = document.getElementById('edit-pinata-image');
@@ -8848,7 +8971,6 @@ class AdminController {
 
     if (idInput) idInput.value = item.id;
     if (nameInput) nameInput.value = item.name || '';
-    if (catInput) catInput.value = item.category || 'personajes';
     if (sizeInput) {
       const match = (item.size || '').match(/(\d+)\s*cm/i) || (item.size || '').match(/(\d+)/);
       const cmVal = match ? parseInt(match[1], 10) : 80;
@@ -8860,6 +8982,16 @@ class AdminController {
     if (previewImg) previewImg.src = item.image || '/images/pinatas/pinata_celebracion.jpg';
     if (descInput) descInput.value = item.desc || '';
     if (modalTitle) modalTitle.textContent = `Modificar: ${item.name || 'Piñata'}`;
+
+    // Initialize edit categories array from item
+    if (Array.isArray(item.categories) && item.categories.length > 0) {
+      this.pinataEditCategories = [...item.categories];
+    } else if (item.category) {
+      this.pinataEditCategories = item.category.split(',').map(s => s.trim()).filter(Boolean);
+    } else {
+      this.pinataEditCategories = ['personajes'];
+    }
+    this.renderPinataCategoryChips('edit');
 
     if (modal) {
       modal.style.display = 'flex';
@@ -8883,7 +9015,10 @@ class AdminController {
   async savePinataProductEdits() {
     const id = document.getElementById('edit-pinata-id')?.value;
     const name = document.getElementById('edit-pinata-name')?.value.trim();
-    const category = document.getElementById('edit-pinata-category')?.value;
+    const categories = (this.pinataEditCategories && this.pinataEditCategories.length > 0)
+      ? this.pinataEditCategories
+      : ['personajes'];
+    const category = categories[0];
     const rawSize = document.getElementById('edit-pinata-size')?.value || '80';
     const size = this.formatPinataSizeText(rawSize);
     let price = parseFloat(document.getElementById('edit-pinata-price')?.value);
@@ -8900,6 +9035,7 @@ class AdminController {
       name,
       title: name,
       category,
+      categories,
       size,
       basePriceUsd: price,
       priceRange: `$${price - 2} - $${price + 4} USD`,
@@ -8986,10 +9122,13 @@ class AdminController {
   toggleAddPinataForm(forceState) {
     const form = document.getElementById('admin-pinata-add-form');
     if (!form) return;
-    if (typeof forceState === 'boolean') {
-      form.style.display = forceState ? 'block' : 'none';
-    } else {
-      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    const willShow = typeof forceState === 'boolean' ? forceState : form.style.display === 'none';
+    form.style.display = willShow ? 'block' : 'none';
+    if (willShow) {
+      if (!this.pinataAddCategories || !this.pinataAddCategories.length) {
+        this.pinataAddCategories = ['personajes'];
+      }
+      this.renderPinataCategoryChips('add');
     }
   }
 
@@ -9007,7 +9146,10 @@ class AdminController {
 
     const rawSize = document.getElementById('admin-pinata-input-size')?.value || '80';
     const size = this.formatPinataSizeText(rawSize);
-    const category = document.getElementById('admin-pinata-input-category')?.value || 'personajes';
+    const categories = (this.pinataAddCategories && this.pinataAddCategories.length > 0)
+      ? this.pinataAddCategories
+      : ['personajes'];
+    const category = categories[0];
     let image = document.getElementById('admin-pinata-input-image')?.value.trim();
     if (!image) {
       image = '/images/pinatas/pinata_celebracion.jpg';
@@ -9019,6 +9161,7 @@ class AdminController {
       title: name,
       size,
       category,
+      categories,
       basePriceUsd: price,
       priceRange: `$${price - 2} - $${price + 4} USD`,
       image,
@@ -9049,6 +9192,8 @@ class AdminController {
         if (fileInput) fileInput.value = '';
         if (sizeInput) sizeInput.value = '80';
         this.updatePinataSizeLabel('add', 80);
+        this.pinataAddCategories = ['personajes'];
+        this.renderPinataCategoryChips('add');
         if (previewEl) previewEl.src = '/images/pinatas/pinata_celebracion.jpg';
         this.loadPinatasCatalog();
       } else {

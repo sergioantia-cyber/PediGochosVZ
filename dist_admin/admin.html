@@ -3298,20 +3298,10 @@
               </div>
             </div>
             <div>
-              <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Categoría</label>
-              <select id="admin-pinata-input-category" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
-                <option value="personajes">Personajes Infantiles</option>
-                <option value="numeros">Números & Letras</option>
-                <option value="figuras3d">Figuras Esculturales 3D</option>
-                <option value="mini">Mini-Piñatas</option>
-                <option value="eventos">Eventos Especiales</option>
-              </select>
-            </div>
-            <div>
               <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Precio Base (USD) - Opcional</label>
               <input type="number" step="0.5" id="admin-pinata-input-price" placeholder="Ej: 18.00 (Por defecto 18)" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #F43F5E; font-weight: 800; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
             </div>
-            <div style="grid-column: span 2;">
+            <div style="grid-column: 1 / -1;">
               <label style="font-size: 11px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Foto del Producto (Archivo de Imagen o URL)</label>
               <div style="display: flex; gap: 8px; align-items: center;">
                 <div style="width: 36px; height: 36px; border-radius: 6px; overflow: hidden; background: #0B0F19; border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0;">
@@ -3321,6 +3311,24 @@
                   📷 Subir Foto
                 </button>
                 <input type="text" id="admin-pinata-input-image" placeholder="URL o archivo cargado" oninput="document.getElementById('admin-pinata-add-preview-img').src = this.value.trim() || '/images/pinatas/pinata_celebracion.jpg'" style="flex: 1; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
+              </div>
+            </div>
+            <!-- Multi-Category Selector with manual tag input -->
+            <div style="grid-column: 1 / -1; background: #0B0F19; border: 1px solid rgba(244, 63, 94, 0.35); border-radius: 12px; padding: 12px 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                <label style="font-size: 11.5px; color: #FDA4AF; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 6px;">
+                  <span>🏷️</span> Categorías del Modelo (Puedes elegir 2 o más, o añadir manuales):
+                </label>
+                <span style="font-size: 10.5px; color: #94A3B8;">Ej: Número + Personaje</span>
+              </div>
+              <div id="admin-pinata-add-chips-container" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+                <!-- Filled dynamically by AdminApp.renderPinataCategoryChips('add') -->
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" id="admin-pinata-add-custom-cat" placeholder="➕ Escribe otra categoría personalizada (ej. Número 1, Spiderman, Temática)..." style="flex: 1; background: #172033; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 7px 10px; border-radius: 8px; font-size: 11.5px;" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); AdminApp.addCustomPinataCategory('add'); }">
+                <button type="button" onclick="AdminApp.addCustomPinataCategory('add')" style="background: rgba(244,63,94,0.25); border: 1px solid #F43F5E; color: #FDA4AF; padding: 7px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; white-space: nowrap;">
+                  + Añadir Categoría
+                </button>
               </div>
             </div>
             <div style="grid-column: 1 / -1;">
@@ -3362,43 +3370,50 @@
         <input type="hidden" id="edit-pinata-id">
         <input type="file" id="admin-pinata-edit-file-input" accept="image/*" style="display: none;" onchange="AdminApp.handlePinataFileSelect(event, 'edit')">
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
           <div>
             <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Nombre del Modelo *</label>
             <input type="text" id="edit-pinata-name" required style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 9px 12px; border-radius: 10px; font-size: 13px; box-sizing: border-box; font-weight: 700;">
           </div>
           <div>
-            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Categoría *</label>
-            <select id="edit-pinata-category" required style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 9px 12px; border-radius: 10px; font-size: 13px; box-sizing: border-box;">
-              <option value="personajes">Personajes Infantiles</option>
-              <option value="numeros">Números & Letras</option>
-              <option value="figuras3d">Figuras Esculturales 3D</option>
-              <option value="mini">Mini-Piñatas</option>
-              <option value="eventos">Eventos Especiales</option>
-            </select>
+            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Precio Base ($ USD) *</label>
+            <input type="number" step="0.5" id="edit-pinata-price" required style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #F43F5E; padding: 9px 12px; border-radius: 10px; font-size: 14px; box-sizing: border-box; font-weight: 900;">
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; margin: 0;">Tamaño (Altura Exacta) *</label>
-              <span id="edit-pinata-size-val" style="font-size: 11.5px; color: #FDA4AF; font-weight: 900; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.45); padding: 2px 8px; border-radius: 6px;">80 cm (Mediana)</span>
-            </div>
-            <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 5px;">
-              <input type="range" id="edit-pinata-size" min="20" max="180" step="5" value="80" oninput="AdminApp.updatePinataSizeLabel('edit', this.value)" style="width: 100%; accent-color: #F43F5E; cursor: pointer; margin: 0;">
-              <div style="display: flex; justify-content: space-between; font-size: 9.5px; color: #94A3B8; font-weight: 700;">
-                <span>20cm</span>
-                <span>50cm</span>
-                <span style="color: #FDA4AF;">80cm</span>
-                <span>120cm</span>
-                <span>180cm</span>
-              </div>
-            </div>
+        <!-- Multi-Category Selector for Edit Modal -->
+        <div style="background: #0B0F19; border: 1.5px solid rgba(244, 63, 94, 0.35); border-radius: 12px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+            <label style="font-size: 11.5px; color: #FDA4AF; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span>🏷️</span> Categorías del Modelo (Puedes elegir 2 o más, o añadir manuales):
+            </label>
+            <span style="font-size: 10.5px; color: #94A3B8;">Ej: Número + Personaje</span>
           </div>
-          <div>
-            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; display: block; margin-bottom: 4px;">Precio Base ($ USD) *</label>
-            <input type="number" step="0.5" id="edit-pinata-price" required style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #F43F5E; padding: 9px 12px; border-radius: 10px; font-size: 14px; box-sizing: border-box; font-weight: 900;">
+          <div id="admin-pinata-edit-chips-container" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+            <!-- Filled dynamically by AdminApp.renderPinataCategoryChips('edit') -->
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="admin-pinata-edit-custom-cat" placeholder="➕ Escribe otra categoría manual y presiona Añadir..." style="flex: 1; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 7px 10px; border-radius: 8px; font-size: 11.5px;" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); AdminApp.addCustomPinataCategory('edit'); }">
+            <button type="button" onclick="AdminApp.addCustomPinataCategory('edit')" style="background: rgba(244,63,94,0.25); border: 1px solid #F43F5E; color: #FDA4AF; padding: 7px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; white-space: nowrap;">
+              + Añadir Categoría
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="font-size: 11.5px; color: #CBD5E1; font-weight: 700; margin: 0;">Tamaño (Altura Exacta) *</label>
+            <span id="edit-pinata-size-val" style="font-size: 11.5px; color: #FDA4AF; font-weight: 900; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.45); padding: 2px 8px; border-radius: 6px;">80 cm (Mediana)</span>
+          </div>
+          <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 5px;">
+            <input type="range" id="edit-pinata-size" min="20" max="180" step="5" value="80" oninput="AdminApp.updatePinataSizeLabel('edit', this.value)" style="width: 100%; accent-color: #F43F5E; cursor: pointer; margin: 0;">
+            <div style="display: flex; justify-content: space-between; font-size: 9.5px; color: #94A3B8; font-weight: 700;">
+              <span>20cm</span>
+              <span>50cm</span>
+              <span style="color: #FDA4AF;">80cm</span>
+              <span>120cm</span>
+              <span>180cm</span>
+            </div>
           </div>
         </div>
 
@@ -3597,7 +3612,7 @@
 
   <script src="/js/sound.js?v=226"></script>
   <script src="/js/qrcode.min.js?v=226"></script>
-  <script src="/js/admin.js?v=228"></script>
+  <script src="/js/admin.js?v=229"></script>
   <script src="/js/menu-builder.js?v=226"></script>
   <script>
     if ('serviceWorker' in navigator) {

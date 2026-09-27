@@ -4342,12 +4342,35 @@ app.post('/api/pinata-services/catalog', (req, res) => {
   }
 
   const catalog = readPinatasCatalog();
+
+  const CATEGORY_MAP = {
+    'personajes': 'Personajes Infantiles',
+    'numeros': 'Números & Letras',
+    'figuras3d': 'Figuras Esculturales 3D',
+    'mini': 'Mini-Piñatas',
+    'eventos': 'Eventos Especiales'
+  };
+
+  let rawCategories = req.body.categories || req.body.category || ['personajes'];
+  if (typeof rawCategories === 'string') {
+    rawCategories = rawCategories.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  if (!Array.isArray(rawCategories) || rawCategories.length === 0) {
+    rawCategories = ['personajes'];
+  }
+
+  const categoryLabels = rawCategories.map(cat => CATEGORY_MAP[cat.toLowerCase()] || cat);
+  const primaryCategory = rawCategories[0] || 'personajes';
+  const categoryLabel = categoryLabels.join(' • ');
+
   const newItem = {
     id: 'pin-cat-' + Date.now(),
     name: name.trim(),
     title: (title || name).trim(),
-    category: category || 'personajes',
-    categoryLabel: category === 'numeros' ? 'Números & Letras' : (category === 'figuras3d' ? 'Figuras Esculturales 3D' : (category === 'mini' ? 'Mini-Piñatas' : 'Personajes Infantiles')),
+    category: primaryCategory,
+    categories: rawCategories,
+    categoryLabel: categoryLabel,
+    categoryLabels: categoryLabels,
     size: size || 'Mediana (~80 cm)',
     sizeId: size && size.toLowerCase().includes('peque') ? 'pequena' : (size && size.toLowerCase().includes('grande') ? 'grande' : (size && size.toLowerCase().includes('mini') ? 'mini' : 'mediana')),
     style: style || 'Escultural / Volumen 3D',
@@ -4406,13 +4429,32 @@ app.put('/api/pinata-services/catalog/:id', (req, res) => {
     return res.status(404).json({ error: 'Producto no encontrado' });
   }
 
-  const category = updates.category || catalog[index].category;
-  const categoryLabel = category === 'numeros' ? 'Números & Letras' : (category === 'figuras3d' ? 'Figuras Esculturales 3D' : (category === 'mini' ? 'Mini-Piñatas' : (category === 'eventos' ? 'Eventos Especiales' : 'Personajes Infantiles')));
+  const CATEGORY_MAP = {
+    'personajes': 'Personajes Infantiles',
+    'numeros': 'Números & Letras',
+    'figuras3d': 'Figuras Esculturales 3D',
+    'mini': 'Mini-Piñatas',
+    'eventos': 'Eventos Especiales'
+  };
+
+  let rawCategories = updates.categories || updates.category || catalog[index].categories || catalog[index].category || ['personajes'];
+  if (typeof rawCategories === 'string') {
+    rawCategories = rawCategories.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  if (!Array.isArray(rawCategories) || rawCategories.length === 0) {
+    rawCategories = ['personajes'];
+  }
+  const categoryLabels = rawCategories.map(cat => CATEGORY_MAP[cat.toLowerCase()] || cat);
+  const primaryCategory = rawCategories[0] || 'personajes';
+  const categoryLabel = categoryLabels.join(' • ');
 
   catalog[index] = {
     ...catalog[index],
     ...updates,
-    categoryLabel,
+    category: primaryCategory,
+    categories: rawCategories,
+    categoryLabel: categoryLabel,
+    categoryLabels: categoryLabels,
     basePriceUsd: parseFloat(updates.basePriceUsd) || catalog[index].basePriceUsd,
     updatedAt: new Date().toISOString()
   };
