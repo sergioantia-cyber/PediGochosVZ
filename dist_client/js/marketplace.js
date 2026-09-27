@@ -499,14 +499,14 @@ class MarketplaceController {
         displayName: 'Taller de Piñatas Creativas',
         category: 'pinatas',
         categoryLabel: 'Fiestas & Piñatas',
-        categoryIcon: '🪅',
+        categoryIcon: '🎉',
         slogan: 'Piñatas artesanales 3D, números temáticos con flores, siluetas y mini-piñatas personalizadas',
         serviceName: 'Piñatas Artesanales por Encargo',
         logo: '/images/services/pinatas_logo.svg',
         image: '/images/pinatas/pinata_celebracion.jpg',
         rating: 5.0,
         reviewCount: 62,
-        badges: ['🪅 100% Hecho a Mano', '🎉 Cualquier Motivo', '⭐ A Palo o Cintas'],
+        badges: ['🎉 100% Hecho a Mano', '⭐ Cualquier Motivo', '🎈 A Palo o Cintas'],
         actionType: 'pinatas',
         ctaText: 'Cotizar en Taller de Piñatas ➔',
         themeColor: '#F43F5E',
@@ -559,7 +559,7 @@ class MarketplaceController {
         displayName: 'Cauchera Cachu 24/7',
         category: 'cauchera',
         categoryLabel: 'Auxilio Vial & Montallantas',
-        categoryIcon: '🛞',
+        categoryIcon: '🔧',
         slogan: 'Montallantas a domicilio las 24 horas. Despinche, parches vulcanizados e inflado con GPS',
         serviceName: 'Cauchera Móvil & Despinche 24H',
         logo: '/images/services/cauchera_logo.svg',
@@ -1346,10 +1346,10 @@ class MarketplaceController {
       const catPills = [
         { key: 'all', label: '🌟 Todas' },
         { key: 'resina', label: '✨ Arte & Resina' },
-        { key: 'pinatas', label: '🪅 Piñatas' },
+        { key: 'pinatas', label: '🎉 Piñatas' },
         { key: 'print3d', label: '🖨️ 3D Lab' },
         { key: 'paint', label: '🎨 Automotriz' },
-        { key: 'cauchera', label: '🛞 Auxilio 24/7' },
+        { key: 'cauchera', label: '🔧 Auxilio 24/7' },
         { key: 'movil', label: '🛵 Transporte' }
       ];
 
