@@ -49,7 +49,160 @@ function normalizeStoreName(name) {
     .trim();
 }
 
+const SPECIALIZED_SERVICES = [
+  {
+    id: 'serv-paint',
+    name: 'Latonería y Pintura Automotriz',
+    logo: '🎨',
+    category: 'servicios',
+    badge: 'Taller Especializado',
+    badgeColor: '#EC4899',
+    badgeBg: 'rgba(236, 72, 153, 0.15)',
+    badgeBorder: 'rgba(236, 72, 153, 0.4)',
+    location: 'San Antonio / Taller Central',
+    description: 'Pintura horneada, enderezado de chasis, pulitura y personalización automotriz',
+    inventorySummary: '🎨 Catálogo de Pinturas & Acabados',
+    inventoryBtnText: 'Gestionar Taller & Solicitudes',
+    inventoryAction: 'AdminApp.openPaintAdminModal()',
+    infoSummary: '📱 WhatsApp: +57 322 794 9751',
+    infoBtnText: 'Modificar Info',
+    infoAction: 'AdminApp.openPaintAdminModal()',
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
+    ordersSummary: '🚗 Cotizaciones en Línea',
+    actionButtons: [
+      { text: '🎨 Taller', action: 'AdminApp.openPaintAdminModal()', bg: '#EC4899', color: '#FFF', title: 'Abrir gestión de Latonería y Pintura' },
+      { text: '💬 Chat', action: 'AdminApp.openPaintAdminModal()', bg: '#6366F1', color: '#FFF', title: 'Ver mensajes y cotizaciones' }
+    ]
+  },
+  {
+    id: 'serv-print3d',
+    name: '3D Lab - Impresión & Prototipado',
+    logo: '🖨️',
+    category: 'servicios',
+    badge: 'Laboratorio 3D',
+    badgeColor: '#8B5CF6',
+    badgeBg: 'rgba(139, 92, 246, 0.15)',
+    badgeBorder: 'rgba(139, 92, 246, 0.4)',
+    location: 'San Antonio / Laboratorio Central',
+    description: 'Impresión 3D FDM/Resina, modelado CAD, prototipos rápidos y repuestos técnicos',
+    inventorySummary: '🖨️ Materiales, Resina & STL',
+    inventoryBtnText: 'Gestionar Proyectos & STL',
+    inventoryAction: 'AdminApp.openPrint3DAdminModal()',
+    infoSummary: '📱 Cotizaciones técnicas inmediatas',
+    infoBtnText: 'Modificar Info',
+    infoAction: 'AdminApp.openPrint3DAdminModal()',
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
+    ordersSummary: '📦 Prototipos & Modelos',
+    actionButtons: [
+      { text: '🖨️ Proyectos', action: 'AdminApp.openPrint3DAdminModal()', bg: '#8B5CF6', color: '#FFF', title: 'Abrir proyectos 3D y STL' },
+      { text: '📦 STL', action: 'AdminApp.openPrint3DAdminModal()', bg: '#0EA5E9', color: '#FFF', title: 'Ver archivos 3D' }
+    ]
+  },
+  {
+    id: 'serv-resin',
+    name: 'ShelliArt - Resina & Recuerdos',
+    logo: '✨',
+    category: 'servicios',
+    badge: 'Artesanía & Acabados',
+    badgeColor: '#06B6D4',
+    badgeBg: 'rgba(6, 182, 212, 0.15)',
+    badgeBorder: 'rgba(6, 182, 212, 0.4)',
+    location: 'San Antonio / Estudio ShelliArt',
+    description: 'Artesanías en resina epóxica, recuerdos de eventos, llaveros y cuadros personalizados',
+    inventorySummary: '✨ Fichas de Diseño & Modelos',
+    inventoryBtnText: 'Gestionar Fichas & Catálogo',
+    inventoryAction: 'AdminApp.openResinAdminModal()',
+    infoSummary: '📱 WhatsApp: +57 322 794 9751',
+    infoBtnText: 'Modificar Info',
+    infoAction: 'AdminApp.openResinAdminModal()',
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
+    ordersSummary: '📋 Fichas de Clientes',
+    actionButtons: [
+      { text: '✨ Fichas', action: 'AdminApp.openResinAdminModal()', bg: '#06B6D4', color: '#FFF', title: 'Ver fichas de resina' },
+      { text: '🖼️ Catálogo', action: 'AdminApp.openResinAdminModal()', bg: '#10B981', color: '#FFF', title: 'Ver catálogo de ShelliArt' }
+    ]
+  },
+  {
+    id: 'serv-pinatas',
+    name: 'Piñatas Personalizadas & Catálogo',
+    logo: '🪅',
+    category: 'servicios',
+    badge: 'Taller de Piñatas',
+    badgeColor: '#F59E0B',
+    badgeBg: 'rgba(245, 158, 11, 0.15)',
+    badgeBorder: 'rgba(245, 158, 11, 0.4)',
+    location: 'San Antonio / Taller Creativo',
+    description: 'Piñatas personalizadas con foto, tamaño, descripción y catálogo festivo listo para pedir',
+    inventorySummary: '🪅 Catálogo de Piñatas & Tamaños',
+    inventoryBtnText: 'Gestionar Catálogo Piñatas',
+    inventoryAction: "AdminApp.openPinatasAdminModal('inventory')",
+    infoSummary: '📲 Cotizaciones: +57 322 784 9751',
+    infoBtnText: 'Modificar Info',
+    infoAction: "AdminApp.openPinatasAdminModal('orders')",
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
+    ordersSummary: '🎉 Cotizaciones +573227849751',
+    actionButtons: [
+      { text: '🪅 Catálogo', action: "AdminApp.openPinatasAdminModal('inventory')", bg: '#F59E0B', color: '#1E293B', title: 'Ver catálogo de piñatas y tamaños' },
+      { text: '📱 WhatsApp', action: "window.open('https://wa.me/573227849751', '_blank')", bg: '#25D366', color: '#FFF', title: 'Contactar al WhatsApp de Piñatas (+573227849751)' }
+    ]
+  },
+  {
+    id: 'serv-cauchera',
+    name: 'Cauchera Móvil 24/7 & Vulcanizadora',
+    logo: '🛞',
+    category: 'servicios',
+    badge: 'Auxilio Vial Móvil',
+    badgeColor: '#EF4444',
+    badgeBg: 'rgba(239, 68, 68, 0.15)',
+    badgeBorder: 'rgba(239, 68, 68, 0.4)',
+    location: 'San Antonio / Ureña / Cobertura Total',
+    description: 'Despinche a domicilio 24 horas, parches, inflado, cambio de tripas para motos y autos',
+    inventorySummary: '🛞 Asistencia Vial 24 Horas',
+    inventoryBtnText: 'Ver Solicitudes de Cauchera',
+    inventoryAction: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})",
+    infoSummary: '🚨 Guardia Activa Ininterrumpida',
+    infoBtnText: 'Modificar Info',
+    infoAction: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})",
+    statusBadge: '<span style="background: rgba(239, 68, 68, 0.15); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; animation: pulse 2s infinite;">🚨 Guardia 24/7</span>',
+    ordersSummary: '🛞 Despinches & Auxilio',
+    actionButtons: [
+      { text: '🛞 Solicitudes', action: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})", bg: '#EF4444', color: '#FFF', title: 'Ver solicitudes de despinche' },
+      { text: '🛵 Auxilio', action: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})", bg: '#F59E0B', color: '#1E293B', title: 'Despacho de vulcanizador' }
+    ]
+  },
+  {
+    id: 'serv-ride',
+    name: 'Mototaxi & Auto Express (Movilidad)',
+    logo: '🛵',
+    category: 'servicios',
+    badge: 'Flota de Transporte',
+    badgeColor: '#10B981',
+    badgeBg: 'rgba(16, 185, 129, 0.15)',
+    badgeBorder: 'rgba(16, 185, 129, 0.4)',
+    location: 'San Antonio / Ureña / San Cristóbal',
+    description: 'Traslados urbanos en moto y auto, carreras inmediatas y envíos de paquetería express',
+    inventorySummary: '🛵 Flota de Conductores & Rutas',
+    inventoryBtnText: 'Ver Carreras / Envíos',
+    inventoryAction: "AdminApp.setOrdersFilter('ride'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})",
+    infoSummary: '💬 Canal de Domiciliarios & Chat',
+    infoBtnText: 'Modificar Info',
+    infoAction: 'AdminApp.openRegisterDriverModal()',
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 En Servicio</span>',
+    ordersSummary: '🛵 Carreras & Rutas',
+    actionButtons: [
+      { text: '🛵 Conductores', action: 'AdminApp.openRegisterDriverModal()', bg: '#10B981', color: '#FFF', title: 'Registrar o gestionar conductores' },
+      { text: '💬 Chat Grupal', action: 'AdminApp.toggleDriverChatModal()', bg: '#6366F1', color: '#FFF', title: 'Abrir chat con conductores' }
+    ]
+  }
+];
+
 class AdminController {
+  getEstablishmentById(id) {
+    if (!id || !this.establishments) return null;
+    const sid = String(id).trim();
+    return this.establishments.find(e => e && String(e.id).trim() === sid) || null;
+  }
+
   constructor() {
     this.establishments = [];
     this.orders = [];
@@ -1161,23 +1314,46 @@ class AdminController {
     this.renderTable();
   }
 
-  openMenuEditorForShop(shopId) {
-    const est = (this.establishments || []).find(e => e.id === shopId);
-    if (!est) return;
-    this.activeShopId = shopId;
-    this.modifyMenuAndTables();
-    this.switchModalTab('menu');
+  async openMenuEditorForShop(shopId) {
+    const est = this.getEstablishmentById(shopId);
+    if (!est) {
+      console.warn('openMenuEditorForShop: establishment not found for ID', shopId);
+      return;
+    }
+    this.activeShopId = est.id;
+    window.activeShopIdForMenu = est.id;
+    this.activeFloorTool = 'table';
+    const titleEl = document.getElementById('designer-modal-shop-name');
+    if (titleEl) titleEl.innerText = `🍔 Taller de Menú y Distribución: ${est.name}`;
+    const subtextEl = document.getElementById('designer-modal-shop-subtext');
+    if (subtextEl) subtextEl.innerText = `Diseño de distribución de mesas y carta de comida para ${est.name}`;
+    const modal = document.getElementById('menu-tables-modal');
+    if (modal) modal.classList.add('active');
+    this.checkModalOpenState();
+    this.activeModalTab = 'menu';
+    ['daily', 'menu', 'ai', 'tables', 'catalog'].forEach(t => {
+      const btn = document.getElementById(`tab-btn-${t}`);
+      const content = document.getElementById(`tab-content-${t}`);
+      if (btn) btn.classList.toggle('active', t === 'menu');
+      if (content) content.classList.toggle('active', t === 'menu');
+    });
+    await this.loadModalProducts();
   }
 
   openEditShopModalFor(shopId) {
-    const est = (this.establishments || []).find(e => e.id === shopId);
-    if (!est) return;
-    this.activeShopId = shopId;
+    const est = this.getEstablishmentById(shopId);
+    if (!est) {
+      console.warn('openEditShopModalFor: establishment not found for ID', shopId);
+      return;
+    }
+    this.activeShopId = est.id;
     this.openEditShopModal();
   }
 
   showEstablishmentActions(id) {
-    this.openEstActionModal(id);
+    const est = this.getEstablishmentById(id);
+    if (!est) return;
+    this.openEstActionModal(est.id);
   }
 
   renderTable() {
@@ -1198,18 +1374,18 @@ class AdminController {
       return true;
     });
 
-    // Compute category counts
+    // Compute category counts (including specialized services)
     const counts = {
-      all: uniqueEsts.length,
+      all: uniqueEsts.length + SPECIALIZED_SERVICES.length,
       comidas: 0,
       farmacias: 0,
       mercados: 0,
       ferreterias: 0,
-      servicios: 0
+      servicios: SPECIALIZED_SERVICES.length
     };
     uniqueEsts.forEach(e => {
       const c = (e.category || '').toLowerCase();
-      if (counts[c] !== undefined) {
+      if (counts[c] !== undefined && c !== 'servicios') {
         counts[c]++;
       } else {
         counts.servicios++;
@@ -1250,6 +1426,18 @@ class AdminController {
       });
     }
 
+    // Filter specialized services
+    let filteredServices = (activeFilter === 'all' || activeFilter === 'servicios') ? [...SPECIALIZED_SERVICES] : [];
+    if (this.searchEstablishmentQuery && filteredServices.length > 0) {
+      const q = this.searchEstablishmentQuery.toLowerCase();
+      filteredServices = filteredServices.filter(s =>
+        (s.name || '').toLowerCase().includes(q) ||
+        (s.description || '').toLowerCase().includes(q) ||
+        (s.location || '').toLowerCase().includes(q) ||
+        (s.badge || '').toLowerCase().includes(q)
+      );
+    }
+
     // Sort: Active/Enabled restaurants at the top, Disabled restaurants at the bottom
     filteredEsts.sort((a, b) => {
       const aDis = a.disabled === true ? 1 : 0;
@@ -1258,11 +1446,11 @@ class AdminController {
       return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' });
     });
 
-    if (filteredEsts.length === 0) {
+    if (filteredEsts.length === 0 && filteredServices.length === 0) {
       tbody.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
-            No se encontraron establecimientos en la categoría seleccionada o filtro de búsqueda.
+            No se encontraron establecimientos o servicios en la categoría seleccionada o filtro de búsqueda.
           </td>
         </tr>
       `;
@@ -1271,7 +1459,98 @@ class AdminController {
       return;
     }
 
-    filteredEsts.forEach(est => {
+    // Helper to render a specialized service row
+    const renderServiceRow = (serv) => {
+      const row = document.createElement('tr');
+      row.style.cursor = 'pointer';
+      row.style.background = 'rgba(248, 250, 252, 0.7)';
+      row.onmouseover = () => { row.style.background = 'rgba(241, 245, 249, 0.95)'; };
+      row.onmouseout = () => { row.style.background = 'rgba(248, 250, 252, 0.7)'; };
+      row.onclick = () => {
+        if (serv.id === 'serv-paint') AdminApp.openPaintAdminModal();
+        else if (serv.id === 'serv-print3d') AdminApp.openPrint3DAdminModal();
+        else if (serv.id === 'serv-resin') AdminApp.openResinAdminModal();
+        else if (serv.id === 'serv-pinatas') AdminApp.openPinatasAdminModal('orders');
+        else if (serv.id === 'serv-cauchera') { AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'}); }
+        else if (serv.id === 'serv-ride') { AdminApp.setOrdersFilter('ride'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'}); }
+      };
+
+      let serviceOrdersDetail = serv.ordersSummary;
+      if (serv.id === 'serv-cauchera') {
+        const cOrders = this.orders.filter(o => this.isCaucheraOrder(o));
+        serviceOrdersDetail = cOrders.length > 0 ? `${cOrders.length} auxilios viales` : 'Guardia activa';
+      } else if (serv.id === 'serv-ride') {
+        const rOrders = this.orders.filter(o => this.isRideOrder(o));
+        serviceOrdersDetail = rOrders.length > 0 ? `${rOrders.length} carreras / envíos` : 'Flota activa';
+      }
+
+      row.innerHTML = `
+        <td class="shop-title-cell" style="font-weight: 700;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 22px;">${serv.logo}</span>
+            <div>
+              <span style="font-size: 14px; font-weight: 800; color: #0F172A;">${serv.name}</span>
+              <span style="background: ${serv.badgeBg}; color: ${serv.badgeColor}; border: 1px solid ${serv.badgeBorder}; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; margin-left: 6px;">
+                ${serv.badge}
+              </span>
+            </div>
+          </div>
+          <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span style="background: rgba(16, 185, 129, 0.15); color: #065F46; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+              📍 ${serv.location}
+            </span>
+          </div>
+          <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748B; max-width: 320px; line-height: 1.3;">
+            ${serv.description}
+          </p>
+        </td>
+        <td>
+          <span class="shop-category-cell" style="background: rgba(139, 92, 246, 0.12); color: #7C3AED; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 800; padding: 4px 10px; border-radius: 8px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px;">
+            🪅 Asistencia & Servicio
+          </span>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #475569;">
+              ${serv.inventorySummary}
+            </span>
+            <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); ${serv.inventoryAction}" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(99,102,241,0.35);" title="Gestionar catálogo, proyectos o inventario del servicio">
+              <span>📦</span> ${serv.inventoryBtnText}
+            </button>
+          </div>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #475569;">
+              ${serv.infoSummary}
+            </div>
+            <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); ${serv.infoAction}" style="background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(15,118,110,0.35);" title="Administrar información o parámetros del servicio">
+              <span>⚙️</span> ${serv.infoBtnText}
+            </button>
+          </div>
+        </td>
+        <td>
+          ${serv.statusBadge}
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-weight: 800; color: #0F172A; font-size: 12.5px;">${serviceOrdersDetail}</span>
+            <span style="font-size: 11px; font-weight: 700; color: #10B981;">⚡ Cotización Directa</span>
+          </div>
+        </td>
+        <td style="text-align: center; white-space: nowrap;">
+          ${serv.actionButtons.map(btn => `
+            <button class="btn-goto-kitchen" onclick="event.stopPropagation(); ${btn.action}" style="background-color: ${btn.bg}; color: ${btn.color}; border: none; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 800; margin: 0 2px; width: auto; display: inline-block; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);" title="${btn.title || btn.text}">
+              ${btn.text}
+            </button>
+          `).join('')}
+        </td>
+      `;
+      tbody.appendChild(row);
+    };
+
+    // Helper to render a regular establishment row
+    const renderEstRow = (est) => {
       const estOrders = this.orders.filter(o => o.establishmentId === est.id || o.establishment_id === est.id);
       const ordersCount = estOrders.length;
       const totalRevenue = estOrders.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -1411,7 +1690,17 @@ class AdminController {
         </td>
       `;
       tbody.appendChild(row);
-    });
+    };
+
+    // If active category is 'servicios', show specialized services first, then any custom service stores
+    if (activeFilter === 'servicios') {
+      filteredServices.forEach(renderServiceRow);
+      filteredEsts.forEach(renderEstRow);
+    } else {
+      // In 'all' or other categories, render establishments then specialized services
+      filteredEsts.forEach(renderEstRow);
+      filteredServices.forEach(renderServiceRow);
+    }
 
     this.loadDriversTable();
     this.loadAdminMasterCatalogTable();
@@ -1619,10 +1908,10 @@ class AdminController {
   }
 
   openEstActionModal(id) {
-    const est = this.establishments.find(e => e.id === id);
+    const est = this.getEstablishmentById(id);
     if (!est) return;
 
-    this.activeShopId = id;
+    this.activeShopId = est.id;
     const nameEl = document.getElementById('action-modal-shop-name');
     if (nameEl) nameEl.innerText = `${est.logo || '🏪'} ${est.name} ${est.disabled ? '(DESHABILITADO)' : ''}`;
 
@@ -1665,7 +1954,7 @@ class AdminController {
 
   openStoreKitchen(estId) {
     const targetId = estId || this.activeShopId;
-    const est = this.establishments.find(e => e.id === targetId);
+    const est = this.getEstablishmentById(targetId);
     if (!est) return;
     this.closeEstActionModal();
     const isApp = window.Capacitor !== undefined || window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -1676,6 +1965,8 @@ class AdminController {
 
   viewShopMenu() {
     if (!this.activeShopId) return;
+    const est = this.getEstablishmentById(this.activeShopId);
+    if (!est) return;
     this.closeEstActionModal();
     const isApp = window.Capacitor !== undefined || window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const baseUrl = isApp ? 'https://pedigochos.onrender.com' : window.location.origin;
@@ -1685,7 +1976,7 @@ class AdminController {
 
   openEditShopModal() {
     if (!this.activeShopId) return;
-    const est = this.establishments.find(e => e.id === this.activeShopId);
+    const est = this.getEstablishmentById(this.activeShopId);
     if (!est) return;
 
     this.closeEstActionModal();
@@ -2018,7 +2309,7 @@ class AdminController {
 
   modifyMenuAndTables() {
     if (!this.activeShopId) return;
-    const est = this.establishments.find(e => e.id === this.activeShopId);
+    const est = this.getEstablishmentById(this.activeShopId);
     if (!est) return;
 
     this.closeEstActionModal();
@@ -2027,8 +2318,10 @@ class AdminController {
     this.activeFloorTool = 'table'; // Default tool
 
     // Update titles and subtext
-    document.getElementById('designer-modal-shop-name').innerText = `🍔 Taller de Menú y Distribución: ${est.name}`;
-    document.getElementById('designer-modal-shop-subtext').innerText = `Diseño de distribución de mesas y carta de comida para ${est.name}`;
+    const titleEl = document.getElementById('designer-modal-shop-name');
+    if (titleEl) titleEl.innerText = `🍔 Taller de Menú y Distribución: ${est.name}`;
+    const subtextEl = document.getElementById('designer-modal-shop-subtext');
+    if (subtextEl) subtextEl.innerText = `Diseño de distribución de mesas y carta de comida para ${est.name}`;
 
     // Open Modal
     const modal = document.getElementById('menu-tables-modal');
@@ -2036,7 +2329,7 @@ class AdminController {
     this.checkModalOpenState();
 
     // Switch to default tab (daily specials or previous tab)
-    const initialTab = this.activeModalTab || 'daily';
+    const initialTab = this.activeModalTab || 'menu';
     this.switchModalTab(initialTab);
   }
 
@@ -2050,14 +2343,13 @@ class AdminController {
       if (content) content.classList.toggle('active', t === tabId);
     });
 
-    const est = this.establishments.find(e => e.id === window.activeShopIdForMenu);
+    const est = this.getEstablishmentById(window.activeShopIdForMenu);
     if (est) this.auditMissingPrices(est);
 
     if (tabId === 'daily') {
       this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
     } else if (tabId === 'menu') {
-      this.renderModalCategories();
-      this.renderModalProducts();
+      this.loadModalProducts();
     } else if (tabId === 'ai') {
       this.initAIMenuTab();
     } else if (tabId === 'tables') {
@@ -2725,7 +3017,7 @@ class AdminController {
   }
 
   async loadModalProducts() {
-    const est = this.establishments.find(e => e.id === window.activeShopIdForMenu);
+    const est = this.getEstablishmentById(window.activeShopIdForMenu);
     if (!est) return;
 
     // Load category categories
@@ -4023,7 +4315,7 @@ class AdminController {
   }
 
   async toggleDisableEstablishment(id) {
-    const est = this.establishments.find(e => e.id === id);
+    const est = this.getEstablishmentById(id);
     if (!est) return;
 
     const newDisabledState = !est.disabled;
@@ -6554,7 +6846,7 @@ class AdminController {
 
   openQuickFillPricesModal(shopId) {
     const targetId = shopId || window.activeShopIdForMenu || this.activeShopId;
-    const est = this.establishments.find(e => e.id === targetId);
+    const est = this.getEstablishmentById(targetId);
     if (!est) return;
 
     this.activeShopIdForQuickFill = est.id;
@@ -7042,7 +7334,7 @@ class AdminController {
 
   openClearModifiersModal(shopId) {
     const targetId = shopId || window.activeShopIdForMenu || this.activeShopId;
-    const est = this.establishments.find(e => e.id === targetId);
+    const est = this.getEstablishmentById(targetId);
     if (!est) {
       alert('Por favor selecciona o abre un restaurante primero.');
       return;
@@ -8131,7 +8423,7 @@ class AdminController {
   // ==========================================
   // Piñatas Personalizadas Admin & Inventory Control
   // ==========================================
-  async openPinatasAdminModal() {
+  async openPinatasAdminModal(initialTab = 'orders') {
     const modal = document.getElementById('admin-pinatas-modal');
     if (modal) {
       modal.style.display = 'flex';
@@ -8139,8 +8431,12 @@ class AdminController {
     }
     const badge = document.getElementById('admin-pinatas-badge');
     if (badge) badge.style.display = 'none';
-    this.switchPinatasAdminTab('orders');
-    await this.loadPinatasQuotes();
+    this.switchPinatasAdminTab(initialTab);
+    if (initialTab === 'inventory') {
+      await this.loadPinatasCatalog();
+    } else {
+      await this.loadPinatasQuotes();
+    }
   }
 
   closePinatasAdminModal() {
