@@ -232,6 +232,28 @@ class MarketplaceController {
         this.showLocationTutorial();
       }, 1000);
     }
+
+    // Dismiss login prompt bubble on scroll or outside tap
+    let hasDismissedLoginPromptOnScroll = false;
+    window.addEventListener('scroll', () => {
+      if (!hasDismissedLoginPromptOnScroll && window.scrollY > 150) {
+        hasDismissedLoginPromptOnScroll = true;
+        const prompt = document.getElementById('login-reward-prompt');
+        if (prompt && !prompt.classList.contains('hidden')) {
+          prompt.classList.add('hidden');
+        }
+      }
+    }, { passive: true });
+
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('auth-status-container');
+      const prompt = document.getElementById('login-reward-prompt');
+      if (prompt && !prompt.classList.contains('hidden')) {
+        if (container && !container.contains(e.target)) {
+          prompt.classList.add('hidden');
+        }
+      }
+    });
   }
 
   checkFirstTimeWelcome() {
@@ -373,11 +395,42 @@ class MarketplaceController {
         </div>
       `;
     } else {
+      const isDismissed = sessionStorage.getItem('pedigochos_login_prompt_dismissed') === 'true';
+      container.style.position = 'relative';
       container.innerHTML = `
-        <button class="btn-notification" onclick="MarketplaceApp.loginWithGoogle()" title="Iniciar Sesión con Google" style="background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #fff; padding: 4px 10px; font-size: 11.5px; font-weight: 800; width: auto; height: 26px; border-radius: 14px; box-shadow: 0 2px 8px rgba(255, 107, 0, 0.35); display: inline-flex; align-items: center; gap: 4px; border: none; cursor: pointer;">
+        <button class="btn-notification btn-login-pulse" onclick="MarketplaceApp.loginWithGoogle()" onmouseenter="MarketplaceApp.showLoginPrompt()" title="Iniciar Sesión con Google">
+          <span class="login-pulse-badge"></span>
           <span>🔑</span> <span>Ingresar</span>
         </button>
+        <div id="login-reward-prompt" class="login-prompt-bubble ${isDismissed ? 'hidden' : ''}" onclick="MarketplaceApp.loginWithGoogle()">
+          <div class="login-prompt-arrow"></div>
+          <div class="login-prompt-header">
+            <span class="login-prompt-tag">⚠️ ¡Inicia Sesión!</span>
+            <button type="button" class="login-prompt-close-btn" onclick="event.stopPropagation(); MarketplaceApp.dismissLoginPrompt()" title="Cerrar aviso">✕</button>
+          </div>
+          <div class="login-prompt-body">
+            Si no ingresas, <strong>no se guardarán tus datos</strong> de perfil ni <strong>acumularás GochoPoints ⭐</strong> en tus pedidos.
+          </div>
+          <div class="login-prompt-action">
+            <span>Toca para ingresar con Google 🚀</span>
+          </div>
+        </div>
       `;
+    }
+  }
+
+  dismissLoginPrompt() {
+    const prompt = document.getElementById('login-reward-prompt');
+    if (prompt) {
+      prompt.classList.add('hidden');
+    }
+    sessionStorage.setItem('pedigochos_login_prompt_dismissed', 'true');
+  }
+
+  showLoginPrompt() {
+    const prompt = document.getElementById('login-reward-prompt');
+    if (prompt) {
+      prompt.classList.remove('hidden');
     }
   }
 

@@ -86,10 +86,25 @@
           🚨 <span>S.O.S</span>
         </button>
         
-        <div id="auth-status-container">
-          <button class="btn-notification" onclick="MarketplaceApp.loginWithGoogle()" title="Iniciar Sesión">
-            🔑 Ingresar
+        <div id="auth-status-container" style="position: relative;">
+          <button class="btn-notification btn-login-pulse" onclick="MarketplaceApp.loginWithGoogle()" onmouseenter="MarketplaceApp.showLoginPrompt()" title="Iniciar Sesión con Google">
+            <span class="login-pulse-badge"></span>
+            <span>🔑</span> <span>Ingresar</span>
           </button>
+          
+          <div id="login-reward-prompt" class="login-prompt-bubble" onclick="MarketplaceApp.loginWithGoogle()">
+            <div class="login-prompt-arrow"></div>
+            <div class="login-prompt-header">
+              <span class="login-prompt-tag">⚠️ ¡Inicia Sesión!</span>
+              <button type="button" class="login-prompt-close-btn" onclick="event.stopPropagation(); MarketplaceApp.dismissLoginPrompt()" title="Cerrar aviso">✕</button>
+            </div>
+            <div class="login-prompt-body">
+              Si no ingresas, <strong>no se guardarán tus datos</strong> de perfil ni <strong>acumularás GochoPoints ⭐</strong> en tus pedidos.
+            </div>
+            <div class="login-prompt-action">
+              <span>Toca para ingresar con Google 🚀</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2010,15 +2025,15 @@
   <script src="/js/qrcode.min.js?v=231"></script>
   <script src="/js/sound.js?v=231"></script>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-  <script src="/js/paint-service.js?v=241"></script>
-  <script src="/js/print3d-service.js?v=241"></script>
-  <script src="/js/resin-service.js?v=241"></script>
-  <script src="/js/pinata-service.js?v=241"></script>
-  <script src="/js/marketplace.js?v=241"></script>
+  <script src="/js/paint-service.js?v=242"></script>
+  <script src="/js/print3d-service.js?v=242"></script>
+  <script src="/js/resin-service.js?v=242"></script>
+  <script src="/js/pinata-service.js?v=242"></script>
+  <script src="/js/marketplace.js?v=242"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=241').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=242').then((reg) => {
           reg.update();
         }).catch(() => {});
       });
