@@ -406,6 +406,8 @@ class AdminController {
     // Auto-login with master key in background immediately
     const savedPass = localStorage.getItem('owner_password') || '0424';
     this.login(savedPass, true);
+    const savedWs = localStorage.getItem('pedigochos_admin_active_workspace') || 'orders';
+    this.switchWorkspace(savedWs);
 
     // Check if Google OAuth session is active in background (non-blocking)
     this.checkSupabaseSession().catch(e => console.warn('Supabase session check notice:', e));
@@ -592,6 +594,8 @@ class AdminController {
 
         // Render data
         this.renderTable();
+        const savedWs = localStorage.getItem('pedigochos_admin_active_workspace') || 'orders';
+        this.switchWorkspace(savedWs);
         await this.loadCentralSedeSettings();
         this.initWebSocket();
         this.requestNotificationPermission();
@@ -618,6 +622,8 @@ class AdminController {
 
       // Render cached data immediately if available
       this.renderTable();
+      const savedWs = localStorage.getItem('pedigochos_admin_active_workspace') || 'orders';
+      this.switchWorkspace(savedWs);
       this.initWebSocket();
       this.requestNotificationPermission();
       this.requestWakeLock();
@@ -1321,29 +1327,7 @@ class AdminController {
   }
 
   async openMenuEditorForShop(shopId) {
-    const est = this.getEstablishmentById(shopId);
-    if (!est) {
-      console.warn('openMenuEditorForShop: establishment not found for ID', shopId);
-      return;
-    }
-    this.activeShopId = est.id;
-    window.activeShopIdForMenu = est.id;
-    this.activeFloorTool = 'table';
-    const titleEl = document.getElementById('designer-modal-shop-name');
-    if (titleEl) titleEl.innerText = `🍔 Taller de Menú y Distribución: ${est.name}`;
-    const subtextEl = document.getElementById('designer-modal-shop-subtext');
-    if (subtextEl) subtextEl.innerText = `Diseño de distribución de mesas y carta de comida para ${est.name}`;
-    const modal = document.getElementById('menu-tables-modal');
-    if (modal) modal.classList.add('active');
-    this.checkModalOpenState();
-    this.activeModalTab = 'menu';
-    ['daily', 'menu', 'ai', 'tables', 'catalog'].forEach(t => {
-      const btn = document.getElementById(`tab-btn-${t}`);
-      const content = document.getElementById(`tab-content-${t}`);
-      if (btn) btn.classList.toggle('active', t === 'menu');
-      if (content) content.classList.toggle('active', t === 'menu');
-    });
-    await this.loadModalProducts();
+    this.openMenuDesignerFor(shopId);
   }
 
   openEditShopModalFor(shopId) {
@@ -2346,6 +2330,169 @@ class AdminController {
     this.switchModalTab(initialTab);
   }
 
+  switchWorkspace(wsId) {
+    const validWorkspaces = ['orders', 'restaurants', 'menu-tables', 'services', 'fleet', 'finance'];
+    const targetId = validWorkspaces.includes(wsId) ? wsId : 'orders';
+    this.activeWorkspace = targetId;
+    try {
+      localStorage.setItem('pedigochos_admin_active_workspace', targetId);
+    } catch(e) {}
+
+    // Update dock tab buttons
+    validWorkspaces.forEach(id => {
+      const btn = document.getElementById(`dock-btn-${id}`);
+      if (btn) {
+        if (id === targetId) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    });
+
+    // Update workspace panes
+    validWorkspaces.forEach(id => {
+      const pane = document.getElementById(`ws-${id}`);
+      if (pane) {
+        if (id === targetId) {
+          pane.style.display = 'block';
+          pane.classList.add('active');
+        } else {
+          pane.style.display = 'none';
+          pane.classList.remove('active');
+        }
+      }
+    });
+
+    // Action based on target workspace
+    if (targetId === 'orders') {
+      this.renderLiveOrders();
+    } else if (targetId === 'restaurants') {
+      this.activeCategoryFilter = 'all';
+      this.renderTable();
+    } else if (targetId === 'menu-tables') {
+      this.initStudioMenuTables();
+    } else if (targetId === 'services') {
+      this.activeCategoryFilter = 'servicios';
+      this.renderTable();
+    } else if (targetId === 'fleet') {
+      if (typeof this.loadDriversTable === 'function') this.loadDriversTable();
+      if (typeof this.loadDriverChat === 'function') this.loadDriverChat();
+    } else if (targetId === 'finance') {
+      if (typeof this.renderAnalyticsPro === 'function') this.renderAnalyticsPro();
+      if (typeof this.loadPlatformSettings === 'function') this.loadPlatformSettings();
+    }
+  }
+
+  initStudioMenuTables() {
+    const select = document.getElementById('studio-active-restaurant-select');
+    if (!select) return;
+
+    const currentSelected = select.value || this.activeShopId || window.activeShopIdForMenu;
+    select.innerHTML = '';
+
+    const uniqueEsts = [];
+    const seenIds = new Set();
+    (this.establishments || []).forEach(est => {
+      if (est && est.id && !seenIds.has(String(est.id))) {
+        seenIds.add(String(est.id));
+        uniqueEsts.push(est);
+      }
+    });
+
+    uniqueEsts.forEach(est => {
+      const opt = document.createElement('option');
+      opt.value = est.id;
+      opt.textContent = `${est.name || 'Sin nombre'} (${est.location || 'Local'})`;
+      select.appendChild(opt);
+    });
+
+    if (uniqueEsts.length > 0) {
+      const found = uniqueEsts.find(e => String(e.id) === String(currentSelected));
+      const targetShopId = found ? found.id : uniqueEsts[0].id;
+      select.value = targetShopId;
+      this.onStudioRestaurantSelect(targetShopId);
+    }
+  }
+
+  onStudioRestaurantSelect(shopId) {
+    if (!shopId) return;
+    this.activeShopId = shopId;
+    window.activeShopIdForMenu = shopId;
+    this.activeFloorTool = 'table';
+    this.switchStudioTab(this.activeStudioTab || 'menu');
+  }
+
+  async switchStudioTab(tabId) {
+    const validTabs = ['menu', 'tables', 'daily', 'ai', 'catalog'];
+    const targetTab = validTabs.includes(tabId) ? tabId : 'menu';
+    this.activeStudioTab = targetTab;
+
+    validTabs.forEach(t => {
+      const btn = document.getElementById(`studio-tab-btn-${t}`);
+      const content = document.getElementById(`studio-tab-content-${t}`);
+      if (btn) {
+        if (t === targetTab) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+      if (content) {
+        if (t === targetTab) {
+          content.style.display = 'block';
+          content.classList.add('active');
+        } else {
+          content.style.display = 'none';
+          content.classList.remove('active');
+        }
+      }
+    });
+
+    const est = this.getEstablishmentById(window.activeShopIdForMenu || this.activeShopId);
+    if (est) this.auditMissingPrices(est);
+
+    if (targetTab === 'menu') {
+      await this.loadModalProducts();
+    } else if (targetTab === 'tables') {
+      this.renderFloorGrid();
+    } else if (targetTab === 'daily') {
+      this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+    } else if (targetTab === 'ai') {
+      if (typeof this.initAIMenuTab === 'function') this.initAIMenuTab();
+    } else if (targetTab === 'catalog') {
+      await this.loadModalImportCatalog();
+    }
+  }
+
+  openActiveStoreKitchen() {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    if (shopId) this.openStoreKitchen(shopId);
+  }
+
+  openActiveStoreQR() {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    if (shopId) this.openStoreQRModal(shopId);
+  }
+
+  openActiveStoreInfo() {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    if (shopId) this.openEditShopModalFor(shopId);
+  }
+
+  openMenuDesignerFor(shopId) {
+    const est = this.getEstablishmentById(shopId);
+    if (!est) {
+      console.warn('openMenuDesignerFor: establishment not found for ID', shopId);
+      return;
+    }
+    this.activeShopId = est.id;
+    window.activeShopIdForMenu = est.id;
+    this.switchWorkspace('menu-tables');
+    const select = document.getElementById('studio-active-restaurant-select');
+    if (select) {
+      select.value = est.id;
+    }
+    this.onStudioRestaurantSelect(est.id);
+  }
+
   switchModalTab(tabId) {
     this.activeModalTab = tabId;
     const tabs = ['daily', 'menu', 'ai', 'tables', 'catalog'];
@@ -2374,42 +2521,51 @@ class AdminController {
 
   selectDailySpecialsDay(day) {
     this.selectedDailyDay = day;
-    const container = document.getElementById('daily-specials-day-selector');
-    if (container) {
-      container.querySelectorAll('.day-pill').forEach(pill => {
-        pill.classList.toggle('active', pill.getAttribute('data-day') === day);
-      });
-    }
+    ['daily-specials-day-selector', 'studio-daily-day-selector'].forEach(id => {
+      const container = document.getElementById(id);
+      if (container) {
+        container.querySelectorAll('.day-pill').forEach(pill => {
+          pill.classList.toggle('active', pill.getAttribute('data-day') === day);
+        });
+      }
+    });
     this.renderDailySpecialsTab(day);
   }
 
   renderDailySpecialsTab(selectedDay = 'todos') {
-    const grid = document.getElementById('daily-specials-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
+    const grids = [
+      document.getElementById('studio-daily-grid'),
+      document.getElementById('daily-specials-grid')
+    ].filter(Boolean);
+    if (grids.length === 0) return;
+    grids.forEach(g => { g.innerHTML = ''; });
 
     const shopId = window.activeShopIdForMenu || this.activeShopId;
     const est = this.establishments.find(e => e.id === shopId);
     if (!est || !est.products || est.products.length === 0) {
-      grid.innerHTML = `
-        <div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--text-muted); font-size: 12.5px; background: rgba(255,255,255,0.02); border-radius: 12px;">
-          No hay productos registrados en este restaurante.
-        </div>
-      `;
+      grids.forEach(grid => {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--text-muted); font-size: 12.5px; background: rgba(255,255,255,0.02); border-radius: 12px;">
+            No hay productos registrados en este restaurante.
+          </div>
+        `;
+      });
       return;
     }
 
     const today = typeof getTodayDayId === 'function' ? getTodayDayId() : 'lunes';
 
     // Mark the "HOY" badge on the day pill
-    const daySelector = document.getElementById('daily-specials-day-selector');
-    if (daySelector) {
-      daySelector.querySelectorAll('.day-pill').forEach(p => {
-        if (p.getAttribute('data-day') === today) {
-          p.classList.add('today-badge');
-        }
-      });
-    }
+    ['daily-specials-day-selector', 'studio-daily-day-selector'].forEach(id => {
+      const daySelector = document.getElementById(id);
+      if (daySelector) {
+        daySelector.querySelectorAll('.day-pill').forEach(p => {
+          if (p.getAttribute('data-day') === today) {
+            p.classList.add('today-badge');
+          }
+        });
+      }
+    });
 
     // Filter products for the selected day
     const filtered = est.products.filter(p => {
@@ -2427,13 +2583,15 @@ class AdminController {
         jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
         domingo: 'Domingo', todos: 'todos los días'
       };
-      grid.innerHTML = `
-        <div style="grid-column: 1 / -1; padding: 28px; text-align: center; color: var(--text-muted); font-size: 13px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 14px;">
-          <span style="font-size: 24px; display: block; margin-bottom: 4px;">🍲</span>
-          <p style="margin: 4px 0 10px 0;">No hay platos asignados para <strong>${dayNames[selectedDay] || selectedDay}</strong>.</p>
-          <button type="button" class="btn-neumorphic" onclick="AdminApp.openMenuModal()" style="margin: 0; font-size: 11.5px; padding: 6px 14px; background: var(--accent); color: #121216; font-weight: 800; cursor: pointer;">➕ Asignar Plato a este Día</button>
-        </div>
-      `;
+      grids.forEach(grid => {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 28px; text-align: center; color: var(--text-muted); font-size: 13px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 14px;">
+            <span style="font-size: 24px; display: block; margin-bottom: 4px;">🍲</span>
+            <p style="margin: 4px 0 10px 0;">No hay platos asignados para <strong>${dayNames[selectedDay] || selectedDay}</strong>.</p>
+            <button type="button" class="btn-neumorphic" onclick="AdminApp.openMenuModal()" style="margin: 0; font-size: 11.5px; padding: 6px 14px; background: var(--accent); color: #121216; font-weight: 800; cursor: pointer;">➕ Asignar Plato a este Día</button>
+          </div>
+        `;
+      });
       return;
     }
 
@@ -2452,40 +2610,41 @@ class AdminController {
         </span>
       `).join('');
 
-      const card = document.createElement('div');
-      card.className = `daily-dish-card ${isPaused ? 'paused' : ''}`;
       const imgUrl = prod.image || '/images/burger_royale.jpg';
 
-      card.innerHTML = `
-        <div class="daily-dish-header">
-          <img src="${imgUrl}" alt="${prod.name}" class="daily-dish-img" onerror="this.src='/images/burger_royale.jpg'">
-          <div style="flex: 1; min-width: 0;">
-            <h4 class="daily-dish-title">${prod.name}</h4>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-              <span class="daily-dish-price">$${parseFloat(prod.price || 0).toFixed(2)}</span>
-              <span style="font-size: 10px; color: #f59e0b; font-weight: 700; background: rgba(245,158,11,0.1); padding: 2px 6px; border-radius: 4px;">📅 ${daysLabel}</span>
+      grids.forEach(grid => {
+        const card = document.createElement('div');
+        card.className = `daily-dish-card ${isPaused ? 'paused' : ''}`;
+        card.innerHTML = `
+          <div class="daily-dish-header">
+            <img src="${imgUrl}" alt="${prod.name}" class="daily-dish-img" onerror="this.src='/images/burger_royale.jpg'">
+            <div style="flex: 1; min-width: 0;">
+              <h4 class="daily-dish-title">${prod.name}</h4>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                <span class="daily-dish-price">$${parseFloat(prod.price || 0).toFixed(2)}</span>
+                <span style="font-size: 10px; color: #f59e0b; font-weight: 700; background: rgba(245,158,11,0.1); padding: 2px 6px; border-radius: 4px;">📅 ${daysLabel}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-          ${dynamicBadges || '<span style="font-size: 10px; color: var(--text-muted); font-style: italic;">Sin opciones dinámicas configuradas</span>'}
-        </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+            ${dynamicBadges || '<span style="font-size: 10px; color: var(--text-muted); font-style: italic;">Sin opciones dinámicas configuradas</span>'}
+          </div>
 
-        <div class="daily-dish-actions">
-          <button type="button" class="btn-daily-action toggle-active ${isPaused ? 'is-paused' : ''}" onclick="AdminApp.toggleProductStatus('${prod.id}')" title="Pausar o activar plato">
-            <span>${isPaused ? '⏸️ Pausado' : '🟢 Activo Hoy'}</span>
-          </button>
-          <button type="button" class="btn-daily-action" onclick="AdminApp.openDailyOptionsModal('${prod.id}')" style="color: #f59e0b;" title="Editar opciones cambiantes (sopas, ensaladas, etc.)">
-            <span>🍲 Opciones</span>
-          </button>
-          <button type="button" class="btn-daily-action" onclick="AdminApp.openProductSpecsModal('${prod.id}')" title="Editar precio, foto e ingredientes">
-            <span>✏️ Editar</span>
-          </button>
-        </div>
-      `;
-
-      grid.appendChild(card);
+          <div class="daily-dish-actions">
+            <button type="button" class="btn-daily-action toggle-active ${isPaused ? 'is-paused' : ''}" onclick="AdminApp.toggleProductStatus('${prod.id}')" title="Pausar o activar plato">
+              <span>${isPaused ? '⏸️ Pausado' : '🟢 Activo Hoy'}</span>
+            </button>
+            <button type="button" class="btn-daily-action" onclick="AdminApp.openDailyOptionsModal('${prod.id}')" style="color: #f59e0b;" title="Editar opciones cambiantes (sopas, ensaladas, etc.)">
+              <span>🍲 Opciones</span>
+            </button>
+            <button type="button" class="btn-daily-action" onclick="AdminApp.openProductSpecsModal('${prod.id}')" title="Editar precio, foto e ingredientes">
+              <span>✏️ Editar</span>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
     });
   }
 
@@ -2782,9 +2941,12 @@ class AdminController {
   }
 
   renderTablesManager() {
-    const grid = document.getElementById('restaurant-tables-manager-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
+    const targets = [
+      { el: document.getElementById('studio-tables-grid'), prefix: 'studio-table-qr' },
+      { el: document.getElementById('restaurant-tables-manager-grid'), prefix: 'modal-table-qr' }
+    ].filter(t => Boolean(t.el));
+    if (targets.length === 0) return;
+    targets.forEach(t => { t.el.innerHTML = ''; });
 
     const shopId = window.activeShopIdForMenu || this.activeShopId;
     const est = this.establishments.find(e => e.id === shopId);
@@ -2827,59 +2989,61 @@ class AdminController {
       const tNum = table.number || (idx + 1);
       const tName = table.name || `Mesa ${tNum}`;
       const directUrl = `${origin}/?store=${encodeURIComponent(est.id)}&mesa=${encodeURIComponent(tNum)}`;
-      const qrBoxId = `table-qr-card-box-${idx}`;
 
-      const card = document.createElement('div');
-      card.className = 'table-qr-card';
-      card.style.cssText = 'background: rgba(18, 18, 24, 0.95); border: 1.5px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.4); position: relative;';
+      targets.forEach(target => {
+        const qrBoxId = `${target.prefix}-box-${idx}`;
+        const card = document.createElement('div');
+        card.className = 'table-qr-card';
+        card.style.cssText = 'background: rgba(18, 18, 24, 0.95); border: 1.5px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.4); position: relative;';
 
-      card.innerHTML = `
-        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 11px; font-weight: 800; color: #10B981; background: rgba(16,185,129,0.15); border: 1px solid #10B981; padding: 2px 8px; border-radius: 6px;">🟢 Activa</span>
-          <button type="button" onclick="AdminApp.deleteTable('${table.id || tNum}')" title="Eliminar Mesa" style="background: rgba(239,68,68,0.15); border: 1px solid #EF4444; color: #EF4444; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px;">✕</button>
-        </div>
+        card.innerHTML = `
+          <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; font-weight: 800; color: #10B981; background: rgba(16,185,129,0.15); border: 1px solid #10B981; padding: 2px 8px; border-radius: 6px;">🟢 Activa</span>
+            <button type="button" onclick="AdminApp.deleteTable('${table.id || tNum}')" title="Eliminar Mesa" style="background: rgba(239,68,68,0.15); border: 1px solid #EF4444; color: #EF4444; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px;">✕</button>
+          </div>
 
-        <div style="margin-top: -4px;">
-          <h4 style="margin: 0; color: #FFF; font-size: 16px; font-weight: 900;">🪑 ${tName}</h4>
-          <span style="font-size: 11px; color: var(--text-muted);">Capacidad: ${table.capacity || 4} pers.</span>
-        </div>
+          <div style="margin-top: -4px;">
+            <h4 style="margin: 0; color: #FFF; font-size: 16px; font-weight: 900;">🪑 ${tName}</h4>
+            <span style="font-size: 11px; color: var(--text-muted);">Capacidad: ${table.capacity || 4} pers.</span>
+          </div>
 
-        <!-- Live QR Code Element with High Contrast -->
-        <div id="${qrBoxId}" style="width: 130px; height: 130px; background: #FFFFFF; border-radius: 12px; padding: 6px; display: flex; align-items: center; justify-content: center; border: 2px solid #FF6B00; box-shadow: 0 0 14px rgba(255,107,0,0.35);">
-          <!-- QR Canvas -->
-        </div>
+          <!-- Live QR Code Element with High Contrast -->
+          <div id="${qrBoxId}" style="width: 130px; height: 130px; background: #FFFFFF; border-radius: 12px; padding: 6px; display: flex; align-items: center; justify-content: center; border: 2px solid #FF6B00; box-shadow: 0 0 14px rgba(255,107,0,0.35);">
+            <!-- QR Canvas -->
+          </div>
 
-        <div style="font-size: 10px; color: #94A3B8; word-break: break-all; max-width: 100%; font-family: monospace; background: rgba(0,0,0,0.3); padding: 4px 6px; border-radius: 6px;">
-          /?store=${est.id}&mesa=${tNum}
-        </div>
+          <div style="font-size: 10px; color: #94A3B8; word-break: break-all; max-width: 100%; font-family: monospace; background: rgba(0,0,0,0.3); padding: 4px 6px; border-radius: 6px;">
+            /?store=${est.id}&mesa=${tNum}
+          </div>
 
-        <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
-          <button type="button" onclick="AdminApp.downloadSingleTableQR('${tNum}', '${est.id}')" style="flex: 1; background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #FFF; border: none; padding: 7px 8px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 3px 8px rgba(255,107,0,0.3);">
-            📥 Descargar
-          </button>
-          <button type="button" onclick="AdminApp.copyTableDirectLink('${directUrl}')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 7px 10px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer;" title="Copiar Enlace">
-            📋 Copiar
-          </button>
-        </div>
-      `;
+          <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
+            <button type="button" onclick="AdminApp.downloadSingleTableQR('${tNum}', '${est.id}')" style="flex: 1; background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #FFF; border: none; padding: 7px 8px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 3px 8px rgba(255,107,0,0.3);">
+              📥 Descargar
+            </button>
+            <button type="button" onclick="AdminApp.copyTableDirectLink('${directUrl}')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 7px 10px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer;" title="Copiar Enlace">
+              📋 Copiar
+            </button>
+          </div>
+        `;
 
-      grid.appendChild(card);
+        target.el.appendChild(card);
 
-      // Generate the QR module inside the card
-      setTimeout(() => {
-        const qrContainer = document.getElementById(qrBoxId);
-        if (qrContainer && typeof QRCode !== 'undefined') {
-          qrContainer.innerHTML = '';
-          new QRCode(qrContainer, {
-            text: directUrl,
-            width: 118,
-            height: 118,
-            colorDark: '#000000',
-            colorLight: '#FFFFFF',
-            correctLevel: QRCode.CorrectLevel.M
-          });
-        }
-      }, 50);
+        // Generate the QR module inside the card
+        setTimeout(() => {
+          const qrContainer = document.getElementById(qrBoxId);
+          if (qrContainer && typeof QRCode !== 'undefined') {
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+              text: directUrl,
+              width: 118,
+              height: 118,
+              colorDark: '#000000',
+              colorLight: '#FFFFFF',
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          }
+        }, 50);
+      });
     });
   }
 
@@ -3057,30 +3221,35 @@ class AdminController {
   }
 
   renderModalCategories() {
-    const sidebar = document.getElementById('modal-categories-sidebar');
-    if (!sidebar) return;
-    sidebar.innerHTML = '';
+    const sidebars = [
+      document.getElementById('studio-categories-bar'),
+      document.getElementById('modal-categories-sidebar')
+    ].filter(Boolean);
+    if (sidebars.length === 0) return;
+    sidebars.forEach(s => { s.innerHTML = ''; });
 
-    const allLi = document.createElement('li');
-    allLi.className = `category-item ${window.activeCategoryId === 'all' ? 'active' : ''}`;
-    allLi.innerText = 'Todos';
-    allLi.style.fontSize = '11.5px';
-    allLi.style.padding = '8px 10px';
-    allLi.style.cursor = 'pointer';
-    allLi.style.borderRadius = '8px';
-    allLi.onclick = () => this.filterCategoryModal('all');
-    sidebar.appendChild(allLi);
+    sidebars.forEach(sidebar => {
+      const allLi = document.createElement('li');
+      allLi.className = `category-item ${window.activeCategoryId === 'all' ? 'active' : ''}`;
+      allLi.innerText = 'Todos';
+      allLi.style.fontSize = '11.5px';
+      allLi.style.padding = '8px 10px';
+      allLi.style.cursor = 'pointer';
+      allLi.style.borderRadius = '8px';
+      allLi.onclick = () => this.filterCategoryModal('all');
+      sidebar.appendChild(allLi);
 
-    window.categoriesList.forEach(cat => {
-      const li = document.createElement('li');
-      li.className = `category-item ${window.activeCategoryId === cat.id ? 'active' : ''}`;
-      li.innerText = cat.name;
-      li.style.fontSize = '11.5px';
-      li.style.padding = '8px 10px';
-      li.style.cursor = 'pointer';
-      li.style.borderRadius = '8px';
-      li.onclick = () => this.filterCategoryModal(cat.id);
-      sidebar.appendChild(li);
+      (window.categoriesList || []).forEach(cat => {
+        const li = document.createElement('li');
+        li.className = `category-item ${window.activeCategoryId === cat.id ? 'active' : ''}`;
+        li.innerText = cat.name;
+        li.style.fontSize = '11.5px';
+        li.style.padding = '8px 10px';
+        li.style.cursor = 'pointer';
+        li.style.borderRadius = '8px';
+        li.onclick = () => this.filterCategoryModal(cat.id);
+        sidebar.appendChild(li);
+      });
     });
   }
 
@@ -3091,115 +3260,127 @@ class AdminController {
   }
 
   renderModalProducts() {
-    const grid = document.getElementById('modal-products-catalog-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
+    const grids = [
+      document.getElementById('studio-products-grid'),
+      document.getElementById('modal-products-catalog-grid')
+    ].filter(Boolean);
+    if (grids.length === 0) return;
+    grids.forEach(g => { g.innerHTML = ''; });
 
-    let filtered = window.productsList;
+    let filtered = window.productsList || [];
     if (window.activeCategoryId !== 'all') {
-      filtered = window.productsList.filter(p => {
+      filtered = (window.productsList || []).filter(p => {
         if (p.category_id) return p.category_id === window.activeCategoryId;
-        const cat = window.categoriesList.find(c => c.id === window.activeCategoryId);
+        const cat = (window.categoriesList || []).find(c => c.id === window.activeCategoryId);
         if (cat && p.category) return p.category.toLowerCase().includes(cat.slug);
         return false;
       });
     }
 
     if (filtered.length === 0) {
-      grid.innerHTML = `
-        <div style="grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px;">
-          No hay productos en esta categoría.
-        </div>
-      `;
+      grids.forEach(grid => {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px;">
+            No hay productos en esta categoría.
+          </div>
+        `;
+      });
       return;
     }
 
     filtered.forEach(prod => {
-      const card = document.createElement('div');
-      card.className = 'admin-product-card-item';
-      card.style.background = 'rgba(255, 255, 255, 0.04)';
-      card.style.border = '1px solid rgba(255, 255, 255, 0.09)';
-      card.style.borderRadius = '16px';
-      card.style.padding = '0';
-      card.style.display = 'flex';
-      card.style.flexDirection = 'column';
-      card.style.overflow = 'hidden';
-      card.style.position = 'relative';
-      card.style.cursor = 'pointer';
-      card.style.transition = 'all 0.22s ease';
-      card.title = `Toca para modificar ficha completa o eliminar "${prod.name}"`;
-
-      card.onmouseenter = () => {
-        card.style.borderColor = 'rgba(255, 107, 0, 0.4)';
-        card.style.transform = 'translateY(-2px)';
-        card.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
-      };
-      card.onmouseleave = () => {
-        card.style.borderColor = 'rgba(255, 255, 255, 0.09)';
-        card.style.transform = 'translateY(0)';
-        card.style.boxShadow = 'none';
-      };
-
-      // Tocar en cualquier parte de la tarjeta despliega la ficha completa editable y eliminable
-      card.onclick = () => AdminApp.openProductSpecsModal(prod.id);
-
       const isAgotado = prod.out_of_stock === true || prod.agotado === true || prod.is_paused === true || prod.available === false;
       const imgUrl = prod.image || '/images/burger_royale.jpg';
       const formattedPrice = this.formatPesos(prod.price || 0);
       const modCount = prod.modifiers && Array.isArray(prod.modifiers) ? prod.modifiers.length : 0;
 
-      card.innerHTML = `
-        <div style="position: relative; width: 100%; aspect-ratio: 16/10; background: #0F172A; overflow: hidden;">
-          <img src="${imgUrl}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
-          <div style="position: absolute; top: 8px; left: 8px; z-index: 2;">
-            ${isAgotado 
-              ? `<span style="background: rgba(239, 68, 68, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🚫 Agotado</span>`
-              : `<span style="background: rgba(16, 185, 129, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🟢 En Stock</span>`
-            }
-          </div>
-          <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); color: #10B981; font-weight: 900; font-size: 13.5px; padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.3); box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
-            ${formattedPrice}
-          </div>
-        </div>
+      grids.forEach(grid => {
+        const card = document.createElement('div');
+        card.className = 'admin-product-card-item';
+        card.style.background = 'rgba(255, 255, 255, 0.04)';
+        card.style.border = '1px solid rgba(255, 255, 255, 0.09)';
+        card.style.borderRadius = '16px';
+        card.style.padding = '0';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.overflow = 'hidden';
+        card.style.position = 'relative';
+        card.style.cursor = 'pointer';
+        card.style.transition = 'all 0.22s ease';
+        card.title = `Toca para modificar ficha completa o eliminar "${prod.name}"`;
 
-        <div style="padding: 12px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; gap: 8px;">
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;">
-              <h4 style="color: #FFFFFF; font-size: 14.5px; margin: 0; font-weight: 800; line-height: 1.25;">${prod.name}</h4>
+        card.onmouseenter = () => {
+          card.style.borderColor = 'rgba(255, 107, 0, 0.4)';
+          card.style.transform = 'translateY(-2px)';
+          card.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
+        };
+        card.onmouseleave = () => {
+          card.style.borderColor = 'rgba(255, 255, 255, 0.09)';
+          card.style.transform = 'translateY(0)';
+          card.style.boxShadow = 'none';
+        };
+
+        // Tocar en cualquier parte de la tarjeta despliega la ficha completa editable y eliminable
+        card.onclick = () => AdminApp.openProductSpecsModal(prod.id);
+
+        card.innerHTML = `
+          <div style="position: relative; width: 100%; aspect-ratio: 16/10; background: #0F172A; overflow: hidden;">
+            <img src="${imgUrl}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
+            <div style="position: absolute; top: 8px; left: 8px; z-index: 2;">
+              ${isAgotado 
+                ? `<span style="background: rgba(239, 68, 68, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🚫 Agotado</span>`
+                : `<span style="background: rgba(16, 185, 129, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🟢 En Stock</span>`
+              }
             </div>
-            <span style="display: inline-block; font-size: 10px; color: #CBD5E1; background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; margin-top: 4px; font-weight: 700;">
-              🏷️ ${prod.category || 'General'}
-            </span>
-            <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.35; margin: 6px 0 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              ${prod.description || 'Sin descripción detallada.'}
-            </p>
-            ${modCount > 0 ? `<div style="font-size: 10.5px; color: #F59E0B; margin-top: 4px; font-weight: 700;">🎛️ ${modCount} grupo(s) de adicionales</div>` : ''}
+            <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); color: #10B981; font-weight: 900; font-size: 13.5px; padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.3); box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+              ${formattedPrice}
+            </div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: auto;">
-            <button type="button" onclick="event.stopPropagation(); AdminApp.toggleProductStatus('${prod.id}')" style="background: ${isAgotado ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}; color: ${isAgotado ? '#34D399' : '#FCD34D'}; border: 1px solid ${isAgotado ? '#10B981' : '#F59E0B'}; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 800; cursor: pointer;" title="Cambiar disponibilidad inmediata">
-              ${isAgotado ? '▶️ Habilitar' : '⏸️ Pausar'}
-            </button>
-            <div style="display: flex; gap: 6px;">
-              <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.openProductSpecsModal('${prod.id}')" style="margin: 0; padding: 4px 10px; font-size: 11px; font-weight: 800; height: auto; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); color: #FFF;" title="Modificar ficha">
-                <span>✏️</span> Editar
+          <div style="padding: 12px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; gap: 8px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;">
+                <h4 style="color: #FFFFFF; font-size: 14.5px; margin: 0; font-weight: 800; line-height: 1.25;">${prod.name}</h4>
+              </div>
+              <span style="display: inline-block; font-size: 10px; color: #CBD5E1; background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; margin-top: 4px; font-weight: 700;">
+                🏷️ ${prod.category || 'General'}
+              </span>
+              <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.35; margin: 6px 0 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                ${prod.description || 'Sin descripción detallada.'}
+              </p>
+              ${modCount > 0 ? `<div style="font-size: 10.5px; color: #F59E0B; margin-top: 4px; font-weight: 700;">🎛️ ${modCount} grupo(s) de adicionales</div>` : ''}
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: auto;">
+              <button type="button" onclick="event.stopPropagation(); AdminApp.toggleProductStatus('${prod.id}')" style="background: ${isAgotado ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}; color: ${isAgotado ? '#34D399' : '#FCD34D'}; border: 1px solid ${isAgotado ? '#10B981' : '#F59E0B'}; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 800; cursor: pointer;" title="Cambiar disponibilidad inmediata">
+                ${isAgotado ? '▶️ Habilitar' : '⏸️ Pausar'}
               </button>
-              <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.deleteProductFromModal('${prod.id}')" style="margin: 0; padding: 4px 8px; font-size: 11px; color: #EF4444; border-color: rgba(239,68,68,0.3); height: auto;" title="Eliminar producto de la carta">
-                <span>🗑️</span>
-              </button>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.openProductSpecsModal('${prod.id}')" style="margin: 0; padding: 4px 10px; font-size: 11px; font-weight: 800; height: auto; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); color: #FFF;" title="Modificar ficha">
+                  <span>✏️</span> Editar
+                </button>
+                <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.deleteProductFromModal('${prod.id}')" style="margin: 0; padding: 4px 8px; font-size: 11px; color: #EF4444; border-color: rgba(239,68,68,0.3); height: auto;" title="Eliminar producto de la carta">
+                  <span>🗑️</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-      grid.appendChild(card);
+        `;
+        grid.appendChild(card);
+      });
     });
   }
 
   async loadModalImportCatalog() {
-    const tbody = document.getElementById('modal-import-catalog-tbody');
-    if (!tbody) return;
+    const tbodies = [
+      document.getElementById('studio-import-catalog-tbody'),
+      document.getElementById('modal-import-catalog-tbody')
+    ].filter(Boolean);
+    if (tbodies.length === 0) return;
 
-    tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">Cargando catálogo maestro...</td></tr>`;
+    tbodies.forEach(tbody => {
+      tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">Cargando catálogo maestro...</td></tr>`;
+    });
 
     try {
       if (typeof MenuBuilder !== 'undefined' && MenuBuilder.supabase) {
@@ -3214,59 +3395,68 @@ class AdminController {
       }
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #f87171;">Error al cargar el catálogo maestro: ${err.message}</td></tr>`;
+      tbodies.forEach(tbody => {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #f87171;">Error al cargar el catálogo maestro: ${err.message}</td></tr>`;
+      });
     }
   }
 
   renderImportCatalogTable(products) {
-    const tbody = document.getElementById('modal-import-catalog-tbody');
-    if (!tbody) return;
+    const tbodies = [
+      document.getElementById('studio-import-catalog-tbody'),
+      document.getElementById('modal-import-catalog-tbody')
+    ].filter(Boolean);
+    if (tbodies.length === 0) return;
 
     if (!products || products.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">No hay productos en el catálogo maestro.</td></tr>`;
+      tbodies.forEach(tbody => {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">No hay productos en el catálogo maestro.</td></tr>`;
+      });
       return;
     }
 
-    const est = this.establishments.find(e => e.id === window.activeShopIdForMenu);
+    const est = this.establishments.find(e => e.id === (window.activeShopIdForMenu || this.activeShopId));
     const existingProductNames = est && est.products ? est.products.map(p => p.name.toLowerCase()) : [];
 
-    tbody.innerHTML = '';
-    products.forEach(prod => {
-      const tr = document.createElement('tr');
-      tr.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
-      tr.style.transition = 'background 0.2s';
-      tr.onmouseenter = () => tr.style.background = 'rgba(255,255,255,0.04)';
-      tr.onmouseleave = () => tr.style.background = 'transparent';
+    tbodies.forEach(tbody => {
+      tbody.innerHTML = '';
+      products.forEach(prod => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+        tr.style.transition = 'background 0.2s';
+        tr.onmouseenter = () => tr.style.background = 'rgba(255,255,255,0.04)';
+        tr.onmouseleave = () => tr.style.background = 'transparent';
 
-      const imgUrl = prod.image_url || prod.image || '/images/burger_royale.jpg';
-      const isAlreadyAdded = existingProductNames.includes(prod.name.toLowerCase());
-      const rawPrice = parseFloat(prod.price) || 0;
-      const copPrice = rawPrice < 1000 ? rawPrice * 1000 : rawPrice;
-      const formattedPrice = `$${Math.round(copPrice).toLocaleString('de-DE')} COP`;
+        const imgUrl = prod.image_url || prod.image || '/images/burger_royale.jpg';
+        const isAlreadyAdded = existingProductNames.includes(prod.name.toLowerCase());
+        const rawPrice = parseFloat(prod.price) || 0;
+        const copPrice = rawPrice < 1000 ? rawPrice * 1000 : rawPrice;
+        const formattedPrice = `$${Math.round(copPrice).toLocaleString('de-DE')} COP`;
 
-      const actionBtn = isAlreadyAdded 
-        ? `<span style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block;">✓ En tu Menú</span>`
-        : `<button onclick="AdminApp.importGlobalProductFromModal('${prod.id}')" style="background: var(--accent); color: #121216; font-weight: 800; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s;">➕ Agregar a mi Menú</button>`;
+        const actionBtn = isAlreadyAdded 
+          ? `<span style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block;">✓ En tu Menú</span>`
+          : `<button onclick="AdminApp.importGlobalProductFromModal('${prod.id}')" style="background: var(--accent); color: #121216; font-weight: 800; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s;">➕ Agregar a mi Menú</button>`;
 
-      tr.innerHTML = `
-        <td style="padding: 10px 14px;">
-          <img src="${imgUrl}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);" onerror="this.src='/images/burger_royale.jpg'">
-        </td>
-        <td style="padding: 10px 14px;">
-          <div style="font-weight: 700; color: #fff;">${prod.name}</div>
-          <span style="font-size: 10.5px; background: rgba(255,255,255,0.08); color: #a78bfa; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;">${prod.category || 'General'}</span>
-        </td>
-        <td style="padding: 10px 14px; color: var(--text-muted); font-size: 12px; max-width: 250px;">
-          ${prod.description || 'Sin descripción especificada.'}
-        </td>
-        <td style="padding: 10px 14px; font-weight: 800; color: #10B981;">
-          ${formattedPrice}
-        </td>
-        <td style="padding: 10px 14px; text-align: center;">
-          ${actionBtn}
-        </td>
-      `;
-      tbody.appendChild(tr);
+        tr.innerHTML = `
+          <td style="padding: 10px 14px;">
+            <img src="${imgUrl}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);" onerror="this.src='/images/burger_royale.jpg'">
+          </td>
+          <td style="padding: 10px 14px;">
+            <div style="font-weight: 700; color: #fff;">${prod.name}</div>
+            <span style="font-size: 10.5px; background: rgba(255,255,255,0.08); color: #a78bfa; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;">${prod.category || 'General'}</span>
+          </td>
+          <td style="padding: 10px 14px; color: var(--text-muted); font-size: 12px; max-width: 250px;">
+            ${prod.description || 'Sin descripción especificada.'}
+          </td>
+          <td style="padding: 10px 14px; font-weight: 800; color: #10B981;">
+            ${formattedPrice}
+          </td>
+          <td style="padding: 10px 14px; text-align: center;">
+            ${actionBtn}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
     });
   }
 
@@ -6928,17 +7118,23 @@ class AdminController {
   auditMissingPrices(est) {
     if (!est) return;
     const missing = this.getMissingPricesForEstablishment(est);
-    const banner = document.getElementById('missing-prices-alert-banner');
-    const textEl = document.getElementById('missing-prices-alert-text');
-
-    if (banner) {
-      if (missing.length > 0) {
-        banner.classList.remove('hidden');
-        if (textEl) textEl.innerText = `Tienes ${missing.length} adicionales/platos sin precio en ${est.name}`;
-      } else {
-        banner.classList.add('hidden');
+    [
+      { bannerId: 'missing-prices-alert-banner', textId: 'missing-prices-alert-text' },
+      { bannerId: 'studio-missing-prices-banner', textId: 'studio-missing-prices-text' }
+    ].forEach(cfg => {
+      const banner = document.getElementById(cfg.bannerId);
+      const textEl = document.getElementById(cfg.textId);
+      if (banner) {
+        if (missing.length > 0) {
+          banner.classList.remove('hidden');
+          banner.style.display = 'flex';
+          if (textEl) textEl.innerText = `Tienes ${missing.length} adicionales/platos sin precio en ${est.name}`;
+        } else {
+          banner.classList.add('hidden');
+          banner.style.display = 'none';
+        }
       }
-    }
+    });
   }
 
   openQuickFillPricesModal(shopId) {

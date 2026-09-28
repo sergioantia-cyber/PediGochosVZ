@@ -1,0 +1,9986 @@
+/* Superadmin Platform Owner Portal Logic (admin.js) */
+
+// Universal Capacitor / Native Android API proxy
+(function() {
+  const isWebRender = window.location.origin.includes('pedigochos.onrender.com');
+  const isLocalDev = window.location.hostname === 'localhost' && window.location.port === '3000';
+  
+  if (!isWebRender && !isLocalDev) {
+    const TARGET_HOST = 'https://pedigochos.onrender.com';
+    const originalFetch = window.fetch;
+    window.fetch = function(input, init) {
+      if (typeof input === 'string') {
+        if (input.startsWith('/api/')) {
+          input = TARGET_HOST + input;
+        } else if (input.startsWith('api/')) {
+          input = TARGET_HOST + '/' + input;
+        }
+      } else if (input && input.url) {
+        if (input.url.startsWith('/') || input.url.includes('localhost/api/')) {
+          const newUrl = input.url.replace(/^(?:https?:\/\/[^\/]+)?\/api\//, TARGET_HOST + '/api/');
+          input = new Request(newUrl, input);
+        }
+      }
+      return originalFetch.call(this, input, init);
+    };
+  }
+})();
+
+const CATEGORY_EMOJIS = {
+  comidas: ['🍔', '🍕', '🌭', '🥤', '🍲', '🌯', '🫓', '🌽', '🍞', '🥖', '🍣', '🌮', '🍜', '🍰', '☕'],
+  farmacias: ['💊', '🩹', '🧪', '🧼', '🧴', '🩺'],
+  mercados: ['🛒', '🍎', '🥛', '🍞', '🥩', '🧀', '🍌'],
+  ferreterias: ['🛠️', '🔨', '🔩', '🔧', '🪚', '🧰', '📐']
+};
+
+const DEFAULT_IMAGES = {
+  comidas: '/images/burger_royale.jpg',
+  farmacias: '/images/vitamina_c.jpg',
+  servicios: '/images/servicios.jpg',
+  mercados: '/images/pack_frutas.jpg',
+  ferreterias: '/images/ferreteria.jpg'
+};
+
+function normalizeStoreName(name) {
+  if (!name) return '';
+  return name.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+}
+
+const SPECIALIZED_SERVICES = [
+  {
+    id: 'serv-resin',
+    name: 'SHELLIART (Arte & Recuerdos en Resina)',
+    logo: '/images/services/shelliart_logo.svg',
+    category: 'servicios',
+    badge: 'ShelliArt Resina',
+    badgeColor: '#EC4899',
+    badgeBg: 'rgba(236, 72, 153, 0.15)',
+    badgeBorder: 'rgba(236, 72, 153, 0.4)',
+    location: 'San Antonio / Estudio ShelliArt',
+    description: 'Artesanías en resina epóxica, llaveros personalizados con fotos y chip NFC, iniciales A-Z con pan de oro 24K y borlas',
+    inventorySummary: '✨ Fichas de Diseño & Modelos',
+    inventoryBtnText: 'Gestionar Parámetros & Fotos',
+    inventoryAction: "AdminApp.openResinAdminModal('settings')",
+    infoSummary: '📱 WhatsApp: +57 322 794 9751',
+    infoBtnText: 'Modificar Info',
+    infoAction: "AdminApp.openResinAdminModal('settings')",
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
+    ordersSummary: '📋 Fichas de Clientes',
+    actionButtons: [
+      { text: '📋 Pedidos', action: "AdminApp.openResinAdminModal('orders')", bg: '#06B6D4', color: '#FFF', title: 'Ver pedidos de resina' },
+      { text: '⚙️ Precios & Fotos', action: "AdminApp.openResinAdminModal('settings')", bg: '#10B981', color: '#FFF', title: 'Modificar tarifas, precios y fotos' }
+    ]
+  },
+  {
+    id: 'serv-pinatas',
+    name: 'Creaciones Lola (Piñatas Personalizadas)',
+    logo: '/images/services/creaciones_lola_logo.svg',
+    category: 'servicios',
+    badge: 'Taller Artesanal',
+    badgeColor: '#F59E0B',
+    badgeBg: 'rgba(245, 158, 11, 0.15)',
+    badgeBorder: 'rgba(245, 158, 11, 0.4)',
+    location: 'San Antonio / Taller Creaciones Lola',
+    description: 'Piñatas artesanales personalizadas 3D, números temáticos florales y catálogo listo para pedir',
+    inventorySummary: '🎉 Catálogo de Creaciones Lola',
+    inventoryBtnText: 'Gestionar Catálogo Piñatas',
+    inventoryAction: "AdminApp.openPinatasAdminModal('inventory')",
+    infoSummary: '📲 Cotizaciones: +57 322 794 9751',
+    infoBtnText: 'Modificar Info',
+    infoAction: "AdminApp.openPinatasAdminModal('orders')",
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
+    ordersSummary: '🎉 Cotizaciones +573227949751',
+    actionButtons: [
+      { text: '🪅 Catálogo', action: "AdminApp.openPinatasAdminModal('inventory')", bg: '#F59E0B', color: '#1E293B', title: 'Ver catálogo de piñatas y tamaños' },
+      { text: '📱 WhatsApp', action: "window.open('https://wa.me/573227949751', '_blank')", bg: '#25D366', color: '#FFF', title: 'Contactar al WhatsApp de Piñatas (+573227949751)' }
+    ]
+  },
+  {
+    id: 'serv-print3d',
+    name: 'PediGochos 3D Lab (Laboratorio Maker & STL)',
+    logo: '/images/services/print3d_logo.svg',
+    category: 'servicios',
+    badge: 'Laboratorio 3D',
+    badgeColor: '#8B5CF6',
+    badgeBg: 'rgba(139, 92, 246, 0.15)',
+    badgeBorder: 'rgba(139, 92, 246, 0.4)',
+    location: 'San Antonio / Laboratorio Central',
+    description: 'Impresión 3D FDM/Resina, modelado CAD, prototipos rápidos y repuestos técnicos',
+    inventorySummary: '🖨️ Materiales, Resina & STL',
+    inventoryBtnText: 'Gestionar Proyectos & STL',
+    inventoryAction: 'AdminApp.openPrint3DAdminModal()',
+    infoSummary: '📱 Cotizaciones técnicas inmediatas',
+    infoBtnText: 'Modificar Info',
+    infoAction: 'AdminApp.openPrint3DAdminModal()',
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
+    ordersSummary: '📦 Prototipos & Modelos',
+    actionButtons: [
+      { text: '🖨️ Proyectos', action: 'AdminApp.openPrint3DAdminModal()', bg: '#8B5CF6', color: '#FFF', title: 'Abrir proyectos 3D y STL' },
+      { text: '📦 STL', action: 'AdminApp.openPrint3DAdminModal()', bg: '#0EA5E9', color: '#FFF', title: 'Ver archivos 3D' }
+    ]
+  },
+  {
+    id: 'serv-paint',
+    name: 'Taller Automotriz San Antonio (Latonería & Pintura al Horno)',
+    logo: '/images/services/paint_logo.svg',
+    category: 'servicios',
+    badge: 'Taller Especializado',
+    badgeColor: '#EC4899',
+    badgeBg: 'rgba(236, 72, 153, 0.15)',
+    badgeBorder: 'rgba(236, 72, 153, 0.4)',
+    location: 'San Antonio / Taller Central',
+    description: 'Pintura horneada, enderezado de chasis, pulitura y personalización automotriz',
+    inventorySummary: '🎨 Catálogo de Pinturas & Acabados',
+    inventoryBtnText: 'Gestionar Taller & Solicitudes',
+    inventoryAction: 'AdminApp.openPaintAdminModal()',
+    infoSummary: '📱 WhatsApp: +57 322 794 9751',
+    infoBtnText: 'Modificar Info',
+    infoAction: 'AdminApp.openPaintAdminModal()',
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
+    ordersSummary: '🚗 Cotizaciones en Línea',
+    actionButtons: [
+      { text: '🎨 Taller', action: 'AdminApp.openPaintAdminModal()', bg: '#EC4899', color: '#FFF', title: 'Abrir gestión de Latonería y Pintura' },
+      { text: '💬 Chat', action: 'AdminApp.openPaintAdminModal()', bg: '#6366F1', color: '#FFF', title: 'Ver mensajes y cotizaciones' }
+    ]
+  },
+  {
+    id: 'serv-cauchera',
+    name: 'Cauchera Cachu 24/7 (Auxilio Vial Inmediato)',
+    logo: '/images/services/cauchera_logo.svg',
+    category: 'servicios',
+    badge: 'Auxilio Vial Móvil',
+    badgeColor: '#EF4444',
+    badgeBg: 'rgba(239, 68, 68, 0.15)',
+    badgeBorder: 'rgba(239, 68, 68, 0.4)',
+    location: 'San Antonio / Ureña / Cobertura Total',
+    description: 'Despinche a domicilio 24 horas, parches, inflado, cambio de tripas para motos y autos',
+    inventorySummary: '🛞 Asistencia Vial & Tarifas',
+    inventoryBtnText: 'Gestionar Tarifas & Auxilios',
+    inventoryAction: 'AdminApp.openCaucheraAdminModal()',
+    infoSummary: '🚨 Guardia Activa Ininterrumpida',
+    infoBtnText: 'Modificar Info',
+    infoAction: 'AdminApp.openCaucheraAdminModal()',
+    statusBadge: '<span style="background: rgba(239, 68, 68, 0.15); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; animation: pulse 2s infinite;">🚨 Guardia 24/7</span>',
+    ordersSummary: '🛞 Despinches & Auxilio',
+    actionButtons: [
+      { text: '🛞 Panel 24/7', action: 'AdminApp.openCaucheraAdminModal()', bg: '#EF4444', color: '#FFF', title: 'Abrir panel de control de Cauchera' },
+      { text: '📋 Solicitudes', action: "AdminApp.setOrdersFilter('cauchera'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})", bg: '#F59E0B', color: '#1E293B', title: 'Ver pedidos de cauchera en la tabla' }
+    ]
+  },
+  {
+    id: 'serv-ride',
+    name: 'PediGochos Móvil (Transporte Moto & Autos)',
+    logo: '/images/services/movil_logo.svg',
+    category: 'servicios',
+    badge: 'Flota de Transporte',
+    badgeColor: '#FF6B00',
+    badgeBg: 'rgba(255, 107, 0, 0.15)',
+    badgeBorder: 'rgba(16, 185, 129, 0.4)',
+    location: 'San Antonio / Ureña / San Cristóbal',
+    description: 'Traslados urbanos en moto y auto, carreras inmediatas y envíos de paquetería express',
+    inventorySummary: '🛵 Flota de Conductores & Rutas',
+    inventoryBtnText: 'Ver Carreras / Envíos',
+    inventoryAction: "AdminApp.setOrdersFilter('ride'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'})",
+    infoSummary: '💬 Canal de Domiciliarios & Chat',
+    infoBtnText: 'Modificar Info',
+    infoAction: 'AdminApp.openRegisterDriverModal()',
+    statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 En Servicio</span>',
+    ordersSummary: '🛵 Carreras & Rutas',
+    actionButtons: [
+      { text: '🛵 Conductores', action: 'AdminApp.openRegisterDriverModal()', bg: '#10B981', color: '#FFF', title: 'Registrar o gestionar conductores' },
+      { text: '💬 Chat Grupal', action: 'AdminApp.openDriverChatModal()', bg: '#6366F1', color: '#FFF', title: 'Abrir chat con conductores' }
+    ]
+  }
+];
+
+class AdminController {
+  getEstablishmentById(id) {
+    if (!id || !this.establishments) return null;
+    const sid = String(id).trim();
+    return this.establishments.find(e => e && String(e.id).trim() === sid) || null;
+  }
+
+  constructor() {
+    this.establishments = [];
+    this.orders = [];
+    this.ordersFilter = 'all'; // 'all' | 'restaurant' | 'ride'
+    this.ordersSearchTerm = '';
+    this.isAuthenticated = false;
+    this.platformSettings = null;
+    this.driverChatMessages = [];
+    this.driverChatFilter = 'all';
+    this.driverChatUnreadCount = 0;
+    this.isDriverChatModalOpen = false;
+    this.activeCategoryFilter = 'all';
+    this.searchEstablishmentQuery = '';
+
+    // Clear any stale cached establishments - server is authoritative
+    try {
+      localStorage.removeItem('pedigochos_admin_establishments');
+      localStorage.removeItem('pedigochos_disabled_stores');
+    } catch(e) {}
+  }
+
+  enforceVerifiedGps(establishments) {
+    if (!Array.isArray(establishments)) return establishments;
+    establishments.forEach(est => {
+      if (!est) return;
+      if (est.latitude !== undefined && est.latitude !== null && !isNaN(parseFloat(est.latitude)) && est.longitude !== undefined && est.longitude !== null && !isNaN(parseFloat(est.longitude))) {
+        est.latitude = parseFloat(est.latitude);
+        est.longitude = parseFloat(est.longitude);
+      } else {
+        let localSaved = null;
+        try {
+          const raw = localStorage.getItem('store_gps_' + est.id);
+          if (raw) localSaved = JSON.parse(raw);
+        } catch(e) {}
+        if (localSaved && localSaved.latitude && localSaved.longitude) {
+          est.latitude = parseFloat(localSaved.latitude);
+          est.longitude = parseFloat(localSaved.longitude);
+        } else {
+          est.latitude = null;
+          est.longitude = null;
+        }
+      }
+      est.location_lat = est.latitude;
+      est.location_lng = est.longitude;
+    });
+    return establishments;
+  }
+
+  async forceCleanUpdate() {
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let reg of registrations) {
+          await reg.unregister();
+        }
+      }
+      const url = new URL(window.location.href);
+      url.searchParams.set('t_sync', Date.now());
+      window.location.href = url.toString();
+    } catch(e) {
+      window.location.reload(true);
+    }
+  }
+
+  async init() {
+    // Auto-detect version update and clear stale caches
+    const APP_VER = '190';
+    try {
+      const cachedVer = localStorage.getItem('pedigochos_app_ver');
+      if (cachedVer && cachedVer !== APP_VER) {
+        localStorage.setItem('pedigochos_app_ver', APP_VER);
+        if ('caches' in window) {
+          caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('v_flush', Date.now());
+            window.location.replace(url.toString());
+          });
+          return;
+        }
+      } else {
+        localStorage.setItem('pedigochos_app_ver', APP_VER);
+      }
+    } catch(e) {}
+
+    this.initModalHistoryNavigation();
+    this.populateLogoSelect('comidas');
+    this.generateRandomLinkKey();
+
+    // Set up auto-stop listeners and audio unlock for persistent alarm in admin
+    if (typeof Sound !== 'undefined') {
+      const stopAlarmAndUnlock = (e) => {
+        try {
+          Sound.init();
+          this.requestWakeLock();
+          if (e && e.target && (e.target.closest('.sound-test-btn') || e.target.closest('.alarm-btn-silence'))) {
+            return;
+          }
+          if (Date.now() - Sound.lastStartedAt < 750) {
+            return;
+          }
+          if (Sound.isPlayingAlarm) {
+            Sound.stopAlarm();
+            this.hideAlarmBanner();
+          }
+        } catch(err) {}
+      };
+
+      window.addEventListener('focus', () => {
+        this.requestWakeLock();
+        this.pollOrdersFallback();
+        if (Sound.isPlayingAlarm && Date.now() - Sound.lastStartedAt > 750) {
+          Sound.stopAlarm();
+          this.hideAlarmBanner();
+        }
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.requestWakeLock();
+          this.pollOrdersFallback();
+          if (Sound.isPlayingAlarm && Date.now() - Sound.lastStartedAt > 750) {
+            Sound.stopAlarm();
+            this.hideAlarmBanner();
+          }
+        }
+      });
+
+      window.addEventListener('online', () => {
+        console.log('🌐 Conexión restaurada en Admin. Re-sincronizando...');
+        this.initWebSocket();
+        this.pollOrdersFallback();
+      });
+
+      window.addEventListener('pageshow', () => {
+        this.requestWakeLock();
+        this.pollOrdersFallback();
+      });
+
+      document.addEventListener('click', stopAlarmAndUnlock, { passive: true });
+      document.addEventListener('touchstart', stopAlarmAndUnlock, { passive: true });
+      document.addEventListener('keydown', stopAlarmAndUnlock, { passive: true });
+
+      Sound.onAlarmStart(() => this.showAlarmBanner());
+      Sound.onAlarmStop(() => this.hideAlarmBanner());
+    }
+
+    // Listen for notification tap actions in Capacitor Native
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try {
+        window.Capacitor.Plugins.LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
+          console.log('🚨 Notification clicked:', notificationAction);
+          const extra = notificationAction.notification?.extra || {};
+          const targetEstId = extra.establishmentId || extra.establishment_id;
+          const targetOrderId = extra.orderId || extra.order_id;
+          if (targetEstId) {
+            this.focusEstablishment(targetEstId, targetOrderId);
+          }
+        });
+      } catch(e) {
+        console.warn('LocalNotifications listener registration:', e);
+      }
+    }
+
+    // Keep screen awake permanently so mobile/desktop browsers do not sleep
+    this.requestWakeLock();
+
+    // Audio & JS background heartbeat keep-alive
+    this.startBackgroundHeartbeat();
+
+    // Start 3.5-second REST polling fallback for live order detection across all stores
+    this.startOrdersPolling();
+
+    // Load active exchange rates and rain mode settings
+    this.loadPlatformSettings();
+
+    // Load live driver group chat and start polling fallback
+    this.loadDriverChat();
+    this.startDriverChatPolling();
+
+    // Permanent persistent auto-login (NEVER logs out, never shows login screen)
+    this.isAuthenticated = true;
+    localStorage.setItem('owner_authenticated_permanently', 'true');
+    localStorage.setItem('is_platform_owner', 'true');
+    localStorage.setItem('owner_password', '0424');
+
+    const gate = document.getElementById('login-gate');
+    if (gate) {
+      gate.classList.add('hidden');
+      gate.style.display = 'none';
+    }
+    const panel = document.getElementById('admin-panel');
+    if (panel) {
+      panel.classList.remove('hidden');
+      panel.style.display = 'block';
+    }
+
+    // Auto-login with master key in background immediately
+    const savedPass = localStorage.getItem('owner_password') || '0424';
+    this.login(savedPass, true);
+
+    // Check if Google OAuth session is active in background (non-blocking)
+    this.checkSupabaseSession().catch(e => console.warn('Supabase session check notice:', e));
+
+    // Process any pending notification click target on app start
+    if (window.pendingTargetEstId) {
+      const pEstId = window.pendingTargetEstId;
+      const pOrderId = window.pendingTargetOrderId;
+      window.pendingTargetEstId = null;
+      window.pendingTargetOrderId = null;
+      setTimeout(() => this.focusEstablishment(pEstId, pOrderId), 500);
+    }
+  }
+
+  async requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        if (!this.wakeLock || this.wakeLock.released) {
+          this.wakeLock = await navigator.wakeLock.request('screen');
+          console.log('🔆 Screen WakeLock active: Dashboard display will stay awake permanently.');
+        }
+      }
+    } catch(err) {
+      console.warn('Wake Lock request notice:', err);
+    }
+  }
+
+  startBackgroundHeartbeat() {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = setInterval(() => {
+      try {
+        if (typeof Sound !== 'undefined' && Sound.ctx && Sound.ctx.state === 'suspended') {
+          Sound.ctx.resume().catch(() => {});
+        }
+      } catch(e) {}
+    }, 15000);
+  }
+
+  async processOwnerSession(user) {
+    if (!user || this.isAuthenticated) return;
+    this.isAuthenticated = true;
+
+    try {
+      const res = await fetch('/api/owner/establishments');
+      this.establishments = this.enforceVerifiedGps(await res.json());
+      await this.loadOrders();
+      
+      // UI transitions
+      const gate = document.getElementById('login-gate');
+      if (gate) gate.classList.add('hidden');
+
+      const panel = document.getElementById('admin-panel');
+      if (panel) panel.classList.remove('hidden');
+      
+      const warningBanner = document.getElementById('backup-warning-banner');
+      if (warningBanner) warningBanner.classList.add('hidden');
+      
+      this.renderTable();
+      await this.loadCentralSedeSettings();
+      this.initPresence(user.email);
+      this.initWebSocket();
+      this.requestNotificationPermission();
+      this.showToast('👑 Acceso de Dueño verificado con Google');
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión al cargar los datos.');
+    }
+  }
+
+  async checkSupabaseSession() {
+    if (typeof SupabaseApp === 'undefined') return;
+    await SupabaseApp.init();
+
+    if (SupabaseApp.client) {
+      SupabaseApp.client.auth.onAuthStateChange(async (event, session) => {
+        if (session && session.user && !this.isAuthenticated) {
+          await this.processOwnerSession(session.user);
+        }
+      });
+    }
+
+    const session = await SupabaseApp.getCurrentSession();
+    if (session && session.user && !this.isAuthenticated) {
+      await this.processOwnerSession(session.user);
+    }
+  }
+
+  async initPresence(email) {
+    if (typeof SupabaseApp === 'undefined' || !SupabaseApp.client) return;
+    const client = SupabaseApp.client;
+    
+    // Configurar canal de presence
+    const channel = client.channel('online-owners', {
+      config: {
+        presence: {
+          key: email,
+        },
+      },
+    });
+
+    channel.on('presence', { event: 'sync' }, () => {
+      const state = channel.presenceState();
+      const onlineUsers = Object.keys(state).map(key => state[key][0].email);
+      const uniqueUsers = [...new Set(onlineUsers)];
+      
+      const indicator = document.getElementById('online-owners-indicator');
+      const countSpan = document.getElementById('online-owners-count');
+      
+      if (indicator && countSpan) {
+        indicator.classList.remove('hidden');
+        countSpan.textContent = `${uniqueUsers.length} activo${uniqueUsers.length !== 1 ? 's' : ''}`;
+        indicator.title = `Dueños en línea:\n${uniqueUsers.join('\n')}`;
+      }
+    });
+
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await channel.track({ email: email, online_at: new Date().toISOString() });
+      }
+    });
+  }
+
+  async loginWithGoogle() {
+    if (typeof SupabaseApp === 'undefined') {
+      const autoPass = prompt('👑 Ingresa la Clave Maestra de Dueño (Ej: 0424):');
+      if (autoPass) await this.login(autoPass);
+      return;
+    }
+    
+    try {
+      await SupabaseApp.init();
+      if (!SupabaseApp.client) {
+        const autoPass = prompt('👑 Ingresa la Clave Maestra de Dueño (Ej: 0424):');
+        if (autoPass) await this.login(autoPass);
+        return;
+      }
+      await SupabaseApp.loginWithGoogle('/admin.html');
+    } catch (err) {
+      console.error(err);
+      const autoPass = prompt('⚠️ Para ingresar directamente sin Google, escribe la Clave Maestra (0424):');
+      if (autoPass) await this.login(autoPass);
+    }
+  }
+
+  async login(customPassword = null, isAutoLogin = false) {
+    const password = (typeof customPassword === 'string' && customPassword)
+      ? customPassword
+      : (document.getElementById('admin-pass')?.value || '').trim();
+
+    if (!password) {
+      if (!isAutoLogin) alert('⚠️ Por favor ingresa la clave de dueño.');
+      return;
+    }
+
+    const errorMsg = document.getElementById('login-error');
+    if (errorMsg) errorMsg.classList.add('hidden');
+
+    try {
+      const response = await fetch('/api/owner/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.isAuthenticated = true;
+        this.establishments = this.enforceVerifiedGps(data.establishments || []);
+
+        // Save permanent session so it NEVER logs out or expires
+        localStorage.setItem('owner_authenticated_permanently', 'true');
+        localStorage.setItem('is_platform_owner', 'true');
+        localStorage.setItem('owner_password', password);
+
+        // Load orders for statistics
+        await this.loadOrders();
+
+        // UI transitions
+        const gate = document.getElementById('login-gate');
+        if (gate) gate.classList.add('hidden');
+
+        const panel = document.getElementById('admin-panel');
+        if (panel) panel.classList.remove('hidden');
+
+        // Render data
+        this.renderTable();
+        await this.loadCentralSedeSettings();
+        this.initWebSocket();
+        this.requestNotificationPermission();
+        this.requestWakeLock();
+        this.showToast('👑 Sesión de Administrador Permanente Activa');
+        
+        const warningBanner = document.getElementById('backup-warning-banner');
+        if (warningBanner) warningBanner.classList.add('hidden');
+      } else {
+        if (!isAutoLogin && errorMsg) errorMsg.classList.remove('hidden');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      // On network failure or offline mode, automatically enter authenticated state
+      this.isAuthenticated = true;
+      localStorage.setItem('owner_authenticated_permanently', 'true');
+      localStorage.setItem('is_platform_owner', 'true');
+      localStorage.setItem('owner_password', password || '0424');
+
+      const gate = document.getElementById('login-gate');
+      if (gate) gate.classList.add('hidden');
+      const panel = document.getElementById('admin-panel');
+      if (panel) panel.classList.remove('hidden');
+
+      // Render cached data immediately if available
+      this.renderTable();
+      this.initWebSocket();
+      this.requestNotificationPermission();
+      this.requestWakeLock();
+      this.showToast('🔄 Conectando con el servidor central...', true);
+
+      // Start automatic retry loop until establishments load from server
+      this.startEstablishmentsRetryLoop();
+    }
+  }
+
+  async fetchEstablishments() {
+    try {
+      const res = await fetch('/api/owner/establishments');
+      if (res.ok) {
+        const raw = await res.json();
+        if (Array.isArray(raw) && raw.length > 0) {
+          this.establishments = this.enforceVerifiedGps(raw);
+          this.renderTable();
+          return true;
+        }
+      }
+    } catch(err) {
+      console.warn('Retry fetch establishments notice:', err);
+    }
+    return false;
+  }
+
+  startEstablishmentsRetryLoop() {
+    if (this.estRetryTimer) clearInterval(this.estRetryTimer);
+    this.estRetryTimer = setInterval(async () => {
+      const ok = await this.fetchEstablishments();
+      if (ok) {
+        clearInterval(this.estRetryTimer);
+        this.estRetryTimer = null;
+        await this.loadOrders();
+        await this.loadCentralSedeSettings();
+        this.renderTable();
+        this.showToast('🟢 Conectado con el servidor central');
+      }
+    }, 3000);
+  }
+
+  startOrdersPolling() {
+    if (this.ordersPollTimer) clearInterval(this.ordersPollTimer);
+    this.ordersPollTimer = setInterval(() => {
+      if (this.isAuthenticated) this.pollOrdersFallback();
+    }, 3500);
+  }
+
+  async pollOrdersFallback() {
+    try {
+      const res = await fetch('/api/orders');
+      if (!res.ok) return;
+      const allOrders = await res.json();
+      if (!Array.isArray(allOrders)) return;
+
+      if (!this.initialOrdersLoaded) {
+        this.orders = allOrders;
+        this.initialOrdersLoaded = true;
+        this.renderTable();
+        this.renderLiveOrders();
+        return;
+      }
+
+      const brandNew = allOrders.filter(ao => !this.orders.some(o => o.id === ao.id));
+      this.orders = allOrders;
+      this.renderTable();
+      this.renderLiveOrders();
+
+      if (brandNew.length > 0) {
+        const now = Date.now();
+        // Only trigger alarm for truly recent pending orders created within the last 15 minutes
+        const activeNewOrders = brandNew.filter(order => {
+          const status = (order.status || '').toLowerCase();
+          const isPending = status === 'pendiente' || status === 'pending' || status === 'preparando';
+          const orderTime = new Date(order.createdAt || order.created_at || order.timestamp || Date.now()).getTime();
+          const isRecent = isNaN(orderTime) ? true : (now - orderTime) < (30 * 60 * 1000);
+          return isPending && isRecent;
+        });
+
+        if (activeNewOrders.length > 0) {
+          console.log('🚨 [Admin Polling] Nuevos pedidos entrantes en vivo:', activeNewOrders);
+          this.playOrderNotification(activeNewOrders[0]);
+        }
+      }
+    } catch(e) {
+      console.warn('Admin orders polling error:', e);
+    }
+  }
+
+  playOrderNotification(order) {
+    if (!order) return;
+    const isRide = order.serviceType === 'ride' || order.serviceType === 'mototaxi' || order.type === 'ride' || Boolean(order.vehicleType) || (order.serviceName && order.serviceName.toLowerCase().includes('moto')) || (order.serviceName && order.serviceName.toLowerCase().includes('carrera'));
+    const isParcel = order.serviceType === 'parcel' || order.type === 'parcel' || (order.serviceName && order.serviceName.toLowerCase().includes('encomienda'));
+
+    if (window.Sound) {
+      if (isRide) {
+        Sound.playRideOrderSound();
+      } else if (isParcel) {
+        Sound.playParcelOrderSound();
+      } else {
+        Sound.playFoodOrderSound();
+      }
+      setTimeout(() => {
+        if (window.Sound && !Sound.isPlayingAlarm) {
+          Sound.startPersistentOrderAlarm(6);
+        }
+      }, 1200);
+    }
+
+    const orderCode = order.dailyNumber || order.code || (order.id ? String(order.id).slice(-4) : '');
+    const storeName = isRide ? (order.serviceName || 'PediGochos Móvil') : (isParcel ? 'Servicio Encomienda' : (order.establishmentName || order.storeName || null));
+    this.showAlarmBanner(orderCode, storeName, order.establishmentId || order.storeId, order.id, isRide);
+  }
+
+  async loadPlatformSettings() {
+    try {
+      const res = await fetch('/api/platform-settings');
+      if (res.ok) {
+        this.platformSettings = await res.json();
+        this.updateHeaderSettingsUI();
+      }
+    } catch (err) {
+      console.warn('Error loading platform settings in admin:', err);
+    }
+  }
+
+  updateHeaderSettingsUI() {
+    if (!this.platformSettings) return;
+
+    // 1. Tasa de cambio en cabecera
+    const ratesTextEl = document.getElementById('header-rates-text');
+    if (ratesTextEl && this.platformSettings.exchangeRates) {
+      const { copUsd, bsUsd } = this.platformSettings.exchangeRates;
+      const copFormatted = copUsd ? `$${Number(copUsd).toLocaleString('es-CO')}` : '$4.100';
+      const bsFormatted = bsUsd ? `${bsUsd} Bs` : '135 Bs';
+      ratesTextEl.textContent = `Tasa: ${copFormatted} COP | ${bsFormatted}`;
+    }
+
+    // 2. Modo Lluvia en cabecera
+    const rainBtn = document.getElementById('btn-header-rain-mode');
+    const rainTextEl = document.getElementById('header-rain-text');
+    const rainIconEl = document.getElementById('header-rain-icon');
+    if (rainBtn && rainTextEl) {
+      if (this.platformSettings.rainMode) {
+        rainBtn.style.background = 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)';
+        rainBtn.style.color = '#FFFFFF';
+        rainBtn.style.borderColor = '#60A5FA';
+        rainBtn.style.boxShadow = '0 0 14px rgba(37, 99, 235, 0.6)';
+        if (rainIconEl) rainIconEl.textContent = '🌧️';
+        rainTextEl.textContent = 'Modo Lluvia: ACTIVO (+25m)';
+      } else {
+        rainBtn.style.background = 'rgba(59, 130, 246, 0.15)';
+        rainBtn.style.color = '#60A5FA';
+        rainBtn.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+        rainBtn.style.boxShadow = 'none';
+        if (rainIconEl) rainIconEl.textContent = '☀️';
+        rainTextEl.textContent = 'Modo Lluvia: OFF';
+      }
+    }
+  }
+
+  openExchangeRateModal() {
+    const modal = document.getElementById('admin-exchange-rate-modal');
+    if (!modal) return;
+
+    const copInput = document.getElementById('input-rate-cop-usd');
+    const bsInput = document.getElementById('input-rate-bs-usd');
+    const rates = this.platformSettings?.exchangeRates || { copUsd: 4100, bsUsd: 135 };
+
+    if (copInput) copInput.value = rates.copUsd || 4100;
+    if (bsInput) bsInput.value = rates.bsUsd || 135;
+
+    this.recalcRateEquivalent();
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+
+  closeExchangeRateModal() {
+    const modal = document.getElementById('admin-exchange-rate-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+  }
+
+  recalcRateEquivalent() {
+    const copInput = document.getElementById('input-rate-cop-usd');
+    const bsInput = document.getElementById('input-rate-bs-usd');
+    const previewEl = document.getElementById('rate-equivalent-preview');
+    if (!copInput || !bsInput || !previewEl) return;
+
+    const cop = parseFloat(copInput.value) || 0;
+    const bs = parseFloat(bsInput.value) || 0;
+
+    if (cop > 0 && bs > 0) {
+      const copPerBs = (cop / bs).toFixed(2);
+      previewEl.innerHTML = `1 Bs ≈ <strong>$${copPerBs} COP</strong> &nbsp;|&nbsp; 1 USD = $${cop.toLocaleString('es-CO')} COP = ${bs} Bs`;
+    } else {
+      previewEl.textContent = 'Ingresa valores válidos para calcular equivalencia.';
+    }
+  }
+
+  async saveExchangeRates() {
+    const copInput = document.getElementById('input-rate-cop-usd');
+    const bsInput = document.getElementById('input-rate-bs-usd');
+    if (!copInput || !bsInput) return;
+
+    const copUsd = parseFloat(copInput.value);
+    const bsUsd = parseFloat(bsInput.value);
+
+    if (!copUsd || copUsd <= 0 || !bsUsd || bsUsd <= 0) {
+      alert('Por favor ingresa valores válidos mayores a cero.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/platform-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exchangeRates: { copUsd, bsUsd }
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.settings) {
+          this.platformSettings = data.settings;
+          this.updateHeaderSettingsUI();
+        }
+        this.closeExchangeRateModal();
+        this.showToast('✅ Tasa de cambio actualizada y transmitida a clientes y domiciliarios');
+      } else {
+        alert('Error al guardar la tasa de cambio');
+      }
+    } catch (err) {
+      console.error('Error saving exchange rates:', err);
+      alert('Error de conexión al guardar tasa de cambio');
+    }
+  }
+
+  async toggleRainMode() {
+    const currentState = Boolean(this.platformSettings?.rainMode);
+    const newState = !currentState;
+
+    try {
+      const res = await fetch('/api/platform-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rainMode: newState })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.settings) {
+          this.platformSettings = data.settings;
+          this.updateHeaderSettingsUI();
+        }
+        this.showToast(newState ? '🌧️ Modo Lluvia / Alta Demanda ACTIVO (+25m)' : '☀️ Modo Lluvia DESACTIVADO');
+      }
+    } catch (err) {
+      console.error('Error toggling rain mode:', err);
+    }
+  }
+
+  openSoundChannelsModal() {
+    const modal = document.getElementById('admin-sound-channels-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+  }
+
+  closeSoundChannelsModal() {
+    const modal = document.getElementById('admin-sound-channels-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+  }
+
+  startDriverChatPolling() {
+    if (this.driverChatPollTimer) clearInterval(this.driverChatPollTimer);
+    this.driverChatPollTimer = setInterval(() => {
+      if (this.isAuthenticated) this.loadDriverChat(true);
+    }, 4500);
+  }
+
+  async loadDriverChat(silent = false) {
+    try {
+      const res = await fetch('/api/driver/chat');
+      if (!res.ok) return;
+      const msgs = await res.json();
+      if (!Array.isArray(msgs)) return;
+
+      const prevCount = this.driverChatMessages.length;
+      this.driverChatMessages = msgs;
+      this.renderDriverChat();
+
+      if (!silent && msgs.length > prevCount && prevCount > 0) {
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsg && lastMsg.senderRole !== 'owner') {
+          if (!this.isDriverChatModalOpen) {
+            this.driverChatUnreadCount += (msgs.length - prevCount);
+            this.updateDriverChatUnreadUI();
+          }
+        }
+      }
+    } catch(e) {
+      if (!silent) console.warn('Error loading driver chat:', e);
+    }
+  }
+
+  handleIncomingDriverChatMessage(msg) {
+    if (!msg) return;
+    const exists = this.driverChatMessages.some(m => m.id === msg.id);
+    if (!exists) {
+      this.driverChatMessages.push(msg);
+      if (msg.senderRole !== 'owner') {
+        if (!this.isDriverChatModalOpen) {
+          this.driverChatUnreadCount++;
+          this.updateDriverChatUnreadUI();
+        }
+        if (window.Sound && typeof Sound.playParcelOrderSound === 'function') {
+          Sound.playParcelOrderSound();
+        }
+      }
+      this.renderDriverChat();
+      this.scrollDriverChatToBottom();
+    }
+  }
+
+  updateDriverChatUnreadUI() {
+    const badge = document.getElementById('admin-chat-unread-badge');
+    if (badge) {
+      if (this.driverChatUnreadCount > 0) {
+        badge.innerText = this.driverChatUnreadCount;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }
+
+  setDriverChatFilter(filter) {
+    this.driverChatFilter = filter;
+    document.querySelectorAll('.chat-filter-btn').forEach(btn => {
+      if (btn.dataset.filter === filter) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    this.renderDriverChat();
+  }
+
+  renderDriverChat() {
+    const feeds = [
+      document.getElementById('admin-driver-chat-feed'),
+      document.getElementById('admin-driver-chat-modal-feed')
+    ].filter(Boolean);
+
+    if (feeds.length === 0) return;
+
+    let countAll = 0, countRide = 0, countFood = 0, countParcel = 0, countMessages = 0;
+    this.driverChatMessages.forEach(m => {
+      countAll++;
+      if (m.type === 'service_request') {
+        const isRide = m.serviceType === 'ride';
+        const isParcel = m.serviceType === 'parcel' || m.serviceType === 'encomienda' || m.vehicleType === 'encomienda';
+        if (isRide) countRide++;
+        else if (isParcel) countParcel++;
+        else countFood++;
+      } else {
+        countMessages++;
+      }
+    });
+
+    ['', '-modal'].forEach(p => {
+      const elAll = document.getElementById(`admin-chat${p}-count-all`);
+      const elRide = document.getElementById(`admin-chat${p}-count-ride`);
+      const elFood = document.getElementById(`admin-chat${p}-count-food`);
+      const elParcel = document.getElementById(`admin-chat${p}-count-parcel`);
+      const elMessages = document.getElementById(`admin-chat${p}-count-messages`);
+      if (elAll) elAll.innerText = countAll;
+      if (elRide) elRide.innerText = countRide;
+      if (elFood) elFood.innerText = countFood;
+      if (elParcel) elParcel.innerText = countParcel;
+      if (elMessages) elMessages.innerText = countMessages;
+    });
+
+    const visibleMessages = this.driverChatMessages.filter(msg => {
+      if (this.driverChatFilter === 'all') return true;
+      if (this.driverChatFilter === 'messages') return msg.type !== 'service_request';
+      if (msg.type !== 'service_request') return false;
+      const isRide = msg.serviceType === 'ride';
+      const isParcel = msg.serviceType === 'parcel' || msg.serviceType === 'encomienda' || msg.vehicleType === 'encomienda';
+      if (this.driverChatFilter === 'ride') return isRide;
+      if (this.driverChatFilter === 'parcel') return isParcel;
+      if (this.driverChatFilter === 'food') return !isRide && !isParcel;
+      return true;
+    });
+
+    if (visibleMessages.length === 0) {
+      const emptyHtml = `
+        <div style="text-align: center; color: #94A3B8; padding: 36px 12px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 6px;">💬</span>
+          <p style="margin: 0; font-size: 13px; font-weight: 700;">No hay elementos para este filtro en el chat.</p>
+        </div>
+      `;
+      feeds.forEach(f => f.innerHTML = emptyHtml);
+      return;
+    }
+
+    const html = visibleMessages.map(msg => {
+      const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+      if (msg.type === 'service_request') {
+        const isRide = msg.serviceType === 'ride';
+        const isLujo = msg.vehicleType === 'lujo';
+        const isTaken = msg.status === 'Tomado';
+        const isEntregado = msg.status === 'Entregado';
+        const safeOrigin = this.escapeHtml(msg.origin || 'Ubicación GPS');
+        const safeDest = this.escapeHtml(msg.destination || 'Dirección de entrega');
+        const originMap = (msg.originLat && msg.originLng) ? `https://www.google.com/maps?q=${msg.originLat},${msg.originLng}` : null;
+        const destMap = (msg.destLat && msg.destLng) ? `https://www.google.com/maps?q=${msg.destLat},${msg.destLng}` : null;
+
+        return `
+          <div class="service-request-card ${isTaken ? 'taken' : ''} ${isLujo ? 'ride-lujo' : ''}" style="margin-bottom: 10px;">
+            <div class="service-card-top">
+              <span class="service-type-badge ${isLujo ? 'lujo' : ''}">
+                ${isRide ? '🚖 TRASLADO MÓVIL' : '📦 ENCOMIENDA DELIVERY'} • ${this.escapeHtml(msg.vehicleLabel || 'Moto Taxi')}
+              </span>
+              <span class="service-price-pill">${msg.fareFormatted || `$${msg.fare} COP`}</span>
+            </div>
+
+            <div class="service-route-box">
+              <div class="route-step">
+                <span class="route-icon" style="color: #10B981;">🟢</span>
+                <div class="route-text" style="flex: 1;">
+                  <strong>Recogida (Origen):</strong>
+                  <span>${safeOrigin}</span>
+                  ${originMap ? `<a href="${originMap}" target="_blank" class="btn-mini-map-action" style="text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">🗺️ Mapa</a>` : ''}
+                </div>
+              </div>
+
+              <div class="route-step" style="margin-top: 6px;">
+                <span class="route-icon" style="color: #EF4444;">🏁</span>
+                <div class="route-text" style="flex: 1;">
+                  <strong>Destino (Llegada):</strong>
+                  <span>${safeDest}</span>
+                  ${destMap ? `<a href="${destMap}" target="_blank" class="btn-mini-map-action" style="text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">🗺️ Mapa</a>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="service-details-row" style="margin-top: 8px;">
+              <span>📏 <strong>${msg.distanceKm || 1} km</strong></span>
+              <span>👤 <strong>${this.escapeHtml(msg.customerName || 'Cliente')}</strong></span>
+              <span style="color: #94A3B8; margin-left: auto;">⏰ ${timeStr}</span>
+            </div>
+
+            <div style="margin-top: 10px; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-align: center; background: ${isTaken ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)'}; color: ${isTaken ? '#34D399' : '#FBBF24'}; border: 1px solid ${isTaken ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'};">
+              ${isTaken ? `🛵 Tomado por ${this.escapeHtml(msg.takenBy || 'Repartidor')}` : isEntregado ? '✅ Servicio Finalizado / Entregado' : '🟡 En espera de repartidor'}
+            </div>
+          </div>
+        `;
+      }
+
+      // Regular text chat message
+      const isOwner = msg.senderRole === 'owner';
+      return `
+        <div class="chat-bubble-msg ${isOwner ? 'self owner-msg' : ''}" style="margin-bottom: 8px;">
+          <div class="chat-sender-name">
+            <span style="${isOwner ? 'color: #FCD34D; font-weight: 900;' : 'color: #34D399; font-weight: 800;'}">
+              ${isOwner ? '👑 Dueño / Central' : '🛵 ' + this.escapeHtml(msg.senderName || 'Repartidor')}
+            </span>
+            <span class="chat-time-tag">${timeStr}</span>
+          </div>
+          <div class="chat-body-text">${this.escapeHtml(msg.text || '')}</div>
+        </div>
+      `;
+    }).join('');
+
+    feeds.forEach(feed => {
+      const isAtBottom = feed.scrollHeight - feed.scrollTop <= feed.clientHeight + 100;
+      feed.innerHTML = html;
+      if (isAtBottom) {
+        feed.scrollTop = feed.scrollHeight;
+      }
+    });
+  }
+
+  scrollDriverChatToBottom() {
+    setTimeout(() => {
+      const feeds = [
+        document.getElementById('admin-driver-chat-feed'),
+        document.getElementById('admin-driver-chat-modal-feed')
+      ].filter(Boolean);
+      feeds.forEach(f => f.scrollTop = f.scrollHeight);
+    }, 100);
+  }
+
+  async sendDriverChatMessage(fromModal = false) {
+    const inputId = fromModal ? 'admin-driver-chat-modal-input' : 'admin-driver-chat-input';
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    const text = inp.value.trim();
+    if (!text) return;
+
+    try {
+      inp.value = '';
+      const otherInput = document.getElementById(fromModal ? 'admin-driver-chat-input' : 'admin-driver-chat-modal-input');
+      if (otherInput) otherInput.value = '';
+
+      const res = await fetch('/api/driver/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: '👑 Dueño / Central',
+          senderPhone: 'owner',
+          senderRole: 'owner',
+          text: text
+        })
+      });
+
+      if (res.ok) {
+        const newMsg = await res.json();
+        this.driverChatMessages.push(newMsg);
+        this.renderDriverChat();
+        this.scrollDriverChatToBottom();
+      }
+    } catch(e) {
+      console.error('Error sending driver chat message from admin:', e);
+      alert('Error de conexión al enviar mensaje al chat de domiciliarios.');
+    }
+  }
+
+  openDriverChatModal() {
+    const modal = document.getElementById('admin-driver-chat-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    this.isDriverChatModalOpen = true;
+    this.driverChatUnreadCount = 0;
+    this.updateDriverChatUnreadUI();
+    this.renderDriverChat();
+    this.scrollDriverChatToBottom();
+    this.checkModalOpenState();
+  }
+
+  closeDriverChatModal() {
+    const modal = document.getElementById('admin-driver-chat-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
+    this.isDriverChatModalOpen = false;
+    this.checkModalOpenState();
+  }
+
+  toggleDriverChatModal() {
+    if (this.isDriverChatModalOpen) {
+      this.closeDriverChatModal();
+    } else {
+      this.openDriverChatModal();
+    }
+  }
+
+  showAlarmBanner(orderCode, storeName = null, estId = null, orderId = null, isRide = false) {
+    this.lastAlarmEstId = estId || this.lastAlarmEstId;
+    this.lastAlarmOrderId = orderId || this.lastAlarmOrderId;
+    this.lastAlarmIsRide = isRide;
+
+    let banner = document.getElementById('admin-alarm-banner');
+    const storeLabel = isRide 
+      ? `🛵 SOLICITUD DE VEHÍCULO (${storeName || 'PediGochos Móvil'})` 
+      : (storeName ? `🏪 ${storeName}` : '¡NUEVO PEDIDO ENTRANTE EN LA PLATAFORMA!');
+    
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'admin-alarm-banner';
+      banner.className = 'kitchen-alarm-banner';
+      document.body.appendChild(banner);
+    }
+
+    banner.innerHTML = `
+      <div class="alarm-banner-inner" onclick="AdminApp.handleAlarmBannerClick();">
+        <div class="alarm-banner-left">
+          <span class="alarm-siren-icon">${isRide ? '🛵' : '🚨'}</span>
+          <div class="alarm-banner-text">
+            <div class="alarm-title">${storeLabel} <span class="alarm-order-code">${orderCode ? '#' + orderCode : ''}</span></div>
+            <div class="alarm-subtitle">${isRide ? '👉 Toca aquí para ver detalles del viaje y apagar la alarma' : '👉 Toca aquí para ver este restaurante y apagar la alarma'}</div>
+          </div>
+        </div>
+        <button class="alarm-btn-silence" onclick="event.stopPropagation(); if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner();">
+          🔕 Silenciar
+        </button>
+      </div>
+    `;
+    banner.classList.remove('hidden');
+  }
+
+  handleAlarmBannerClick() {
+    if (window.Sound) Sound.stopAlarm();
+    this.hideAlarmBanner();
+    if (this.lastAlarmIsRide) {
+      const rideOrder = (this.orders || []).find(o => String(o.id) === String(this.lastAlarmOrderId));
+      if (rideOrder) {
+        this.showNewOrderModal(rideOrder, 'PediGochos Móvil');
+      }
+    } else if (this.lastAlarmEstId) {
+      this.focusEstablishment(this.lastAlarmEstId, this.lastAlarmOrderId);
+    }
+  }
+
+  hideAlarmBanner() {
+    const banner = document.getElementById('admin-alarm-banner');
+    if (banner) {
+      banner.classList.add('hidden');
+    }
+  }
+
+  async loadOrders() {
+    try {
+      const response = await fetch('/api/orders');
+      if (response.ok) {
+        this.orders = await response.json();
+      } else {
+        this.orders = [];
+      }
+    } catch (err) {
+      console.error('Error loading orders:', err);
+      this.orders = [];
+    }
+  }
+
+  async logout() {
+    if (!confirm('¿Estás seguro de que deseas cerrar sesión? Si sales del panel, dejarás de recibir notificaciones y alarmas sonoras de nuevos pedidos.')) return;
+    this.isAuthenticated = false;
+    this.establishments = [];
+    this.orders = [];
+    localStorage.removeItem('owner_authenticated_permanently');
+    localStorage.removeItem('is_platform_owner');
+    localStorage.removeItem('owner_password');
+
+    if (typeof SupabaseApp !== 'undefined') {
+      await SupabaseApp.logout();
+    }
+
+    if (this.wakeLock) {
+      try { this.wakeLock.release(); } catch(e) {}
+    }
+
+    document.getElementById('admin-pass').value = '';
+    document.getElementById('login-gate').classList.remove('hidden');
+    document.getElementById('admin-panel').classList.add('hidden');
+  }
+
+  toggleNewEstablishmentForm(force = null) {
+    const panel = document.getElementById('collapsible-new-est-panel');
+    const btn = document.getElementById('btn-toggle-new-est');
+    if (!panel) return;
+    const isHidden = panel.style.display === 'none' || panel.classList.contains('hidden');
+    const shouldOpen = force !== null ? force : isHidden;
+
+    if (shouldOpen) {
+      panel.style.display = 'block';
+      panel.classList.remove('hidden');
+      if (btn) {
+        btn.innerHTML = '<span>▲</span> Plegar Formulario';
+        btn.style.background = '#475569';
+      }
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      panel.style.display = 'none';
+      panel.classList.add('hidden');
+      if (btn) {
+        btn.innerHTML = '<span>➕</span> Registrar Nuevo Restaurante / Comercio';
+        btn.style.background = 'linear-gradient(135deg, #FF6B00 0%, #EA580C 100%)';
+      }
+    }
+  }
+
+  setCategoryFilter(cat) {
+    this.activeCategoryFilter = cat;
+    document.querySelectorAll('.btn-category-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
+    });
+    this.renderTable();
+  }
+
+  handleStoreSearch(query) {
+    this.searchEstablishmentQuery = (query || '').toLowerCase().trim();
+    this.renderTable();
+  }
+
+  async openMenuEditorForShop(shopId) {
+    const est = this.getEstablishmentById(shopId);
+    if (!est) {
+      console.warn('openMenuEditorForShop: establishment not found for ID', shopId);
+      return;
+    }
+    this.activeShopId = est.id;
+    window.activeShopIdForMenu = est.id;
+    this.activeFloorTool = 'table';
+    const titleEl = document.getElementById('designer-modal-shop-name');
+    if (titleEl) titleEl.innerText = `🍔 Taller de Menú y Distribución: ${est.name}`;
+    const subtextEl = document.getElementById('designer-modal-shop-subtext');
+    if (subtextEl) subtextEl.innerText = `Diseño de distribución de mesas y carta de comida para ${est.name}`;
+    const modal = document.getElementById('menu-tables-modal');
+    if (modal) modal.classList.add('active');
+    this.checkModalOpenState();
+    this.activeModalTab = 'menu';
+    ['daily', 'menu', 'ai', 'tables', 'catalog'].forEach(t => {
+      const btn = document.getElementById(`tab-btn-${t}`);
+      const content = document.getElementById(`tab-content-${t}`);
+      if (btn) btn.classList.toggle('active', t === 'menu');
+      if (content) content.classList.toggle('active', t === 'menu');
+    });
+    await this.loadModalProducts();
+  }
+
+  openEditShopModalFor(shopId) {
+    const est = this.getEstablishmentById(shopId);
+    if (!est) {
+      console.warn('openEditShopModalFor: establishment not found for ID', shopId);
+      return;
+    }
+    this.activeShopId = est.id;
+    this.openEditShopModal();
+  }
+
+  showEstablishmentActions(id) {
+    const est = this.getEstablishmentById(id);
+    if (!est) return;
+    this.openEstActionModal(est.id);
+  }
+
+  renderTable() {
+    this.updateSaveButtonState();
+    this.renderAnalyticsPro();
+    this.renderLiveOrders();
+    const tbody = document.getElementById('keys-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // Deduplicate establishments strictly by ID before rendering
+    const seenRenderIds = new Set();
+    const uniqueEsts = (this.establishments || []).filter(e => {
+      if (!e || !e.id) return false;
+      const sid = String(e.id).trim();
+      if (seenRenderIds.has(sid)) return false;
+      seenRenderIds.add(sid);
+      return true;
+    });
+
+    // Compute category counts (including specialized services)
+    const counts = {
+      all: uniqueEsts.length + SPECIALIZED_SERVICES.length,
+      comidas: 0,
+      farmacias: 0,
+      mercados: 0,
+      ferreterias: 0,
+      servicios: SPECIALIZED_SERVICES.length
+    };
+    uniqueEsts.forEach(e => {
+      const c = (e.category || '').toLowerCase();
+      if (counts[c] !== undefined && c !== 'servicios') {
+        counts[c]++;
+      } else {
+        counts.servicios++;
+      }
+    });
+
+    const setBadgeCount = (id, count) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = count;
+    };
+    setBadgeCount('cat-count-all', counts.all);
+    setBadgeCount('cat-count-comidas', counts.comidas);
+    setBadgeCount('cat-count-farmacias', counts.farmacias);
+    setBadgeCount('cat-count-mercados', counts.mercados);
+    setBadgeCount('cat-count-ferreterias', counts.ferreterias);
+    setBadgeCount('cat-count-servicios', counts.servicios);
+
+    // Filter by active category
+    const activeFilter = this.activeCategoryFilter || 'all';
+    let filteredEsts = uniqueEsts;
+    if (activeFilter !== 'all') {
+      filteredEsts = filteredEsts.filter(e => {
+        const c = (e.category || '').toLowerCase();
+        if (activeFilter === 'servicios') {
+          return c === 'servicios' || !['comidas', 'farmacias', 'mercados', 'ferreterias'].includes(c);
+        }
+        return c === activeFilter;
+      });
+    }
+
+    // Filter by search query
+    if (this.searchEstablishmentQuery) {
+      filteredEsts = filteredEsts.filter(e => {
+        const name = (e.name || '').toLowerCase();
+        const loc = (e.location || '').toLowerCase();
+        const key = (e.linkKey || '').toLowerCase();
+        return name.includes(this.searchEstablishmentQuery) || loc.includes(this.searchEstablishmentQuery) || key.includes(this.searchEstablishmentQuery);
+      });
+    }
+
+    // Filter specialized services
+    let filteredServices = (activeFilter === 'all' || activeFilter === 'servicios') ? [...SPECIALIZED_SERVICES] : [];
+    if (this.searchEstablishmentQuery && filteredServices.length > 0) {
+      const q = this.searchEstablishmentQuery.toLowerCase();
+      filteredServices = filteredServices.filter(s =>
+        (s.name || '').toLowerCase().includes(q) ||
+        (s.description || '').toLowerCase().includes(q) ||
+        (s.location || '').toLowerCase().includes(q) ||
+        (s.badge || '').toLowerCase().includes(q)
+      );
+    }
+
+    // Sort: Active/Enabled restaurants at the top, Disabled restaurants at the bottom
+    filteredEsts.sort((a, b) => {
+      const aDis = a.disabled === true ? 1 : 0;
+      const bDis = b.disabled === true ? 1 : 0;
+      if (aDis !== bDis) return aDis - bDis;
+      return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    if (filteredEsts.length === 0 && filteredServices.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+            No se encontraron establecimientos o servicios en la categoría seleccionada o filtro de búsqueda.
+          </td>
+        </tr>
+      `;
+      this.loadDriversTable();
+      this.loadAdminMasterCatalogTable();
+      return;
+    }
+
+    // Helper to render a specialized service row
+    const renderServiceRow = (serv) => {
+      const row = document.createElement('tr');
+      row.style.cursor = 'pointer';
+      row.style.background = 'rgba(248, 250, 252, 0.7)';
+      row.onmouseover = () => { row.style.background = 'rgba(241, 245, 249, 0.95)'; };
+      row.onmouseout = () => { row.style.background = 'rgba(248, 250, 252, 0.7)'; };
+      row.onclick = () => {
+        if (serv.id === 'serv-paint') AdminApp.openPaintAdminModal();
+        else if (serv.id === 'serv-print3d') AdminApp.openPrint3DAdminModal();
+        else if (serv.id === 'serv-resin') AdminApp.openResinAdminModal();
+        else if (serv.id === 'serv-cauchera') AdminApp.openCaucheraAdminModal();
+        else if (serv.id === 'serv-ride') { AdminApp.setOrdersFilter('ride'); document.getElementById('admin-live-orders-card')?.scrollIntoView({behavior: 'smooth'}); }
+      };
+
+      let serviceOrdersDetail = serv.ordersSummary;
+      if (serv.id === 'serv-cauchera') {
+        const cOrders = this.orders.filter(o => this.isCaucheraOrder(o));
+        serviceOrdersDetail = cOrders.length > 0 ? `${cOrders.length} auxilios viales` : 'Guardia activa';
+      } else if (serv.id === 'serv-ride') {
+        const rOrders = this.orders.filter(o => this.isRideOrder(o));
+        serviceOrdersDetail = rOrders.length > 0 ? `${rOrders.length} carreras / envíos` : 'Flota activa';
+      }
+
+      const servLogoHTML = (serv.logo && (serv.logo.startsWith('/') || serv.logo.endsWith('.svg') || serv.logo.endsWith('.png')))
+        ? `<img src="${serv.logo}" alt="${serv.name}" style="width: 28px; height: 28px; object-fit: contain; border-radius: 6px; flex-shrink: 0;">`
+        : `<span style="font-size: 22px; line-height: 1;">${serv.logo || '🪅'}</span>`;
+
+      row.innerHTML = `
+        <td class="shop-title-cell" style="font-weight: 700; color: #0F172A !important;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${servLogoHTML}
+            <div>
+              <span style="font-size: 14px; font-weight: 800; color: #0F172A !important;">${serv.name}</span>
+              <span style="background: ${serv.badgeBg}; color: ${serv.badgeColor}; border: 1px solid ${serv.badgeBorder}; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; margin-left: 6px;">
+                ${serv.badge}
+              </span>
+            </div>
+          </div>
+          <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span style="background: rgba(16, 185, 129, 0.15); color: #065F46; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+              📍 ${serv.location}
+            </span>
+          </div>
+          <p style="margin: 4px 0 0 0; font-size: 11.5px; color: #334155 !important; font-weight: 600; max-width: 320px; line-height: 1.35;">
+            ${serv.description}
+          </p>
+        </td>
+        <td>
+          <span class="shop-category-cell" style="background: rgba(139, 92, 246, 0.12); color: #7C3AED; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 800; padding: 4px 10px; border-radius: 8px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px;">
+            🪅 Asistencia & Servicio
+          </span>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #334155 !important;">
+              ${serv.inventorySummary}
+            </span>
+            <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); ${serv.inventoryAction}" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(99,102,241,0.35);" title="Gestionar catálogo, proyectos o inventario del servicio">
+              <span>📦</span> ${serv.inventoryBtnText}
+            </button>
+          </div>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #334155 !important;">
+              ${serv.infoSummary}
+            </div>
+            <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); ${serv.infoAction}" style="background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(15,118,110,0.35);" title="Administrar información o parámetros del servicio">
+              <span>⚙️</span> ${serv.infoBtnText}
+            </button>
+          </div>
+        </td>
+        <td>
+          ${serv.statusBadge}
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-weight: 800; color: #0F172A !important; font-size: 12.5px;">${serviceOrdersDetail}</span>
+            <span style="font-size: 11px; font-weight: 700; color: #10B981;">⚡ Cotización Directa</span>
+          </div>
+        </td>
+        <td style="text-align: center; white-space: nowrap;">
+          ${serv.actionButtons.map(btn => `
+            <button class="btn-goto-kitchen" onclick="event.stopPropagation(); ${btn.action}" style="background-color: ${btn.bg}; color: ${btn.color}; border: none; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 800; margin: 0 2px; width: auto; display: inline-block; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);" title="${btn.title || btn.text}">
+              ${btn.text}
+            </button>
+          `).join('')}
+        </td>
+      `;
+      tbody.appendChild(row);
+    };
+
+    // Helper to render a regular establishment row
+    const renderEstRow = (est) => {
+      const estOrders = this.orders.filter(o => o.establishmentId === est.id || o.establishment_id === est.id);
+      const ordersCount = estOrders.length;
+      const totalRevenue = estOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+      // Find last order details
+      let lastOrderHTML = '<span style="color: var(--text-muted); font-size: 11px;">Sin pedidos aún</span>';
+      if (estOrders.length > 0) {
+        const sortedOrders = [...estOrders].sort((a, b) => new Date(b.createdAt || b.timestamp || b.created_at || 0) - new Date(a.createdAt || a.timestamp || a.created_at || 0));
+        const lastOrder = sortedOrders[0];
+        
+        const rawDate = lastOrder.createdAt || lastOrder.timestamp || lastOrder.created_at;
+        const orderDate = rawDate ? new Date(rawDate) : null;
+        const timeAgoStr = orderDate ? this.getTimeAgoStr(orderDate) : 'Reciente';
+
+        const statusMap = {
+          'pending': { label: '⏳ Pendiente', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)' },
+          'preparing': { label: '👨‍🍳 En Preparación', color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.15)' },
+          'ready': { label: '📦 Listo', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)' },
+          'on_the_way': { label: '🛵 En Camino', color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.15)' },
+          'completed': { label: '✅ Entregado', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' },
+          'cancelled': { label: '❌ Cancelado', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' }
+        };
+
+        const statusObj = statusMap[lastOrder.status] || { label: lastOrder.status || 'Registrado', color: '#94A3B8', bg: 'rgba(255,255,255,0.08)' };
+        const codeStr = lastOrder.deliveryDetails?.code || lastOrder.orderCode || (lastOrder.id ? lastOrder.id.slice(-4) : '---');
+
+        lastOrderHTML = `
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 11px; font-weight: 700; color: #334155;">⏱️ ${timeAgoStr}</span>
+            <span style="background: ${statusObj.bg}; color: ${statusObj.color}; border: 1px solid ${statusObj.color}; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; display: inline-block; width: fit-content;">
+              ${statusObj.label} (#${codeStr})
+            </span>
+          </div>
+        `;
+      }
+
+      const row = document.createElement('tr');
+      row.style.cursor = 'pointer';
+      if (est.disabled) {
+        row.style.opacity = '0.72';
+        row.style.background = 'rgba(239, 68, 68, 0.03)';
+      }
+      row.onclick = () => AdminApp.showEstablishmentActions(est.id);
+
+      const disabledBadge = est.disabled 
+        ? `<span style="background: rgba(239, 68, 68, 0.15); color: #DC2626; border: 1px solid #DC2626; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; margin-left: 6px;">🚫 DESHABILITADO</span>`
+        : '';
+
+      const latDisplay = est.latitude ? parseFloat(est.latitude).toFixed(4) : '7.8145';
+      const lngDisplay = est.longitude ? parseFloat(est.longitude).toFixed(4) : '-72.4430';
+
+      const missingPrices = this.getMissingPricesForEstablishment(est);
+      const missingPricesBadge = missingPrices.length > 0
+        ? `<button type="button" onclick="event.stopPropagation(); AdminApp.openQuickFillPricesModal('${est.id}')" style="background: rgba(245, 158, 11, 0.18); color: #B45309; border: 1.5px solid #F59E0B; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; box-shadow: 0 2px 6px rgba(245,158,11,0.25); animation: pulse 2s infinite;" title="Haz clic para llenar precios pendientes">⚠️ ${missingPrices.length} adicionales sin precio</button>
+           <button type="button" onclick="event.stopPropagation(); AdminApp.openClearModifiersModal('${est.id}')" style="background: rgba(239, 68, 68, 0.15); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.4); font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; box-shadow: 0 2px 6px rgba(239,68,68,0.2);" title="Eliminar o limpiar adicionales de este restaurante">🗑️ Limpiar Adicionales</button>`
+        : '';
+
+      const categoryMap = {
+        'comidas': '🍔 Comidas',
+        'farmacias': '💊 Farmacias',
+        'mercados': '🛒 Mercados',
+        'ferreterias': '🛠️ Ferreterías',
+        'servicios': '🪅 Servicios'
+      };
+      const catLabel = categoryMap[est.category] || `🏪 ${est.category || 'Comercio'}`;
+
+      const estLogoHTML = (est.logo && (est.logo.startsWith('/') || est.logo.endsWith('.svg') || est.logo.endsWith('.png') || est.logo.endsWith('.jpg') || est.logo.endsWith('.webp')))
+        ? `<img src="${est.logo}" alt="${est.name}" style="width: 28px; height: 28px; object-fit: cover; border-radius: 6px; flex-shrink: 0;">`
+        : `<span style="font-size: 20px;">${est.logo || '🏪'}</span>`;
+
+      row.innerHTML = `
+        <td class="shop-title-cell" style="font-weight: 700; color: #0F172A !important;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${estLogoHTML}
+            <div>
+              <span style="font-size: 14px; font-weight: 800; color: #0F172A !important;">${est.name}</span>
+              ${disabledBadge}
+            </div>
+          </div>
+          <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span style="background: rgba(16, 185, 129, 0.15); color: #065F46; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+              📍 ${est.location || 'San Antonio'} (${latDisplay}, ${lngDisplay})
+            </span>
+            ${missingPricesBadge}
+            <button type="button" onclick="event.stopPropagation(); AdminApp.openStoreMapSingle('${est.id}')" style="background: #10B981; color: #FFFFFF; border: none; font-size: 10.5px; font-weight: 800; padding: 3px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; box-shadow: 0 2px 6px rgba(16,185,129,0.3);">
+              🗺️ Ver Mapa
+            </button>
+          </div>
+        </td>
+        <td>
+          <span class="shop-category-cell" style="background: rgba(255, 107, 0, 0.12); color: #EA580C; border: 1px solid rgba(255, 107, 0, 0.3); font-weight: 800; padding: 4px 10px; border-radius: 8px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px;">
+            ${catLabel}
+          </span>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #475569;">
+              📦 ${(est.products || []).length} productos en carta
+            </span>
+            <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openMenuEditorForShop('${est.id}')" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(99,102,241,0.35);" title="Modificar productos, inventario, precios y categorías">
+              <span>📦</span> Modificar Inventario / Menú
+            </button>
+          </div>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11.5px; font-weight: 700; color: #475569;">🔑 Clave: <b style="color: #D97706; font-family: monospace;">${est.linkKey}</b></span>
+              <button type="button" onclick="event.stopPropagation(); AdminApp.promptChangeLinkKey('${est.id}', '${est.name.replace(/'/g, "\\'")}', '${est.linkKey}')" title="Cambiar clave de vinculación" style="background: rgba(245, 158, 11, 0.15); color: #B45309; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 1px 5px; font-size: 10px; cursor: pointer;">✏️</button>
+            </div>
+            <div style="font-size: 11px; color: #64748B;">
+              🛵 Envío: <b style="color: #0F172A;">${this.formatPesos(est.delivery_fee || 0)}</b>
+            </div>
+            <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openEditShopModalFor('${est.id}')" style="background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(15,118,110,0.35);" title="Modificar nombre, logo, portada, horarios, costos y ubicación GPS">
+              <span>⚙️</span> Modificar Info
+            </button>
+          </div>
+        </td>
+        <td>
+          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.toggleDisableEstablishment('${est.id}')" style="background-color: ${est.disabled ? '#FEF3C7' : '#DCFCE7'}; color: ${est.disabled ? '#B45309' : '#15803D'}; border: 1px solid ${est.disabled ? '#FCD34D' : '#86EFAC'}; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 800; cursor: pointer; display: inline-block;">
+            ${est.disabled ? '🚫 Deshabilitado' : '🟢 Habilitado'}
+          </button>
+        </td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-weight: 800; color: #0F172A; font-size: 12.5px;">${ordersCount} pedidos</span>
+            <span style="font-weight: 800; color: var(--primary); font-size: 12.5px;">${this.formatPesos(totalRevenue)}</span>
+            <div style="margin-top: 2px;">${lastOrderHTML}</div>
+          </div>
+        </td>
+        <td style="text-align: center; white-space: nowrap;">
+          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openStoreKitchen('${est.id}')" style="background-color: #F59E0B; color: #1E293B; border: none; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 800; margin: 0 2px; width: auto; display: inline-block; cursor: pointer; box-shadow: 0 2px 6px rgba(245,158,11,0.35);" title="Abrir cocina de este comercio en vivo (KDS)">
+            🍳 KDS
+          </button>
+          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openStoreQRModal('${est.id}')" style="background-color: #6366F1; color: #FFFFFF; border: none; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 800; margin: 0 2px; width: auto; display: inline-block; cursor: pointer; box-shadow: 0 2px 6px rgba(99,102,241,0.3);" title="Ver enlace y QR para compartir">
+            📱 QR
+          </button>
+          <button class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.deleteEstablishment('${est.id}', '${est.name}')" style="background-color: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 700; margin: 0 2px; width: auto; display: inline-block; cursor: pointer;" title="Eliminar este comercio del sistema">
+            🗑️
+          </button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    };
+
+    // If active category is 'servicios', show specialized services first, then any custom service stores
+    if (activeFilter === 'servicios') {
+      filteredServices.forEach(renderServiceRow);
+      filteredEsts.forEach(renderEstRow);
+    } else {
+      // In 'all' or other categories, render establishments then specialized services
+      filteredEsts.forEach(renderEstRow);
+      filteredServices.forEach(renderServiceRow);
+    }
+
+    this.loadDriversTable();
+    this.loadAdminMasterCatalogTable();
+  }
+
+  async loadDriversTable() {
+    const tbody = document.getElementById('admin-drivers-table-body');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/drivers');
+      if (!res.ok) return;
+      const drivers = await res.json();
+
+      if (!Array.isArray(drivers) || drivers.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">
+              No hay repartidores registrados en el sistema. Registra el primero con el botón azul arriba.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = drivers.map(d => {
+        const isOnline = d.status === 'Disponible' || d.status === 'En Camino';
+        const statusBadge = d.status === 'En Camino' 
+          ? '<span style="background: rgba(59,130,246,0.2); color: #3B82F6; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">🛵 En Camino</span>'
+          : (d.status === 'Disponible' 
+            ? '<span style="background: rgba(16,185,129,0.2); color: #10B981; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">🟢 Disponible</span>'
+            : '<span style="background: rgba(239,68,68,0.2); color: #EF4444; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">🔴 Fuera de Servicio</span>');
+
+        const cleanPhone = (d.phone || '').replace(/\D/g, '');
+        const waLink = `https://wa.me/${cleanPhone}`;
+
+        return `
+          <tr>
+            <td style="font-weight: 800; color: #0F172A;">🛵 ${d.name}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 12px; font-weight: 700; color: #334155;">📱 ${d.phone}</span>
+                <a href="${waLink}" target="_blank" style="background: rgba(37,211,102,0.18); color: #15803d; border: 1px solid rgba(37,211,102,0.4); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 3px;" title="Chat directo por WhatsApp">
+                  💬 Chat
+                </a>
+              </div>
+            </td>
+            <td style="font-size: 12px; font-weight: 600; color: #334155;">${d.vehicleType || 'Moto 🛵'}</td>
+            <td style="font-family: monospace; font-size: 13px; font-weight: 800; color: #047857;">${d.linkKey}</td>
+            <td style="font-weight: 800; color: var(--primary); text-align: center;">${d.totalDeliveries || 0}</td>
+            <td>${statusBadge}</td>
+            <td style="text-align: center;">
+              <div style="display: flex; gap: 6px; justify-content: center;">
+                <a href="${waLink}" target="_blank" style="background: rgba(37,211,102,0.2); color: #25D366; border: 1px solid rgba(37,211,102,0.4); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; text-decoration: none; display: inline-block;">
+                  💬 WhatsApp
+                </a>
+                <a href="/driver.html" target="_blank" style="background: rgba(59,130,246,0.15); color: #3B82F6; border: 1px solid rgba(59,130,246,0.3); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; text-decoration: none; display: inline-block;">
+                  🛵 App Driver
+                </a>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch(e) {
+      console.warn('Error loading drivers table:', e);
+    }
+  }
+
+  openRegisterDriverModal() {
+    const modal = document.getElementById('admin-register-driver-modal');
+    if (!modal) return;
+    document.getElementById('reg-driver-name').value = '';
+    document.getElementById('reg-driver-phone').value = '';
+    document.getElementById('reg-driver-key').value = 'GOCHO-' + Math.floor(1000 + Math.random() * 9000);
+    modal.classList.add('active');
+    this.checkModalOpenState();
+  }
+
+  closeRegisterDriverModal() {
+    const modal = document.getElementById('admin-register-driver-modal');
+    if (modal) modal.classList.remove('active');
+    this.checkModalOpenState();
+  }
+
+  async handleRegisterDriverSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('reg-driver-name').value.trim();
+    const prefixEl = document.getElementById('reg-driver-prefix');
+    const prefix = prefixEl ? prefixEl.value : '+57';
+    let rawPhone = document.getElementById('reg-driver-phone').value.trim();
+    const vehicleType = document.getElementById('reg-driver-vehicle').value;
+    const linkKey = document.getElementById('reg-driver-key').value.trim().toUpperCase();
+
+    const cleanDigits = rawPhone.replace(/\D/g, '').replace(/^0+/, '');
+    const phone = rawPhone.startsWith('+') ? rawPhone : `${prefix}${cleanDigits}`;
+
+    try {
+      const res = await fetch('/api/drivers/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, vehicleType, linkKey })
+      });
+
+      if (res.ok) {
+        this.showToast(`✅ Repartidor "${name}" (${phone}) registrado con éxito.`);
+        this.closeRegisterDriverModal();
+        this.loadDriversTable();
+      } else {
+        alert('Error al registrar repartidor.');
+      }
+    } catch(err) {
+      console.error(err);
+      alert('Error de conexión al registrar repartidor.');
+    }
+  }
+
+  showEstablishmentActions(id) {
+    this.openEstActionModal(id);
+  }
+
+  focusEstablishment(estId, orderId = null) {
+    if (!estId) return;
+    if (window.Sound) Sound.stopAlarm();
+    this.hideAlarmBanner();
+
+    // If not authenticated or establishments not loaded yet, save pending
+    if (!this.isAuthenticated || !this.establishments || this.establishments.length === 0) {
+      window.pendingTargetEstId = estId;
+      window.pendingTargetOrderId = orderId;
+      return;
+    }
+
+    const cleanId = String(estId).trim();
+    const est = this.establishments.find(e => String(e.id).trim() === cleanId || (e.name && e.name.toLowerCase().trim() === cleanId.toLowerCase()));
+    if (!est) {
+      console.warn('focusEstablishment: establishment not found with ID/Name:', estId);
+      return;
+    }
+
+    // 1. Highlight and scroll smoothly to the store row in the table
+    const tbody = document.getElementById('keys-table-body');
+    if (tbody) {
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const targetRow = rows.find(r => r.innerHTML.includes(est.id) || r.textContent.includes(est.name));
+      if (targetRow) {
+        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetRow.style.transition = 'all 0.4s ease';
+        targetRow.style.backgroundColor = 'rgba(255, 94, 58, 0.28)';
+        targetRow.style.outline = '3px solid #FF5E3A';
+        targetRow.style.borderRadius = '8px';
+        setTimeout(() => {
+          targetRow.style.backgroundColor = '';
+          targetRow.style.outline = '';
+        }, 5000);
+      }
+    }
+
+    // 2. Open establishment action modal directly
+    this.openEstActionModal(est.id);
+
+    // 3. If there is a specific order, show the order popup on top
+    if (orderId) {
+      const order = this.orders.find(o => String(o.id) === String(orderId));
+      if (order) {
+        this.showNewOrderModal(order, est.name);
+      }
+    }
+
+    this.showToast(`🏪 Mostrando local: ${est.name}`);
+  }
+
+  initModalHistoryNavigation() {
+    window.addEventListener('popstate', (e) => {
+      const activeModals = Array.from(document.querySelectorAll('.modal-overlay.active'));
+      if (activeModals.length > 0) {
+        activeModals.sort((a, b) => {
+          const zA = parseInt(window.getComputedStyle(a).zIndex) || 0;
+          const zB = parseInt(window.getComputedStyle(b).zIndex) || 0;
+          return zB - zA;
+        });
+
+        const topModal = activeModals[0];
+        if (topModal) {
+          topModal.classList.remove('active');
+          this.checkModalOpenState();
+        }
+      }
+    });
+  }
+
+  pushModalState(modalId) {
+    if (modalId) {
+      window.history.pushState({ modalId: modalId, adminModal: true }, '');
+    }
+  }
+
+  checkModalOpenState() {
+    const anyActive = document.querySelector('.modal-overlay.active');
+    if (anyActive) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+  }
+
+  openEstActionModal(id) {
+    const est = this.getEstablishmentById(id);
+    if (!est) return;
+
+    this.activeShopId = est.id;
+    const nameEl = document.getElementById('action-modal-shop-name');
+    if (nameEl) nameEl.innerText = `${est.logo || '🏪'} ${est.name} ${est.disabled ? '(DESHABILITADO)' : ''}`;
+
+    const disableBtn = document.getElementById('btn-toggle-disable-modal');
+    if (disableBtn) {
+      if (est.disabled) {
+        disableBtn.innerText = '🟢 Habilitar Comercio (Mostrar en Marketplace)';
+        disableBtn.style.backgroundColor = '#D1FAE5';
+        disableBtn.style.color = '#065F46';
+        disableBtn.style.borderColor = '#6EE7B7';
+      } else {
+        disableBtn.innerText = '🚫 Deshabilitar Comercio (Ocultar del Marketplace)';
+        disableBtn.style.backgroundColor = '#FEF3C7';
+        disableBtn.style.color = '#92400E';
+        disableBtn.style.borderColor = '#FCD34D';
+      }
+    }
+
+    const missingPrices = this.getMissingPricesForEstablishment(est);
+    const quickFillBtn = document.getElementById('action-modal-quick-fill-btn');
+    if (quickFillBtn) {
+      if (missingPrices.length > 0) {
+        quickFillBtn.style.display = 'flex';
+        quickFillBtn.innerText = `⚡ Llenar Precios Pendientes (${missingPrices.length} adicionales)`;
+      } else {
+        quickFillBtn.style.display = 'none';
+      }
+    }
+
+    const modal = document.getElementById('est-action-modal');
+    if (modal) modal.classList.add('active');
+    this.checkModalOpenState();
+  }
+
+  closeEstActionModal() {
+    const modal = document.getElementById('est-action-modal');
+    if (modal) modal.classList.remove('active');
+    this.checkModalOpenState();
+  }
+
+  openStoreKitchen(estId) {
+    const targetId = estId || this.activeShopId;
+    const est = this.getEstablishmentById(targetId);
+    if (!est) return;
+    this.closeEstActionModal();
+    const isApp = window.Capacitor !== undefined || window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const baseUrl = isApp ? 'https://pedigochos.onrender.com' : window.location.origin;
+    const url = `${baseUrl}/kitchen.html?key=${encodeURIComponent(est.linkKey || '')}`;
+    window.open(url, '_blank') || (window.location.href = url);
+  }
+
+  viewShopMenu() {
+    if (!this.activeShopId) return;
+    const est = this.getEstablishmentById(this.activeShopId);
+    if (!est) return;
+    this.closeEstActionModal();
+    const isApp = window.Capacitor !== undefined || window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const baseUrl = isApp ? 'https://pedigochos.onrender.com' : window.location.origin;
+    const url = `${baseUrl}/?store=${encodeURIComponent(this.activeShopId)}`;
+    window.open(url, '_blank') || (window.location.href = url);
+  }
+
+  openEditShopModal() {
+    if (!this.activeShopId) return;
+    const est = this.getEstablishmentById(this.activeShopId);
+    if (!est) return;
+
+    this.closeEstActionModal();
+
+    // Show modal immediately
+    const modal = document.getElementById('edit-est-modal');
+    if (modal) modal.classList.add('active');
+    this.checkModalOpenState();
+
+    this.checkStoreGPSStatus(est);
+
+    try {
+      const idInp = document.getElementById('edit-shop-id');
+      if (idInp) idInp.value = est.id;
+      const nameInp = document.getElementById('edit-shop-name');
+      if (nameInp) nameInp.value = est.name;
+      const keyInp = document.getElementById('edit-shop-link-key');
+      if (keyInp) keyInp.value = est.linkKey || '';
+      const descInp = document.getElementById('edit-shop-description');
+      if (descInp) descInp.value = est.description || '';
+      const locInp = document.getElementById('edit-shop-location');
+      if (locInp) locInp.value = est.location || 'San Antonio';
+      const delInp = document.getElementById('edit-shop-delivery');
+      if (delInp) delInp.value = est.delivery_fee || 0;
+      const bannerInput = document.getElementById('edit-shop-banner');
+      if (bannerInput) bannerInput.value = est.banner || '';
+      const themeInp = document.getElementById('edit-shop-theme');
+      if (themeInp) themeInp.value = est.themeColor || '#FF5E3A';
+      const disabledInp = document.getElementById('edit-shop-disabled');
+      if (disabledInp) disabledInp.checked = Boolean(est.disabled);
+
+      // Initialize GPS map for editing establishment
+      setTimeout(() => {
+        this.initEditShopGPSMap(est);
+      }, 200);
+
+      // Show preparation & delivery times & business hours for all establishments
+      const timesGroup = document.getElementById('edit-shop-times-group');
+      const prepInput = document.getElementById('edit-shop-prep-time');
+      const deliveryTimeInput = document.getElementById('edit-shop-delivery-time');
+      const openTimeInput = document.getElementById('edit-shop-open-time');
+      const closeTimeInput = document.getElementById('edit-shop-close-time');
+
+      if (timesGroup) {
+        timesGroup.style.display = 'grid';
+        timesGroup.classList.remove('hidden');
+      }
+      if (prepInput) prepInput.value = est.prep_time || '';
+      if (deliveryTimeInput) deliveryTimeInput.value = est.delivery_time || '';
+      if (openTimeInput) openTimeInput.value = est.open_time || '17:00';
+      if (closeTimeInput) closeTimeInput.value = est.close_time || '00:00';
+
+      const workingDays = Array.isArray(est.working_days) && est.working_days.length > 0
+        ? est.working_days
+        : ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+      document.querySelectorAll('input[name="edit-working-day"]').forEach(chk => {
+        chk.checked = workingDays.includes(chk.value);
+      });
+
+      const select = document.getElementById('edit-shop-logo');
+      if (select) {
+        select.innerHTML = '';
+        const emojis = CATEGORY_EMOJIS[est.category] || ['🏪'];
+        emojis.forEach(emoji => {
+          const opt = document.createElement('option');
+          opt.value = emoji;
+          opt.innerText = `${emoji} Icono`;
+          if (emoji === est.logo) opt.selected = true;
+          select.appendChild(opt);
+        });
+      }
+
+      // Populate global catalog dropdown for product imports if element exists
+      const importSelect = document.getElementById('import-product-select');
+      if (importSelect) {
+        importSelect.innerHTML = `<option value="">Cargando catálogo...</option>`;
+        if (typeof MenuBuilder !== 'undefined' && MenuBuilder.supabase) {
+          MenuBuilder.supabase
+            .from('products')
+            .select('*')
+            .order('name', { ascending: true })
+            .then(({ data, error }) => {
+              if (error) throw error;
+              this.globalProductsCache = data || [];
+              importSelect.innerHTML = `<option value="">-- Selecciona un producto --</option>`;
+              this.globalProductsCache.forEach(prod => {
+                const opt = document.createElement('option');
+                opt.value = prod.id;
+                opt.innerText = `${prod.name} ($${parseFloat(prod.price).toFixed(2)})`;
+                importSelect.appendChild(opt);
+              });
+            })
+            .catch(err => {
+              console.error(err);
+              importSelect.innerHTML = `<option value="">Error cargando catálogo</option>`;
+            });
+        } else {
+          importSelect.innerHTML = `<option value="">Catálogo no disponible</option>`;
+        }
+      }
+
+      window.activeShopIdForMenu = est.id;
+      const builderTitle = document.getElementById('menu-builder-shop-name');
+      if (builderTitle) builderTitle.innerText = `🍔 Creador de Menú: ${est.name}`;
+      if (typeof window.loadProducts === 'function') {
+        window.loadProducts();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  closeEditShopModal() {
+    const modal = document.getElementById('edit-est-modal');
+    if (modal) modal.classList.remove('active');
+    this.checkModalOpenState();
+  }
+
+  async handleEditShopSubmit(e) {
+    e.preventDefault();
+    if (!this.activeShopId) return;
+
+    const est = this.establishments.find(e => e.id === this.activeShopId);
+    if (!est) return;
+
+    const submitBtn = document.getElementById('btn-submit-edit-shop');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Guardando Cambios...</span>`;
+
+    const name = document.getElementById('edit-shop-name').value.trim();
+    const description = document.getElementById('edit-shop-description').value.trim();
+    const location = document.getElementById('edit-shop-location').value;
+    const logo = document.getElementById('edit-shop-logo').value;
+    const delivery_fee = document.getElementById('edit-shop-delivery').value;
+    const themeColor = document.getElementById('edit-shop-theme').value;
+
+    const prep_time = document.getElementById('edit-shop-prep-time').value;
+    const delivery_time = document.getElementById('edit-shop-delivery-time').value;
+    const open_time = document.getElementById('edit-shop-open-time')?.value || '17:00';
+    const close_time = document.getElementById('edit-shop-close-time')?.value || '00:00';
+
+    const logoFile = document.getElementById('edit-shop-logo-file').files[0];
+    const bannerFile = document.getElementById('edit-shop-banner-file').files[0];
+
+    let logoImage = est.logoImage || null;
+    let banner = est.banner || '';
+
+    try {
+      // 1. Upload custom logo file if selected
+      if (logoFile) {
+        submitBtn.innerHTML = `<span>Subiendo Logo...</span>`;
+        logoImage = await MenuBuilder.uploadProductImage(logoFile);
+      }
+
+      // 2. Upload cover banner file if selected
+      if (bannerFile) {
+        submitBtn.innerHTML = `<span>Subiendo Portada...</span>`;
+        banner = await MenuBuilder.uploadProductImage(bannerFile);
+      }
+
+      const disabled = document.getElementById('edit-shop-disabled')?.checked || false;
+
+      const latVal = document.getElementById('edit-shop-latitude')?.value;
+      const lngVal = document.getElementById('edit-shop-longitude')?.value;
+      const latitude = (latVal !== '' && latVal !== null && latVal !== undefined) ? parseFloat(latVal) : null;
+      const longitude = (lngVal !== '' && lngVal !== null && lngVal !== undefined) ? parseFloat(lngVal) : null;
+
+      const payload = {
+        isOwner: true,
+        name,
+        description,
+        location,
+        logo,
+        delivery_fee,
+        banner,
+        themeColor,
+        logoImage,
+        disabled,
+        latitude,
+        longitude,
+        location_lat: latitude,
+        location_lng: longitude,
+        prep_time: prep_time ? parseInt(prep_time) : null,
+        delivery_time: delivery_time ? parseInt(delivery_time) : null,
+        open_time: open_time,
+        close_time: close_time,
+        working_days: Array.from(document.querySelectorAll('input[name="edit-working-day"]:checked')).map(c => c.value)
+      };
+
+      const newLinkKey = document.getElementById('edit-shop-link-key')?.value.trim().toUpperCase();
+      if (newLinkKey) {
+        payload.newLinkKey = newLinkKey;
+      }
+
+      const res = await fetch(`/api/establishments/${this.activeShopId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        this.showToast('✅ Cambios guardados con éxito.');
+        this.closeEditShopModal();
+        
+        // Reset file inputs
+        document.getElementById('edit-shop-logo-file').value = '';
+        document.getElementById('edit-shop-banner-file').value = '';
+        
+        await this.reloadData();
+        this.markPendingChanges();
+      } else {
+        alert('Error al guardar los cambios.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de red al guardar los cambios.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Guardar Cambios</span>`;
+    }
+  }
+
+  generateRandomLinkKeyForEdit() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const inp = document.getElementById('edit-shop-link-key');
+    if (inp) {
+      inp.value = result;
+      this.showToast(`🔑 Nueva clave generada: ${result}`);
+    }
+  }
+
+  async promptChangeLinkKey(estId, estName, currentKey) {
+    const newKey = prompt(`🔑 Cambiar clave de vinculación para "${estName}":\n\nClave actual: ${currentKey || 'N/A'}\n\nIngresa la nueva clave (letras o números, ej. MIRESTAURANTE o 6MAP9F):`, currentKey || '');
+    if (newKey === null) return;
+    
+    const cleanKey = newKey.trim().toUpperCase();
+    if (!cleanKey) {
+      alert('La clave de vinculación no puede estar vacía.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/establishments/${estId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          newLinkKey: cleanKey
+        })
+      });
+
+      if (res.ok) {
+        this.showToast(`✅ Clave de vinculación de ${estName} actualizada a: ${cleanKey}`);
+        await this.reloadData();
+      } else {
+        alert('Error al actualizar la clave de vinculación.');
+      }
+    } catch(err) {
+      console.error(err);
+      alert('Error de conexión al actualizar la clave.');
+    }
+  }
+
+  async importGlobalProduct() {
+    if (!this.activeShopId) return;
+    const select = document.getElementById('import-product-select');
+    const prodId = select.value;
+    if (!prodId) {
+      alert('Por favor, selecciona un producto de la lista para importar.');
+      return;
+    }
+
+    const selected = this.globalProductsCache.find(p => p.id === prodId);
+    if (!selected) return;
+
+    const est = this.establishments.find(e => e.id === this.activeShopId);
+    if (!est) return;
+
+    if (!est.products) est.products = [];
+
+    // Check if duplicate
+    if (est.products.some(p => p.name.toLowerCase() === selected.name.toLowerCase())) {
+      alert(`⚠️ El producto "${selected.name}" ya está en el menú de este establecimiento.`);
+      return;
+    }
+
+    const newLocalProduct = {
+      id: `p-${Date.now()}-${Math.floor(Math.random() * 100)}`,
+      name: selected.name,
+      price: parseFloat(selected.price),
+      description: selected.description || '',
+      image: selected.image_url
+    };
+
+    est.products.push(newLocalProduct);
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (res.ok) {
+        this.showToast(`📥 ¡${selected.name} importado con éxito!`);
+        
+        // Refresh active menu view
+        if (window.activeShopIdForMenu === est.id) {
+          if (typeof window.loadProducts === 'function') {
+            await window.loadProducts();
+          }
+        }
+        this.markPendingChanges();
+      } else {
+        alert('Error al guardar el producto importado.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión al importar el producto.');
+    }
+  }
+
+  modifyMenuAndTables() {
+    if (!this.activeShopId) return;
+    const est = this.getEstablishmentById(this.activeShopId);
+    if (!est) return;
+
+    this.closeEstActionModal();
+
+    window.activeShopIdForMenu = est.id;
+    this.activeFloorTool = 'table'; // Default tool
+
+    // Update titles and subtext
+    const titleEl = document.getElementById('designer-modal-shop-name');
+    if (titleEl) titleEl.innerText = `🍔 Taller de Menú y Distribución: ${est.name}`;
+    const subtextEl = document.getElementById('designer-modal-shop-subtext');
+    if (subtextEl) subtextEl.innerText = `Diseño de distribución de mesas y carta de comida para ${est.name}`;
+
+    // Open Modal
+    const modal = document.getElementById('menu-tables-modal');
+    if (modal) modal.classList.add('active');
+    this.checkModalOpenState();
+
+    // Switch to default tab (daily specials or previous tab)
+    const initialTab = this.activeModalTab || 'menu';
+    this.switchModalTab(initialTab);
+  }
+
+  switchModalTab(tabId) {
+    this.activeModalTab = tabId;
+    const tabs = ['daily', 'menu', 'ai', 'tables', 'catalog'];
+    tabs.forEach(t => {
+      const btn = document.getElementById(`tab-btn-${t}`);
+      const content = document.getElementById(`tab-content-${t}`);
+      if (btn) btn.classList.toggle('active', t === tabId);
+      if (content) content.classList.toggle('active', t === tabId);
+    });
+
+    const est = this.getEstablishmentById(window.activeShopIdForMenu);
+    if (est) this.auditMissingPrices(est);
+
+    if (tabId === 'daily') {
+      this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+    } else if (tabId === 'menu') {
+      this.loadModalProducts();
+    } else if (tabId === 'ai') {
+      this.initAIMenuTab();
+    } else if (tabId === 'tables') {
+      this.renderFloorGrid();
+    } else if (tabId === 'catalog') {
+      this.loadModalImportCatalog();
+    }
+  }
+
+  selectDailySpecialsDay(day) {
+    this.selectedDailyDay = day;
+    const container = document.getElementById('daily-specials-day-selector');
+    if (container) {
+      container.querySelectorAll('.day-pill').forEach(pill => {
+        pill.classList.toggle('active', pill.getAttribute('data-day') === day);
+      });
+    }
+    this.renderDailySpecialsTab(day);
+  }
+
+  renderDailySpecialsTab(selectedDay = 'todos') {
+    const grid = document.getElementById('daily-specials-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est || !est.products || est.products.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--text-muted); font-size: 12.5px; background: rgba(255,255,255,0.02); border-radius: 12px;">
+          No hay productos registrados en este restaurante.
+        </div>
+      `;
+      return;
+    }
+
+    const today = typeof getTodayDayId === 'function' ? getTodayDayId() : 'lunes';
+
+    // Mark the "HOY" badge on the day pill
+    const daySelector = document.getElementById('daily-specials-day-selector');
+    if (daySelector) {
+      daySelector.querySelectorAll('.day-pill').forEach(p => {
+        if (p.getAttribute('data-day') === today) {
+          p.classList.add('today-badge');
+        }
+      });
+    }
+
+    // Filter products for the selected day
+    const filtered = est.products.filter(p => {
+      const days = (p.available_days && Array.isArray(p.available_days) && p.available_days.length > 0)
+        ? p.available_days.map(d => String(d).toLowerCase())
+        : ['todos'];
+
+      if (selectedDay === 'todos') return true;
+      return days.includes('todos') || days.includes(selectedDay);
+    });
+
+    if (filtered.length === 0) {
+      const dayNames = {
+        lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles',
+        jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
+        domingo: 'Domingo', todos: 'todos los días'
+      };
+      grid.innerHTML = `
+        <div style="grid-column: 1 / -1; padding: 28px; text-align: center; color: var(--text-muted); font-size: 13px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 14px;">
+          <span style="font-size: 24px; display: block; margin-bottom: 4px;">🍲</span>
+          <p style="margin: 4px 0 10px 0;">No hay platos asignados para <strong>${dayNames[selectedDay] || selectedDay}</strong>.</p>
+          <button type="button" class="btn-neumorphic" onclick="AdminApp.openMenuModal()" style="margin: 0; font-size: 11.5px; padding: 6px 14px; background: var(--accent); color: #121216; font-weight: 800; cursor: pointer;">➕ Asignar Plato a este Día</button>
+        </div>
+      `;
+      return;
+    }
+
+    filtered.forEach(prod => {
+      const isPaused = prod.is_paused === true || prod.available === false;
+      const days = (prod.available_days && Array.isArray(prod.available_days) && prod.available_days.length > 0)
+        ? prod.available_days
+        : ['todos'];
+      
+      const daysLabel = days.includes('todos') ? 'Todos los días' : days.map(d => d.slice(0, 3).toUpperCase()).join(', ');
+      
+      const dynamicModifiers = (prod.modifiers && Array.isArray(prod.modifiers)) ? prod.modifiers : [];
+      const dynamicBadges = dynamicModifiers.map(g => `
+        <span class="daily-dish-options-badge" title="${g.group_name}: ${g.options ? g.options.map(o => o.name).join(', ') : ''}">
+          🍲 ${g.group_name} (${g.options ? g.options.length : 0})
+        </span>
+      `).join('');
+
+      const card = document.createElement('div');
+      card.className = `daily-dish-card ${isPaused ? 'paused' : ''}`;
+      const imgUrl = prod.image || '/images/burger_royale.jpg';
+
+      card.innerHTML = `
+        <div class="daily-dish-header">
+          <img src="${imgUrl}" alt="${prod.name}" class="daily-dish-img" onerror="this.src='/images/burger_royale.jpg'">
+          <div style="flex: 1; min-width: 0;">
+            <h4 class="daily-dish-title">${prod.name}</h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+              <span class="daily-dish-price">$${parseFloat(prod.price || 0).toFixed(2)}</span>
+              <span style="font-size: 10px; color: #f59e0b; font-weight: 700; background: rgba(245,158,11,0.1); padding: 2px 6px; border-radius: 4px;">📅 ${daysLabel}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+          ${dynamicBadges || '<span style="font-size: 10px; color: var(--text-muted); font-style: italic;">Sin opciones dinámicas configuradas</span>'}
+        </div>
+
+        <div class="daily-dish-actions">
+          <button type="button" class="btn-daily-action toggle-active ${isPaused ? 'is-paused' : ''}" onclick="AdminApp.toggleProductStatus('${prod.id}')" title="Pausar o activar plato">
+            <span>${isPaused ? '⏸️ Pausado' : '🟢 Activo Hoy'}</span>
+          </button>
+          <button type="button" class="btn-daily-action" onclick="AdminApp.openDailyOptionsModal('${prod.id}')" style="color: #f59e0b;" title="Editar opciones cambiantes (sopas, ensaladas, etc.)">
+            <span>🍲 Opciones</span>
+          </button>
+          <button type="button" class="btn-daily-action" onclick="AdminApp.openProductSpecsModal('${prod.id}')" title="Editar precio, foto e ingredientes">
+            <span>✏️ Editar</span>
+          </button>
+        </div>
+      `;
+
+      grid.appendChild(card);
+    });
+  }
+
+  async toggleProductStatus(productId) {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est || !est.products) return;
+
+    const prod = est.products.find(p => String(p.id) === String(productId));
+    if (!prod) return;
+
+    prod.is_paused = !(prod.is_paused === true || prod.available === false);
+    prod.available = !prod.is_paused;
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+      if (res.ok) {
+        this.showLocalToast(`Plato ${prod.name} ${prod.available ? 'activado' : 'pausado'}.`);
+        this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+        this.renderModalProducts();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  openDailyOptionsModal(productId) {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est || !est.products) return;
+
+    const prod = est.products.find(p => String(p.id) === String(productId));
+    if (!prod) return;
+
+    this.activeDailyOptionsProductId = productId;
+    this.dailyOptionsGroups = prod.modifiers ? JSON.parse(JSON.stringify(prod.modifiers)) : [];
+
+    if (this.dailyOptionsGroups.length === 0) {
+      this.dailyOptionsGroups = [
+        {
+          group_id: 'g-sopa-' + Date.now(),
+          group_name: 'Sopa del Día',
+          selection_type: 'single',
+          required: true,
+          options: [
+            { option_id: 'opt-s1', name: 'Sopa de Costilla', extra_price: 0 },
+            { option_id: 'opt-s2', name: 'Sancocho de Gallina', extra_price: 0 },
+            { option_id: 'opt-s3', name: 'Sin Sopa', extra_price: 0 }
+          ]
+        }
+      ];
+    }
+
+    const titleEl = document.getElementById('daily-options-product-name');
+    if (titleEl) titleEl.innerText = prod.name;
+    const modal = document.getElementById('daily-options-modal');
+    if (modal) modal.classList.add('active');
+    this.renderDailyOptionsGroupsList();
+  }
+
+  closeDailyOptionsModal() {
+    const modal = document.getElementById('daily-options-modal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  renderDailyOptionsGroupsList() {
+    const container = document.getElementById('daily-options-groups-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!this.dailyOptionsGroups || this.dailyOptionsGroups.length === 0) {
+      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 11.5px; padding: 16px;">Sin grupos de opciones agregados. Haz clic en "➕ Agregar Opción".</div>`;
+      return;
+    }
+
+    this.dailyOptionsGroups.forEach((group, gIdx) => {
+      const gCard = document.createElement('div');
+      gCard.style.background = 'rgba(255, 255, 255, 0.03)';
+      gCard.style.border = '1px solid rgba(255, 255, 255, 0.08)';
+      gCard.style.borderRadius = '12px';
+      gCard.style.padding = '12px';
+      gCard.style.display = 'flex';
+      gCard.style.flexDirection = 'column';
+      gCard.style.gap = '8px';
+
+      const optionsListHTML = (group.options || []).map((opt, oIdx) => `
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <input type="text" value="${opt.name || ''}" oninput="AdminApp.updateDailyOptionName(${gIdx}, ${oIdx}, this.value)" placeholder="Nombre del sabor u opción" style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 6px; padding: 5px 8px; font-size: 12px;">
+          <input type="number" step="0.01" value="${opt.extra_price !== undefined ? opt.extra_price : (opt.price || 0)}" oninput="AdminApp.updateDailyOptionPrice(${gIdx}, ${oIdx}, this.value)" placeholder="+$ extra" style="width: 70px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #10b981; border-radius: 6px; padding: 5px 6px; font-size: 11.5px; font-weight: bold; text-align: center;">
+          <button type="button" onclick="AdminApp.removeDailyOptionItem(${gIdx}, ${oIdx})" style="background: rgba(239, 68, 68, 0.8); border: none; color: #fff; width: 24px; height: 24px; border-radius: 50%; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+      `).join('');
+
+      gCard.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <input type="text" value="${group.group_name || ''}" oninput="AdminApp.updateDailyGroupName(${gIdx}, this.value)" placeholder="Título (Ej: Sopa del Día, Ensalada, Proteína)" style="flex: 1; font-weight: 800; color: var(--accent); background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; font-size: 12.5px;">
+          <select onchange="AdminApp.updateDailyGroupType(${gIdx}, this.value)" style="background: rgba(18,18,22,0.9); color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 4px 6px; font-size: 11px;">
+            <option value="single" ${group.selection_type === 'single' ? 'selected' : ''}>1 Selección</option>
+            <option value="multiple" ${group.selection_type === 'multiple' ? 'selected' : ''}>Múltiple</option>
+          </select>
+          <button type="button" onclick="AdminApp.removeDailyGroup(${gIdx})" style="background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer;">🗑️</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+          ${optionsListHTML}
+        </div>
+
+        <button type="button" onclick="AdminApp.addDailyOptionItem(${gIdx})" style="align-self: flex-start; background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px dashed rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; margin-top: 4px;">
+          ➕ Agregar Sabor / Opción
+        </button>
+      `;
+
+      container.appendChild(gCard);
+    });
+  }
+
+  addQuickDailyGroup() {
+    if (!this.dailyOptionsGroups) this.dailyOptionsGroups = [];
+    this.dailyOptionsGroups.push({
+      group_id: 'g-grp-' + Date.now(),
+      group_name: 'Nueva Opción (Ej: Ensalada, Sabor)',
+      selection_type: 'single',
+      required: true,
+      options: [
+        { option_id: 'opt-' + Date.now() + '-1', name: 'Opción 1', extra_price: 0 },
+        { option_id: 'opt-' + Date.now() + '-2', name: 'Opción 2', extra_price: 0 }
+      ]
+    });
+    this.renderDailyOptionsGroupsList();
+  }
+
+  updateDailyGroupName(gIdx, name) {
+    if (this.dailyOptionsGroups && this.dailyOptionsGroups[gIdx]) this.dailyOptionsGroups[gIdx].group_name = name;
+  }
+
+  updateDailyGroupType(gIdx, type) {
+    if (this.dailyOptionsGroups && this.dailyOptionsGroups[gIdx]) this.dailyOptionsGroups[gIdx].selection_type = type;
+  }
+
+  removeDailyGroup(gIdx) {
+    if (this.dailyOptionsGroups) {
+      this.dailyOptionsGroups.splice(gIdx, 1);
+      this.renderDailyOptionsGroupsList();
+    }
+  }
+
+  addDailyOptionItem(gIdx) {
+    if (!this.dailyOptionsGroups || !this.dailyOptionsGroups[gIdx]) return;
+    if (!this.dailyOptionsGroups[gIdx].options) this.dailyOptionsGroups[gIdx].options = [];
+    this.dailyOptionsGroups[gIdx].options.push({
+      option_id: 'opt-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      name: 'Nueva Variante',
+      extra_price: 0
+    });
+    this.renderDailyOptionsGroupsList();
+  }
+
+  updateDailyOptionName(gIdx, oIdx, name) {
+    if (this.dailyOptionsGroups && this.dailyOptionsGroups[gIdx] && this.dailyOptionsGroups[gIdx].options[oIdx]) {
+      this.dailyOptionsGroups[gIdx].options[oIdx].name = name;
+    }
+  }
+
+  updateDailyOptionPrice(gIdx, oIdx, val) {
+    if (this.dailyOptionsGroups && this.dailyOptionsGroups[gIdx] && this.dailyOptionsGroups[gIdx].options[oIdx]) {
+      this.dailyOptionsGroups[gIdx].options[oIdx].extra_price = parseFloat(val) || 0;
+      this.dailyOptionsGroups[gIdx].options[oIdx].price = parseFloat(val) || 0;
+    }
+  }
+
+  removeDailyOptionItem(gIdx, oIdx) {
+    if (this.dailyOptionsGroups && this.dailyOptionsGroups[gIdx] && this.dailyOptionsGroups[gIdx].options) {
+      this.dailyOptionsGroups[gIdx].options.splice(oIdx, 1);
+      this.renderDailyOptionsGroupsList();
+    }
+  }
+
+  async saveDailyOptions() {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est || !est.products || !this.activeDailyOptionsProductId) return;
+
+    const prod = est.products.find(p => String(p.id) === String(this.activeDailyOptionsProductId));
+    if (!prod) return;
+
+    // Filter empty groups
+    prod.modifiers = this.dailyOptionsGroups.filter(g => g.group_name && g.group_name.trim() !== '');
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (res.ok) {
+        this.showLocalToast(`✅ Opciones dinámicas de ${prod.name} guardadas con éxito.`);
+        this.closeDailyOptionsModal();
+        this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+        this.renderModalProducts();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al guardar opciones dinámicas.');
+    }
+  }
+
+  closeMenuTablesModal() {
+    const modal = document.getElementById('menu-tables-modal');
+    if (modal) modal.classList.remove('active');
+    try { this.closeProductSpecsModal(); } catch(e) { console.error(e); }
+    try { this.reloadData(); } catch(e) { console.error(e); }
+    this.checkModalOpenState();
+  }
+
+  openMenuModal() {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    if (!shopId) {
+      alert('⚠️ Selecciona primero un establecimiento de la lista para agregarle productos.');
+      return;
+    }
+    window.activeShopIdForMenu = shopId;
+
+    // Populate category dropdown inside create product modal
+    const select = document.getElementById('form-category');
+    if (select) {
+      select.innerHTML = '<option value="">-- Selecciona una categoría --</option>';
+      const cats = window.categoriesList || [];
+      if (cats.length > 0) {
+        cats.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.id || cat.slug;
+          opt.innerText = cat.name || cat;
+          select.appendChild(opt);
+        });
+      } else if (typeof MenuBuilder !== 'undefined') {
+        MenuBuilder.getCategories().then(c => {
+          window.categoriesList = c || [];
+          select.innerHTML = '<option value="">-- Selecciona una categoría --</option>';
+          window.categoriesList.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id || cat.slug;
+            opt.innerText = cat.name || cat;
+            select.appendChild(opt);
+          });
+        }).catch(err => console.error(err));
+      }
+    }
+
+    const modal = document.getElementById('product-modal');
+    if (modal) modal.classList.add('active');
+    this.checkModalOpenState();
+  }
+
+  closeMenuModal() {
+    const modal = document.getElementById('product-modal');
+    if (modal) modal.classList.remove('active');
+    const form = document.getElementById('product-form');
+    if (form) form.reset();
+    this.checkModalOpenState();
+  }
+
+  setFloorTool(tool) {
+    this.activeFloorTool = tool;
+    
+    // Update button active classes
+    const tools = ['table', 'wall', 'eraser'];
+    tools.forEach(t => {
+      const btn = document.getElementById(`tool-${t}`);
+      if (btn) {
+        if (t === tool) {
+          btn.style.background = 'var(--accent)';
+          btn.style.color = '#121216';
+        } else {
+          btn.style.background = 'rgba(255,255,255,0.05)';
+          btn.style.color = '#ffffff';
+        }
+      }
+    });
+  }
+
+  renderFloorGrid() {
+    this.renderTablesManager();
+  }
+
+  renderTablesManager() {
+    const grid = document.getElementById('restaurant-tables-manager-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est) return;
+
+    // Ensure est.tables exists
+    if (!Array.isArray(est.tables) || est.tables.length === 0) {
+      if (Array.isArray(est.layout) && est.layout.length > 0) {
+        est.tables = est.layout
+          .filter(i => i.type === 'table')
+          .map(i => ({
+            id: `t-${i.number}`,
+            name: `Mesa ${i.number}`,
+            number: i.number,
+            capacity: 4,
+            status: 'Disponible'
+          }));
+      } else {
+        // Default 6 tables if newly created
+        est.tables = [1, 2, 3, 4, 5, 6].map(n => ({
+          id: `t-${n}`,
+          name: `Mesa ${n}`,
+          number: n,
+          capacity: 4,
+          status: 'Disponible'
+        }));
+      }
+    }
+
+    // Sort tables by number/name
+    est.tables.sort((a, b) => {
+      const numA = parseInt(a.number || a.name || 0, 10);
+      const numB = parseInt(b.number || b.name || 0, 10);
+      return (isNaN(numA) ? 0 : numA) - (isNaN(numB) ? 0 : numB);
+    });
+
+    const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
+
+    est.tables.forEach((table, idx) => {
+      const tNum = table.number || (idx + 1);
+      const tName = table.name || `Mesa ${tNum}`;
+      const directUrl = `${origin}/?store=${encodeURIComponent(est.id)}&mesa=${encodeURIComponent(tNum)}`;
+      const qrBoxId = `table-qr-card-box-${idx}`;
+
+      const card = document.createElement('div');
+      card.className = 'table-qr-card';
+      card.style.cssText = 'background: rgba(18, 18, 24, 0.95); border: 1.5px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.4); position: relative;';
+
+      card.innerHTML = `
+        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11px; font-weight: 800; color: #10B981; background: rgba(16,185,129,0.15); border: 1px solid #10B981; padding: 2px 8px; border-radius: 6px;">🟢 Activa</span>
+          <button type="button" onclick="AdminApp.deleteTable('${table.id || tNum}')" title="Eliminar Mesa" style="background: rgba(239,68,68,0.15); border: 1px solid #EF4444; color: #EF4444; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px;">✕</button>
+        </div>
+
+        <div style="margin-top: -4px;">
+          <h4 style="margin: 0; color: #FFF; font-size: 16px; font-weight: 900;">🪑 ${tName}</h4>
+          <span style="font-size: 11px; color: var(--text-muted);">Capacidad: ${table.capacity || 4} pers.</span>
+        </div>
+
+        <!-- Live QR Code Element with High Contrast -->
+        <div id="${qrBoxId}" style="width: 130px; height: 130px; background: #FFFFFF; border-radius: 12px; padding: 6px; display: flex; align-items: center; justify-content: center; border: 2px solid #FF6B00; box-shadow: 0 0 14px rgba(255,107,0,0.35);">
+          <!-- QR Canvas -->
+        </div>
+
+        <div style="font-size: 10px; color: #94A3B8; word-break: break-all; max-width: 100%; font-family: monospace; background: rgba(0,0,0,0.3); padding: 4px 6px; border-radius: 6px;">
+          /?store=${est.id}&mesa=${tNum}
+        </div>
+
+        <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
+          <button type="button" onclick="AdminApp.downloadSingleTableQR('${tNum}', '${est.id}')" style="flex: 1; background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #FFF; border: none; padding: 7px 8px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 3px 8px rgba(255,107,0,0.3);">
+            📥 Descargar
+          </button>
+          <button type="button" onclick="AdminApp.copyTableDirectLink('${directUrl}')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 7px 10px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer;" title="Copiar Enlace">
+            📋 Copiar
+          </button>
+        </div>
+      `;
+
+      grid.appendChild(card);
+
+      // Generate the QR module inside the card
+      setTimeout(() => {
+        const qrContainer = document.getElementById(qrBoxId);
+        if (qrContainer && typeof QRCode !== 'undefined') {
+          qrContainer.innerHTML = '';
+          new QRCode(qrContainer, {
+            text: directUrl,
+            width: 118,
+            height: 118,
+            colorDark: '#000000',
+            colorLight: '#FFFFFF',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        }
+      }, 50);
+    });
+  }
+
+  addNewTablePrompt() {
+    this.toggleAddTableForm(true);
+  }
+
+  toggleAddTableForm(show) {
+    const form = document.getElementById('add-table-quick-form');
+    if (!form) return;
+    form.style.display = show ? 'block' : 'none';
+    if (show) {
+      const shopId = window.activeShopIdForMenu || this.activeShopId;
+      const est = this.establishments.find(e => e.id === shopId);
+      const tables = est && Array.isArray(est.tables) ? est.tables : [];
+      const maxNum = tables.reduce((max, t) => Math.max(max, parseInt(t.number || 0, 10) || 0), 0);
+      const nextNum = maxNum + 1;
+      const numInput = document.getElementById('new-table-number-input');
+      if (numInput) {
+        numInput.value = nextNum;
+        numInput.focus();
+      }
+    }
+  }
+
+  async confirmAddNewTable() {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est) return;
+
+    const numInput = document.getElementById('new-table-number-input');
+    const capInput = document.getElementById('new-table-capacity-input');
+    const val = numInput ? numInput.value.trim() : '';
+    if (!val) {
+      alert('Por favor indica el número o nombre de la mesa.');
+      return;
+    }
+
+    if (!Array.isArray(est.tables)) est.tables = [];
+
+    const isNum = !isNaN(parseInt(val, 10)) && String(parseInt(val, 10)) === val;
+    const tableNumber = isNum ? parseInt(val, 10) : val;
+    const tableName = isNum ? `Mesa ${val}` : val;
+    const capacity = capInput ? parseInt(capInput.value, 10) || 4 : 4;
+
+    const newTable = {
+      id: `t-${Date.now()}`,
+      name: tableName,
+      number: tableNumber,
+      capacity: capacity,
+      status: 'Disponible'
+    };
+
+    // Check if table already exists
+    const exists = est.tables.some(t => String(t.number) === String(tableNumber) || t.name.toLowerCase() === tableName.toLowerCase());
+    if (exists) {
+      alert(`⚠️ La mesa "${val}" ya existe en el restaurante.`);
+      return;
+    }
+
+    est.tables.push(newTable);
+
+    // Auto-save to server
+    try {
+      await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          tables: est.tables
+        })
+      });
+      this.showToast(`✅ ${tableName} agregada con su QR generado`);
+      this.toggleAddTableForm(false);
+      this.renderTablesManager();
+    } catch(e) {
+      console.error('Error saving table:', e);
+      this.showToast('Error al guardar la mesa');
+    }
+  }
+
+  async deleteTable(tableIdOrNum) {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est || !Array.isArray(est.tables)) return;
+
+    if (!confirm('¿Seguro que deseas eliminar esta mesa?')) return;
+
+    est.tables = est.tables.filter(t => t.id !== tableIdOrNum && String(t.number) !== String(tableIdOrNum));
+
+    try {
+      await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          tables: est.tables
+        })
+      });
+      this.showToast('🗑️ Mesa eliminada');
+      this.renderTablesManager();
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  copyTableDirectLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+      this.showToast('📋 Enlace de la mesa copiado');
+    }).catch(() => {
+      prompt('Copia este enlace para la mesa:', url);
+    });
+  }
+
+  downloadSingleTableQR(tableNumberOrName, estId) {
+    const est = this.establishments.find(e => e.id === (estId || window.activeShopIdForMenu || this.activeShopId));
+    if (!est) return;
+
+    const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
+    const directUrl = `${origin}/?store=${encodeURIComponent(est.id)}&mesa=${encodeURIComponent(tableNumberOrName)}`;
+
+    this.renderCustomOrangeQR(directUrl, (qrElement) => {
+      const canvas = document.createElement('canvas');
+      this.drawStoreQRDisplayCanvas(canvas, est, tableNumberOrName, qrElement);
+      
+      const link = document.createElement('a');
+      link.download = `QR_Mesa_${tableNumberOrName}_${est.name.replace(/\s+/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      this.showToast(`📥 Descargando QR de Mesa #${tableNumberOrName}`);
+    });
+  }
+
+  downloadAllTablesQRBatch() {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est || !Array.isArray(est.tables) || est.tables.length === 0) {
+      alert('No hay mesas registradas en este local.');
+      return;
+    }
+
+    this.showToast(`📦 Descargando lote de ${est.tables.length} códigos QR...`);
+    est.tables.forEach((table, idx) => {
+      setTimeout(() => {
+        this.downloadSingleTableQR(table.number || (idx + 1), est.id);
+      }, idx * 600);
+    });
+  }
+
+  async loadModalProducts() {
+    const est = this.getEstablishmentById(window.activeShopIdForMenu);
+    if (!est) return;
+
+    // Load category categories
+    if (typeof MenuBuilder !== 'undefined') {
+      const cats = await MenuBuilder.getCategories();
+      window.categoriesList = cats;
+
+      // Populate Category selector inside create product modal
+      const select = document.getElementById('form-category');
+      if (select) {
+        select.innerHTML = '<option value="">-- Selecciona una categoría --</option>';
+        cats.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.id;
+          opt.innerText = cat.name;
+          select.appendChild(opt);
+        });
+      }
+    }
+    
+    window.productsList = est.products || [];
+    this.renderModalCategories();
+    this.renderModalProducts();
+  }
+
+  renderModalCategories() {
+    const sidebar = document.getElementById('modal-categories-sidebar');
+    if (!sidebar) return;
+    sidebar.innerHTML = '';
+
+    const allLi = document.createElement('li');
+    allLi.className = `category-item ${window.activeCategoryId === 'all' ? 'active' : ''}`;
+    allLi.innerText = 'Todos';
+    allLi.style.fontSize = '11.5px';
+    allLi.style.padding = '8px 10px';
+    allLi.style.cursor = 'pointer';
+    allLi.style.borderRadius = '8px';
+    allLi.onclick = () => this.filterCategoryModal('all');
+    sidebar.appendChild(allLi);
+
+    window.categoriesList.forEach(cat => {
+      const li = document.createElement('li');
+      li.className = `category-item ${window.activeCategoryId === cat.id ? 'active' : ''}`;
+      li.innerText = cat.name;
+      li.style.fontSize = '11.5px';
+      li.style.padding = '8px 10px';
+      li.style.cursor = 'pointer';
+      li.style.borderRadius = '8px';
+      li.onclick = () => this.filterCategoryModal(cat.id);
+      sidebar.appendChild(li);
+    });
+  }
+
+  filterCategoryModal(catId) {
+    window.activeCategoryId = catId;
+    this.renderModalCategories();
+    this.renderModalProducts();
+  }
+
+  renderModalProducts() {
+    const grid = document.getElementById('modal-products-catalog-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    let filtered = window.productsList;
+    if (window.activeCategoryId !== 'all') {
+      filtered = window.productsList.filter(p => {
+        if (p.category_id) return p.category_id === window.activeCategoryId;
+        const cat = window.categoriesList.find(c => c.id === window.activeCategoryId);
+        if (cat && p.category) return p.category.toLowerCase().includes(cat.slug);
+        return false;
+      });
+    }
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px;">
+          No hay productos en esta categoría.
+        </div>
+      `;
+      return;
+    }
+
+    filtered.forEach(prod => {
+      const card = document.createElement('div');
+      card.className = 'admin-product-card-item';
+      card.style.background = 'rgba(255, 255, 255, 0.04)';
+      card.style.border = '1px solid rgba(255, 255, 255, 0.09)';
+      card.style.borderRadius = '16px';
+      card.style.padding = '0';
+      card.style.display = 'flex';
+      card.style.flexDirection = 'column';
+      card.style.overflow = 'hidden';
+      card.style.position = 'relative';
+      card.style.cursor = 'pointer';
+      card.style.transition = 'all 0.22s ease';
+      card.title = `Toca para modificar ficha completa o eliminar "${prod.name}"`;
+
+      card.onmouseenter = () => {
+        card.style.borderColor = 'rgba(255, 107, 0, 0.4)';
+        card.style.transform = 'translateY(-2px)';
+        card.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
+      };
+      card.onmouseleave = () => {
+        card.style.borderColor = 'rgba(255, 255, 255, 0.09)';
+        card.style.transform = 'translateY(0)';
+        card.style.boxShadow = 'none';
+      };
+
+      // Tocar en cualquier parte de la tarjeta despliega la ficha completa editable y eliminable
+      card.onclick = () => AdminApp.openProductSpecsModal(prod.id);
+
+      const isAgotado = prod.out_of_stock === true || prod.agotado === true || prod.is_paused === true || prod.available === false;
+      const imgUrl = prod.image || '/images/burger_royale.jpg';
+      const formattedPrice = this.formatPesos(prod.price || 0);
+      const modCount = prod.modifiers && Array.isArray(prod.modifiers) ? prod.modifiers.length : 0;
+
+      card.innerHTML = `
+        <div style="position: relative; width: 100%; aspect-ratio: 16/10; background: #0F172A; overflow: hidden;">
+          <img src="${imgUrl}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
+          <div style="position: absolute; top: 8px; left: 8px; z-index: 2;">
+            ${isAgotado 
+              ? `<span style="background: rgba(239, 68, 68, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🚫 Agotado</span>`
+              : `<span style="background: rgba(16, 185, 129, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🟢 En Stock</span>`
+            }
+          </div>
+          <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); color: #10B981; font-weight: 900; font-size: 13.5px; padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.3); box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+            ${formattedPrice}
+          </div>
+        </div>
+
+        <div style="padding: 12px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; gap: 8px;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;">
+              <h4 style="color: #FFFFFF; font-size: 14.5px; margin: 0; font-weight: 800; line-height: 1.25;">${prod.name}</h4>
+            </div>
+            <span style="display: inline-block; font-size: 10px; color: #CBD5E1; background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; margin-top: 4px; font-weight: 700;">
+              🏷️ ${prod.category || 'General'}
+            </span>
+            <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.35; margin: 6px 0 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+              ${prod.description || 'Sin descripción detallada.'}
+            </p>
+            ${modCount > 0 ? `<div style="font-size: 10.5px; color: #F59E0B; margin-top: 4px; font-weight: 700;">🎛️ ${modCount} grupo(s) de adicionales</div>` : ''}
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: auto;">
+            <button type="button" onclick="event.stopPropagation(); AdminApp.toggleProductStatus('${prod.id}')" style="background: ${isAgotado ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}; color: ${isAgotado ? '#34D399' : '#FCD34D'}; border: 1px solid ${isAgotado ? '#10B981' : '#F59E0B'}; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 800; cursor: pointer;" title="Cambiar disponibilidad inmediata">
+              ${isAgotado ? '▶️ Habilitar' : '⏸️ Pausar'}
+            </button>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.openProductSpecsModal('${prod.id}')" style="margin: 0; padding: 4px 10px; font-size: 11px; font-weight: 800; height: auto; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); color: #FFF;" title="Modificar ficha">
+                <span>✏️</span> Editar
+              </button>
+              <button type="button" class="btn-neumorphic" onclick="event.stopPropagation(); AdminApp.deleteProductFromModal('${prod.id}')" style="margin: 0; padding: 4px 8px; font-size: 11px; color: #EF4444; border-color: rgba(239,68,68,0.3); height: auto;" title="Eliminar producto de la carta">
+                <span>🗑️</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  async loadModalImportCatalog() {
+    const tbody = document.getElementById('modal-import-catalog-tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">Cargando catálogo maestro...</td></tr>`;
+
+    try {
+      if (typeof MenuBuilder !== 'undefined' && MenuBuilder.supabase) {
+        const { data, error } = await MenuBuilder.supabase
+          .from('products')
+          .select('*')
+          .order('name', { ascending: true });
+        
+        if (error) throw error;
+        this.globalProductsCache = data || [];
+        this.renderImportCatalogTable(this.globalProductsCache);
+      }
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #f87171;">Error al cargar el catálogo maestro: ${err.message}</td></tr>`;
+    }
+  }
+
+  renderImportCatalogTable(products) {
+    const tbody = document.getElementById('modal-import-catalog-tbody');
+    if (!tbody) return;
+
+    if (!products || products.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">No hay productos en el catálogo maestro.</td></tr>`;
+      return;
+    }
+
+    const est = this.establishments.find(e => e.id === window.activeShopIdForMenu);
+    const existingProductNames = est && est.products ? est.products.map(p => p.name.toLowerCase()) : [];
+
+    tbody.innerHTML = '';
+    products.forEach(prod => {
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+      tr.style.transition = 'background 0.2s';
+      tr.onmouseenter = () => tr.style.background = 'rgba(255,255,255,0.04)';
+      tr.onmouseleave = () => tr.style.background = 'transparent';
+
+      const imgUrl = prod.image_url || prod.image || '/images/burger_royale.jpg';
+      const isAlreadyAdded = existingProductNames.includes(prod.name.toLowerCase());
+      const rawPrice = parseFloat(prod.price) || 0;
+      const copPrice = rawPrice < 1000 ? rawPrice * 1000 : rawPrice;
+      const formattedPrice = `$${Math.round(copPrice).toLocaleString('de-DE')} COP`;
+
+      const actionBtn = isAlreadyAdded 
+        ? `<span style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block;">✓ En tu Menú</span>`
+        : `<button onclick="AdminApp.importGlobalProductFromModal('${prod.id}')" style="background: var(--accent); color: #121216; font-weight: 800; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s;">➕ Agregar a mi Menú</button>`;
+
+      tr.innerHTML = `
+        <td style="padding: 10px 14px;">
+          <img src="${imgUrl}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);" onerror="this.src='/images/burger_royale.jpg'">
+        </td>
+        <td style="padding: 10px 14px;">
+          <div style="font-weight: 700; color: #fff;">${prod.name}</div>
+          <span style="font-size: 10.5px; background: rgba(255,255,255,0.08); color: #a78bfa; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;">${prod.category || 'General'}</span>
+        </td>
+        <td style="padding: 10px 14px; color: var(--text-muted); font-size: 12px; max-width: 250px;">
+          ${prod.description || 'Sin descripción especificada.'}
+        </td>
+        <td style="padding: 10px 14px; font-weight: 800; color: #10B981;">
+          ${formattedPrice}
+        </td>
+        <td style="padding: 10px 14px; text-align: center;">
+          ${actionBtn}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  filterImportCatalogTable() {
+    const searchInput = document.getElementById('modal-import-search');
+    if (!searchInput || !this.globalProductsCache) return;
+    const query = searchInput.value.toLowerCase().trim();
+
+    const filtered = this.globalProductsCache.filter(p => 
+      p.name.toLowerCase().includes(query) || 
+      (p.category && p.category.toLowerCase().includes(query)) ||
+      (p.description && p.description.toLowerCase().includes(query))
+    );
+
+    this.renderImportCatalogTable(filtered);
+  }
+
+  async importGlobalProductFromModal(prodId) {
+    if (!prodId) return;
+
+    const selected = this.globalProductsCache.find(p => p.id === prodId);
+    if (!selected) return;
+
+    const est = this.establishments.find(e => e.id === window.activeShopIdForMenu);
+    if (!est) return;
+
+    if (!est.products) est.products = [];
+
+    // Duplicate check
+    if (est.products.some(p => p.name.toLowerCase() === selected.name.toLowerCase())) {
+      alert(`⚠️ El producto "${selected.name}" ya está en el menú.`);
+      return;
+    }
+
+    const rawPrice = parseFloat(selected.price) || 0;
+    const copPrice = rawPrice < 1000 ? rawPrice * 1000 : rawPrice;
+
+    const newLocalProduct = {
+      id: `p-${Date.now()}-${Math.floor(Math.random() * 100)}`,
+      name: selected.name,
+      price: copPrice,
+      description: selected.description || '',
+      image: selected.image_url || selected.image || ''
+    };
+
+    est.products.push(newLocalProduct);
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (res.ok) {
+        this.showToast(`📥 ¡${selected.name} importado con éxito!`);
+        this.loadModalProducts();
+        this.renderImportCatalogTable(this.globalProductsCache);
+        this.markPendingChanges();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async deleteGlobalProductFromModal() {
+    const select = document.getElementById('modal-import-product-select');
+    const prodId = select.value;
+    if (!prodId) {
+      alert('⚠️ Por favor, selecciona un producto del catálogo para eliminar.');
+      return;
+    }
+
+    const selected = this.globalProductsCache.find(p => p.id === prodId);
+    if (!selected) return;
+
+    if (!confirm(`⚠️ ATENCIÓN: Estás a punto de eliminar permanentemente "${selected.name}" del catálogo GLOBAL de Supabase.\n\nEsto no lo borrará de las tiendas que ya lo importaron, pero nadie más podrá importarlo.\n\n¿Estás seguro?`)) {
+      return;
+    }
+
+    if (typeof MenuBuilder !== 'undefined' && MenuBuilder.supabase) {
+      try {
+        const { error } = await MenuBuilder.supabase
+          .from('products')
+          .delete()
+          .eq('id', prodId);
+        
+        if (error) throw error;
+        
+        this.showToast(`🗑️ "${selected.name}" eliminado del catálogo global.`);
+        await this.loadModalImportCatalog();
+      } catch (err) {
+        console.error(err);
+        alert('Error al eliminar el producto global: ' + err.message);
+      }
+    }
+  }
+
+  async deleteProductFromModal(prodId) {
+    if (!prodId) return;
+
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    if (!shopId) {
+      alert('⚠️ No se ha seleccionado un establecimiento activo.');
+      return;
+    }
+
+    const est = this.establishments.find(e => String(e.id) === String(shopId));
+    if (!est) return;
+
+    const prod = (est.products || []).find(p => String(p.id) === String(prodId));
+    const prodName = prod ? prod.name : 'este producto';
+
+    if (!confirm(`¿Seguro que deseas eliminar "${prodName}" del menú de ${est.name}?`)) return;
+
+    est.products = (est.products || []).filter(p => String(p.id) !== String(prodId));
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (res.ok) {
+        this.showToast(`🗑️ "${prodName}" eliminado del menú.`);
+        this.loadModalProducts();
+        if (typeof this.renderImportCatalogTable === 'function') {
+          this.renderImportCatalogTable(this.globalProductsCache || []);
+        }
+        this.markPendingChanges();
+      } else {
+        alert('Error al guardar la eliminación del producto.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión al eliminar el producto.');
+    }
+  }
+
+  async importNewProductToActiveShop(newProduct) {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    if (!shopId) return;
+
+    const est = this.establishments.find(e => String(e.id) === String(shopId));
+    if (!est) return;
+
+    if (!est.products) est.products = [];
+
+    const rawPrice = parseFloat(newProduct.price) || 0;
+
+    const newLocalProduct = {
+      id: `p-${Date.now()}-${Math.floor(Math.random() * 100)}`,
+      name: newProduct.name,
+      price: rawPrice,
+      description: newProduct.description || '',
+      image: newProduct.image_url || newProduct.image || '',
+      category: newProduct.category || newProduct.category_id || '',
+      category_id: newProduct.category_id || '',
+      modifiers: newProduct.modifiers,
+      available_days: newProduct.available_days || ['todos'],
+      exclusions: newProduct.exclusions ? newProduct.exclusions.map(name => typeof name === 'string' ? { name } : name) : undefined
+    };
+
+    est.products.push(newLocalProduct);
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+      if (res.ok) {
+        this.loadModalProducts();
+        if (typeof this.loadModalImportCatalog === 'function') {
+          this.loadModalImportCatalog();
+        }
+        if (typeof this.renderDailySpecialsTab === 'function') {
+          this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+        }
+        this.markPendingChanges();
+      }
+    } catch (err) {
+      console.error('Error importing newly created product:', err);
+    }
+  }
+
+  async deleteEstablishment(id, name) {
+    const code = prompt(`⚠️ ATENCIÓN: Estás a punto de eliminar permanentemente el comercio "${name}".\n\nPor favor, ingresa el código maestro de seguridad 0424 para confirmar:`);
+    if (code === null) return;
+
+    if (code !== '0424') {
+      alert('❌ Código maestro incorrecto. Operación cancelada.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/establishments/${id}?code=0424`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        alert(`🗑️ El establecimiento "${name}" ha sido eliminado del sistema con éxito.`);
+        await this.reloadData();
+        this.markPendingChanges();
+      } else {
+        const data = await response.json();
+        alert('Error al eliminar establecimiento: ' + (data.error || 'Problema desconocido'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de red al eliminar el establecimiento.');
+    }
+  }
+
+  async resetBillingHistory() {
+    if (!this.activeShopId) return;
+    const est = this.establishments.find(e => e.id === this.activeShopId);
+    if (!est) return;
+
+    const code = prompt(`⚠️ ATENCIÓN: Estás a punto de resetear e iniciar desde $0 toda la facturación e historial de pedidos del establecimiento "${est.name}".\n\nPor favor, ingresa el código de confirmación 0424 para proceder:`);
+    if (code === null) return;
+
+    if (code !== '0424') {
+      alert('❌ Código maestro incorrecto. Operación cancelada.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/establishments/${this.activeShopId}/orders/reset?code=0424`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        alert(`🔄 ¡Historial de facturación de "${est.name}" reseteado a $0 con éxito!`);
+        this.closeEstActionModal();
+        await this.reloadData();
+        this.markPendingChanges();
+      } else {
+        const data = await response.json();
+        alert('Error al resetear la facturación: ' + (data.error || 'Problema de red.'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de red al intentar resetear la facturación.');
+    }
+  }
+
+  async reloadData() {
+    try {
+      try {
+        localStorage.removeItem('pedigochos_disabled_stores');
+      } catch(e) {}
+
+      const res = await fetch('/api/owner/establishments');
+      this.establishments = this.enforceVerifiedGps(await res.json());
+      if (Array.isArray(this.establishments)) {
+        this.establishments.forEach(est => {
+          est.disabled = Boolean(est.disabled);
+        });
+      }
+      await this.loadOrders();
+      this.renderTable();
+    } catch (err) {
+      console.error('Error reloading admin dashboard data:', err);
+    }
+  }
+
+  formatPesos(val) {
+    if (isNaN(val)) return '$0';
+    return '$' + Math.round(val).toLocaleString('de-DE');
+  }
+
+  // Form helpers
+  handleCategoryChange(category) {
+    this.populateLogoSelect(category);
+  }
+
+  populateLogoSelect(category) {
+    const select = document.getElementById('reg-logo-select');
+    select.innerHTML = '';
+    const emojis = CATEGORY_EMOJIS[category] || ['🏪'];
+    emojis.forEach(emoji => {
+      const opt = document.createElement('option');
+      opt.value = emoji;
+      opt.innerText = `${emoji} Icono`;
+      select.appendChild(opt);
+    });
+  }
+
+  generateRandomLinkKey() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let key = '';
+    for (let i = 0; i < 6; i++) {
+      key += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('reg-link-key').value = key;
+  }
+
+  toggleBannerType(type) {
+    const gradGroup = document.getElementById('banner-gradient-group');
+    const imgGroup = document.getElementById('banner-image-group');
+
+    if (type === 'gradient') {
+      gradGroup.classList.remove('hidden');
+      imgGroup.classList.add('hidden');
+    } else {
+      gradGroup.classList.add('hidden');
+      imgGroup.classList.remove('hidden');
+    }
+  }
+
+  addNewProductRow() {
+    const container = document.getElementById('dynamic-products-container');
+    const index = container.children.length;
+
+    const row = document.createElement('div');
+    row.className = 'reg-product-row';
+    row.dataset.index = index;
+
+    row.innerHTML = `
+      <button type="button" class="btn-remove-row" onclick="AdminApp.removeProductRow(${index})" style="position: absolute; top: 8px; right: 8px; color: red;">✕</button>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre del Producto <span class="required">*</span></label>
+          <input type="text" class="prod-name" required placeholder="Ej. Coca Cola 1L">
+        </div>
+        <div class="form-group">
+          <label>Precio ($ USD) <span class="required">*</span></label>
+          <input type="number" class="prod-price" required step="0.01" min="0" placeholder="Ej. 2.50">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Descripción del Producto (Ingredientes base y detalles) <span class="required">*</span></label>
+        <input type="text" class="prod-desc" required placeholder="Ej. Doble carne premium, queso cheddar, lechuga, tomate en pan brioche.">
+      </div>
+    `;
+    container.appendChild(row);
+  }
+
+  removeProductRow(index) {
+    const container = document.getElementById('dynamic-products-container');
+    const rows = Array.from(container.children);
+    const target = rows.find(r => parseInt(r.dataset.index, 10) === index);
+    if (target) {
+      container.removeChild(target);
+    }
+  }
+
+  async handleRegisterSubmit(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('btn-submit-registration');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerText = '⏳ Registrando...';
+    }
+
+    const name = document.getElementById('reg-name').value.trim();
+    const category = document.getElementById('reg-category').value;
+    const location = document.getElementById('reg-location').value;
+    const description = document.getElementById('reg-description').value.trim();
+    const logo = document.getElementById('reg-logo-select').value;
+    let bannerType = document.getElementById('reg-banner-type').value;
+    const linkKey = document.getElementById('reg-link-key').value.trim().toUpperCase();
+
+    const logoFile = document.getElementById('reg-logo-file').files[0];
+    const bannerFile = document.getElementById('reg-banner-file').files[0];
+
+    let logoImage = null;
+    let banner = '';
+    
+    if (bannerType === 'gradient') {
+      banner = document.querySelector('input[name="reg-gradient"]:checked').value;
+    } else {
+      banner = document.getElementById('reg-banner-image').value.trim() || 'linear-gradient(135deg, #1D2671, #C33764)';
+    }
+
+    try {
+      // 1. Upload custom logo file if selected
+      if (logoFile) {
+        if (submitBtn) submitBtn.innerText = '📤 Subiendo Logo...';
+        logoImage = await MenuBuilder.uploadProductImage(logoFile);
+      }
+
+      // 2. Upload cover banner file if selected
+      if (bannerFile) {
+        if (submitBtn) submitBtn.innerText = '📤 Subiendo Portada...';
+        banner = await MenuBuilder.uploadProductImage(bannerFile);
+        bannerType = 'image';
+      }
+
+      // Parse products (optional)
+      const productRows = document.querySelectorAll('.reg-product-row');
+      const products = [];
+      productRows.forEach((row, i) => {
+        const nameInput = row.querySelector('.prod-name');
+        const priceInput = row.querySelector('.prod-price');
+        const descInput = row.querySelector('.prod-desc');
+
+        const prodName = nameInput ? nameInput.value.trim() : '';
+        const prodPrice = priceInput ? parseFloat(priceInput.value) : 0;
+        const prodDesc = descInput ? descInput.value.trim() : '';
+        
+        if (prodName) {
+          products.push({
+            id: `p-${Date.now()}-${i}`,
+            name: prodName,
+            price: isNaN(prodPrice) ? 0 : prodPrice,
+            description: prodDesc,
+            image: DEFAULT_IMAGES[category]
+          });
+        }
+      });
+
+      const payload = {
+        name,
+        category,
+        location,
+        description,
+        logo,
+        bannerType,
+        banner,
+        linkKey,
+        products,
+        logoImage
+      };
+
+      const response = await fetch('/api/establishments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        this.showToast('✅ Establecimiento registrado con éxito.');
+        
+        // Reset form
+        document.getElementById('reg-est-form').reset();
+        document.getElementById('dynamic-products-container').innerHTML = '';
+        document.getElementById('reg-logo-file').value = '';
+        document.getElementById('reg-banner-file').value = '';
+        this.generateRandomLinkKey();
+        this.toggleNewEstablishmentForm(false);
+
+        // Reload data from api
+        await this.reloadData();
+        this.markPendingChanges();
+      } else {
+        const errorText = await response.text();
+        alert('Error al registrar establecimiento: ' + errorText);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión al servidor.');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = '💼 Crear Establecimiento y Registrar';
+      }
+    }
+  }
+
+  openProductSpecsModal(productId) {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est) return;
+
+    const prod = est.products.find(p => p.id === productId);
+    if (!prod) return;
+
+    this.activeSpecsProductId = productId;
+    
+    // Set title
+    const titleEl = document.getElementById('specs-modal-title');
+    if (titleEl) titleEl.innerText = `⚙️ Especificaciones: ${prod.name}`;
+    const idEl = document.getElementById('specs-product-id');
+    if (idEl) idEl.value = productId;
+
+    // Load general product details
+    const nameEl = document.getElementById('specs-product-name');
+    if (nameEl) nameEl.value = prod.name || '';
+    const catEl = document.getElementById('specs-product-category');
+    if (catEl) catEl.value = prod.category || '';
+    const priceEl = document.getElementById('specs-product-price');
+    if (priceEl) priceEl.value = prod.price !== undefined ? prod.price : '';
+    const descEl = document.getElementById('specs-product-description');
+    if (descEl) descEl.value = prod.description || '';
+
+    // Load exclusions / ingredients
+    this.specsIngredients = prod.exclusions ? prod.exclusions.map(e => ({
+      name: typeof e === 'object' && e.name ? e.name : String(e),
+      price: typeof e === 'object' && e.price !== undefined ? e.price : 500
+    })) : [];
+    this.renderSpecsIngredients();
+
+    // Load modifier groups
+    this.specsGroups = prod.modifiers ? JSON.parse(JSON.stringify(prod.modifiers)) : [];
+    this.renderSpecsGroups();
+
+    // Set product image preview & reset file upload input
+    const previewImg = document.getElementById('specs-product-image-preview');
+    if (previewImg) previewImg.src = prod.image || '/images/burger_royale.jpg';
+    const fileInput = document.getElementById('specs-product-image-file');
+    if (fileInput) fileInput.value = '';
+
+    // Set available days pills
+    if (typeof window.setSelectedDaysToContainer === 'function') {
+      window.setSelectedDaysToContainer('specs-available-days-pills', prod.available_days || ['todos']);
+    }
+
+    // Set stock status buttons
+    const isAvail = prod.available !== false && prod.is_paused !== true && prod.agotado !== true;
+    this.setSpecsModalStockStatus(isAvail);
+
+    // Open dedicated standalone modal without touching current tab
+    const modal = document.getElementById('product-specs-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  setSpecsModalStockStatus(isAvailable) {
+    const input = document.getElementById('specs-product-available');
+    if (input) input.value = isAvailable ? 'true' : 'false';
+
+    const activeBtn = document.getElementById('specs-status-active-btn');
+    const pausedBtn = document.getElementById('specs-status-paused-btn');
+    if (activeBtn && pausedBtn) {
+      if (isAvailable) {
+        activeBtn.style.background = 'rgba(16,185,129,0.25)';
+        activeBtn.style.borderColor = '#10B981';
+        activeBtn.style.color = '#34D399';
+        pausedBtn.style.background = 'rgba(255,255,255,0.05)';
+        pausedBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+        pausedBtn.style.color = '#94A3B8';
+      } else {
+        activeBtn.style.background = 'rgba(255,255,255,0.05)';
+        activeBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+        activeBtn.style.color = '#94A3B8';
+        pausedBtn.style.background = 'rgba(239,68,68,0.25)';
+        pausedBtn.style.borderColor = '#EF4444';
+        pausedBtn.style.color = '#FCA5A5';
+      }
+    }
+  }
+
+  deleteProductFromSpecsModal() {
+    const idEl = document.getElementById('specs-product-id');
+    const prodId = idEl ? idEl.value : this.activeSpecsProductId;
+    if (prodId) {
+      this.deleteProductFromModal(prodId);
+    }
+  }
+
+  closeProductSpecsModal() {
+    const modal = document.getElementById('product-specs-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  }
+
+  renderSpecsIngredients() {
+    const container = document.getElementById('specs-ingredients-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (this.specsIngredients.length === 0) {
+      container.innerHTML = `<span style="font-size: 11.5px; color: var(--text-muted);">Sin ingredientes listados</span>`;
+      return;
+    }
+
+    this.specsIngredients.forEach((ingObj, idx) => {
+      const ingName = typeof ingObj === 'string' ? ingObj : (ingObj.name || '');
+      const ingPrice = typeof ingObj === 'string' ? 500 : (ingObj.price !== undefined ? ingObj.price : 500);
+
+      const tag = document.createElement('div');
+      tag.style.display = 'flex';
+      tag.style.alignItems = 'center';
+      tag.style.gap = '8px';
+      tag.style.background = 'rgba(255, 94, 58, 0.1)';
+      tag.style.border = '1px solid rgba(255, 94, 58, 0.25)';
+      tag.style.color = 'var(--accent)';
+      tag.style.padding = '6px 12px';
+      tag.style.borderRadius = '8px';
+      tag.style.fontSize = '12px';
+      tag.style.fontWeight = '700';
+
+      tag.innerHTML = `
+        <span>${ingName}</span>
+        <input type="number" value="${ingPrice}" onchange="AdminApp.updateIngredientPrice(${idx}, this.value)" style="width: 70px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 4px; padding: 2px 4px; font-size: 11px; font-weight: bold; text-align: center;" placeholder="Precio">
+        <span onclick="AdminApp.removeIngredientOption(${idx})" style="cursor: pointer; color: #ef4444; font-weight: 900; margin-left: 4px;">✕</span>
+      `;
+      container.appendChild(tag);
+    });
+  }
+
+  addIngredientOption() {
+    const input = document.getElementById('new-ingredient-input');
+    const val = input.value.trim();
+    if (!val) return;
+
+    const duplicate = this.specsIngredients.some(i => {
+      const name = typeof i === 'string' ? i : i.name;
+      return name.toLowerCase() === val.toLowerCase();
+    });
+
+    if (duplicate) {
+      alert('Este ingrediente ya está listado.');
+      return;
+    }
+
+    this.specsIngredients.push({
+      name: val,
+      price: 500
+    });
+    input.value = '';
+    this.renderSpecsIngredients();
+  }
+
+  updateIngredientPrice(idx, val) {
+    const num = parseFloat(val);
+    if (isNaN(num)) return;
+    if (typeof this.specsIngredients[idx] === 'string') {
+      this.specsIngredients[idx] = {
+        name: this.specsIngredients[idx],
+        price: num
+      };
+    } else {
+      this.specsIngredients[idx].price = num;
+    }
+  }
+
+  removeIngredientOption(idx) {
+    this.specsIngredients.splice(idx, 1);
+    this.renderSpecsIngredients();
+  }
+
+  renderSpecsGroups() {
+    const container = document.getElementById('specs-groups-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (this.specsGroups.length === 0) {
+      container.innerHTML = `<p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 10px 0;">No hay grupos de adicionales configurados.</p>`;
+      return;
+    }
+
+    this.specsGroups.forEach((group, gIdx) => {
+      const gDiv = document.createElement('div');
+      gDiv.style.background = 'rgba(255,255,255,0.02)';
+      gDiv.style.border = '1px solid rgba(255,255,255,0.05)';
+      gDiv.style.borderRadius = '12px';
+      gDiv.style.padding = '12px';
+      gDiv.style.display = 'flex';
+      gDiv.style.flexDirection = 'column';
+      gDiv.style.gap = '10px';
+      gDiv.style.marginBottom = '12px';
+
+      gDiv.innerHTML = `
+        <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+          <input type="text" value="${group.group_name}" onchange="AdminApp.updateGroupName('${group.group_id}', this.value)" placeholder="Nombre del grupo (ej. Salsas)" style="flex: 1; padding: 6px 10px; font-size: 12.5px; background: rgba(18,18,22,0.6); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px;">
+          
+          <select onchange="AdminApp.updateGroupType('${group.group_id}', this.value)" style="background: rgba(18,18,22,0.6); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 6px; border-radius: 8px; font-size: 11.5px;">
+            <option value="single" ${group.selection_type === 'single' ? 'selected' : ''}>Selección Única</option>
+            <option value="multiple" ${group.selection_type === 'multiple' ? 'selected' : ''}>Selección Múltiple</option>
+          </select>
+
+          <label style="display: flex; align-items: center; gap: 4px; font-size: 11.5px; cursor: pointer; color: var(--text-muted); margin: 0;">
+            <input type="checkbox" ${group.is_required ? 'checked' : ''} onchange="AdminApp.updateGroupRequired('${group.group_id}', this.checked)"> Oblig.
+          </label>
+
+          <button type="button" onclick="AdminApp.deleteModifierGroup('${group.group_id}')" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer; padding: 0; width: auto; height: auto;">🗑️</button>
+        </div>
+
+        <div style="border-top: 1px dashed rgba(255,255,255,0.04); padding-top: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 700;">Opciones de Selección</span>
+            <button type="button" class="btn-neumorphic" onclick="AdminApp.addOptionToGroup('${group.group_id}')" style="margin: 0; padding: 4px 8px; font-size: 10px; height: 24px;">➕ Opción</button>
+          </div>
+          <div id="options-list-${group.group_id}" style="display: flex; flex-direction: column; gap: 6px;">
+            <!-- Rendered dynamically below -->
+          </div>
+        </div>
+      `;
+
+      const optList = gDiv.querySelector(`#options-list-${group.group_id}`);
+      group.options.forEach((opt, oIdx) => {
+        const oDiv = document.createElement('div');
+        oDiv.style.display = 'flex';
+        oDiv.style.gap = '8px';
+        oDiv.style.alignItems = 'center';
+
+        oDiv.innerHTML = `
+          <input type="text" value="${opt.name}" onchange="AdminApp.updateOptionName('${group.group_id}', '${opt.option_id}', this.value)" placeholder="Opción" style="flex: 1; padding: 4px 8px; font-size: 11.5px; background: rgba(18,18,22,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 6px;">
+          <input type="number" value="${opt.price}" onchange="AdminApp.updateOptionPrice('${group.group_id}', '${opt.option_id}', this.value)" placeholder="Precio ($)" style="width: 80px; padding: 4px 8px; font-size: 11.5px; background: rgba(18,18,22,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 6px;">
+          <button type="button" onclick="AdminApp.deleteOptionFromGroup('${group.group_id}', '${opt.option_id}')" style="background: none; border: none; color: #ef4444; font-size: 11px; cursor: pointer; padding: 0; width: auto; height: auto;">✕</button>
+        `;
+        optList.appendChild(oDiv);
+      });
+
+      container.appendChild(gDiv);
+    });
+  }
+
+  addModifierGroup() {
+    this.specsGroups.push({
+      group_id: 'g-' + Date.now() + '-' + Math.floor(Math.random() * 100),
+      group_name: 'Adicionales',
+      selection_type: 'single',
+      is_required: false,
+      options: []
+    });
+    this.renderSpecsGroups();
+  }
+
+  deleteModifierGroup(groupId) {
+    this.specsGroups = this.specsGroups.filter(g => g.group_id !== groupId);
+    this.renderSpecsGroups();
+  }
+
+  updateGroupName(groupId, val) {
+    const group = this.specsGroups.find(g => g.group_id === groupId);
+    if (group) group.group_name = val.trim();
+  }
+
+  updateGroupType(groupId, val) {
+    const group = this.specsGroups.find(g => g.group_id === groupId);
+    if (group) group.selection_type = val;
+  }
+
+  updateGroupRequired(groupId, val) {
+    const group = this.specsGroups.find(g => g.group_id === groupId);
+    if (group) group.is_required = val;
+  }
+
+  addOptionToGroup(groupId) {
+    const group = this.specsGroups.find(g => g.group_id === groupId);
+    if (group) {
+      group.options.push({
+        option_id: 'opt-' + Date.now() + '-' + Math.floor(Math.random() * 100),
+        name: 'Nuevo adicional',
+        price: 0
+      });
+      this.renderSpecsGroups();
+    }
+  }
+
+  deleteOptionFromGroup(groupId, optionId) {
+    const group = this.specsGroups.find(g => g.group_id === groupId);
+    if (group) {
+      group.options = group.options.filter(o => o.option_id !== optionId);
+      this.renderSpecsGroups();
+    }
+  }
+
+  updateOptionName(groupId, optionId, val) {
+    const group = this.specsGroups.find(g => g.group_id === groupId);
+    if (group) {
+      const opt = group.options.find(o => o.option_id === optionId);
+      if (opt) opt.name = val.trim();
+    }
+  }
+
+  updateOptionPrice(groupId, optionId, val) {
+    const group = this.specsGroups.find(g => g.group_id === groupId);
+    if (group) {
+      const opt = group.options.find(o => o.option_id === optionId);
+      if (opt) opt.price = parseFloat(val) || 0;
+    }
+  }
+
+  async handleSpecsSubmit(e) {
+    e.preventDefault();
+    if (!this.activeSpecsProductId) return;
+
+    const est = this.establishments.find(e => e.id === window.activeShopIdForMenu);
+    if (!est) return;
+
+    const prod = est.products.find(p => p.id === this.activeSpecsProductId);
+    if (!prod) return;
+
+    // 1. Update general details
+    prod.name = document.getElementById('specs-product-name').value.trim();
+    prod.category = document.getElementById('specs-product-category').value.trim();
+    prod.price = parseFloat(document.getElementById('specs-product-price').value) || 0;
+    prod.description = document.getElementById('specs-product-description').value.trim();
+    prod.available_days = typeof window.getSelectedDaysFromContainer === 'function' ? window.getSelectedDaysFromContainer('specs-available-days-pills') : ['todos'];
+
+    const isAvail = document.getElementById('specs-product-available')?.value !== 'false';
+    prod.available = isAvail;
+    prod.is_paused = !isAvail;
+    prod.agotado = !isAvail;
+    prod.out_of_stock = !isAvail;
+
+    // 2. Prepare exclusions
+    prod.exclusions = this.specsIngredients.map((item, i) => {
+      const ingName = typeof item === 'string' ? item : item.name;
+      const ingPrice = typeof item === 'string' ? 500 : (item.price !== undefined ? item.price : 500);
+      return {
+        id: `ex-${i}`,
+        name: ingName,
+        price: ingPrice
+      };
+    });
+
+    // 3. Save modifiers groups
+    prod.modifiers = this.specsGroups;
+
+    // 4. Create pricing map for exclusions and modifiers
+    const priceMap = {};
+    prod.exclusions.forEach(item => {
+      const key = item.name.trim().toLowerCase();
+      if (key) priceMap[key] = item.price;
+    });
+    prod.modifiers.forEach(group => {
+      if (group.options) {
+        group.options.forEach(opt => {
+          const key = opt.name.trim().toLowerCase();
+          if (key) priceMap[key] = opt.price;
+        });
+      }
+    });
+
+    // 5. Propagate pricing changes to all other products in the establishment
+    est.products.forEach(p => {
+      // Exclusions
+      if (p.exclusions) {
+        p.exclusions = p.exclusions.map(ex => {
+          let exName = typeof ex === 'string' ? ex : (ex.name || '');
+          let exPrice = typeof ex === 'string' ? 500 : (ex.price !== undefined ? ex.price : 500);
+          const key = exName.trim().toLowerCase();
+          if (priceMap[key] !== undefined) {
+            exPrice = priceMap[key];
+          }
+          return { id: ex.id || `ex-${Math.random()}`, name: exName, price: exPrice };
+        });
+      }
+      // Modifiers
+      if (p.modifiers) {
+        p.modifiers.forEach(group => {
+          if (group.options) {
+            group.options.forEach(opt => {
+              const key = opt.name.trim().toLowerCase();
+              if (priceMap[key] !== undefined) {
+                opt.price = priceMap[key];
+                opt.extra_price = priceMap[key];
+              }
+            });
+          }
+        });
+      }
+    });
+
+    const fileInput = document.getElementById('specs-product-image-file');
+    const imageFile = fileInput ? fileInput.files[0] : null;
+
+    try {
+      if (imageFile && typeof MenuBuilder !== 'undefined') {
+        this.showToast('Uploading image...');
+        const newImgUrl = await MenuBuilder.uploadProductImage(imageFile);
+        prod.image = newImgUrl;
+      }
+
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (res.ok) {
+        this.showToast('✅ Especificaciones guardadas correctamente.');
+        this.closeProductSpecsModal();
+        if (typeof this.loadModalProducts === 'function') {
+          this.loadModalProducts();
+        }
+        if (typeof this.renderDailySpecialsTab === 'function') {
+          this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+        }
+        if (typeof this.renderModalProducts === 'function') {
+          this.renderModalProducts();
+        }
+        this.markPendingChanges();
+      } else {
+        alert('Error al guardar especificaciones.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión.');
+    }
+  }
+
+  markPendingChanges() {
+    this.hasPendingChanges = true;
+    this.updateSaveButtonState();
+  }
+
+  updateSaveButtonState() {
+    const btnSave = document.getElementById('btn-cloud-save');
+    if (!btnSave) return;
+    if (this.hasPendingChanges) {
+      btnSave.style.backgroundColor = '#10B981';
+      btnSave.style.color = '#FFFFFF';
+      btnSave.style.borderColor = '#10B981';
+      btnSave.style.boxShadow = '0 0 14px rgba(16, 185, 129, 0.7)';
+      btnSave.innerHTML = '🟢 💾 Guardar Cambios Pendientes';
+    } else {
+      btnSave.style.backgroundColor = '#374151';
+      btnSave.style.color = '#9CA3AF';
+      btnSave.style.borderColor = '#4B5563';
+      btnSave.style.boxShadow = 'none';
+      btnSave.innerHTML = '💾 Guardar Cambios';
+    }
+  }
+
+  async loadLatestVersionFromCloud() {
+    try {
+      this.showToast('📥 Cargando la última versión desde la nube...');
+      const res = await fetch('/api/owner/establishments');
+      if (res.ok) {
+        this.establishments = this.enforceVerifiedGps(await res.json());
+        this.hasPendingChanges = false;
+        this.updateSaveButtonState();
+        await this.loadOrders();
+        this.renderTable();
+        try {
+          if (this.globalMap) {
+            this.initAdminGlobalStoresMap(this.currentGlobalMapFilter || 'all');
+          }
+        } catch(mErr) {
+          console.warn('Map refresh warning on cloud reload:', mErr);
+        }
+        this.showToast('✅ Última versión cargada exitosamente.');
+      } else {
+        alert('Error al cargar la última versión desde el servidor.');
+      }
+    } catch (err) {
+      console.error('Error loading latest version:', err);
+      alert('Error al sincronizar la última versión: ' + (err.message || err));
+    }
+  }
+
+  async saveChangesToCloud() {
+    try {
+      const btnSave = document.getElementById('btn-cloud-save');
+      if (btnSave) btnSave.innerText = '⏳ Guardando en Nube...';
+      await this.triggerCloudBackup();
+      this.hasPendingChanges = false;
+      this.updateSaveButtonState();
+      this.showToast('✅ Cambios guardados en la nube con éxito.');
+    } catch (err) {
+      console.error('Error saving changes to cloud:', err);
+      this.showToast('⚠️ Error al guardar los cambios en la nube.');
+      this.updateSaveButtonState();
+    }
+  }
+
+  async triggerCloudBackup() {
+    try {
+      console.log('☁️ Triggering manual cloud save via server...');
+      const res = await fetch('/api/cloud/save', { method: 'POST' });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Cloud save failed:', errData.error || res.status);
+        this.showToast('❌ Error al guardar el respaldo en la nube.');
+      } else {
+        console.log('🎉 Cloud save completed successfully!');
+      }
+    } catch (err) {
+      console.error('Error during cloud backup:', err);
+      throw err;
+    }
+  }
+
+  async loadCentralSedeSettings() {
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const settings = await res.json();
+        const nameInp = document.getElementById('admin-central-sede-name');
+        const latInp = document.getElementById('admin-central-sede-lat');
+        const lngInp = document.getElementById('admin-central-sede-lng');
+        if (nameInp) nameInp.value = settings.central_delivery_name || '';
+        if (latInp) latInp.value = (settings.central_delivery_lat !== null && settings.central_delivery_lat !== undefined) ? settings.central_delivery_lat : '';
+        if (lngInp) lngInp.value = (settings.central_delivery_lng !== null && settings.central_delivery_lng !== undefined) ? settings.central_delivery_lng : '';
+      }
+    } catch (err) {
+      console.warn('Could not load central sede settings:', err);
+    }
+  }
+
+  toggleSedeCardCollapse() {
+    const body = document.getElementById('admin-sede-card-body');
+    const chevron = document.getElementById('sede-card-chevron');
+    if (!body) return;
+
+    if (body.style.display === 'none') {
+      body.style.display = 'block';
+      if (chevron) chevron.style.transform = 'rotate(0deg)';
+    } else {
+      body.style.display = 'none';
+      if (chevron) chevron.style.transform = 'rotate(-90deg)';
+    }
+  }
+
+  toggleSedeMap() {
+    const container = document.getElementById('admin-sede-map-container');
+    if (!container) return;
+
+    if (container.classList.contains('hidden')) {
+      container.classList.remove('hidden');
+      setTimeout(() => {
+        this.initSedeMap();
+      }, 150);
+    } else {
+      container.classList.add('hidden');
+    }
+  }
+
+  initSedeMap() {
+    if (typeof L === 'undefined') return;
+
+    const latVal = parseFloat(document.getElementById('admin-central-sede-lat').value) || 7.8131;
+    const lngVal = parseFloat(document.getElementById('admin-central-sede-lng').value) || -72.4439;
+    const center = [latVal, lngVal];
+
+    if (this.sedeMap) {
+      this.sedeMap.setView(center, 15);
+      this.sedeMap.invalidateSize();
+      if (this.sedeMarker) this.sedeMarker.setLatLng(center);
+      return;
+    }
+
+    this.sedeMap = L.map('admin-sede-leaflet-map').setView(center, 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(this.sedeMap);
+
+    const greenSedeIcon = L.divIcon({
+      className: 'custom-sede-marker',
+      html: `<div style="background-color: #8B5CF6; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4); border: 2px solid white;">🏛️</div>`,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17]
+    });
+
+    this.sedeMarker = L.marker(center, { icon: greenSedeIcon, draggable: true }).addTo(this.sedeMap);
+
+    this.sedeMarker.on('dragend', () => {
+      const pos = this.sedeMarker.getLatLng();
+      document.getElementById('admin-central-sede-lat').value = pos.lat.toFixed(6);
+      document.getElementById('admin-central-sede-lng').value = pos.lng.toFixed(6);
+    });
+
+    this.sedeMap.on('click', (e) => {
+      this.sedeMarker.setLatLng(e.latlng);
+      document.getElementById('admin-central-sede-lat').value = e.latlng.lat.toFixed(6);
+      document.getElementById('admin-central-sede-lng').value = e.latlng.lng.toFixed(6);
+    });
+  }
+
+  checkStoreGPSStatus(est) {
+    const banner = document.getElementById('store-gps-warning-banner');
+    if (!banner) return;
+    if (!est || !est.latitude || !est.longitude || isNaN(parseFloat(est.latitude)) || isNaN(parseFloat(est.longitude))) {
+      banner.classList.remove('hidden');
+    } else {
+      banner.classList.add('hidden');
+    }
+  }
+
+  captureCurrentStoreGPS() {
+    if (!this.activeShopId) {
+      alert('Por favor selecciona un restaurante primero.');
+      return;
+    }
+    const est = this.establishments.find(e => e.id === this.activeShopId);
+    if (!est) return;
+
+    const btn = document.getElementById('btn-capture-store-gps');
+    if (btn) { btn.disabled = true; btn.innerText = '📡 Obteniendo GPS...'; }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          est.latitude = lat;
+          est.longitude = lng;
+          est.location_lat = lat;
+          est.location_lng = lng;
+
+          try {
+            localStorage.setItem('store_gps_' + est.id, JSON.stringify({ latitude: lat, longitude: lng }));
+          } catch(e) {}
+
+          try {
+            await fetch(`/api/establishments/${est.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                latitude: lat,
+                longitude: lng,
+                location_lat: lat,
+                location_lng: lng
+              })
+            });
+            this.showToast(`✅ Ubicación GPS de ${est.name} registrada (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+
+            // Hide warning notification banner automatically
+            const banner = document.getElementById('store-gps-warning-banner');
+            if (banner) banner.classList.add('hidden');
+          } catch(err) {
+            console.error(err);
+            alert('Error guardando la ubicación GPS en el servidor.');
+          } finally {
+            if (btn) { btn.disabled = false; btn.innerText = '📡 Capturar GPS / Registrar Ubicación del Local'; }
+          }
+        },
+        (err) => {
+          console.error(err);
+          alert('No se pudo acceder al GPS. Asegúrate de permitir el acceso a la ubicación en tu navegador.');
+          if (btn) { btn.disabled = false; btn.innerText = '📡 Capturar GPS / Registrar Ubicación del Local'; }
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } else {
+      alert('Tu navegador no soporta Geolocalización GPS.');
+      if (btn) { btn.disabled = false; btn.innerText = '📡 Capturar GPS / Registrar Ubicación del Local'; }
+    }
+  }
+
+  async toggleDisableEstablishment(id) {
+    const est = this.getEstablishmentById(id);
+    if (!est) return;
+
+    const newDisabledState = !est.disabled;
+    const actionName = newDisabledState ? 'DESHABILITAR' : 'HABILITAR';
+
+    if (!confirm(`¿Estás seguro de que deseas ${actionName} el comercio "${est.name}"?\n\n${newDisabledState ? 'El comercio quedará oculto en el Marketplace para los clientes.' : 'El comercio volverá a ser visible en el Marketplace.'}`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/establishments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOwner: true, disabled: newDisabledState })
+      });
+
+      if (res.ok) {
+        est.disabled = newDisabledState;
+        // DO NOT cache in localStorage - server is the authoritative source for disabled state
+        this.showToast(`✅ Comercio "${est.name}" ${newDisabledState ? 'deshabilitado' : 'habilitado'} con éxito.`);
+        this.closeEstActionModal();
+        await this.reloadData();
+        this.markPendingChanges();
+      } else {
+        alert('Error al cambiar el estado del comercio.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión al actualizar el estado del comercio.');
+    }
+  }
+
+  toggleActiveShopDisable() {
+    if (this.activeShopId) {
+      this.toggleDisableEstablishment(this.activeShopId);
+    }
+  }
+
+  getTimeAgoStr(date) {
+    if (!date || isNaN(date.getTime())) return 'Hace poco';
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Hace un instante';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours}h ${diffMins % 60}m`;
+    return `Hace ${diffDays}d (${date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })})`;
+  }
+
+  async loadAdminMasterCatalogTable() {
+    const tbody = document.getElementById('admin-master-catalog-tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Cargando catálogo maestro...</td></tr>`;
+
+    try {
+      if (typeof MenuBuilder !== 'undefined' && MenuBuilder.supabase) {
+        const { data, error } = await MenuBuilder.supabase
+          .from('products')
+          .select('*')
+          .order('name', { ascending: true });
+
+        if (error) throw error;
+        this.masterProductsCache = data || [];
+        this.renderAdminMasterCatalogTable(this.masterProductsCache);
+      }
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: #f87171;">Error al cargar el catálogo maestro: ${err.message}</td></tr>`;
+    }
+  }
+
+  renderAdminMasterCatalogTable(products) {
+    const tbody = document.getElementById('admin-master-catalog-tbody');
+    if (!tbody) return;
+
+    if (!products || products.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No hay productos en el catálogo maestro.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = '';
+    products.forEach(prod => {
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid var(--border)';
+      
+      const imgUrl = prod.image_url || prod.image || '/images/burger_royale.jpg';
+      const rawPrice = parseFloat(prod.price) || 0;
+      const copPrice = rawPrice < 1000 ? rawPrice * 1000 : rawPrice;
+      const formattedPrice = `$${Math.round(copPrice).toLocaleString('de-DE')} COP`;
+
+      tr.innerHTML = `
+        <td style="padding: 10px 14px;">
+          <img src="${imgUrl}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border);" onerror="this.src='/images/burger_royale.jpg'">
+        </td>
+        <td style="padding: 10px 14px; font-weight: 700; color: #0F172A;">
+          ${prod.name}
+        </td>
+        <td style="padding: 10px 14px;">
+          <span style="background: #F1F5F9; color: var(--primary); padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">${prod.category || 'General'}</span>
+        </td>
+        <td style="padding: 10px 14px; font-size: 12px; color: var(--text-muted); max-width: 250px;">
+          ${prod.description || 'Sin descripción especificada.'}
+        </td>
+        <td style="padding: 10px 14px; font-weight: 800; color: #10B981;">
+          ${formattedPrice}
+        </td>
+        <td style="padding: 10px 14px; text-align: center;">
+          <button onclick="AdminApp.deleteMasterProduct('${prod.id}')" style="background: #EF4444; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s;" title="Eliminar del catálogo maestro global">
+            🗑️ Eliminar
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  filterMasterCatalogTable() {
+    const input = document.getElementById('admin-master-catalog-search');
+    if (!input || !this.masterProductsCache) return;
+    const query = input.value.toLowerCase().trim();
+
+    const filtered = this.masterProductsCache.filter(p => 
+      p.name.toLowerCase().includes(query) || 
+      (p.category && p.category.toLowerCase().includes(query)) ||
+      (p.description && p.description.toLowerCase().includes(query))
+    );
+
+    this.renderAdminMasterCatalogTable(filtered);
+  }
+
+  openCreateMasterProductModal() {
+    const modal = document.getElementById('admin-create-master-product-modal');
+    if (modal) modal.classList.add('active');
+    this.checkModalOpenState();
+  }
+
+  closeCreateMasterProductModal() {
+    const modal = document.getElementById('admin-create-master-product-modal');
+    if (modal) modal.classList.remove('active');
+    this.checkModalOpenState();
+  }
+
+  async handleCreateMasterProductSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('master-prod-name').value.trim();
+    const category = document.getElementById('master-prod-category').value.trim();
+    const rawPrice = parseFloat(document.getElementById('master-prod-price').value);
+    const description = document.getElementById('master-prod-desc').value.trim();
+    const fileInput = document.getElementById('master-prod-image-file');
+
+    if (!name || !category || isNaN(rawPrice)) {
+      alert('Completa los campos obligatorios (*)');
+      return;
+    }
+
+    const price = rawPrice < 1000 ? rawPrice * 1000 : rawPrice;
+    let imageUrl = '/images/burger_royale.jpg';
+
+    const submitBtn = document.getElementById('btn-submit-create-master-prod');
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Guardando...';
+
+    try {
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        if (typeof MenuBuilder !== 'undefined' && MenuBuilder.uploadProductImage) {
+          imageUrl = await MenuBuilder.uploadProductImage(fileInput.files[0]);
+        }
+      }
+
+      if (typeof MenuBuilder !== 'undefined' && MenuBuilder.supabase) {
+        const newProduct = {
+          name,
+          category,
+          price,
+          description,
+          image_url: imageUrl
+        };
+
+        const { error } = await MenuBuilder.supabase
+          .from('products')
+          .insert([newProduct]);
+
+        if (error) throw error;
+
+        this.showToast(`✅ "${name}" creado con éxito en el catálogo maestro.`);
+        this.closeCreateMasterProductModal();
+        await this.loadAdminMasterCatalogTable();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al crear el producto maestro: ' + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = '💾 Guardar Producto Maestro';
+    }
+  }
+
+  async deleteMasterProduct(prodId) {
+    if (!prodId) return;
+    const item = (this.masterProductsCache || []).find(p => p.id === prodId);
+    const itemName = item ? item.name : 'este producto';
+
+    if (!confirm(`⚠️ ¿Estás seguro de eliminar permanentemente "${itemName}" del catálogo maestro global?\n\nEsta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    try {
+      if (typeof MenuBuilder !== 'undefined' && MenuBuilder.supabase) {
+        const { error } = await MenuBuilder.supabase
+          .from('products')
+          .delete()
+          .eq('id', prodId);
+
+        if (error) throw error;
+
+        this.showToast(`🗑️ "${itemName}" eliminado del catálogo maestro.`);
+        await this.loadAdminMasterCatalogTable();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al eliminar producto: ' + err.message);
+    }
+  }
+
+  renderAnalyticsPro() {
+    const totalSalesUsdEl = document.getElementById('pro-kpi-sales-usd');
+    const totalSalesCopEl = document.getElementById('pro-kpi-sales-cop');
+    const totalOrdersEl = document.getElementById('pro-kpi-total-orders');
+    const avgTicketEl = document.getElementById('pro-kpi-avg-ticket');
+    const topProductsListEl = document.getElementById('pro-top-products-list');
+    const salesChartContainerEl = document.getElementById('pro-sales-chart-container');
+
+    if (!totalSalesUsdEl) return;
+
+    let totalUsd = 0;
+    let totalCop = 0;
+    let totalOrderCount = this.orders ? this.orders.length : 0;
+    const productSalesMap = {};
+
+    if (this.orders && Array.isArray(this.orders) && this.orders.length > 0) {
+      this.orders.forEach(ord => {
+        const orderTotalCop = ord.total || 0;
+        totalCop += orderTotalCop;
+        const estUsd = orderTotalCop / 4000;
+        totalUsd += estUsd;
+
+        if (ord.items && Array.isArray(ord.items)) {
+          ord.items.forEach(item => {
+            const pName = item.name || item.product_name || 'Producto';
+            productSalesMap[pName] = (productSalesMap[pName] || 0) + (item.quantity || 1);
+          });
+        }
+      });
+    } else {
+      // Sample calculation from establishments for demo
+      let prodCount = 0;
+      (this.establishments || []).forEach(e => {
+        (e.products || []).forEach(p => {
+          prodCount++;
+          const pName = p.name || 'Producto';
+          productSalesMap[pName] = Math.floor(Math.random() * 25) + 5;
+        });
+      });
+      totalOrderCount = Math.max(14, prodCount * 2);
+      totalUsd = totalOrderCount * 14.5;
+      totalCop = totalUsd * 4000;
+    }
+
+    const avgTicket = totalOrderCount > 0 ? (totalUsd / totalOrderCount) : 0;
+
+    totalSalesUsdEl.innerText = `$${totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    totalSalesCopEl.innerText = `${Math.round(totalCop).toLocaleString()} COP`;
+    
+    const restCount = (this.orders || []).filter(o => !this.isRideOrder(o)).length;
+    const rideCount = (this.orders || []).filter(o => this.isRideOrder(o)).length;
+    totalOrdersEl.innerHTML = `${totalOrderCount} <span style="font-size: 10px; font-weight: 800; color: #94A3B8; display: block; margin-top: 3px;">🍔 ${restCount} Comercios · 🛵 ${rideCount} Móviles</span>`;
+    
+    avgTicketEl.innerText = `$${avgTicket.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    // Top Products List
+    if (topProductsListEl) {
+      topProductsListEl.innerHTML = '';
+      const sortedProds = Object.entries(productSalesMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+      if (sortedProds.length === 0) {
+        topProductsListEl.innerHTML = '<div style="font-size: 11px; color: #94A3B8;">No hay ventas registradas aún.</div>';
+      } else {
+        const maxVal = sortedProds[0][1] || 1;
+        sortedProds.forEach(([name, count], idx) => {
+          const pct = Math.round((count / maxVal) * 100);
+          const row = document.createElement('div');
+          row.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
+          row.innerHTML = `
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #fff;">
+              <span>${idx + 1}. ${name}</span>
+              <span style="color: #F59E0B;">${count} u.</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+              <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #F59E0B, #D97706); border-radius: 3px;"></div>
+            </div>
+          `;
+          topProductsListEl.appendChild(row);
+        });
+      }
+    }
+
+    // Weekly Sales Bar Chart
+    if (salesChartContainerEl) {
+      salesChartContainerEl.innerHTML = '';
+      const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      const sampleDaysSales = [140, 210, 180, 290, 360, 480, 410];
+      const maxSale = Math.max(...sampleDaysSales);
+
+      days.forEach((day, idx) => {
+        const val = sampleDaysSales[idx];
+        const hPct = Math.round((val / maxSale) * 100);
+        const col = document.createElement('div');
+        col.style.cssText = 'flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end;';
+        col.innerHTML = `
+          <span style="font-size: 9px; color: #10B981; font-weight: 800;">$${val}</span>
+          <div style="width: 100%; height: ${hPct}%; background: linear-gradient(180deg, #F59E0B 0%, #D97706 100%); border-radius: 4px 4px 0 0;" title="${day}: $${val}"></div>
+          <span style="font-size: 10px; color: #94A3B8; font-weight: 700;">${day}</span>
+        `;
+        salesChartContainerEl.appendChild(col);
+      });
+    }
+  }
+
+  exportExecutiveReport() {
+    this.showToast('📄 Generando Reporte Ejecutivo Analytics Pro ($10/mes)...');
+    setTimeout(() => {
+      alert('📄 REPORTE EJECUTIVO ANALYTICS PRO ($10/MES)\n\n' +
+            '• Estado del Plan: ACTIVO ($10/mes)\n' +
+            '• Ventas Totales: ' + (document.getElementById('pro-kpi-sales-usd')?.innerText || '$0.00') + '\n' +
+            '• Pedidos Totales: ' + (document.getElementById('pro-kpi-total-orders')?.innerText || '0') + '\n' +
+            '• Ticket Promedio: ' + (document.getElementById('pro-kpi-avg-ticket')?.innerText || '$0.00') + '\n' +
+            '• Hora Pico: 7:00 PM - 9:30 PM\n\n' +
+            '¡Reporte generado con éxito!');
+    }, 600);
+  }
+
+  showToast(message, isError = false) {
+    if (typeof window.showToast === 'function') {
+      window.showToast(message, isError);
+    } else {
+      const toast = document.getElementById('toast');
+      if (toast) {
+        toast.innerText = message;
+        toast.classList.remove('hidden');
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+          toast.classList.add('hidden');
+        }, 3000);
+      }
+    }
+  }
+
+  openAllStoresMapModal() {
+    const modal = document.getElementById('admin-all-stores-map-modal');
+    if (!modal) return;
+    modal.classList.add('active');
+    this.checkModalOpenState();
+
+    setTimeout(() => {
+      this.initAdminGlobalStoresMap();
+    }, 250);
+  }
+
+  closeAllStoresMapModal() {
+    const modal = document.getElementById('admin-all-stores-map-modal');
+    if (modal) modal.classList.remove('active');
+    this.checkModalOpenState();
+  }
+
+  openStoreMapSingle(estId) {
+    const est = (this.establishments || []).find(e => String(e.id) === String(estId));
+    if (!est) return;
+
+    const modal = document.getElementById('admin-all-stores-map-modal');
+    if (!modal) return;
+    modal.classList.add('active');
+    this.checkModalOpenState();
+
+    setTimeout(() => {
+      this.initAdminGlobalStoresMap(this.currentGlobalMapFilter || 'all', est.id);
+      setTimeout(() => {
+        if (this.globalMap) {
+          const item = (this.globalMapMarkers || []).find(m => String(m.estId) === String(est.id));
+          if (item && item.marker) {
+            const latLng = item.marker.getLatLng();
+            const hasGPS = Boolean(est.latitude && est.longitude);
+            this.globalMap.setView(latLng, hasGPS ? 16 : 14);
+            item.marker.openPopup();
+          }
+        }
+      }, 200);
+    }, 250);
+  }
+
+  async saveStoreGPS(estId) {
+    const item = (this.globalMapMarkers || []).find(m => String(m.estId) === String(estId));
+    const est = (this.establishments || []).find(e => String(e.id) === String(estId));
+    if (!item || !item.marker || !est) return;
+
+    const pos = item.marker.getLatLng();
+    const newLat = parseFloat(pos.lat.toFixed(6));
+    const newLng = parseFloat(pos.lng.toFixed(6));
+
+    est.latitude = newLat;
+    est.longitude = newLng;
+    est.location_lat = newLat;
+    est.location_lng = newLng;
+
+    try {
+      localStorage.setItem('store_gps_' + est.id, JSON.stringify({ latitude: newLat, longitude: newLng }));
+    } catch(e) {}
+
+    this.showToast(`📡 Guardando nueva posición GPS de "${est.name}"...`);
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          latitude: newLat,
+          longitude: newLng,
+          location_lat: newLat,
+          location_lng: newLng
+        })
+      });
+
+      if (res.ok) {
+        this.showToast(`✅ ¡Ubicación de "${est.name}" guardada (${newLat.toFixed(4)}, ${newLng.toFixed(4)})!`);
+        this.renderTable();
+        this.markPendingChanges();
+        this.initAdminGlobalStoresMap(this.currentGlobalMapFilter || 'all', est.id, [newLat, newLng]);
+        this.triggerCloudBackup();
+      } else {
+        this.showToast('⚠️ Error al guardar la ubicación en el servidor.');
+      }
+    } catch(err) {
+      console.error('Error saving moved store position:', err);
+      this.showToast('⚠️ Error de conexión al actualizar posición GPS.');
+    }
+  }
+
+  async removeStoreGPS(estId) {
+    const est = (this.establishments || []).find(e => String(e.id) === String(estId));
+    if (!est) return;
+
+    const confirmDelete = confirm(`¿Estás seguro de quitar el marcador GPS de "${est.name}" del mapa?\n\n(El restaurante, sus productos y su menú permanecerán intactos sin ningún cambio).`);
+    if (!confirmDelete) return;
+
+    est.latitude = null;
+    est.longitude = null;
+    est.location_lat = null;
+    est.location_lng = null;
+
+    try {
+      localStorage.removeItem('store_gps_' + est.id);
+    } catch(e) {}
+
+    this.showToast(`🗑️ Eliminando marcador GPS de "${est.name}"...`);
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          latitude: null,
+          longitude: null,
+          location_lat: null,
+          location_lng: null
+        })
+      });
+
+      if (res.ok) {
+        this.showToast(`🗑️ Marcador de "${est.name}" eliminado del mapa (restaurante intacto).`);
+        this.markPendingChanges();
+        this.initAdminGlobalStoresMap(this.currentGlobalMapFilter || 'all');
+      } else {
+        this.showToast('⚠️ Error al eliminar el marcador en el servidor.');
+      }
+    } catch(err) {
+      console.error('Error removing store GPS position:', err);
+      this.showToast('⚠️ Error de conexión al eliminar el marcador GPS.');
+    }
+  }
+
+  initAdminGlobalStoresMap(filterLoc = 'all', pendingEstId = null, keepCenter = null) {
+    this.currentGlobalMapFilter = filterLoc;
+    const container = document.getElementById('admin-global-stores-map');
+    if (!container || typeof L === 'undefined') return;
+
+    this.enforceVerifiedGps(this.establishments);
+
+    if (this.globalMap) {
+      try { this.globalMap.remove(); } catch(e) {}
+      this.globalMap = null;
+    }
+    this.globalMapMarkers = [];
+
+    let centerLat = 7.8145;
+    let centerLng = -72.4430;
+
+    let targetEsts = this.establishments || [];
+    if (filterLoc !== 'all') {
+      targetEsts = targetEsts.filter(e => (e.location || 'San Antonio').toLowerCase().includes(filterLoc.toLowerCase()));
+    }
+
+    // Filter targetEsts strictly by unique ID to ensure every store gets its own exact marker
+    const seenEstIds = new Set();
+    const uniqueTargetEsts = [];
+
+    (targetEsts || []).forEach(est => {
+      if (!est || !est.id) return;
+      const sId = String(est.id).trim();
+      if (!seenEstIds.has(sId)) {
+        seenEstIds.add(sId);
+        uniqueTargetEsts.push(est);
+      }
+    });
+
+    targetEsts = uniqueTargetEsts;
+
+    // All stores have guaranteed verified GPS
+    const estsToRender = targetEsts;
+    const estsWithGPS = targetEsts.filter(e => e.latitude && e.longitude);
+
+    if (estsWithGPS.length > 0) {
+      centerLat = estsWithGPS[0].latitude;
+      centerLng = estsWithGPS[0].longitude;
+    }
+
+    const map = L.map('admin-global-stores-map').setView([centerLat, centerLng], 14);
+    this.globalMap = map;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    setTimeout(() => { if (this.globalMap) this.globalMap.invalidateSize(); }, 150);
+    setTimeout(() => { if (this.globalMap) this.globalMap.invalidateSize(); }, 400);
+    setTimeout(() => { if (this.globalMap) this.globalMap.invalidateSize(); }, 800);
+
+    const statsText = document.getElementById('admin-map-stats-text');
+    if (statsText) {
+      statsText.innerHTML = `<span>📡</span> <span>Locales con GPS Registrado: <strong>${estsWithGPS.length}</strong> / <strong>${targetEsts.length}</strong> Comercios</span>`;
+    }
+
+    const bounds = L.latLngBounds();
+
+    targetEsts.forEach((est) => {
+      const hasSavedGPS = Boolean(est.latitude && est.longitude);
+      let lat = hasSavedGPS ? parseFloat(est.latitude) : centerLat;
+      let lng = hasSavedGPS ? parseFloat(est.longitude) : centerLng;
+
+      bounds.extend([lat, lng]);
+
+      const emojiIcon = L.divIcon({
+        className: 'custom-admin-store-pin',
+        html: `
+          <div style="background: ${hasSavedGPS ? (est.disabled ? '#EF4444' : '#10B981') : '#F59E0B'}; color: #FFF; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: 2px solid #FFFFFF;">
+            ${est.logo || '🏪'}
+          </div>
+        `,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19]
+      });
+
+      const buildPopupHTML = (e, currentLat, currentLng) => {
+        const gmapsLink = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
+        const isSet = Boolean(e.latitude && e.longitude);
+        return `
+          <div style="min-width: 220px; padding: 4px; font-family: system-ui, -apple-system, sans-serif;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span style="font-size: 24px;">${e.logo || '🏪'}</span>
+              <div>
+                <strong style="font-size: 14px; color: #0F172A; display: block;">${e.name}</strong>
+                <span style="font-size: 11px; color: #64748B;">📍 ${e.location || 'San Antonio'}</span>
+              </div>
+            </div>
+            <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+              <span style="background: ${e.disabled ? '#FEE2E2' : '#D1FAE5'}; color: ${e.disabled ? '#991B1B' : '#065F46'}; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">
+                ${e.disabled ? '🚫 DESHABILITADO' : '🟢 HABILITADO'}
+              </span>
+              ${isSet ? '<span style="background: #DBEAFE; color: #1E40AF; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">📡 GPS FIJADO</span>' : '<span style="background: #FEF3C7; color: #92400E; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">⚠️ ARRASTRA Y GUARDA</span>'}
+            </div>
+            <p style="font-size: 10.5px; color: #475569; margin: 4px 0 8px 0; line-height: 1.3; background: #F1F5F9; padding: 6px; border-radius: 6px;">
+              📌 Arrastra este pin a la ubicación deseada y presiona el botón verde para guardar.
+            </p>
+            <button onclick="AdminApp.saveStoreGPS('${e.id}')" style="display: block; width: 100%; text-align: center; background: #10B981; color: #FFFFFF; font-weight: 800; font-size: 11px; padding: 7px 10px; border-radius: 8px; border: none; cursor: pointer; margin-bottom: 6px; box-shadow: 0 2px 6px rgba(16,185,129,0.3); box-sizing: border-box;">
+              💾 Guardar Ubicación GPS
+            </button>
+            ${isSet ? `
+            <button onclick="AdminApp.removeStoreGPS('${e.id}')" style="display: block; width: 100%; text-align: center; background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 800; font-size: 11px; padding: 6px 10px; border-radius: 8px; cursor: pointer; margin-bottom: 6px; box-sizing: border-box;">
+              🗑️ Quitar Marcador del Mapa
+            </button>
+            ` : ''}
+            <a href="${gmapsLink}" target="_blank" style="display: block; width: 100%; text-align: center; background: #2563EB; color: #FFFFFF; font-weight: 800; font-size: 11px; padding: 6px 10px; border-radius: 8px; text-decoration: none; box-shadow: 0 2px 6px rgba(37,99,235,0.3); box-sizing: border-box;">
+              📍 Abrir en Google Maps
+            </a>
+          </div>
+        `;
+      };
+
+      const marker = L.marker([lat, lng], { icon: emojiIcon, draggable: true }).addTo(map);
+      marker.bindPopup(buildPopupHTML(est, lat, lng));
+
+      marker.bindTooltip(`<b>${est.name}</b>`, {
+        permanent: true,
+        direction: 'top',
+        className: 'admin-map-pin-label',
+        offset: [0, -20]
+      });
+
+      marker.on('dragend', (e) => {
+        const pos = e.target.getLatLng();
+        const newLat = parseFloat(pos.lat.toFixed(6));
+        const newLng = parseFloat(pos.lng.toFixed(6));
+
+        marker.setPopupContent(buildPopupHTML(est, newLat, newLng));
+        marker.openPopup();
+        this.showToast(`📌 Pin movido. Presiona "💾 Guardar Ubicación GPS" en la burbuja para confirmar.`);
+      });
+
+      this.globalMapMarkers.push({ estId: est.id, marker });
+    });
+
+    const selectEl = document.getElementById('admin-map-store-select');
+    if (selectEl) {
+      selectEl.innerHTML = '<option value="">🔍 Centrar Restaurante...</option>';
+      targetEsts.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = `${e.logo || '🏪'} ${e.name}`;
+        selectEl.appendChild(opt);
+      });
+    }
+
+    try {
+      if (keepCenter && Array.isArray(keepCenter) && keepCenter.length === 2) {
+        map.setView(keepCenter, 16);
+      } else if (bounds && typeof bounds.isValid === 'function' && bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      } else {
+        map.setView([centerLat, centerLng], 14);
+      }
+    } catch(e) {
+      console.warn('Map fitBounds warning:', e);
+      map.setView([centerLat, centerLng], 14);
+    }
+
+    if (pendingEstId) {
+      setTimeout(() => {
+        const item = (this.globalMapMarkers || []).find(m => String(m.estId) === String(pendingEstId));
+        if (item && item.marker) {
+          item.marker.openPopup();
+        }
+      }, 250);
+    }
+  }
+
+  focusStoreOnMap(estId) {
+    if (!estId) return;
+    const item = (this.globalMapMarkers || []).find(m => String(m.estId) === String(estId));
+    if (item && item.marker && this.globalMap) {
+      const latLng = item.marker.getLatLng();
+      this.globalMap.setView(latLng, 16, { animate: true });
+      item.marker.openPopup();
+    }
+  }
+
+  async clearAllStoreGPS() {
+    if (!confirm('⚠️ ¿Estás seguro de BORRAR todas las ubicaciones guardadas de todos los restaurantes?\n\nPodrás volver a colocar y guardar cada pin en el mapa libremente desde cero.')) return;
+
+    this.showToast('🗑️ Borrando todas las ubicaciones GPS...');
+
+    try {
+      for (const est of this.establishments) {
+        est.latitude = null;
+        est.longitude = null;
+        est.location_lat = null;
+        est.location_lng = null;
+        try { localStorage.removeItem('store_gps_' + est.id); } catch(e) {}
+        await fetch(`/api/establishments/${est.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            isOwner: true,
+            latitude: null,
+            longitude: null,
+            location_lat: null,
+            location_lng: null
+          })
+        });
+      }
+
+      this.showToast('✅ ¡Todas las ubicaciones han sido borradas! Ahora puedes posicionar los pines libremente.');
+      this.renderTable();
+      this.initAdminGlobalStoresMap(this.currentGlobalMapFilter || 'all');
+      this.triggerCloudBackup();
+    } catch(err) {
+      console.error(err);
+      this.showToast('⚠️ Error al borrar ubicaciones.');
+    }
+  }
+
+  filterGlobalMapLocation(loc) {
+    this.initAdminGlobalStoresMap(loc);
+  }
+
+  initEditShopGPSMap(est) {
+    const container = document.getElementById('edit-shop-gps-map');
+    if (!container || typeof L === 'undefined') return;
+
+    if (this.editShopMap) {
+      try { this.editShopMap.remove(); } catch(e) {}
+      this.editShopMap = null;
+    }
+
+    let lat = (est.latitude && !isNaN(parseFloat(est.latitude))) ? parseFloat(est.latitude) : 7.8145;
+    let lng = (est.longitude && !isNaN(parseFloat(est.longitude))) ? parseFloat(est.longitude) : -72.4430;
+
+    const latInp = document.getElementById('edit-shop-latitude');
+    const lngInp = document.getElementById('edit-shop-longitude');
+    if (latInp) latInp.value = lat.toFixed(6);
+    if (lngInp) lngInp.value = lng.toFixed(6);
+
+    const map = L.map('edit-shop-gps-map').setView([lat, lng], 15);
+    this.editShopMap = map;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    setTimeout(() => { if (this.editShopMap) this.editShopMap.invalidateSize(); }, 150);
+    setTimeout(() => { if (this.editShopMap) this.editShopMap.invalidateSize(); }, 400);
+
+    const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+    this.editShopMarker = marker;
+
+    const updateInputs = (newLat, newLng) => {
+      if (latInp) latInp.value = newLat.toFixed(6);
+      if (lngInp) lngInp.value = newLng.toFixed(6);
+    };
+
+    marker.on('dragend', (e) => {
+      const pos = e.target.getLatLng();
+      updateInputs(pos.lat, pos.lng);
+    });
+
+    map.on('click', (e) => {
+      marker.setLatLng(e.latlng);
+      updateInputs(e.latlng.lat, e.latlng.lng);
+    });
+  }
+
+  getCurrentLocationForEditShop() {
+    if ('geolocation' in navigator) {
+      this.showToast('📡 Capturando ubicación GPS actual...');
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const latInp = document.getElementById('edit-shop-latitude');
+        const lngInp = document.getElementById('edit-shop-longitude');
+        if (latInp) latInp.value = lat.toFixed(6);
+        if (lngInp) lngInp.value = lng.toFixed(6);
+
+        if (this.editShopMap && this.editShopMarker) {
+          this.editShopMap.setView([lat, lng], 17);
+          this.editShopMarker.setLatLng([lat, lng]);
+        }
+        this.showToast('✅ Ubicación GPS capturada exitosamente.');
+      }, (err) => {
+        alert('⚠️ No se pudo obtener la ubicación GPS automática. Por favor activa el GPS o selecciona en el mapa.');
+      }, { enableHighAccuracy: true });
+    } else {
+      alert('Tu navegador no soporta geolocalización GPS.');
+    }
+  }
+
+  initWebSocket() {
+    if (this.ws) {
+      try { this.ws.close(); } catch(e) {}
+    }
+
+    const isNative = window.location.origin.includes('localhost') || window.location.origin.includes('capacitor');
+    const wsUrl = isNative 
+      ? 'wss://pedigochos.onrender.com' 
+      : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
+    
+    console.log('👑 Admin Owner App connecting to WebSocket:', wsUrl);
+    this.ws = new WebSocket(wsUrl);
+
+    if (this.pingTimer) clearInterval(this.pingTimer);
+    this.pingTimer = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({ type: 'PING' }));
+      }
+    }, 10000);
+
+    this.ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'PONG') return;
+
+        if (data.type === 'GLOBAL_NEW_ORDER' || data.type === 'NEW_ORDER') {
+          const order = data.order;
+          if (!order) return;
+
+          const exists = this.orders.some(o => o.id === order.id);
+          if (!exists) {
+            this.orders.push(order);
+          } else {
+            const idx = this.orders.findIndex(o => o.id === order.id);
+            if (idx !== -1) this.orders[idx] = order;
+          }
+
+          this.renderTable();
+          this.playOrderNotification(order);
+          this.loadDriverChat(true);
+        }
+
+        if (data.type === 'PLATFORM_SETTINGS_UPDATE' && data.settings) {
+          this.platformSettings = data.settings;
+          this.updateHeaderSettingsUI();
+        }
+
+        if (data.type === 'DRIVER_CHAT_MESSAGE' && data.message) {
+          this.handleIncomingDriverChatMessage(data.message);
+        }
+
+        if (data.type === 'DRIVER_CHAT_UPDATE' || data.type === 'ORDER_STATUS_UPDATE') {
+          this.loadDriverChat(true);
+        }
+
+        // Real-time Paint Quotes and Messages
+        if (data.type === 'PAINT_QUOTE_NEW' || data.type === 'PAINT_QUOTE_UPDATE' || data.type === 'PAINT_QUOTE_MESSAGE') {
+          this.handlePaintWsEvent(data);
+        }
+
+        // Real-time 3D Lab Quotes and Messages
+        if (data.type === 'PRINT3D_QUOTE_NEW' || data.type === 'PRINT3D_QUOTE_UPDATE' || data.type === 'PRINT3D_QUOTE_MESSAGE') {
+          this.handlePrint3DWsEvent(data);
+        }
+
+        // Real-time Resin Quotes and Messages (ShelliArt)
+        if (data.type === 'RESIN_QUOTE_NEW' || data.type === 'RESIN_QUOTE_UPDATE' || data.type === 'RESIN_QUOTE_MESSAGE') {
+          this.handleResinWsEvent(data);
+        }
+
+        // Real-time Piñatas Quotes, Messages & Catalog Updates
+        if (data.type === 'PINATA_QUOTE_NEW' || data.type === 'PINATA_QUOTE_UPDATE' || data.type === 'PINATA_QUOTE_MESSAGE' || data.type === 'PINATA_CATALOG_UPDATE') {
+          this.handlePinatasWsEvent(data);
+        }
+
+        // Real-time Merchant Registration Leads
+        if (data.type === 'MERCHANT_LEAD_NEW') {
+          this.handleMerchantLeadWs(data);
+        }
+      } catch (err) {
+        console.error('Error parsing WS message in admin:', err);
+      }
+    };
+
+    this.ws.onclose = () => {
+      if (this.pingTimer) clearInterval(this.pingTimer);
+      console.log('👑 [Admin WS] Conexión cerrada. Reconectando en 2.5s...');
+      setTimeout(() => this.initWebSocket(), 2500);
+    };
+  }
+
+  requestNotificationPermission(silent = true) {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try {
+        window.Capacitor.Plugins.LocalNotifications.requestPermissions().then(result => {
+          if (result.display === 'granted' && !silent) {
+            this.showToast('🔔 Notificaciones nativas activadas');
+          }
+        }).catch(() => {});
+      } catch(e) {}
+      return;
+    }
+
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        if (!silent) this.showToast('🔔 Notificaciones de escritorio ya están activadas.');
+      } else if (Notification.permission === 'denied') {
+        if (!silent) alert('⚠️ Las notificaciones están bloqueadas en tu navegador.\n\nPara activarlas: haz clic en el icono del candado 🔒 junto a la URL en tu navegador y activa la casilla "Notificaciones".');
+      } else {
+        try {
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted' && !silent) {
+              this.showToast('✅ ¡Notificaciones de escritorio activadas exitosamente!');
+            }
+          }).catch(() => {});
+        } catch(e) {}
+      }
+    } else {
+      console.log('📱 Entorno nativo/móvil detectado: notificaciones gestionadas por el sistema Android.');
+    }
+  }
+
+  playOrderNotification(order) {
+    // 1. Play persistent scandalous audio alarm & continuous vibration loop for up to 120 seconds
+    if (typeof Sound !== 'undefined') {
+      Sound.startPersistentOrderAlarm(120);
+    }
+
+    const isCauchera = this.isCaucheraOrder(order);
+    const isRide = !isCauchera && this.isRideOrder(order);
+    const est = this.establishments.find(e => e.id === order.establishmentId || e.id === order.establishment_id);
+    const storeName = isCauchera ? 'Montallantas El Cachu 24H' : (isRide ? 'PediGochos Móvil' : (est ? est.name : 'Restaurante'));
+    const customerName = order.customerName || order.deliveryDetails?.name || 'Cliente';
+    const orderCode = order.deliveryDetails?.code || (order.id ? String(order.id).slice(-4) : '####');
+    const orderTotal = order.total !== undefined ? `$${Math.round(order.total).toLocaleString('es-CO')} COP` : '';
+
+    const vType = order.vehicleType || order.deliveryDetails?.vehicleType || 'moto';
+    const vehicleNames = { moto: 'Moto Taxi', auto: 'Auto', lujo: 'Auto de Lujo' };
+    const vName = vehicleNames[vType] || 'Moto Taxi';
+
+    const orderType = isCauchera
+      ? `🛞 SOS Cauchera 24H`
+      : (isRide 
+        ? `🛵 ${vName}` 
+        : (order.orderType === 'mesa' ? '🍽️ Mesa ' + (order.mesaNumber || order.deliveryDetails?.mesa || '') : '🚴 Delivery'));
+
+    const estId = order.establishmentId || order.establishment_id || (isCauchera ? 'montallantas-el-cachu' : (isRide ? 'pedigochos-movil' : ''));
+
+    // Show top flashing persistent alarm banner with direct store linkage
+    this.showAlarmBanner(orderCode, isCauchera ? 'SOS Cauchera 24H' : (isRide ? vName : storeName), estId, order.id, isRide || isCauchera);
+
+    // 2. Native OS Push Notification (Capacitor or Web)
+    const notifTitle = isCauchera
+      ? `🛞 ¡AUXILIO VIAL SOS CAUCHERA 24H! #${orderCode}`
+      : (isRide 
+        ? `🚖 ¡SOLICITUD DE VEHÍCULO (${vName.toUpperCase()})!`
+        : `🚨 ¡NUEVO PEDIDO RECIBIDO! #${orderCode}`);
+    const notifBody = isCauchera
+      ? `🛞 Solicitud de El Cachu por ${customerName}\n📍 Lugar: ${order.deliveryDetails?.address || 'GPS'}\n💰 Total: ${orderTotal}`
+      : (isRide
+        ? `🛵 ${vName} solicitado por ${customerName}\n🟢 Recogida: ${order.deliveryDetails?.origin || 'GPS'}\n🏁 Destino: ${order.deliveryDetails?.destination || ''}\n💰 Tarifa: ${orderTotal}`
+        : `🏪 ${storeName}\n👤 ${customerName} (${orderType})\n💰 Total: ${orderTotal}`);
+
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try {
+        window.Capacitor.Plugins.LocalNotifications.schedule({
+          notifications: [
+            {
+              title: notifTitle,
+              body: notifBody,
+              id: Math.floor(Math.random() * 1000000),
+              schedule: { at: new Date(Date.now() + 100) },
+              sound: 'alarm.wav',
+              channelId: 'pedigochos_master_alerts',
+              smallIcon: 'ic_launcher_foreground',
+              extra: {
+                establishmentId: estId,
+                orderId: order.id,
+                storeName: storeName,
+                isRide: isRide || isCauchera
+              }
+            }
+          ]
+        });
+      } catch(e) {
+        console.warn('Capacitor notification schedule failed:', e);
+      }
+    } else if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        const notif = new Notification(notifTitle, {
+          body: notifBody,
+          icon: '/icons/icon-192.png',
+          tag: 'order-' + order.id,
+          requireInteraction: true,
+          data: { establishmentId: estId, orderId: order.id, isRide: isRide, isCauchera: isCauchera }
+        });
+        notif.onclick = () => {
+          window.focus();
+          if (isRide || isCauchera) {
+            AdminApp.showNewOrderModal(order, isCauchera ? 'Montallantas El Cachu 24H' : 'PediGochos Móvil');
+          } else if (estId) {
+            AdminApp.focusEstablishment(estId, order.id);
+          }
+        };
+      } catch(e) {}
+    }
+
+    // 3. Display High-Priority 3D Toast Alert in Admin UI
+    if (isCauchera) {
+      this.showToast(`🛞 ¡AUXILIO VIAL SOS CAUCHERA! #${orderCode} - ${customerName} (${orderTotal})`);
+    } else if (isRide) {
+      this.showToast(`🚖 ¡SOLICITUD DE VEHÍCULO! #${orderCode} (${vName}) - ${customerName} (${orderTotal})`);
+    } else {
+      this.showToast(`🚨 ¡NUEVO PEDIDO! #${orderCode} en ${storeName} - ${customerName} (${orderTotal})`);
+    }
+
+    // 4. Show high-priority popup modal with all order details
+    this.showNewOrderModal(order, storeName);
+  }
+
+  showNewOrderModal(order, storeName) {
+    if (!order) return;
+    let modal = document.getElementById('admin-new-order-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'admin-new-order-modal';
+      modal.className = 'modal-overlay';
+      document.body.appendChild(modal);
+    }
+
+    const isCauchera = this.isCaucheraOrder(order);
+    const isRide = !isCauchera && this.isRideOrder(order);
+    const estId = order.establishmentId || order.establishment_id || '';
+    const orderCode = order.deliveryDetails?.code || (order.id ? String(order.id).slice(-4) : '####');
+    const customerName = order.customerName || order.deliveryDetails?.name || 'Cliente';
+    const phone = order.customerPhone || order.deliveryDetails?.phone || 'Sin teléfono';
+    const cleanPhone = String(phone).replace(/\D/g, '');
+    const totalFormatted = `$${Math.round(order.total || 0).toLocaleString('es-CO')} COP`;
+
+    if (isCauchera) {
+      // --- SOS CAUCHERA MODAL ---
+      const vType = order.vehicleType || order.serviceDetails?.vehicleType || 'Vehículo';
+      const sTitle = order.serviceDetails?.serviceTitle || order.items?.[0]?.name || 'Despinche / Auxilio';
+      const hasNight = (order.nightSurcharge && order.nightSurcharge > 0) || order.serviceDetails?.hasNightSurcharge;
+      const vIcons = { moto: '🛵 Moto', carro: '🚗 Carro', camioneta: '🚙 Camioneta / 4x4', camion: '🚚 Camión' };
+      const vDisplay = vIcons[vType] || vType;
+
+      const locAddr = order.deliveryDetails?.address || order.deliveryDetails?.origin || 'Ubicación GPS';
+      const reference = order.deliveryDetails?.reference || order.deliveryDetails?.notes || order.paymentNotes || '';
+      const mapUrl = (order.deliveryDetails?.latitude && order.deliveryDetails?.longitude)
+        ? `https://www.google.com/maps?q=${order.deliveryDetails.latitude},${order.deliveryDetails.longitude}`
+        : null;
+
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 480px; border-radius: 24px; border: 2px solid #EF4444; background: #111827; box-shadow: 0 0 40px rgba(239, 68, 68, 0.4); animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+          <div style="background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%); color: #FFF; padding: 18px 20px; border-radius: 22px 22px 0 0; text-align: center; position: relative;">
+            <span style="font-size: 38px; display: block; margin-bottom: 4px;">🛞</span>
+            <h3 style="margin: 0; font-size: 19px; font-weight: 900;">¡AUXILIO VIAL SOS CAUCHERA!</h3>
+            <span style="background: rgba(0,0,0,0.3); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; margin-top: 4px;">
+              MONTALLANTAS EL CACHU · #${orderCode}
+            </span>
+          </div>
+          <div style="padding: 20px; color: #FFF;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 14px;">
+              <div>
+                <div style="font-size: 11px; color: #94A3B8;">CONDUCTOR SOLICITANTE</div>
+                <div style="font-size: 16px; font-weight: 800;">👤 ${customerName}</div>
+                <div style="font-size: 13px; color: #38BDF8;">📱 ${phone}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 11px; color: #94A3B8;">TARIFA TOTAL</div>
+                <div style="font-size: 20px; font-weight: 900; color: #10B981;">${totalFormatted}</div>
+                ${hasNight ? `<span style="font-size: 10px; background: rgba(147,51,234,0.3); color: #C084FC; padding: 2px 6px; border-radius: 6px; font-weight: 800;">🌙 Recargo Nocturno</span>` : ''}
+              </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 14px;">
+              <div style="font-size: 13px; font-weight: 800; color: #FCD34D; margin-bottom: 6px;">
+                ${vDisplay} · ${sTitle}
+              </div>
+              <div style="font-size: 12.5px; color: #E2E8F0;">
+                <span style="color: #EF4444; font-weight: 800;">📍 Ubicación:</span> ${locAddr}
+              </div>
+              ${reference ? `<div style="font-size: 11.5px; color: #CBD5E1; margin-top: 4px;">📝 <em>${reference}</em></div>` : ''}
+              ${mapUrl ? `
+                <a href="${mapUrl}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; color: #38BDF8; font-weight: 800; text-decoration: underline;">
+                  🗺️ Abrir ubicación exacta en Google Maps ➔
+                </a>
+              ` : ''}
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              ${cleanPhone ? `
+                <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '58' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te contactamos de PediGochos respecto a tu solicitud de auxilio con Montallantas El Cachu (#${orderCode}).`)}" target="_blank" class="btn-primary" style="flex: 1; padding: 11px; font-size: 12.5px; font-weight: 800; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; background: #25D366; border: none; color: #FFF; box-shadow: 0 4px 12px rgba(37,211,102,0.3);">
+                  💬 WhatsApp Cliente
+                </a>
+              ` : ''}
+              <a href="https://wa.me/584245516340?text=${encodeURIComponent(`Hola El Cachu, nueva solicitud #${orderCode} de auxilio vial para ${customerName} (${phone}) en: ${locAddr}.`)}" target="_blank" class="btn-primary" style="flex: 1; padding: 11px; font-size: 12.5px; font-weight: 800; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; background: #EF4444; border: none; color: #FFF; box-shadow: 0 4px 12px rgba(239,68,68,0.3);">
+                🛞 Avisar a El Cachu
+              </a>
+            </div>
+
+            <button type="button" onclick="if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner(); document.getElementById('admin-new-order-modal').style.display='none';" class="btn-primary" style="width: 100%; padding: 11px; font-size: 13.5px; font-weight: 800; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #FFF;">
+              ✅ Cerrar Alerta
+            </button>
+          </div>
+        </div>
+      `;
+      modal.style.display = 'flex';
+      return;
+    }
+
+    if (isRide) {
+      // --- VEHICLE REQUEST MODAL ---
+      const vType = order.vehicleType || order.deliveryDetails?.vehicleType || 'moto';
+      const vNames = { moto: 'Moto Taxi', auto: 'Auto Estándar', lujo: 'Auto de Lujo' };
+      const vIcons = { moto: '🛵', auto: '🚗', lujo: '✨' };
+      const vName = vNames[vType] || 'Moto Taxi';
+      const vIcon = vIcons[vType] || '🛵';
+
+      const origin = order.deliveryDetails?.origin || 'Ubicación GPS';
+      const dest = order.deliveryDetails?.destination || order.deliveryDetails?.address || 'Destino fijado';
+      const dist = order.deliveryDetails?.distanceKm || 1;
+      const notes = order.deliveryDetails?.notes || order.paymentNotes || '';
+
+      const originMapUrl = (order.deliveryDetails?.originLat && order.deliveryDetails?.originLng)
+        ? `https://www.google.com/maps?q=${order.deliveryDetails.originLat},${order.deliveryDetails.originLng}`
+        : null;
+      const destMapUrl = (order.deliveryDetails?.destLat && order.deliveryDetails?.destLng)
+        ? `https://www.google.com/maps?q=${order.deliveryDetails.destLat},${order.deliveryDetails.destLng}`
+        : null;
+
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 480px; border-radius: 24px; border: 2px solid #10B981; background: #111827; box-shadow: 0 0 40px rgba(16, 185, 129, 0.4); animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+          <div style="background: linear-gradient(135deg, #10B981 0%, #0D9488 100%); color: #FFF; padding: 18px 20px; border-radius: 22px 22px 0 0; text-align: center; position: relative;">
+            <span style="font-size: 38px; display: block; margin-bottom: 4px;">${vIcon}</span>
+            <h3 style="margin: 0; font-size: 19px; font-weight: 900;">¡SOLICITUD DE VEHÍCULO!</h3>
+            <span style="background: rgba(0,0,0,0.3); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; margin-top: 4px;">
+              ${vName.toUpperCase()} · Código #${orderCode}
+            </span>
+          </div>
+          <div style="padding: 20px; color: #FFF;">
+            
+            <!-- Pasajero Card -->
+            <div style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="font-size: 11px; color: #34D399; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">👤 Datos del Pasajero</div>
+              <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 800; color: #FFF;">${customerName}</p>
+              <p style="margin: 0; font-size: 13px; color: #CBD5E1; display: flex; align-items: center; justify-content: space-between;">
+                <span>📱 ${phone}</span>
+                ${cleanPhone ? `<a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '57' + cleanPhone}" target="_blank" style="color: #25D366; font-weight: 800; text-decoration: underline; font-size: 12px;">💬 Abrir WhatsApp</a>` : ''}
+              </p>
+            </div>
+
+            <!-- Ruta Card -->
+            <div style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08); font-size: 13px; line-height: 1.45;">
+              <div style="font-size: 11px; color: #F59E0B; font-weight: 800; text-transform: uppercase; margin-bottom: 6px;">🗺️ Ruta del Viaje</div>
+              <div style="margin-bottom: 6px;">
+                <span style="color: #10B981; font-weight: 800;">🟢 Recogida:</span> ${origin}
+                ${originMapUrl ? `<br><a href="${originMapUrl}" target="_blank" style="color: #38BDF8; font-weight: 800; font-size: 11.5px; text-decoration: underline;">🗺️ Ver Origen en Google Maps</a>` : ''}
+              </div>
+              <div style="margin-bottom: 6px;">
+                <span style="color: #FF6B00; font-weight: 800;">🏁 Destino:</span> ${dest}
+                ${destMapUrl ? `<br><a href="${destMapUrl}" target="_blank" style="color: #38BDF8; font-weight: 800; font-size: 11.5px; text-decoration: underline;">🗺️ Ver Destino en Google Maps</a>` : ''}
+              </div>
+              <div style="color: #94A3B8; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; margin-top: 6px;">
+                📏 <strong>Distancia Estimada:</strong> ${dist} km
+                ${notes ? `<br>📝 <strong>Referencia:</strong> <em>${notes}</em>` : ''}
+              </div>
+            </div>
+
+            <!-- Tarifa Card -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; padding: 12px 16px; border-radius: 14px; margin-bottom: 16px;">
+              <span style="font-size: 14px; font-weight: 700; color: #FFF;">Tarifa Estimada del Viaje:</span>
+              <span style="font-size: 20px; font-weight: 900; color: #34D399;">${totalFormatted}</span>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              ${cleanPhone ? `
+                <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '57' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te contactamos de PediGochos Móvil para confirmar tu solicitud de ${vName} (#${orderCode}). Un conductor va en camino.`)}" target="_blank" class="btn-primary" style="flex: 1; padding: 11px; font-size: 12.5px; font-weight: 800; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; background: #25D366; border: none; color: #FFF; box-shadow: 0 4px 12px rgba(37,211,102,0.3);">
+                  💬 Escribir al Pasajero
+                </a>
+              ` : ''}
+              <button type="button" onclick="AdminApp.updateOrderStatusFromSelect('${order.id}', 'En Camino'); document.getElementById('admin-new-order-modal').style.display='none'; if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner();" class="btn-primary" style="flex: 1; padding: 11px; font-size: 12.5px; font-weight: 800; border-radius: 10px; cursor: pointer; background: #3B82F6; border: none; color: #FFF;">
+                🛵 Asignar Conductor
+              </button>
+            </div>
+
+            <button type="button" onclick="if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner(); document.getElementById('admin-new-order-modal').style.display='none';" class="btn-primary" style="width: 100%; padding: 11px; font-size: 13px; font-weight: 800; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #FFF;">
+              ✅ Aceptar y Cerrar Alerta
+            </button>
+          </div>
+        </div>
+      `;
+      modal.style.display = 'flex';
+      return;
+    }
+
+    // --- RESTAURANT / FOOD ORDER MODAL (STANDARD) ---
+    const address = order.deliveryDetails?.address || order.deliveryDetails?.mesa || 'Sin dirección';
+    const total = order.total !== undefined ? parseFloat(order.total).toFixed(2) : '0.00';
+    const items = order.items || [];
+
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 460px; border-radius: 24px; border: 2px solid var(--primary); background: #111827; box-shadow: 0 0 35px rgba(255, 94, 58, 0.4); animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <div style="background: linear-gradient(135deg, #FF5E3A 0%, #FF2A00 100%); color: #FFF; padding: 18px 20px; border-radius: 22px 22px 0 0; text-align: center; position: relative;">
+          <span style="font-size: 36px; display: block; margin-bottom: 4px;">🍔</span>
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800;">¡NUEVO PEDIDO DE RESTAURANTE!</h3>
+          <span style="background: rgba(0,0,0,0.25); padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 800;">Código #${orderCode}</span>
+        </div>
+        <div style="padding: 20px; color: #FFF;">
+          <div style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
+            <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: 800; color: #FFD700;">🏪 ${storeName}</p>
+            <p style="margin: 0 0 4px 0; font-size: 13px;">👤 <strong>Cliente:</strong> ${customerName}</p>
+            <p style="margin: 0 0 4px 0; font-size: 13px;">📞 <strong>Teléfono:</strong> ${phone}</p>
+            <p style="margin: 0 0 4px 0; font-size: 13px;">📍 <strong>Ubicación/Mesa:</strong> ${address}</p>
+            ${(order.deliveryDetails?.latitude && order.deliveryDetails?.longitude) ? `<p style="margin: 0; font-size: 13px;">🗺️ <strong>GPS:</strong> <a href="https://maps.google.com/?q=${order.deliveryDetails.latitude},${order.deliveryDetails.longitude}" target="_blank" style="color: #38BDF8; font-weight: 700; text-decoration: underline;">Abrir en Google Maps</a></p>` : ''}
+          </div>
+          <div style="margin-bottom: 16px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #CBD5E1;">📦 Productos Solicitados:</h4>
+            <div style="max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;" class="premium-scroll">
+              ${items.map(item => `
+                <div style="display: flex; justify-content: space-between; font-size: 12.5px; background: rgba(255,255,255,0.04); padding: 7px 10px; border-radius: 8px;">
+                  <span>${item.quantity || 1}x ${item.name}</span>
+                  <strong style="color: var(--primary);">$${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</strong>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 94, 58, 0.15); border: 1px solid var(--primary); padding: 12px 16px; border-radius: 14px; margin-bottom: 16px;">
+            <span style="font-size: 14px; font-weight: 700;">Total del Pedido:</span>
+            <span style="font-size: 20px; font-weight: 800; color: #FFD700;">$${total}</span>
+          </div>
+
+          ${order.paymentReceiptUrl ? `
+            <button type="button" onclick="AdminApp.openReceiptViewer('${order.id}')" style="width: 100%; margin-bottom: 12px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; padding: 10px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(16,185,129,0.35);">
+              <span>📸</span> Ver Comprobante de Pago Adjunto
+            </button>
+          ` : ''}
+
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <button type="button" onclick="if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner(); document.getElementById('admin-new-order-modal').style.display='none'; AdminApp.openEstActionModal('${estId}');" class="btn-primary" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 800; border-radius: 10px; cursor: pointer; background: #3B82F6; border: none; color: #FFF;">
+              📋 Administrar Comercio
+            </button>
+            <button type="button" onclick="if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner(); document.getElementById('admin-new-order-modal').style.display='none'; AdminApp.openStoreKitchen('${estId}');" class="btn-primary" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 800; border-radius: 10px; cursor: pointer; background: #F59E0B; border: none; color: #1E293B;">
+              🍳 Abrir Cocina (KDS)
+            </button>
+          </div>
+
+          <button type="button" onclick="if(window.Sound) Sound.stopAlarm(); AdminApp.hideAlarmBanner(); document.getElementById('admin-new-order-modal').style.display='none';" class="btn-primary" style="width: 100%; padding: 11px; font-size: 13.5px; font-weight: 800; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #FFF;">
+            ✅ Cerrar Alerta
+          </button>
+        </div>
+      </div>
+    `;
+    modal.style.display = 'flex';
+  }
+
+  // ========================================================
+  // LIVE ORDERS & VEHICLE REQUESTS MANAGEMENT METHODS
+  // ========================================================
+
+  isCaucheraOrder(order) {
+    if (!order) return false;
+    return order.orderType === 'cauchera' || 
+           order.serviceType === 'cauchera' || 
+           order.establishmentId === 'montallantas-el-cachu' ||
+           (order.id && String(order.id).startsWith('cauchera-')) ||
+           (order.deliveryDetails && order.deliveryDetails.serviceType === 'cauchera');
+  }
+
+  isRideOrder(order) {
+    if (!order || this.isCaucheraOrder(order)) return false;
+    return order.orderType === 'ride' || 
+           order.serviceType === 'ride' || 
+           order.establishmentId === 'pedigochos-movil' ||
+           !!order.vehicleType ||
+           (order.id && String(order.id).startsWith('movil-')) ||
+           (order.deliveryDetails && (order.deliveryDetails.serviceType === 'ride' || !!order.deliveryDetails.originLat));
+  }
+
+  setOrdersFilter(filter) {
+    if (filter === 'resin') {
+      this.openResinAdminModal();
+      return;
+    }
+    if (filter === 'paint') {
+      this.openPaintAdminModal();
+      return;
+    }
+    if (filter === 'print3d') {
+      this.openPrint3DAdminModal();
+      return;
+    }
+    this.ordersFilter = filter;
+    ['all', 'restaurant', 'ride', 'cauchera'].forEach(f => {
+      const btn = document.getElementById(`filter-pill-${f}`);
+      if (btn) {
+        if (f === filter) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+    });
+    this.renderLiveOrders();
+  }
+
+  filterLiveOrdersList() {
+    const inp = document.getElementById('admin-orders-search-input');
+    this.ordersSearchTerm = inp ? inp.value.trim().toLowerCase() : '';
+    this.renderLiveOrders();
+  }
+
+  renderLiveOrders() {
+    const tbody = document.getElementById('admin-live-orders-tbody');
+    if (!tbody) return;
+
+    const all = this.orders || [];
+    const caucheraOrders = all.filter(o => this.isCaucheraOrder(o));
+    const rideOrders = all.filter(o => this.isRideOrder(o));
+    const restaurantOrders = all.filter(o => !this.isRideOrder(o) && !this.isCaucheraOrder(o));
+
+    // Update counter badges
+    const countAll = document.getElementById('filter-count-all');
+    const countRest = document.getElementById('filter-count-restaurant');
+    const countRide = document.getElementById('filter-count-ride');
+    const countCauchera = document.getElementById('filter-count-cauchera');
+    const statRest = document.getElementById('badge-stat-restaurants');
+    const statRide = document.getElementById('badge-stat-rides');
+    const statCauchera = document.getElementById('badge-stat-cauchera');
+
+    if (countAll) countAll.innerText = all.length;
+    if (countRest) countRest.innerText = restaurantOrders.length;
+    if (countRide) countRide.innerText = rideOrders.length;
+    if (countCauchera) countCauchera.innerText = caucheraOrders.length;
+    if (statRest) statRest.innerText = `🍔 Restaurantes: ${restaurantOrders.length}`;
+    if (statRide) statRide.innerText = `🛵 Vehículos: ${rideOrders.length}`;
+    if (statCauchera) statCauchera.innerText = `🛞 Cauchera: ${caucheraOrders.length}`;
+
+    // Select subset based on active filter
+    let displayedOrders = all;
+    if (this.ordersFilter === 'restaurant') {
+      displayedOrders = restaurantOrders;
+    } else if (this.ordersFilter === 'ride') {
+      displayedOrders = rideOrders;
+    } else if (this.ordersFilter === 'cauchera') {
+      displayedOrders = caucheraOrders;
+    }
+
+    // Apply search filter if active
+    if (this.ordersSearchTerm) {
+      const term = this.ordersSearchTerm;
+      displayedOrders = displayedOrders.filter(o => {
+        const cName = (o.customerName || o.deliveryDetails?.name || '').toLowerCase();
+        const phone = (o.customerPhone || o.deliveryDetails?.phone || '').toLowerCase();
+        const estName = (o.establishmentName || '').toLowerCase();
+        const code = (o.deliveryDetails?.code || o.id || '').toLowerCase();
+        const origin = (o.deliveryDetails?.origin || '').toLowerCase();
+        const dest = (o.deliveryDetails?.destination || o.deliveryDetails?.address || '').toLowerCase();
+        return cName.includes(term) || phone.includes(term) || estName.includes(term) || code.includes(term) || origin.includes(term) || dest.includes(term);
+      });
+    }
+
+    // Sort newest first
+    displayedOrders.sort((a, b) => {
+      const tA = new Date(a.createdAt || a.created_at || a.timestamp || 0).getTime();
+      const tB = new Date(b.createdAt || b.created_at || b.timestamp || 0).getTime();
+      return tB - tA;
+    });
+
+    if (displayedOrders.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 26px; color: #94A3B8; font-size: 13px;">
+            🔍 No hay pedidos ni solicitudes que coincidan con la vista actual.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    const htmlRows = displayedOrders.map(ord => {
+      const isCauchera = this.isCaucheraOrder(ord);
+      const isRide = !isCauchera && this.isRideOrder(ord);
+      const rawDate = ord.createdAt || ord.created_at || ord.timestamp;
+      const orderDate = rawDate ? new Date(rawDate) : null;
+      const timeAgoStr = orderDate ? this.getTimeAgoStr(orderDate) : 'Reciente';
+      const orderTimeStr = orderDate ? orderDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+      const orderCode = ord.deliveryDetails?.code || (ord.id ? String(ord.id).slice(-4) : '####');
+      const customerName = ord.customerName || ord.deliveryDetails?.name || 'Cliente';
+      const rawPhone = ord.customerPhone || ord.deliveryDetails?.phone || '';
+      const cleanPhone = String(rawPhone).replace(/\D/g, '');
+
+      // Status pill formatting
+      const currentStatus = ord.status || 'Pendiente';
+      const statusOptions = (isRide || isCauchera)
+        ? ['Pendiente', 'En Camino', 'Entregado', 'Cancelado']
+        : ['Pendiente', 'Preparando', 'Listo', 'En Camino', 'Entregado', 'Cancelado'];
+
+      const statusSelectHtml = `
+        <select onchange="AdminApp.updateOrderStatusFromSelect('${ord.id}', this.value)" style="padding: 4px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 800; background: #0F172A; border: 1.5px solid ${currentStatus === 'Entregado' ? '#10B981' : currentStatus === 'Cancelado' ? '#EF4444' : '#F59E0B'}; color: #FFF; outline: none; cursor: pointer;">
+          ${statusOptions.map(st => `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st === 'Entregado' ? '✅ Atendido' : st === 'Cancelado' ? '❌ Cancelado' : st === 'Pendiente' ? '⏳ Pendiente' : st === 'Preparando' ? '👨‍🍳 Preparando' : st === 'Listo' ? '📦 Listo' : '🛵 En Camino'}</option>`).join('')}
+        </select>
+      `;
+
+      if (isCauchera) {
+        // --- SOS CAUCHERA 24H ROW (MONTALLANTAS EL CACHU) ---
+        const vType = ord.vehicleType || ord.serviceDetails?.vehicleType || ord.deliveryDetails?.vehicleType || 'Vehículo';
+        const sTitle = ord.serviceDetails?.serviceTitle || ord.items?.[0]?.name || 'Despinche / Reparación';
+        const hasNight = (ord.nightSurcharge && ord.nightSurcharge > 0) || ord.serviceDetails?.hasNightSurcharge;
+        const vIcons = {
+          moto: '🛵 Moto',
+          carro: '🚗 Carro Particular',
+          camioneta: '🚙 Camioneta / 4x4',
+          camion: '🚚 Camión / Carga'
+        };
+        const vDisplay = vIcons[vType] || vType;
+
+        const locAddr = ord.deliveryDetails?.address || ord.deliveryDetails?.origin || 'Ubicación GPS';
+        const reference = ord.deliveryDetails?.reference || ord.deliveryDetails?.notes || ord.paymentNotes || '';
+        const mapUrl = (ord.deliveryDetails?.latitude && ord.deliveryDetails?.longitude)
+          ? `https://www.google.com/maps?q=${ord.deliveryDetails.latitude},${ord.deliveryDetails.longitude}`
+          : ((ord.deliveryDetails?.originLat && ord.deliveryDetails?.originLng)
+            ? `https://www.google.com/maps?q=${ord.deliveryDetails.originLat},${ord.deliveryDetails.originLng}`
+            : null);
+
+        const totalFormatted = `$${Math.round(ord.total || 0).toLocaleString('es-CO')} COP`;
+
+        return `
+          <tr class="live-order-row row-cauchera" style="background: rgba(239, 68, 68, 0.05); border-left: 3px solid #EF4444;">
+            <td>
+              <span class="service-badge" style="background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid #EF4444; padding: 3px 8px; border-radius: 8px; font-weight: 900; font-size: 11px; display: inline-block;">🛞 SOS CAUCHERA</span>
+              <div style="font-size: 10.5px; color: #FCA5A5; font-weight: 800; margin-top: 4px;">El Cachu 24H</div>
+            </td>
+            <td>
+              <strong style="color: #F87171; font-size: 13px;">#${orderCode}</strong>
+              <div style="font-size: 11px; color: #94A3B8;">${timeAgoStr}</div>
+              <div style="font-size: 10px; color: #64748B;">${orderTimeStr}</div>
+            </td>
+            <td>
+              <div style="font-weight: 800; color: #FFF; font-size: 13px;">👤 ${customerName}</div>
+              <div style="font-size: 11.5px; color: #CBD5E1; margin-top: 2px;">📱 ${rawPhone || 'Sin tlf'}</div>
+            </td>
+            <td>
+              <div style="font-size: 12px; color: #E2E8F0; line-height: 1.4;">
+                <div style="font-weight: 800; color: #FCD34D;">
+                  ${vDisplay} · <span style="color: #FFF;">${sTitle}</span>
+                </div>
+                ${hasNight ? `<span style="background: rgba(147, 51, 234, 0.25); color: #C084FC; border: 1px solid #9333EA; padding: 1px 6px; border-radius: 6px; font-size: 10px; font-weight: 800; margin-top: 3px; display: inline-block;">🌙 Tarifa Nocturna (+$5.000 COP)</span>` : ''}
+                <div style="display: flex; align-items: center; gap: 4px; margin-top: 3px;">
+                  <span style="color: #EF4444; font-weight: 800;">📍 Lugar:</span> ${locAddr}
+                  ${mapUrl ? `<a href="${mapUrl}" target="_blank" style="color: #38BDF8; font-size: 11px; font-weight: 800; text-decoration: underline; margin-left: 4px;" title="Ver ubicación en Google Maps">🗺️ Mapa</a>` : ''}
+                </div>
+                ${reference ? `<div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">📝 <em>${reference}</em></div>` : ''}
+              </div>
+            </td>
+            <td>
+              <strong style="color: #10B981; font-size: 13.5px;">${totalFormatted}</strong>
+              <div style="font-size: 10.5px; color: #94A3B8;">Total Auxilio</div>
+            </td>
+            <td>
+              ${statusSelectHtml}
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                ${cleanPhone ? `
+                  <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '58' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te contactamos de PediGochos respecto a tu solicitud de auxilio vial con Montallantas El Cachu (#${orderCode}).`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Chatear con el cliente por WhatsApp">
+                    💬 Cliente
+                  </a>
+                ` : ''}
+                <a href="https://wa.me/584245516340?text=${encodeURIComponent(`Hola El Cachu, orden #${orderCode} de auxilio vial para ${customerName} (${rawPhone}).`)}" target="_blank" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #EF4444; color: #F87171; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Contactar a Montallantas El Cachu">
+                  🛞 El Cachu
+                </a>
+              </div>
+            </td>
+          </tr>
+        `;
+      } else if (isRide) {
+        // --- VEHICLE REQUEST ROW (MOTO TAXI, AUTO, LUJO) ---
+        const vType = ord.vehicleType || ord.deliveryDetails?.vehicleType || 'moto';
+        const vBadges = {
+          moto: '<span class="service-badge badge-ride-moto">🛵 MOTO TAXI</span>',
+          auto: '<span class="service-badge badge-ride-auto">🚗 AUTO</span>',
+          lujo: '<span class="service-badge badge-ride-lujo">✨ AUTO LUJO</span>'
+        };
+        const badgeHtml = vBadges[vType] || '<span class="service-badge badge-ride-moto">🛵 MÓVIL</span>';
+
+        const originAddr = ord.deliveryDetails?.origin || 'Ubicación GPS';
+        const destAddr = ord.deliveryDetails?.destination || ord.deliveryDetails?.address || 'Destino';
+        const distanceKm = ord.deliveryDetails?.distanceKm || 1;
+        const notes = ord.deliveryDetails?.notes || ord.paymentNotes || '';
+
+        const originMapUrl = (ord.deliveryDetails?.originLat && ord.deliveryDetails?.originLng)
+          ? `https://www.google.com/maps?q=${ord.deliveryDetails.originLat},${ord.deliveryDetails.originLng}`
+          : null;
+        const destMapUrl = (ord.deliveryDetails?.destLat && ord.deliveryDetails?.destLng)
+          ? `https://www.google.com/maps?q=${ord.deliveryDetails.destLat},${ord.deliveryDetails.destLng}`
+          : null;
+
+        const totalFormatted = `$${Math.round(ord.total || 0).toLocaleString('es-CO')} COP`;
+
+        return `
+          <tr class="live-order-row row-ride">
+            <td>
+              ${badgeHtml}
+              <div style="font-size: 10.5px; color: #34D399; font-weight: 700; margin-top: 4px;">🚖 Transporte</div>
+            </td>
+            <td>
+              <strong style="color: #38BDF8; font-size: 13px;">#${orderCode}</strong>
+              <div style="font-size: 11px; color: #94A3B8;">${timeAgoStr}</div>
+              <div style="font-size: 10px; color: #64748B;">${orderTimeStr}</div>
+            </td>
+            <td>
+              <div style="font-weight: 800; color: #FFF; font-size: 13px;">👤 ${customerName}</div>
+              <div style="font-size: 11.5px; color: #CBD5E1; margin-top: 2px;">📱 ${rawPhone || 'Sin tlf'}</div>
+            </td>
+            <td>
+              <div style="font-size: 12px; color: #E2E8F0; line-height: 1.4;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #10B981; font-weight: 800;">🟢 Recogida:</span> ${originAddr}
+                  ${originMapUrl ? `<a href="${originMapUrl}" target="_blank" style="color: #38BDF8; font-size: 11px; font-weight: 800; text-decoration: underline; margin-left: 4px;" title="Ver origen en Google Maps">🗺️ Mapa</a>` : ''}
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                  <span style="color: #FF6B00; font-weight: 800;">🏁 Destino:</span> ${destAddr}
+                  ${destMapUrl ? `<a href="${destMapUrl}" target="_blank" style="color: #38BDF8; font-size: 11px; font-weight: 800; text-decoration: underline; margin-left: 4px;" title="Ver destino en Google Maps">🗺️ Mapa</a>` : ''}
+                </div>
+                <div style="font-size: 11px; color: #F59E0B; margin-top: 2px;">
+                  📏 <strong>${distanceKm} km</strong> estimados ${notes ? `· 📝 <em>${notes}</em>` : ''}
+                </div>
+              </div>
+            </td>
+            <td>
+              <strong style="color: #10B981; font-size: 13.5px;">${totalFormatted}</strong>
+              <div style="font-size: 10.5px; color: #94A3B8;">Tarifa Viaje</div>
+            </td>
+            <td>
+              ${statusSelectHtml}
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                ${cleanPhone ? `
+                  <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '57' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te escribimos de PediGochos Móvil sobre tu solicitud de ${vType === 'moto' ? 'Moto Taxi' : 'Auto'} (#${orderCode}).`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Chatear con el pasajero por WhatsApp">
+                    💬 WhatsApp
+                  </a>
+                ` : ''}
+                <button type="button" onclick="AdminApp.showNewOrderModal(AdminApp.orders.find(o => String(o.id) === '${ord.id}'), 'PediGochos Móvil')" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                  👁️ Detalles
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      } else {
+        // --- RESTAURANT / MERCHANT ORDER ROW ---
+        const est = this.establishments.find(e => e.id === ord.establishmentId || e.id === ord.establishment_id);
+        const estName = est ? est.name : (ord.establishmentName || 'Restaurante');
+        const badgeHtml = '<span class="service-badge badge-restaurant">🍔 RESTAURANTE</span>';
+
+        const itemsSummary = (ord.items && Array.isArray(ord.items))
+          ? ord.items.map(it => `${it.quantity || 1}x ${it.name}`).join(', ')
+          : 'Platillos solicitados';
+
+        const locText = ord.orderType === 'mesa'
+          ? `🍽️ Mesa #${ord.tableNumber || 1}`
+          : `🚴 Domicilio: ${ord.deliveryDetails?.address || 'Dirección de entrega'}`;
+
+        const totalFormatted = `$${Math.round(ord.total || 0).toLocaleString('es-CO')} COP`;
+
+        return `
+          <tr class="live-order-row row-restaurant">
+            <td>
+              ${badgeHtml}
+              <div style="font-weight: 800; color: #FFD700; font-size: 11.5px; margin-top: 3px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                🏪 ${estName}
+              </div>
+            </td>
+            <td>
+              <strong style="color: #FF6B00; font-size: 13px;">#${orderCode}</strong>
+              <div style="font-size: 11px; color: #94A3B8;">${timeAgoStr}</div>
+              <div style="font-size: 10px; color: #64748B;">${orderTimeStr}</div>
+            </td>
+            <td>
+              <div style="font-weight: 800; color: #FFF; font-size: 13px;">👤 ${customerName}</div>
+              <div style="font-size: 11.5px; color: #CBD5E1; margin-top: 2px;">📱 ${rawPhone || 'Sin tlf'}</div>
+            </td>
+            <td>
+              <div style="font-size: 12px; color: #FFF; font-weight: 700;">
+                📦 ${itemsSummary}
+              </div>
+              <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">
+                ${locText}
+              </div>
+            </td>
+            <td>
+              <strong style="color: #FFD700; font-size: 13.5px;">${totalFormatted}</strong>
+              <div style="font-size: 10.5px; color: #94A3B8;">${ord.paymentMethod || 'Efectivo'}</div>
+            </td>
+            <td>
+              ${statusSelectHtml}
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                ${cleanPhone ? `
+                  <a href="https://wa.me/${cleanPhone.startsWith('57') || cleanPhone.startsWith('58') ? cleanPhone : '57' + cleanPhone}?text=${encodeURIComponent(`Hola ${customerName}, te escribimos de PediGochos sobre tu pedido #${orderCode} de ${estName}.`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Chatear con el cliente por WhatsApp">
+                    💬 WhatsApp
+                  </a>
+                ` : ''}
+                ${ord.establishmentId ? `
+                  <button type="button" onclick="AdminApp.openStoreKitchen('${ord.establishmentId}')" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #F59E0B; color: #FCD34D; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                    🍳 Cocina
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+    }).join('');
+
+    tbody.innerHTML = htmlRows;
+  }
+
+  async updateOrderStatusFromSelect(orderId, newStatus) {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        const order = (this.orders || []).find(o => String(o.id) === String(orderId));
+        if (order) order.status = newStatus;
+        this.showToast(`✅ Estado actualizado a: ${newStatus}`);
+        this.renderLiveOrders();
+        this.renderTable();
+      }
+    } catch(e) {
+      console.warn('Error updating status:', e);
+    }
+  }
+
+  openStoreQRModal(estId) {
+    const est = (this.establishments || []).find(e => String(e.id) === String(estId));
+    if (!est) return;
+
+    this.currentQREst = est;
+    const modal = document.getElementById('admin-store-qr-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('qr-modal-title');
+    if (titleEl) titleEl.innerText = `📱 Display QR: ${est.name}`;
+    
+    const tableInp = document.getElementById('qr-modal-table-input');
+    if (tableInp) tableInp.value = '';
+
+    this.updateStoreQRDisplay();
+    modal.classList.add('active');
+    this.checkModalOpenState();
+  }
+
+  closeStoreQRModal() {
+    const modal = document.getElementById('admin-store-qr-modal');
+    if (modal) modal.classList.remove('active');
+    this.checkModalOpenState();
+  }
+
+  updateStoreQRDisplay() {
+    if (!this.currentQREst) return;
+    const est = this.currentQREst;
+    const tableInp = document.getElementById('qr-modal-table-input');
+    const tableNum = tableInp ? tableInp.value.trim() : '';
+
+    const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
+    let directUrl = `${origin}/?store=${encodeURIComponent(est.id)}`;
+    if (tableNum) {
+      directUrl += `&mesa=${encodeURIComponent(tableNum)}`;
+    }
+
+    const urlInp = document.getElementById('qr-modal-url-input');
+    if (urlInp) urlInp.value = directUrl;
+
+    const canvas = document.getElementById('qr-display-canvas');
+    if (!canvas) return;
+
+    // Generate QR code modules
+    this.renderCustomOrangeQR(directUrl, (qrCanvasOrImg) => {
+      this.drawStoreQRDisplayCanvas(canvas, est, tableNum, qrCanvasOrImg);
+    });
+  }
+
+  renderCustomOrangeQR(directUrl, callback) {
+    // 1. Try local QRCode client-side library
+    if (typeof QRCode !== 'undefined') {
+      try {
+        const hiddenDiv = document.getElementById('qr-hidden-generator') || document.createElement('div');
+        hiddenDiv.innerHTML = '';
+        
+        new QRCode(hiddenDiv, {
+          text: directUrl,
+          width: 580,
+          height: 580,
+          colorDark: '#000000',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        // Give a microtask for canvas/img generation
+        setTimeout(() => {
+          const generatedCanvas = hiddenDiv.querySelector('canvas');
+          const generatedImg = hiddenDiv.querySelector('img');
+          if (generatedCanvas) {
+            callback(generatedCanvas);
+          } else if (generatedImg && generatedImg.src) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => callback(img);
+            img.src = generatedImg.src;
+          } else {
+            this.fallbackQRServerImage(directUrl, callback);
+          }
+        }, 30);
+        return;
+      } catch (err) {
+        console.warn('QRCode JS error, falling back:', err);
+      }
+    }
+
+    this.fallbackQRServerImage(directUrl, callback);
+  }
+
+  fallbackQRServerImage(directUrl, callback) {
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=580x580&data=${encodeURIComponent(directUrl)}&color=000000&bgcolor=FFFFFF&margin=0`;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => callback(img);
+    img.onerror = () => {
+      // Offline fallback
+      const altUrl = `https://api.qrserver.com/v1/create-qr-code/?size=580x580&data=${encodeURIComponent(directUrl)}&margin=0`;
+      const fallbackImg = new Image();
+      fallbackImg.crossOrigin = 'anonymous';
+      fallbackImg.onload = () => callback(fallbackImg);
+      fallbackImg.src = altUrl;
+    };
+    img.src = qrApiUrl;
+  }
+
+  drawStoreQRDisplayCanvas(canvas, est, tableNum, qrElement) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = 1200;
+    const H = 1200;
+    canvas.width = W;
+    canvas.height = H;
+
+    // 1. Deep Dark Background
+    ctx.fillStyle = '#09090D';
+    ctx.fillRect(0, 0, W, H);
+
+    // 2. Symmetrical Orange Cross Beams (Geometric Ray Pattern)
+    ctx.save();
+    const gradRay = ctx.createLinearGradient(0, 0, W, H);
+    gradRay.addColorStop(0, '#FF7A00');
+    gradRay.addColorStop(0.5, '#FF5500');
+    gradRay.addColorStop(1, '#FF7A00');
+    ctx.fillStyle = gradRay;
+
+    // Top-Left Wedge
+    ctx.beginPath();
+    ctx.moveTo(0, 160);
+    ctx.lineTo(160, 0);
+    ctx.lineTo(600, 600);
+    ctx.closePath();
+    ctx.fill();
+
+    // Bottom-Right Wedge
+    ctx.beginPath();
+    ctx.moveTo(1200, 1040);
+    ctx.lineTo(1040, 1200);
+    ctx.lineTo(600, 600);
+    ctx.closePath();
+    ctx.fill();
+
+    // Top-Right Wedge
+    ctx.beginPath();
+    ctx.moveTo(1040, 0);
+    ctx.lineTo(1200, 160);
+    ctx.lineTo(600, 600);
+    ctx.closePath();
+    ctx.fill();
+
+    // Bottom-Left Wedge
+    ctx.beginPath();
+    ctx.moveTo(0, 1040);
+    ctx.lineTo(160, 1200);
+    ctx.lineTo(600, 600);
+    ctx.closePath();
+    ctx.fill();
+
+    // Side Lateral Wedges
+    ctx.beginPath();
+    ctx.moveTo(0, 420);
+    ctx.lineTo(0, 780);
+    ctx.lineTo(600, 600);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(1200, 420);
+    ctx.lineTo(1200, 780);
+    ctx.lineTo(600, 600);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // 3. Central Glowing Circle Emblem
+    const cx = 600;
+    const cy = 600;
+    const R = 490;
+
+    ctx.save();
+    // Glowing Outer Shadow
+    ctx.shadowColor = 'rgba(255, 107, 0, 0.75)';
+    ctx.shadowBlur = 45;
+
+    // Inner Circle Body
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    const circleGrad = ctx.createRadialGradient(cx, cy, 60, cx, cy, R);
+    circleGrad.addColorStop(0, '#16161D');
+    circleGrad.addColorStop(0.75, '#0E0E14');
+    circleGrad.addColorStop(1, '#08080C');
+    ctx.fillStyle = circleGrad;
+    ctx.fill();
+
+    // Main Outer Orange Stroke
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#FF6B00';
+    ctx.stroke();
+    ctx.restore();
+
+    // Inner Accent Ring
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R - 14, 0, Math.PI * 2);
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'rgba(255, 170, 0, 0.8)';
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. Four Cardinal Food Badges
+    const badges = [
+      { x: cx, y: cy - R, icon: '🍔' },
+      { x: cx - R, y: cy, icon: '🍽️' },
+      { x: cx + R, y: cy, icon: '🥟' },
+      { x: cx, y: cy + R, icon: '🥩' }
+    ];
+
+    badges.forEach(b => {
+      ctx.save();
+      // Badge Disc
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 44, 0, Math.PI * 2);
+      ctx.fillStyle = '#111116';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#FF6B00';
+      ctx.shadowColor = 'rgba(255, 107, 0, 0.9)';
+      ctx.shadowBlur = 18;
+      ctx.stroke();
+      ctx.restore();
+
+      // Emoji Icon
+      ctx.save();
+      ctx.font = '40px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(b.icon, b.x, b.y + 2);
+      ctx.restore();
+    });
+
+    // 5. Top Restaurant Name Header
+    ctx.save();
+    const rawName = (est.name || 'RESTAURANTE').toUpperCase();
+    
+    let fontSize = 52;
+    if (rawName.length > 18) fontSize = 42;
+    if (rawName.length > 25) fontSize = 34;
+
+    ctx.font = `900 ${fontSize}px "Arial Black", "Montserrat", "Impact", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    ctx.shadowColor = 'rgba(255, 120, 0, 0.9)';
+    ctx.shadowBlur = 24;
+    
+    const nameGrad = ctx.createLinearGradient(0, 240, 0, 320);
+    nameGrad.addColorStop(0, '#FFA726');
+    nameGrad.addColorStop(0.5, '#FF7A00');
+    nameGrad.addColorStop(1, '#FF5500');
+    ctx.fillStyle = nameGrad;
+    
+    const nameY = tableNum ? 260 : 285;
+    ctx.fillText(rawName, cx, nameY);
+    ctx.restore();
+
+    // Table Pill Badge (if specified)
+    if (tableNum) {
+      ctx.save();
+      const tableText = `📍 MESA ${tableNum.toUpperCase()}`;
+      ctx.font = '900 24px "Montserrat", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      const textWidth = ctx.measureText(tableText).width;
+      const pillW = textWidth + 38;
+      const pillH = 38;
+      const pillX = cx - pillW / 2;
+      const pillY = 302;
+
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.15)';
+      ctx.strokeStyle = '#FCD34D';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(pillX, pillY, pillW, pillH, 19);
+      } else {
+        ctx.rect(pillX, pillY, pillW, pillH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#FDE047';
+      ctx.shadowColor = 'rgba(253, 224, 71, 0.6)';
+      ctx.shadowBlur = 10;
+      ctx.fillText(tableText, cx, pillY + pillH / 2);
+      ctx.restore();
+    }
+
+    // 6. Center High-Contrast QR Code Box with Glowing Orange Accent Frame
+    if (qrElement) {
+      const qrSize = 580;
+      const qrX = cx - qrSize / 2;
+      const qrY = tableNum ? 355 : 340;
+
+      // Clean pure white plate for max scanner readability with glowing orange border
+      ctx.save();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowColor = 'rgba(255, 107, 0, 0.85)';
+      ctx.shadowBlur = 30;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32, 24);
+      } else {
+        ctx.rect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
+      }
+      ctx.fill();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#FF6B00';
+      ctx.stroke();
+      ctx.restore();
+
+      // Draw QR Image/Canvas
+      ctx.drawImage(qrElement, qrX, qrY, qrSize, qrSize);
+    }
+
+    // 7. Bottom Branding & Call to Action
+    ctx.save();
+    ctx.font = '900 22px "Montserrat", "Arial Black", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#FFA000';
+    ctx.shadowColor = 'rgba(255, 107, 0, 0.7)';
+    ctx.shadowBlur = 12;
+    ctx.fillText('PEDIGOCHOS • ESCANEA PARA ORDENAR', cx, 985);
+    ctx.restore();
+  }
+
+  async copyStoreQRUrl() {
+    const inp = document.getElementById('qr-modal-url-input');
+    if (!inp || !inp.value) return;
+
+    try {
+      await navigator.clipboard.writeText(inp.value);
+      this.showToast('📋 ¡Enlace directo copiado al portapapeles!');
+    } catch(e) {
+      inp.select();
+      document.execCommand('copy');
+      this.showToast('📋 ¡Enlace copiado!');
+    }
+  }
+
+  openStoreQRInNewTab() {
+    const inp = document.getElementById('qr-modal-url-input');
+    if (inp && inp.value) {
+      window.open(inp.value, '_blank');
+    }
+  }
+
+  downloadStoreQRImage() {
+    if (!this.currentQREst) return;
+    const est = this.currentQREst;
+    const tableNum = (document.getElementById('qr-modal-table-input')?.value || '').trim();
+    const canvas = document.getElementById('qr-display-canvas');
+    if (!canvas) return;
+
+    this.showToast('⏳ Generando Display HD...');
+
+    try {
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
+      const link = document.createElement('a');
+      const filename = `Display_QR_${(est.name || 'Restaurante').replace(/[^a-zA-Z0-9]/g, '_')}${tableNum ? '_Mesa_' + tableNum : ''}.png`;
+      link.href = dataUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      this.showToast(`✅ ¡Display HD guardado como "${filename}"!`);
+    } catch(err) {
+      console.error(err);
+      window.open(canvas.toDataURL(), '_blank');
+    }
+  }
+
+  async downloadBatchTableQRs(from = 1, to = 10) {
+    if (!this.currentQREst) return;
+    const est = this.currentQREst;
+    const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
+
+    this.showToast(`📦 Generando lote de displays para Mesas ${from} al ${to}...`);
+
+    for (let table = from; table <= to; table++) {
+      const directUrl = `${origin}/?store=${encodeURIComponent(est.id)}&mesa=${encodeURIComponent(table)}`;
+      
+      await new Promise((resolve) => {
+        this.renderCustomOrangeQR(directUrl, (qrElem) => {
+          const offCanvas = document.createElement('canvas');
+          this.drawStoreQRDisplayCanvas(offCanvas, est, String(table), qrElem);
+          
+          const dataUrl = offCanvas.toDataURL('image/png', 1.0);
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = `Display_QR_${(est.name || 'Restaurante').replace(/[^a-zA-Z0-9]/g, '_')}_Mesa_${table}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          setTimeout(resolve, 300);
+        });
+      });
+    }
+
+    this.showToast(`✅ ¡Lote de ${to - from + 1} displays para mesas descargado con éxito!`);
+  }
+
+  printStoreQRAffiche() {
+    if (!this.currentQREst) return;
+    const est = this.currentQREst;
+    const tableNum = (document.getElementById('qr-modal-table-input')?.value || '').trim();
+    const canvas = document.getElementById('qr-display-canvas');
+    if (!canvas) return;
+
+    const dataUrl = canvas.toDataURL('image/png', 1.0);
+
+    const printWin = window.open('', '_blank', 'width=700,height=850');
+    if (!printWin) {
+      alert('⚠️ Por favor permite las ventanas emergentes para imprimir.');
+      return;
+    }
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Imprimir Display QR - ${est.name}</title>
+        <meta charset="utf-8">
+        <style>
+          @page {
+            size: auto;
+            margin: 10mm;
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #09090D;
+            color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .display-card {
+            background: #09090D;
+            border-radius: 24px;
+            padding: 20px;
+            text-align: center;
+            max-width: 480px;
+            width: 100%;
+            box-sizing: border-box;
+          }
+          .display-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            display: block;
+            margin: 0 auto;
+          }
+          .instructions {
+            margin-top: 14px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #FFA000;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="display-card">
+          <img src="${dataUrl}" alt="Display QR ${est.name}">
+          <div class="instructions">📱 Escanea con tu cámara para ver el menú y pedir</div>
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
+  }
+
+  // ==========================================
+  // AI MENU SCANNER & MISSING PRICES ENGINE
+  // ==========================================
+
+  initAIMenuTab() {
+    const keyInput = document.getElementById('ai-menu-api-key');
+    if (keyInput) {
+      const savedKey = localStorage.getItem('pedigochos_gemini_api_key') || '';
+      if (savedKey) keyInput.value = savedKey;
+    }
+    this.selectedAIMenuFileBase64 = null;
+    const previewCont = document.getElementById('ai-menu-file-preview-container');
+    if (previewCont) previewCont.classList.add('hidden');
+    const fileInput = document.getElementById('ai-menu-file-input');
+    if (fileInput) fileInput.value = '';
+    const textInput = document.getElementById('ai-menu-text-input');
+    if (textInput) textInput.value = '';
+
+    const emptyState = document.getElementById('ai-scan-empty-state');
+    if (emptyState) emptyState.style.display = 'block';
+    const statusCont = document.getElementById('ai-scan-status-container');
+    if (statusCont) statusCont.style.display = 'none';
+    const resultsCont = document.getElementById('ai-scan-results-container');
+    if (resultsCont) {
+      resultsCont.classList.add('hidden');
+      resultsCont.innerHTML = '';
+    }
+  }
+
+  openAIScannerForShop(shopId) {
+    this.closeEstActionModal();
+    window.activeShopIdForMenu = shopId;
+    this.openMenuTablesModal(shopId);
+    this.switchModalTab('ai');
+  }
+
+  handleAIMenuFileSelected(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const previewCont = document.getElementById('ai-menu-file-preview-container');
+    const previewImg = document.getElementById('ai-menu-file-preview');
+    const nameLabel = document.getElementById('ai-menu-file-name');
+
+    if (nameLabel) nameLabel.innerText = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.selectedAIMenuFileBase64 = e.target.result;
+      if (file.type.startsWith('image/') && previewImg) {
+        previewImg.src = e.target.result;
+        if (previewCont) previewCont.classList.remove('hidden');
+      } else {
+        if (previewCont) previewCont.classList.add('hidden');
+      }
+      this.showToast(`📸 Archivo cargado: ${file.name}`);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async startAIMenuScan() {
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est) {
+      this.showToast('⚠️ Por favor selecciona un comercio primero');
+      return;
+    }
+
+    const textInput = document.getElementById('ai-menu-text-input')?.value?.trim() || '';
+    const fileBase64 = this.selectedAIMenuFileBase64 || '';
+    const apiKey = document.getElementById('ai-menu-api-key')?.value?.trim() || '';
+
+    if (apiKey) {
+      localStorage.setItem('pedigochos_gemini_api_key', apiKey);
+    }
+
+    if (!fileBase64 && !textInput) {
+      this.showToast('⚠️ Sube una foto de la carta o escribe el texto del menú');
+      return;
+    }
+
+    const emptyState = document.getElementById('ai-scan-empty-state');
+    const statusCont = document.getElementById('ai-scan-status-container');
+    const statusTitle = document.getElementById('ai-scan-status-title');
+    const statusDesc = document.getElementById('ai-scan-status-desc');
+    const resultsCont = document.getElementById('ai-scan-results-container');
+
+    if (emptyState) emptyState.style.display = 'none';
+    if (resultsCont) resultsCont.classList.add('hidden');
+    if (statusCont) statusCont.style.display = 'block';
+
+    const steps = [
+      { title: '🔍 Leyendo texto y detectando platos...', desc: 'Analizando imágenes, encabezados y precios con Inteligencia Artificial...' },
+      { title: '🍳 Organizando categorías y modificadores...', desc: 'Estructurando ingredientes, tamaños y opciones adicionales...' },
+      { title: '💵 Auditando precios y detectando adicionales pendientes...', desc: 'Verificando adicionales y notas para el restaurante...' }
+    ];
+
+    let stepIdx = 0;
+    const stepTimer = setInterval(() => {
+      stepIdx = (stepIdx + 1) % steps.length;
+      if (statusTitle) statusTitle.innerText = steps[stepIdx].title;
+      if (statusDesc) statusDesc.innerText = steps[stepIdx].desc;
+    }, 2500);
+
+    try {
+      const response = await fetch('/api/ai/parse-menu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: fileBase64,
+          menuText: textInput,
+          apiKey: apiKey || localStorage.getItem('pedigochos_gemini_api_key') || '',
+          establishmentName: est.name,
+          establishmentCategory: est.category
+        })
+      });
+
+      clearInterval(stepTimer);
+      if (statusCont) statusCont.style.display = 'none';
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'No se pudo estructurar el menú');
+      }
+
+      this.currentParsedAIMenu = data.menu;
+      this.renderAIMenuPreview(data.menu, est);
+      this.showToast(`🎉 Menú extraído: ${data.menu.products?.length || 0} platos detectados`);
+    } catch (err) {
+      clearInterval(stepTimer);
+      if (statusCont) statusCont.style.display = 'none';
+      if (emptyState) emptyState.style.display = 'block';
+      console.error('Error starting AI scan:', err);
+      alert(`⚠️ Error al escanear menú con IA:\n${err.message}\n\nPuedes obtener una clave gratuita de Google en https://aistudio.google.com/app/apikey`);
+    }
+  }
+
+  renderAIMenuPreview(menu, est) {
+    const resultsCont = document.getElementById('ai-scan-results-container');
+    if (!resultsCont) return;
+
+    resultsCont.classList.remove('hidden');
+
+    const products = menu.products || [];
+    const categories = menu.categories || [];
+    const missingCount = menu.missing_prices_count || 0;
+
+    let missingBanner = '';
+    if (missingCount > 0) {
+      missingBanner = `
+        <div style="background: rgba(245, 158, 11, 0.15); border: 1.5px solid #F59E0B; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">⚠️</span>
+          <div>
+            <strong style="color: #FCD34D; font-size: 12.5px;">${missingCount} adicionales o productos detectados sin precio</strong>
+            <p style="margin: 0; font-size: 11px; color: #CBD5E1;">Puedes ajustarlos aquí mismo o importarlos y completarlos luego con el botón rápido.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    resultsCont.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+        <div>
+          <h4 style="margin: 0; color: #FFF; font-size: 14.5px; font-weight: 800;">🎉 Vista Previa del Menú Extraído</h4>
+          <span style="font-size: 11.5px; color: var(--accent);">${products.length} platos en ${categories.length} categorías</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 11px; color: #CBD5E1; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+            <input type="checkbox" id="ai-replace-menu-checkbox" checked> Reemplazar carta actual
+          </label>
+        </div>
+      </div>
+
+      ${missingBanner}
+
+      <div class="premium-scroll" style="flex: 1; max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; margin-bottom: 12px;">
+        ${products.map((p, pIdx) => {
+          const priceDisplay = p.price > 0 ? `$${p.price.toLocaleString('de-DE')} COP` : '⚠️ Sin Precio';
+          const pBadgeColor = p.price > 0 ? '#10B981' : '#F59E0B';
+          
+          let modifiersBadges = '';
+          if (Array.isArray(p.modifiers) && p.modifiers.length > 0) {
+            modifiersBadges = p.modifiers.map(m => `
+              <div style="margin-top: 4px; padding: 4px 8px; background: rgba(255,255,255,0.04); border-radius: 6px; font-size: 10.5px;">
+                <strong style="color: #93C5FD;">🎛️ ${m.group_name}:</strong>
+                ${(m.options || []).map(opt => `
+                  <span style="color: ${opt.price_pending ? '#FCD34D' : '#FFF'}; margin-right: 6px;">
+                    ${opt.name} (${opt.price_pending ? '⚠️ Sin Precio' : (opt.extra_price > 0 ? `+$${opt.extra_price.toLocaleString('de-DE')}` : '+$0')})
+                  </span>
+                `).join('')}
+              </div>
+            `).join('');
+          }
+
+          return `
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                <div>
+                  <div style="font-weight: 800; font-size: 13px; color: #FFF;">${p.name}</div>
+                  <span style="font-size: 10.5px; color: var(--text-muted);">${p.category || 'General'}</span>
+                  ${p.description ? `<p style="font-size: 11px; color: #94A3B8; margin: 2px 0 0 0;">${p.description}</p>` : ''}
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                  <span style="font-size: 12px; font-weight: 800; color: ${pBadgeColor};">${priceDisplay}</span>
+                </div>
+              </div>
+              ${modifiersBadges}
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;">
+        <button type="button" class="btn-neumorphic" onclick="AdminApp.initAIMenuTab()" style="margin: 0; padding: 8px 14px; font-size: 12px;">🔄 Reintentar</button>
+        <button type="button" onclick="AdminApp.confirmImportAIMenu()" style="flex: 1; padding: 10px 18px; border-radius: 10px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(160,185,129,0.35);">
+          <span>💾 Confirmar e Importar Carta Completa</span>
+        </button>
+      </div>
+    `;
+  }
+
+  async confirmImportAIMenu() {
+    if (!this.currentParsedAIMenu || !Array.isArray(this.currentParsedAIMenu.products)) {
+      this.showToast('⚠️ No hay menú procesado para importar');
+      return;
+    }
+
+    const shopId = window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === shopId);
+    if (!est) return;
+
+    const replaceExisting = document.getElementById('ai-replace-menu-checkbox')?.checked ?? true;
+
+    // Format new products with unique identifiers
+    const formattedProducts = this.currentParsedAIMenu.products.map(p => {
+      const prodId = 'prod-' + Date.now() + '-' + Math.floor(Math.random() * 100000);
+      let modifiers = [];
+      if (Array.isArray(p.modifiers)) {
+        modifiers = p.modifiers.map((m, mIdx) => ({
+          group_id: `g-${mIdx}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          group_name: m.group_name || 'Opciones',
+          selection_type: m.selection_type || 'multiple',
+          required: !!m.required,
+          options: (m.options || []).map((opt, oIdx) => ({
+            id: `opt-${mIdx}-${oIdx}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            option_id: `opt-${mIdx}-${oIdx}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            name: opt.name || 'Opción',
+            extra_price: parseFloat(opt.extra_price) || 0,
+            price_pending: opt.price_pending === true || (!opt.extra_price && m.group_name?.toLowerCase().includes('adic'))
+          }))
+        }));
+      }
+
+      return {
+        id: prodId,
+        name: p.name || 'Producto',
+        category: p.category || 'General',
+        description: p.description || '',
+        price: parseFloat(p.price) || 0,
+        price_pending: p.price_pending === true || parseFloat(p.price) <= 0,
+        image: p.image || '/images/burger_royale.jpg',
+        exclusions: (p.exclusions || []).map(e => (typeof e === 'object' ? e : { name: String(e) })),
+        modifiers: modifiers
+      };
+    });
+
+    if (replaceExisting) {
+      est.products = formattedProducts;
+    } else {
+      if (!Array.isArray(est.products)) est.products = [];
+      formattedProducts.forEach(fp => {
+        if (!est.products.some(ep => ep.name.toLowerCase() === fp.name.toLowerCase())) {
+          est.products.push(fp);
+        }
+      });
+    }
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (!res.ok) throw new Error('Error al guardar en el servidor');
+
+      this.showToast(`🎉 ¡Menú de ${est.name} actualizado con éxito!`);
+      this.markPendingChanges();
+      this.renderTable();
+      this.loadModalProducts();
+
+      // Switch to standard menu tab
+      this.switchModalTab('menu');
+
+      // Check if missing prices exist to trigger prompt
+      const missing = this.getMissingPricesForEstablishment(est);
+      if (missing.length > 0) {
+        setTimeout(() => {
+          this.openQuickFillPricesModal(est.id);
+        }, 500);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al guardar el menú en el servidor: ' + err.message);
+    }
+  }
+
+  getMissingPricesForEstablishment(est) {
+    if (!est || !Array.isArray(est.products)) return [];
+    const missing = [];
+    const modifierMap = new Map();
+
+    est.products.forEach(p => {
+      // 1. Check if product itself has no price
+      if (p.price_pending === true || !p.price || parseFloat(p.price) <= 0) {
+        missing.push({
+          type: 'product',
+          productId: p.id,
+          productName: p.name,
+          category: p.category || 'Carta',
+          name: p.name,
+          currentPrice: p.price || 0,
+          productNames: [p.name]
+        });
+      }
+
+      // 2. Check modifiers/additions and group by modifier name
+      if (Array.isArray(p.modifiers)) {
+        p.modifiers.forEach(m => {
+          if (Array.isArray(m.options)) {
+            m.options.forEach(opt => {
+              const isPending = opt.price_pending === true || (m.group_name?.toLowerCase().includes('adic') && (!opt.extra_price || parseFloat(opt.extra_price) <= 0));
+              if (isPending) {
+                const groupLabel = (m.group_name || 'Adicionales').trim();
+                const optLabel = (opt.name || 'Opción').trim();
+                const key = `${groupLabel.toLowerCase()}:::${optLabel.toLowerCase()}`;
+
+                if (!modifierMap.has(key)) {
+                  modifierMap.set(key, {
+                    type: 'modifier',
+                    groupName: groupLabel,
+                    optionName: optLabel,
+                    name: `${groupLabel} ➔ ${optLabel}`,
+                    currentPrice: opt.extra_price || 0,
+                    category: p.category || 'Carta',
+                    productNames: [p.name],
+                    targets: [{
+                      productId: p.id,
+                      productName: p.name,
+                      groupId: m.group_id,
+                      optionId: opt.id || opt.option_id
+                    }]
+                  });
+                } else {
+                  const existing = modifierMap.get(key);
+                  if (!existing.productNames.includes(p.name)) {
+                    existing.productNames.push(p.name);
+                  }
+                  existing.targets.push({
+                    productId: p.id,
+                    productName: p.name,
+                    groupId: m.group_id,
+                    optionId: opt.id || opt.option_id
+                  });
+                  if (!existing.currentPrice && opt.extra_price > 0) {
+                    existing.currentPrice = opt.extra_price;
+                  }
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // Add all unique grouped modifiers
+    modifierMap.forEach(item => {
+      missing.push(item);
+    });
+
+    return missing;
+  }
+
+  auditMissingPrices(est) {
+    if (!est) return;
+    const missing = this.getMissingPricesForEstablishment(est);
+    const banner = document.getElementById('missing-prices-alert-banner');
+    const textEl = document.getElementById('missing-prices-alert-text');
+
+    if (banner) {
+      if (missing.length > 0) {
+        banner.classList.remove('hidden');
+        if (textEl) textEl.innerText = `Tienes ${missing.length} adicionales/platos sin precio en ${est.name}`;
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+  }
+
+  openQuickFillPricesModal(shopId) {
+    const targetId = shopId || window.activeShopIdForMenu || this.activeShopId;
+    const est = this.getEstablishmentById(targetId);
+    if (!est) return;
+
+    this.activeShopIdForQuickFill = est.id;
+
+    const nameEl = document.getElementById('quick-fill-shop-name');
+    if (nameEl) nameEl.innerText = `🏪 ${est.name}`;
+
+    const missing = this.getMissingPricesForEstablishment(est);
+    const listCont = document.getElementById('quick-fill-items-list');
+
+    if (listCont) {
+      if (missing.length === 0) {
+        listCont.innerHTML = `
+          <div style="text-align: center; padding: 24px; color: #10B981;">
+            <span style="font-size: 32px; display: block; margin-bottom: 6px;">✅</span>
+            <strong style="font-size: 14px;">¡Todos los productos y adicionales tienen precio!</strong>
+          </div>
+        `;
+      } else {
+        listCont.innerHTML = missing.map((item, idx) => {
+          let appliesToText = '';
+          if (item.type === 'product') {
+            appliesToText = `Plato completo (${item.category || 'Carta'})`;
+          } else if (item.productNames && item.productNames.length > 1) {
+            const preview = item.productNames.slice(0, 3).join(', ');
+            const remaining = item.productNames.length - 3;
+            appliesToText = `🔄 Aplica a ${item.productNames.length} platos: ${preview}${remaining > 0 ? ` +${remaining} más` : ''}`;
+          } else if (item.productNames && item.productNames.length === 1) {
+            appliesToText = `Plato: ${item.productNames[0]} (${item.category || 'Carta'})`;
+          } else {
+            appliesToText = item.category || 'Carta';
+          }
+
+          return `
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 12px; gap: 12px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 180px;">
+                <div style="font-weight: 800; font-size: 13px; color: #FFF;">${item.name}</div>
+                <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">${appliesToText}</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="display: flex; align-items: center; gap: 4px; width: 130px;">
+                  <span style="color: #FCD34D; font-weight: 800; font-size: 13px;">$</span>
+                  <input type="number" step="500" min="0" placeholder="Ej: 3000" data-idx="${idx}" class="quick-fill-input" value="${item.currentPrice > 0 ? item.currentPrice : ''}" style="width: 100%; padding: 6px 8px; border-radius: 8px; background: rgba(18,18,22,0.9); border: 1.5px solid #F59E0B; color: #FFF; font-weight: 800; font-size: 13px;">
+                </div>
+                <button type="button" onclick="event.stopPropagation(); AdminApp.deleteSpecificMissingModifier(${idx})" class="btn-neumorphic" style="margin: 0; padding: 6px 9px; height: 32px; color: #EF4444; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.12); font-size: 12px; cursor: pointer;" title="Eliminar este adicional sin precio de los platos">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    this.currentQuickFillItems = missing;
+
+    const modal = document.getElementById('quick-fill-prices-modal');
+    if (modal) modal.classList.add('active');
+    this.checkModalOpenState();
+  }
+
+  closeQuickFillPricesModal() {
+    const modal = document.getElementById('quick-fill-prices-modal');
+    if (modal) modal.classList.remove('active');
+    this.checkModalOpenState();
+
+    const menuModal = document.getElementById('menu-tables-modal');
+    if (!menuModal || !menuModal.classList.contains('active')) {
+      const tableCard = document.getElementById('keys-table-body')?.closest('.admin-card');
+      if (tableCard) {
+        tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }
+
+  async deleteSpecificMissingModifier(idx) {
+    const est = this.establishments.find(e => e.id === this.activeShopIdForQuickFill);
+    if (!est || !Array.isArray(this.currentQuickFillItems)) return;
+
+    const item = this.currentQuickFillItems[idx];
+    if (!item) return;
+
+    if (!confirm(`¿Eliminar "${item.name}" de todos los platos donde aparece?`)) return;
+
+    if (item.type === 'product') {
+      est.products = (est.products || []).filter(p => p.id !== item.productId);
+    } else if (item.type === 'modifier') {
+      const optNameTarget = (item.optionName || '').trim().toLowerCase();
+      const groupNameTarget = (item.groupName || '').trim().toLowerCase();
+
+      (est.products || []).forEach(prod => {
+        if (Array.isArray(prod.modifiers)) {
+          prod.modifiers.forEach(group => {
+            if (Array.isArray(group.options)) {
+              group.options = group.options.filter(o => {
+                const isTarget = item.targets && item.targets.some(t => t.productId === prod.id && (t.optionId === o.id || t.optionId === o.option_id));
+                const nameMatch = (o.name || '').trim().toLowerCase() === optNameTarget;
+                return !isTarget && !nameMatch;
+              });
+            }
+          });
+          prod.modifiers = prod.modifiers.filter(group => Array.isArray(group.options) && group.options.length > 0);
+        }
+      });
+    }
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (res.ok) {
+        this.showToast(`✅ "${item.name}" eliminado de los platos.`);
+        this.openQuickFillPricesModal(est.id);
+
+        if (typeof this.loadModalProducts === 'function') this.loadModalProducts();
+        if (typeof this.renderModalProducts === 'function') this.renderModalProducts();
+        if (typeof this.renderDailySpecialsTab === 'function') {
+          this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+        }
+        if (typeof this.renderTable === 'function') {
+          this.renderTable();
+        }
+        if (typeof this.auditMissingPrices === 'function') {
+          this.auditMissingPrices(est);
+        }
+        this.markPendingChanges();
+      } else {
+        alert('Error al guardar cambios.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al eliminar adicional.');
+    }
+  }
+
+  async deleteMissingModifiersAll() {
+    const est = this.establishments.find(e => e.id === this.activeShopIdForQuickFill);
+    if (!est || !Array.isArray(this.currentQuickFillItems) || this.currentQuickFillItems.length === 0) return;
+
+    if (!confirm(`¿Eliminar TODOS los ${this.currentQuickFillItems.length} adicionales/platos sin precio de "${est.name}"?`)) return;
+
+    const missingModifiers = this.currentQuickFillItems.filter(i => i.type === 'modifier');
+    const missingProducts = this.currentQuickFillItems.filter(i => i.type === 'product').map(p => p.productId);
+
+    if (missingProducts.length > 0) {
+      est.products = (est.products || []).filter(p => !missingProducts.includes(p.id));
+    }
+
+    const optNamesToDelete = new Set(missingModifiers.map(m => (m.optionName || '').trim().toLowerCase()));
+
+    (est.products || []).forEach(prod => {
+      if (Array.isArray(prod.modifiers)) {
+        prod.modifiers.forEach(group => {
+          if (Array.isArray(group.options)) {
+            group.options = group.options.filter(o => {
+              const nameKey = (o.name || '').trim().toLowerCase();
+              const isUnpriced = optNamesToDelete.has(nameKey) || o.price_pending === true || !o.extra_price || o.extra_price === 0;
+              return !optNamesToDelete.has(nameKey) && !isUnpriced;
+            });
+          }
+        });
+        prod.modifiers = prod.modifiers.filter(group => Array.isArray(group.options) && group.options.length > 0);
+      }
+    });
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (res.ok) {
+        document.getElementById('quick-fill-prices-modal')?.classList.remove('active');
+        this.checkModalOpenState();
+        this.showToast(`✅ Se eliminaron todos los adicionales sin precio.`);
+
+        if (typeof this.loadModalProducts === 'function') this.loadModalProducts();
+        if (typeof this.renderModalProducts === 'function') this.renderModalProducts();
+        if (typeof this.renderDailySpecialsTab === 'function') {
+          this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+        }
+        if (typeof this.renderTable === 'function') {
+          this.renderTable();
+        }
+        if (typeof this.auditMissingPrices === 'function') {
+          this.auditMissingPrices(est);
+        }
+        this.markPendingChanges();
+
+        const menuModal = document.getElementById('menu-tables-modal');
+        if (!menuModal || !menuModal.classList.contains('active')) {
+          const tableCard = document.getElementById('keys-table-body')?.closest('.admin-card');
+          if (tableCard) {
+            tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      } else {
+        alert('Error al guardar cambios.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al eliminar adicionales.');
+    }
+  }
+
+  async saveQuickFillPrices() {
+    const est = this.establishments.find(e => e.id === this.activeShopIdForQuickFill);
+    if (!est || !Array.isArray(this.currentQuickFillItems)) return;
+
+    const inputs = document.querySelectorAll('.quick-fill-input');
+    inputs.forEach(inp => {
+      const idx = parseInt(inp.getAttribute('data-idx'));
+      const val = parseFloat(inp.value) || 0;
+      const item = this.currentQuickFillItems[idx];
+      if (!item) return;
+
+      if (item.type === 'product') {
+        const prod = (est.products || []).find(p => p.id === item.productId);
+        if (prod) {
+          prod.price = val;
+          prod.price_pending = false;
+        }
+      } else if (item.type === 'modifier') {
+        const optNameTarget = (item.optionName || '').trim().toLowerCase();
+        const groupNameTarget = (item.groupName || '').trim().toLowerCase();
+
+        // 1. Update all explicit targets
+        if (Array.isArray(item.targets)) {
+          item.targets.forEach(tgt => {
+            const prod = (est.products || []).find(p => p.id === tgt.productId);
+            if (prod && Array.isArray(prod.modifiers)) {
+              const modGroup = prod.modifiers.find(m => m.group_id === tgt.groupId || (m.group_name || '').trim().toLowerCase() === groupNameTarget);
+              if (modGroup && Array.isArray(modGroup.options)) {
+                const opt = modGroup.options.find(o => (o.id === tgt.optionId || o.option_id === tgt.optionId || (o.name || '').trim().toLowerCase() === optNameTarget));
+                if (opt) {
+                  opt.extra_price = val;
+                  opt.price_pending = false;
+                }
+              }
+            }
+          });
+        }
+
+        // 2. Global bulk update across ALL dishes in the establishment with matching modifier option name
+        (est.products || []).forEach(prod => {
+          if (Array.isArray(prod.modifiers)) {
+            prod.modifiers.forEach(m => {
+              const mNameLower = (m.group_name || '').trim().toLowerCase();
+              if (mNameLower === groupNameTarget || mNameLower.includes('adic') || groupNameTarget.includes('adic')) {
+                if (Array.isArray(m.options)) {
+                  m.options.forEach(opt => {
+                    if ((opt.name || '').trim().toLowerCase() === optNameTarget) {
+                      opt.extra_price = val;
+                      opt.price_pending = false;
+                    }
+                  });
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (!res.ok) throw new Error('Error al guardar precios');
+
+      this.showToast(`✅ Precios actualizados en todos los platos de ${est.name}`);
+      this.markPendingChanges();
+      this.renderTable();
+      this.auditMissingPrices(est);
+      if (typeof this.loadModalProducts === 'function') this.loadModalProducts();
+
+      const modal = document.getElementById('quick-fill-prices-modal');
+      if (modal) modal.classList.remove('active');
+      this.checkModalOpenState();
+
+      const menuModal = document.getElementById('menu-tables-modal');
+      if (!menuModal || !menuModal.classList.contains('active')) {
+        const tableCard = document.getElementById('keys-table-body')?.closest('.admin-card');
+        if (tableCard) {
+          tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al guardar precios: ' + err.message);
+    }
+  }
+
+  // ==========================================
+  // PIZZA CRUSTS MANAGER (ADMIN)
+  // ==========================================
+
+  openPizzaCrustsManagerModal(shopId) {
+    const targetId = shopId || window.activeShopIdForMenu || this.activeShopId;
+    const est = this.establishments.find(e => e.id === targetId);
+    if (!est) {
+      this.showToast('⚠️ Por favor selecciona un comercio primero');
+      return;
+    }
+
+    this.activeShopIdForCrusts = est.id;
+
+    const nameEl = document.getElementById('pizza-crusts-shop-name');
+    if (nameEl) nameEl.innerText = `🍕 ${est.name}`;
+
+    const defaultCrusts = [
+      { id: 'tradicional', name: 'Borde Tradicional (Sin relleno)', price: 0, icon: '🥖', description: 'Masa clásica crujiente' },
+      { id: 'queso', name: 'Borde de Queso Mozzarella', price: 5000, icon: '🧀', description: 'Relleno de queso derretido' },
+      { id: 'salchicha', name: 'Borde de Salchicha', price: 6000, icon: '🌭', description: 'Relleno de salchicha parrillera' },
+      { id: 'bocadillo_queso', name: 'Borde de Bocadillo con Queso', price: 6000, icon: '🍯', description: 'Dulce de guayaba con queso' },
+      { id: 'queso_crema', name: 'Borde de Queso Crema / Cheddar', price: 6000, icon: '🧀', description: 'Queso crema suave' }
+    ];
+
+    if (!Array.isArray(est.pizza_crusts) || est.pizza_crusts.length === 0) {
+      this.editingPizzaCrusts = JSON.parse(JSON.stringify(defaultCrusts));
+    } else {
+      this.editingPizzaCrusts = JSON.parse(JSON.stringify(est.pizza_crusts));
+      const hasTrad = this.editingPizzaCrusts.some(c => (c.name || '').toLowerCase().includes('tradicional'));
+      if (!hasTrad) this.editingPizzaCrusts.unshift(defaultCrusts[0]);
+    }
+
+    this.renderPizzaCrustsManagerList();
+
+    const modal = document.getElementById('pizza-crusts-manager-modal');
+    if (modal) modal.classList.add('active');
+    this.checkModalOpenState();
+  }
+
+  renderPizzaCrustsManagerList() {
+    const listCont = document.getElementById('pizza-crusts-list');
+    if (!listCont || !Array.isArray(this.editingPizzaCrusts)) return;
+
+    if (this.editingPizzaCrusts.length === 0) {
+      listCont.innerHTML = `
+        <div style="text-align: center; padding: 20px; color: #94A3B8; font-size: 13px;">
+          No hay bordes configurados. Usa el formulario de arriba para añadir uno.
+        </div>
+      `;
+      return;
+    }
+
+    listCont.innerHTML = this.editingPizzaCrusts.map((crust, idx) => {
+      const isTrad = (crust.name || '').toLowerCase().includes('tradicional');
+      return `
+        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); padding: 10px 12px; border-radius: 12px; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+            <span style="font-size: 20px;">${crust.icon || '🧀'}</span>
+            <input type="text" class="crust-name-input" data-idx="${idx}" value="${crust.name}" style="flex: 1; background: rgba(18,18,22,0.8); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #FFF; font-weight: 700; font-size: 12.5px; padding: 6px 10px;">
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; width: 130px;">
+            <span style="color: #FCD34D; font-weight: 800; font-size: 13px;">$</span>
+            <input type="number" step="500" min="0" class="crust-price-input" data-idx="${idx}" value="${crust.price || 0}" ${isTrad ? 'readonly' : ''} style="width: 100%; padding: 6px 8px; border-radius: 8px; background: rgba(18,18,22,0.9); border: 1.5px solid ${isTrad ? 'rgba(255,255,255,0.1)' : '#F59E0B'}; color: #FFF; font-weight: 800; font-size: 12.5px;">
+          </div>
+          <div>
+            ${isTrad ? `
+              <span style="font-size: 10.5px; color: #10B981; font-weight: 800; padding: 4px 6px;">Base</span>
+            ` : `
+              <button type="button" onclick="AdminApp.removePizzaCrust(${idx})" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #EF4444; color: #FCA5A5; border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer;" title="Eliminar borde">
+                🗑️
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  addNewPizzaCrust() {
+    const nameInput = document.getElementById('new-crust-name');
+    const priceInput = document.getElementById('new-crust-price');
+    const iconInput = document.getElementById('new-crust-icon');
+
+    const name = nameInput?.value?.trim();
+    const price = parseFloat(priceInput?.value) || 0;
+    const icon = iconInput?.value?.trim() || (name?.toLowerCase().includes('salchicha') ? '🌭' : (name?.toLowerCase().includes('bocadillo') ? '🍯' : (name?.toLowerCase().includes('choc') ? '🍫' : '🧀')));
+
+    if (!name) {
+      this.showToast('⚠️ Escribe el nombre del borde');
+      return;
+    }
+
+    if (!Array.isArray(this.editingPizzaCrusts)) {
+      this.editingPizzaCrusts = [];
+    }
+
+    this.editingPizzaCrusts.push({
+      id: 'crust-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      name: name,
+      price: price,
+      icon: icon,
+      description: ''
+    });
+
+    if (nameInput) nameInput.value = '';
+    if (priceInput) priceInput.value = '';
+    if (iconInput) iconInput.value = '';
+
+    this.renderPizzaCrustsManagerList();
+    this.showToast(`➕ Borde "${name}" añadido a la lista`);
+  }
+
+  removePizzaCrust(idx) {
+    if (!Array.isArray(this.editingPizzaCrusts) || !this.editingPizzaCrusts[idx]) return;
+    this.editingPizzaCrusts.splice(idx, 1);
+    this.renderPizzaCrustsManagerList();
+    this.showToast(`🗑️ Borde eliminado`);
+  }
+
+  async savePizzaCrusts() {
+    const est = this.establishments.find(e => e.id === this.activeShopIdForCrusts);
+    if (!est || !Array.isArray(this.editingPizzaCrusts)) return;
+
+    // Sync from inputs in DOM
+    const nameInputs = document.querySelectorAll('.crust-name-input');
+    const priceInputs = document.querySelectorAll('.crust-price-input');
+
+    nameInputs.forEach(inp => {
+      const idx = parseInt(inp.getAttribute('data-idx'));
+      if (this.editingPizzaCrusts[idx]) {
+        this.editingPizzaCrusts[idx].name = inp.value.trim() || this.editingPizzaCrusts[idx].name;
+      }
+    });
+
+    priceInputs.forEach(inp => {
+      const idx = parseInt(inp.getAttribute('data-idx'));
+      if (this.editingPizzaCrusts[idx]) {
+        this.editingPizzaCrusts[idx].price = parseFloat(inp.value) || 0;
+      }
+    });
+
+    est.pizza_crusts = this.editingPizzaCrusts;
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          linkKey: est.linkKey,
+          isOwner: true,
+          pizza_crusts: est.pizza_crusts
+        })
+      });
+
+      if (!res.ok) throw new Error('Error al guardar bordes');
+
+      this.showToast(`✅ Bordes de pizza guardados para ${est.name}`);
+      this.markPendingChanges();
+
+      const modal = document.getElementById('pizza-crusts-manager-modal');
+      if (modal) modal.classList.remove('active');
+      this.checkModalOpenState();
+    } catch (err) {
+      console.error(err);
+      alert('Error al guardar bordes: ' + err.message);
+    }
+  }
+
+  // --- Limpieza y Eliminación Selectiva / Masiva de Adicionales ---
+  clearCurrentProductModifiers() {
+    if (!confirm('¿Eliminar todos los grupos de opciones y adicionales de este plato?')) return;
+    this.specsGroups = [];
+    this.renderSpecsGroups();
+  }
+
+  openClearModifiersModal(shopId) {
+    const targetId = shopId || window.activeShopIdForMenu || this.activeShopId;
+    const est = this.getEstablishmentById(targetId);
+    if (!est) {
+      alert('Por favor selecciona o abre un restaurante primero.');
+      return;
+    }
+
+    this.activeShopId = est.id;
+    window.activeShopIdForMenu = est.id;
+    this.activeShopIdForClearModifiers = est.id;
+
+    const nameEl = document.getElementById('clear-modifiers-shop-name');
+    if (nameEl) nameEl.innerText = `🏪 ${est.name}`;
+
+    const searchInp = document.getElementById('clear-modifiers-search-input');
+    if (searchInp) searchInp.value = '';
+
+    this.renderClearModifiersDishList();
+
+    const modal = document.getElementById('clear-modifiers-modal');
+    if (modal) modal.classList.add('active');
+    if (typeof this.checkModalOpenState === 'function') this.checkModalOpenState();
+  }
+
+  closeClearModifiersModal() {
+    const modal = document.getElementById('clear-modifiers-modal');
+    if (modal) modal.classList.remove('active');
+    if (typeof this.checkModalOpenState === 'function') this.checkModalOpenState();
+
+    const menuModal = document.getElementById('menu-tables-modal');
+    if (!menuModal || !menuModal.classList.contains('active')) {
+      const tableCard = document.getElementById('keys-table-body')?.closest('.admin-card');
+      if (tableCard) {
+        tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }
+
+  renderClearModifiersDishList() {
+    const est = this.establishments.find(e => e.id === this.activeShopIdForClearModifiers);
+    const listCont = document.getElementById('clear-modifiers-dish-list');
+    if (!est || !listCont) return;
+
+    const searchVal = (document.getElementById('clear-modifiers-search-input')?.value || '').toLowerCase().trim();
+    const products = est.products || [];
+
+    const filtered = products.filter(p => {
+      if (!searchVal) return true;
+      return (p.name || '').toLowerCase().includes(searchVal) || (p.category || '').toLowerCase().includes(searchVal);
+    });
+
+    if (filtered.length === 0) {
+      listCont.innerHTML = `
+        <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px;">
+          No se encontraron platos con el criterio de búsqueda.
+        </div>
+      `;
+      return;
+    }
+
+    listCont.innerHTML = filtered.map(prod => {
+      const groupsCount = Array.isArray(prod.modifiers) ? prod.modifiers.length : 0;
+      let totalOptions = 0;
+      if (groupsCount > 0) {
+        prod.modifiers.forEach(g => {
+          totalOptions += Array.isArray(g.options) ? g.options.length : 0;
+        });
+      }
+
+      const hasModifiers = groupsCount > 0;
+      const statusBadge = hasModifiers
+        ? `<span style="background: rgba(239, 68, 68, 0.15); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 800;">🎛️ ${groupsCount} grupo${groupsCount > 1 ? 's' : ''} (${totalOptions} opciones)</span>`
+        : `<span style="color: #64748B; font-size: 11px; font-style: italic;">(Sin adicionales)</span>`;
+
+      const formattedPrice = this.formatPesos ? this.formatPesos(prod.price || 0) : `$${(prod.price || 0).toLocaleString('es-CO')}`;
+
+      return `
+        <label style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 10px 14px; border-radius: 12px; gap: 12px; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+          <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+            <input type="checkbox" class="clear-mod-dish-checkbox" value="${prod.id}" ${hasModifiers ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: #EF4444; cursor: pointer; flex-shrink: 0;">
+            <img src="${prod.image || '/images/burger_royale.jpg'}" alt="${prod.name}" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; background: #111; flex-shrink: 0;" onerror="this.src='/images/burger_royale.jpg'">
+            <div style="min-width: 0; flex: 1;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <strong style="color: #FFF; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prod.name}</strong>
+                <span style="color: #94A3B8; font-size: 11px;">(${prod.category || 'Carta'})</span>
+              </div>
+              <div style="font-size: 11px; color: #10B981; font-weight: 700; margin-top: 2px;">${formattedPrice}</div>
+            </div>
+          </div>
+          <div style="flex-shrink: 0;">
+            ${statusBadge}
+          </div>
+        </label>
+      `;
+    }).join('');
+  }
+
+  filterClearModifiersList() {
+    this.renderClearModifiersDishList();
+  }
+
+  toggleAllClearModifiersCheckboxes(checked) {
+    const checkboxes = document.querySelectorAll('.clear-mod-dish-checkbox');
+    checkboxes.forEach(cb => { cb.checked = checked; });
+  }
+
+  async executeClearModifiersSelected() {
+    const est = this.establishments.find(e => e.id === this.activeShopIdForClearModifiers);
+    if (!est) return;
+
+    const checkboxes = document.querySelectorAll('.clear-mod-dish-checkbox:checked');
+    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+    if (selectedIds.length === 0) {
+      alert('Por favor selecciona al menos 1 plato para eliminar sus adicionales.');
+      return;
+    }
+
+    const clearExclusions = document.getElementById('clear-scope-exclusions')?.checked || false;
+    const msg = clearExclusions
+      ? `¿Estás seguro de eliminar los adicionales Y las exclusiones de los ${selectedIds.length} platos seleccionados?`
+      : `¿Estás seguro de eliminar todos los adicionales de los ${selectedIds.length} platos seleccionados?`;
+
+    if (!confirm(msg)) return;
+
+    let modifiedCount = 0;
+    (est.products || []).forEach(p => {
+      if (selectedIds.includes(p.id)) {
+        p.modifiers = [];
+        if (clearExclusions) {
+          p.exclusions = [];
+        }
+        modifiedCount++;
+      }
+    });
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (res.ok) {
+        this.closeClearModifiersModal();
+        if (typeof this.showToast === 'function') {
+          this.showToast(`✅ Se limpiaron los adicionales de ${modifiedCount} platos.`);
+        } else {
+          alert(`✅ Se limpiaron los adicionales de ${modifiedCount} platos.`);
+        }
+
+        if (typeof this.loadModalProducts === 'function') this.loadModalProducts();
+        if (typeof this.renderModalProducts === 'function') this.renderModalProducts();
+        if (typeof this.renderDailySpecialsTab === 'function') {
+          this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+        }
+        if (typeof this.renderTable === 'function') this.renderTable();
+        if (typeof this.auditMissingPrices === 'function') this.auditMissingPrices(est);
+        this.markPendingChanges();
+        this.checkModalOpenState();
+      } else {
+        alert('Error al guardar cambios en el servidor.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión al eliminar adicionales.');
+    }
+  }
+
+  async executeClearModifiersAll() {
+    const est = this.establishments.find(e => e.id === this.activeShopIdForClearModifiers);
+    if (!est) return;
+
+    const clearExclusions = document.getElementById('clear-scope-exclusions')?.checked || false;
+    const msg = clearExclusions
+      ? `⚠️ ATENCIÓN: ¿Estás seguro de eliminar los ADICIONALES y EXCLUSIONES de TODOS los platos de "${est.name}"?`
+      : `⚠️ ATENCIÓN: ¿Estás seguro de eliminar TODOS los grupos de adicionales de TODOS los platos de "${est.name}"?`;
+
+    if (!confirm(msg)) return;
+
+    let modifiedCount = 0;
+    (est.products || []).forEach(p => {
+      p.modifiers = [];
+      if (clearExclusions) {
+        p.exclusions = [];
+      }
+      modifiedCount++;
+    });
+
+    try {
+      const res = await fetch(`/api/establishments/${est.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOwner: true,
+          products: est.products
+        })
+      });
+
+      if (res.ok) {
+        this.closeClearModifiersModal();
+        if (typeof this.showToast === 'function') {
+          this.showToast(`✅ Se eliminaron los adicionales de todos los platos (${modifiedCount}).`);
+        } else {
+          alert(`✅ Se eliminaron los adicionales de todos los platos (${modifiedCount}).`);
+        }
+
+        if (typeof this.loadModalProducts === 'function') this.loadModalProducts();
+        if (typeof this.renderModalProducts === 'function') this.renderModalProducts();
+        if (typeof this.renderDailySpecialsTab === 'function') {
+          this.renderDailySpecialsTab(this.selectedDailyDay || 'todos');
+        }
+        if (typeof this.renderTable === 'function') this.renderTable();
+        if (typeof this.auditMissingPrices === 'function') this.auditMissingPrices(est);
+        this.markPendingChanges();
+        this.checkModalOpenState();
+      } else {
+        alert('Error al guardar cambios en el servidor.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión al eliminar adicionales.');
+    }
+  }
+
+  // ==========================================
+  // PAYMENT METHODS & QR MANAGEMENT (ADMIN)
+  // ==========================================
+
+  async openPaymentMethodsModal(initialStoreId = null) {
+    const modal = document.getElementById('admin-payment-methods-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+
+    // Populate store select
+    const select = document.getElementById('admin-pm-store-select');
+    if (select) {
+      const stores = (this.establishments || []).map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+      select.innerHTML = `
+        <option value="global">🌐 Plataforma Global (Por Defecto)</option>
+        ${stores}
+      `;
+      if (initialStoreId) {
+        select.value = initialStoreId;
+      }
+    }
+
+    this.cancelPaymentMethodForm();
+    await this.loadAdminPaymentMethods();
+  }
+
+  closePaymentMethodsModal() {
+    const modal = document.getElementById('admin-payment-methods-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  }
+
+  async onPaymentStoreChanged() {
+    this.cancelPaymentMethodForm();
+    await this.loadAdminPaymentMethods();
+  }
+
+  async loadAdminPaymentMethods() {
+    const container = document.getElementById('admin-payment-methods-list');
+    const select = document.getElementById('admin-pm-store-select');
+    if (!container) return;
+
+    const storeId = select ? select.value : 'global';
+    container.innerHTML = '<div style="color: #94A3B8; text-align: center; padding: 20px;">Cargando cuentas...</div>';
+
+    try {
+      let url = storeId === 'global' ? '/api/settings/payment-methods' : `/api/establishments/${storeId}/payment-methods`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Error al consultar métodos');
+      const data = await res.json();
+      this.currentAdminPaymentMethods = Array.isArray(data) ? data : (data.paymentMethods || []);
+      this.renderAdminPaymentMethodsList();
+    } catch(err) {
+      console.error(err);
+      container.innerHTML = '<div style="color: #EF4444; text-align: center; padding: 20px;">Error al cargar cuentas de pago.</div>';
+    }
+  }
+
+  renderAdminPaymentMethodsList() {
+    const container = document.getElementById('admin-payment-methods-list');
+    if (!container) return;
+
+    const methods = this.currentAdminPaymentMethods || [];
+    if (methods.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 30px; background: rgba(255,255,255,0.02); border-radius: 14px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 6px;">💳</span>
+          <strong style="color: #FFF; font-size: 13.5px;">No hay cuentas registradas para esta sede</strong>
+          <p style="color: #94A3B8; font-size: 12px; margin: 4px 0 0 0;">Haz clic en <strong>"+ Nueva Cuenta o QR"</strong> para registrar una cuenta.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = methods.map((m) => {
+      const typeIcon = m.type === 'pago_movil' ? '📲' : (m.type === 'zelle' ? '💵' : (m.type === 'binance' ? '🟡' : '🏦'));
+      const isActive = m.active !== false;
+
+      return `
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; ${!isActive ? 'opacity: 0.5;' : ''}">
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="font-weight: 900; font-size: 13.5px; color: #FFF;">${typeIcon} ${m.title || m.bank}</span>
+              <span style="font-size: 10.5px; font-weight: 800; background: rgba(20,184,166,0.2); color: #5EEAD4; padding: 2px 6px; border-radius: 4px;">${m.bank || m.type}</span>
+              ${m.accountType ? `<span style="font-size: 10.5px; font-weight: 800; background: rgba(59,130,246,0.2); color: #93C5FD; padding: 2px 6px; border-radius: 4px;">${m.accountType}</span>` : ''}
+              ${m.qrImage ? '<span style="font-size: 10px; font-weight: 800; background: rgba(16,185,129,0.2); color: #10B981; padding: 2px 6px; border-radius: 4px;">QR Adjunto</span>' : ''}
+            </div>
+            <div style="font-size: 12px; color: #CBD5E1; margin-top: 4px;">
+              ${m.phone ? `<span>📞/💳 ${m.phone}</span> • ` : ''}
+              ${m.accountType ? `<span>(${m.accountType})</span> • ` : ''}
+              ${m.idNumber ? `<span>🪪 ${m.idNumber}</span> • ` : ''}
+              ${m.account ? `<span>💳 ${m.account}</span> • ` : ''}
+              ${m.titular ? `<span>👤 ${m.titular}</span>` : ''}
+            </div>
+            ${m.notes ? `<div style="font-size: 11px; color: #FDE047; margin-top: 2px; font-style: italic;">Nota: ${m.notes}</div>` : ''}
+          </div>
+
+          <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
+            <button type="button" onclick="AdminApp.toggleAdminPaymentMethodActive('${m.id}')" style="background: ${isActive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}; border: 1px solid ${isActive ? '#10B981' : '#EF4444'}; color: ${isActive ? '#10B981' : '#EF4444'}; padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+              ${isActive ? '🟢 Activo' : '🔴 Pausado'}
+            </button>
+            <button type="button" onclick="AdminApp.editAdminPaymentMethod('${m.id}')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+              ✏️
+            </button>
+            <button type="button" onclick="AdminApp.deleteAdminPaymentMethod('${m.id}')" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #FCA5A5; padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  openAddPaymentMethodForm(existingData = null) {
+    const form = document.getElementById('admin-payment-method-form-container');
+    const title = document.getElementById('admin-payment-form-title');
+    if (!form) return;
+
+    form.classList.remove('hidden');
+
+    if (existingData) {
+      if (title) title.innerText = 'Editar Cuenta Bancaria';
+      document.getElementById('admin-pm-form-id').value = existingData.id || '';
+      document.getElementById('admin-pm-form-type').value = existingData.type || 'pago_movil';
+      document.getElementById('admin-pm-form-bank').value = existingData.bank || '';
+      document.getElementById('admin-pm-form-phone').value = existingData.phone || existingData.account || '';
+      const accTypeEl = document.getElementById('admin-pm-form-account-type');
+      if (accTypeEl) accTypeEl.value = existingData.accountType || '';
+      document.getElementById('admin-pm-form-idnumber').value = existingData.idNumber || '';
+      document.getElementById('admin-pm-form-titular').value = existingData.titular || '';
+      document.getElementById('admin-pm-form-notes').value = existingData.notes || '';
+      document.getElementById('admin-pm-form-qr-url').value = existingData.qrImage || '';
+    } else {
+      if (title) title.innerText = 'Agregar Nueva Cuenta Bancaria / QR';
+      document.getElementById('admin-pm-form-id').value = '';
+      document.getElementById('admin-pm-form-type').value = 'pago_movil';
+      document.getElementById('admin-pm-form-bank').value = '';
+      document.getElementById('admin-pm-form-phone').value = '';
+      const accTypeEl = document.getElementById('admin-pm-form-account-type');
+      if (accTypeEl) accTypeEl.value = '';
+      document.getElementById('admin-pm-form-idnumber').value = '';
+      document.getElementById('admin-pm-form-titular').value = '';
+      document.getElementById('admin-pm-form-notes').value = '';
+      document.getElementById('admin-pm-form-qr-url').value = '';
+    }
+    const fileInp = document.getElementById('admin-pm-form-qr-file');
+    if (fileInp) fileInp.value = '';
+  }
+
+  cancelPaymentMethodForm() {
+    const form = document.getElementById('admin-payment-method-form-container');
+    if (form) form.classList.add('hidden');
+  }
+
+  editAdminPaymentMethod(id) {
+    const method = (this.currentAdminPaymentMethods || []).find(m => m.id === id);
+    if (method) this.openAddPaymentMethodForm(method);
+  }
+
+  async handleAdminQRFileSelected(event) {
+    const input = event.target;
+    if (!input || !input.files || !input.files[0]) return;
+    const file = input.files[0];
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 800;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.8);
+          document.getElementById('admin-pm-form-qr-url').value = compressed;
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  async savePaymentMethod() {
+    const select = document.getElementById('admin-pm-store-select');
+    const storeId = select ? select.value : 'global';
+
+    const id = document.getElementById('admin-pm-form-id').value || ('pm-' + Date.now());
+    const type = document.getElementById('admin-pm-form-type').value;
+    const bank = document.getElementById('admin-pm-form-bank').value.trim();
+    const phone = document.getElementById('admin-pm-form-phone').value.trim();
+    const accTypeEl = document.getElementById('admin-pm-form-account-type');
+    const accountType = accTypeEl ? accTypeEl.value : '';
+    const idNumber = document.getElementById('admin-pm-form-idnumber').value.trim();
+    const titular = document.getElementById('admin-pm-form-titular').value.trim();
+    const notes = document.getElementById('admin-pm-form-notes').value.trim();
+    const qrImage = document.getElementById('admin-pm-form-qr-url').value;
+
+    if (!bank || !phone) {
+      alert('Por favor indica al menos el Banco y el Teléfono/Cuenta.');
+      return;
+    }
+
+    const typeTitles = {
+      pago_movil: 'Pago Móvil (Bolívares)',
+      transferencia: 'Bancolombia / Nequi (COP)',
+      zelle: 'Zelle (USD)',
+      binance: 'Binance Pay USDT',
+      otro: bank
+    };
+
+    const newMethod = {
+      id,
+      title: `${typeTitles[type] || bank}`,
+      type,
+      bank,
+      phone,
+      accountType: accountType || null,
+      idNumber,
+      titular,
+      notes,
+      qrImage,
+      active: true
+    };
+
+    let methods = [...(this.currentAdminPaymentMethods || [])];
+    const existingIdx = methods.findIndex(m => m.id === id);
+    if (existingIdx !== -1) {
+      methods[existingIdx] = newMethod;
+    } else {
+      methods.push(newMethod);
+    }
+
+    try {
+      const url = storeId === 'global' ? '/api/settings/payment-methods' : `/api/establishments/${storeId}/payment-methods`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentMethods: methods })
+      });
+
+      if (res.ok) {
+        this.currentAdminPaymentMethods = methods;
+        this.renderAdminPaymentMethodsList();
+        this.cancelPaymentMethodForm();
+        this.markPendingChanges();
+      } else {
+        alert('Error al guardar la cuenta en el servidor.');
+      }
+    } catch(err) {
+      console.error(err);
+      alert('Error de conexión al guardar cuenta.');
+    }
+  }
+
+  async deleteAdminPaymentMethod(id) {
+    if (!confirm('¿Deseas eliminar esta cuenta de pago?')) return;
+    const select = document.getElementById('admin-pm-store-select');
+    const storeId = select ? select.value : 'global';
+    const methods = (this.currentAdminPaymentMethods || []).filter(m => m.id !== id);
+
+    try {
+      const url = storeId === 'global' ? '/api/settings/payment-methods' : `/api/establishments/${storeId}/payment-methods`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentMethods: methods })
+      });
+
+      if (res.ok) {
+        this.currentAdminPaymentMethods = methods;
+        this.renderAdminPaymentMethodsList();
+        this.markPendingChanges();
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  async toggleAdminPaymentMethodActive(id) {
+    const select = document.getElementById('admin-pm-store-select');
+    const storeId = select ? select.value : 'global';
+    const methods = (this.currentAdminPaymentMethods || []).map(m => {
+      if (m.id === id) {
+        return { ...m, active: m.active === false ? true : false };
+      }
+      return m;
+    });
+
+    try {
+      const url = storeId === 'global' ? '/api/settings/payment-methods' : `/api/establishments/${storeId}/payment-methods`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentMethods: methods })
+      });
+
+      if (res.ok) {
+        this.currentAdminPaymentMethods = methods;
+        this.renderAdminPaymentMethodsList();
+        this.markPendingChanges();
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  // ==========================================
+  // RECEIPT VIEWER MODAL (ADMIN ZOOM)
+  // ==========================================
+
+  openReceiptViewer(orderId) {
+    const order = (this.orders || []).find(o => String(o.id) === String(orderId));
+    if (!order || !order.paymentReceiptUrl) return;
+
+    const modal = document.getElementById('admin-receipt-viewer-modal');
+    const infoEl = document.getElementById('admin-receipt-modal-order-info');
+    const imgEl = document.getElementById('admin-receipt-modal-full-img');
+    const downloadLink = document.getElementById('admin-receipt-modal-download-link');
+
+    const orderTimeFormatted = order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+    const locText = order.orderType === 'mesa' ? `🍽️ Mesa #${order.tableNumber || '1'}` : `🚴 Domicilio (${order.deliveryDetails?.phone || 'Sin tlf'})`;
+
+    if (infoEl) {
+      infoEl.innerHTML = `
+        <span><strong>Pedido:</strong> #${String(order.id).slice(-4)}</span>
+        <span><strong>Comercio:</strong> ${order.establishmentName || ''}</span>
+        <span><strong>Ubicación:</strong> ${locText}</span>
+        <span><strong>Hora:</strong> ${orderTimeFormatted}</span>
+        <span><strong>Cliente:</strong> ${order.customerName || 'Cliente'}</span>
+        <span><strong>Total:</strong> $${Math.round(order.total || 0).toLocaleString('de-DE')} COP</span>
+      `;
+    }
+
+    if (imgEl) imgEl.src = order.paymentReceiptUrl;
+    if (downloadLink) downloadLink.href = order.paymentReceiptUrl;
+
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeReceiptViewerModal() {
+    const modal = document.getElementById('admin-receipt-viewer-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  }
+
+  // ==========================================
+  // Paint & Bodywork Services Admin Control
+  // ==========================================
+  async openPaintAdminModal() {
+    const modal = document.getElementById('admin-paint-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+    const badge = document.getElementById('admin-paint-badge');
+    if (badge) badge.style.display = 'none';
+    await this.loadPaintQuotes();
+  }
+
+  closePaintAdminModal() {
+    const modal = document.getElementById('admin-paint-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  handlePaintWsEvent(data) {
+    const badge = document.getElementById('admin-paint-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (this.currentInspectingQuote && this.currentInspectingQuote.type === 'paint' && this.currentInspectingQuote.id === data.quoteId) {
+      this.loadQuoteChatMessages();
+    }
+    const modal = document.getElementById('admin-paint-modal');
+    if (modal && modal.style.display === 'flex') {
+      this.loadPaintQuotes();
+    }
+  }
+
+  async loadPaintQuotes() {
+    try {
+      const res = await fetch('/api/paint-services/quotes');
+      const quotes = await res.json();
+      this.renderPaintQuotes(quotes);
+    } catch (e) {
+      console.warn('Could not load paint quotes:', e);
+    }
+  }
+
+  renderPaintQuotes(quotes) {
+    const listEl = document.getElementById('admin-paint-quotes-list');
+    if (!listEl) return;
+
+    const total = quotes.length;
+    const pending = quotes.filter(q => q.status === 'Solicitado').length;
+    const quoted = quotes.filter(q => q.status === 'Presupuestado').length;
+    const done = quotes.filter(q => q.status === 'Finalizado').length;
+
+    const totalEl = document.getElementById('admin-paint-kpi-total');
+    const pendEl = document.getElementById('admin-paint-kpi-pending');
+    const quotEl = document.getElementById('admin-paint-kpi-quoted');
+    const doneEl = document.getElementById('admin-paint-kpi-done');
+
+    if (totalEl) totalEl.textContent = total;
+    if (pendEl) pendEl.textContent = pending;
+    if (quotEl) quotEl.textContent = quoted;
+    if (doneEl) doneEl.textContent = done;
+
+    if (!quotes.length) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">🎨</span>
+          <p style="margin: 0; font-size: 13px;">No hay cotizaciones de pintura registradas aún.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = quotes.map(q => {
+      const statusColors = {
+        'Solicitado': '#F59E0B',
+        'En Conversación': '#3B82F6',
+        'Presupuestado': '#A855F7',
+        'En Producción': '#EF4444',
+        'Finalizado': '#10B981'
+      };
+      const color = statusColors[q.status] || '#94A3B8';
+      const piecesStr = (q.selectedPieces || []).join(', ') || 'Auto completo';
+
+      return `
+        <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <strong style="color: #FFF; font-size: 13.5px;">Cotización #${q.id.slice(-6)}: ${q.customerName}</strong>
+              <span style="font-size: 11.5px; color: #94A3B8; margin-left: 8px;">📞 ${q.customerPhone}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: rgba(255,255,255,0.08); color: ${color}; border: 1px solid ${color}; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 10px;">
+                ${q.status}
+              </span>
+              <span style="font-size: 11px; color: #64748B;">${new Date(q.createdAt).toLocaleDateString([], { day: '2-digit', month: 'short' })}</span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; font-size: 11.5px; color: #CBD5E1; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 10px;">
+            <div><strong>Vehículo:</strong> ${(q.vehicleType || '').toUpperCase()}</div>
+            <div><strong>Pintura:</strong> <span style="color: #38BDF8;">🎨 ${q.paintQualityName || (q.finishType || 'Bicapa').toUpperCase()}</span></div>
+            <div><strong>Barniz:</strong> <span style="color: #C084FC;">✨ ${q.varnishName || 'DuPont (Gama Alta A)'}</span></div>
+            <div><strong>Pulitura:</strong> <span style="color: #FBBF24;">💎 ${q.polishingTier || 'Solo Gama Alta (3M / Cerámica)'}</span></div>
+            <div><strong>Piezas:</strong> ${piecesStr}</div>
+            <div><strong>Latonería:</strong> ${q.hasLatoneria ? (q.latoneriaSeverity || 'Leve').toUpperCase() : 'NO'}</div>
+            <div><strong>Estimado / Final:</strong> <span style="color: #10B981; font-weight: 800;">${q.finalPrice ? `$${q.finalPrice} USD` : `$${q.estimatedRangeUsd} USD`}</span></div>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <a href="https://wa.me/573227949751?text=${encodeURIComponent(`🚗 *PEDIDO #${q.id.slice(-6)} DE LATONERÍA Y PINTURA*\n👤 Cliente: ${q.customerName} (${q.customerPhone})\n🚘 Vehículo: ${(q.vehicleType || '').toUpperCase()} - ${q.vehicleModel || ''}\n🎨 Pintura: ${q.paintQualityName || ''}\n✨ Barniz: ${q.varnishName || ''}\n💎 Pulitura: ${q.polishingTier || ''}\n💰 Estimado: ${q.finalPrice ? `$${q.finalPrice} USD` : `$${q.estimatedRangeUsd} USD`}`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+              <span>🟢</span> WhatsApp (322 794 9751)
+            </a>
+            <button type="button" onclick="AdminApp.openQuoteChatInspector('paint', '${q.id}', '${q.customerName}')" style="background: rgba(59, 130, 246, 0.15); border: 1px solid #3B82F6; color: #93C5FD; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💬 Chat en Vivo (${(q.messages || []).length})
+            </button>
+            <button type="button" onclick="AdminApp.promptPaintPrice('${q.id}')" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #A855F7; color: #E9D5FF; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💵 Presupuestar ($ USD)
+            </button>
+            <select onchange="AdminApp.updatePaintStatus('${q.id}', this.value)" style="background: #0F172A; border: 1px solid rgba(255,255,255,0.2); color: #FFF; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              <option value="Solicitado" ${q.status === 'Solicitado' ? 'selected' : ''}>⏳ Solicitado</option>
+              <option value="En Conversación" ${q.status === 'En Conversación' ? 'selected' : ''}>💬 En Conversación</option>
+              <option value="Presupuestado" ${q.status === 'Presupuestado' ? 'selected' : ''}>📋 Presupuestado</option>
+              <option value="En Producción" ${q.status === 'En Producción' ? 'selected' : ''}>🚗 En Producción / Taller</option>
+              <option value="Finalizado" ${q.status === 'Finalizado' ? 'selected' : ''}>✅ Finalizado</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async updatePaintStatus(quoteId, status) {
+    try {
+      await fetch(`/api/paint-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setStatus', status })
+      });
+      this.loadPaintQuotes();
+    } catch (e) {
+      alert('Error actualizando estado.');
+    }
+  }
+
+  async promptPaintPrice(quoteId) {
+    const p = prompt('Ingresa el monto presupuestado final en USD (ej. 150):');
+    if (!p || isNaN(p)) return;
+
+    try {
+      await fetch(`/api/paint-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setPrice', price: parseFloat(p), status: 'Presupuestado' })
+      });
+      this.loadPaintQuotes();
+    } catch (e) {
+      alert('Error fijando precio.');
+    }
+  }
+
+  // ==========================================
+  // 3D Lab Services Admin Control
+  // ==========================================
+  async openPrint3DAdminModal() {
+    const modal = document.getElementById('admin-print3d-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+    const badge = document.getElementById('admin-print3d-badge');
+    if (badge) badge.style.display = 'none';
+    await this.loadPrint3DQuotes();
+  }
+
+  closePrint3DAdminModal() {
+    const modal = document.getElementById('admin-print3d-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  handlePrint3DWsEvent(data) {
+    const badge = document.getElementById('admin-print3d-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (this.currentInspectingQuote && this.currentInspectingQuote.type === 'print3d' && this.currentInspectingQuote.id === data.quoteId) {
+      this.loadQuoteChatMessages();
+    }
+    const modal = document.getElementById('admin-print3d-modal');
+    if (modal && modal.style.display === 'flex') {
+      this.loadPrint3DQuotes();
+    }
+  }
+
+  async loadPrint3DQuotes() {
+    try {
+      const res = await fetch('/api/print3d-services/quotes');
+      const quotes = await res.json();
+      this.renderPrint3DQuotes(quotes);
+    } catch (e) {
+      console.warn('Could not load 3d quotes:', e);
+    }
+  }
+
+  renderPrint3DQuotes(quotes) {
+    const listEl = document.getElementById('admin-print3d-quotes-list');
+    if (!listEl) return;
+
+    const total = quotes.length;
+    const inChat = quotes.filter(q => q.status === 'En Conversación').length;
+    const printing = quotes.filter(q => q.status === 'En Producción').length;
+    const done = quotes.filter(q => q.status === 'Finalizado').length;
+
+    const totalEl = document.getElementById('admin-print3d-kpi-total');
+    const chatEl = document.getElementById('admin-print3d-kpi-chat');
+    const printEl = document.getElementById('admin-print3d-kpi-printing');
+    const doneEl = document.getElementById('admin-print3d-kpi-done');
+
+    if (totalEl) totalEl.textContent = total;
+    if (chatEl) chatEl.textContent = inChat;
+    if (printEl) printEl.textContent = printing;
+    if (doneEl) doneEl.textContent = done;
+
+    if (!quotes.length) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">🖨️</span>
+          <p style="margin: 0; font-size: 13px;">No hay pedidos de impresión 3D registrados aún.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = quotes.map(q => {
+      const statusColors = {
+        'Solicitado': '#F59E0B',
+        'En Conversación': '#3B82F6',
+        'Presupuestado': '#A855F7',
+        'En Producción': '#818CF8',
+        'Finalizado': '#10B981'
+      };
+      const color = statusColors[q.status] || '#94A3B8';
+
+      return `
+        <div style="background: #1E1B4B; border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <strong style="color: #FFF; font-size: 13.5px;">Orden 3D #${q.id.slice(-6)}: ${q.productTitle}</strong>
+              <span style="font-size: 11.5px; color: #A5B4FC; margin-left: 8px;">👤 ${q.customerName} (${q.customerPhone || 'Sin tel.'})</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: rgba(99,102,241,0.15); color: ${color}; border: 1px solid ${color}; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 10px;">
+                ${q.status}
+              </span>
+              <span style="font-size: 11px; color: #64748B;">${new Date(q.createdAt).toLocaleDateString([], { day: '2-digit', month: 'short' })}</span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; font-size: 11.5px; color: #CBD5E1; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px;">
+            <div><strong>Escala:</strong> ${q.scale}%</div>
+            <div><strong>Material:</strong> ${(q.material || 'PLA').toUpperCase()}</div>
+            <div><strong>Color:</strong> ${q.filamentColor || 'Negro'}</div>
+            <div><strong>Cantidad:</strong> ${q.quantity || 1} un.</div>
+            <div><strong>Precio:</strong> <span style="color: #38BDF8; font-weight: 800;">${q.finalPrice ? `$${q.finalPrice} USD` : `$${q.estimatedPriceUsd} USD`}</span></div>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <button type="button" onclick="AdminApp.openQuoteChatInspector('print3d', '${q.id}', '${q.customerName} - ${q.productTitle}')" style="background: rgba(99, 102, 241, 0.2); border: 1px solid #6366F1; color: #A5B4FC; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💬 Chat en Vivo (${(q.messages || []).length})
+            </button>
+            <button type="button" onclick="AdminApp.promptPrint3DPrice('${q.id}')" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #A855F7; color: #E9D5FF; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💵 Fijar Precio ($ USD)
+            </button>
+            <select onchange="AdminApp.updatePrint3DStatus('${q.id}', this.value)" style="background: #0F172A; border: 1px solid rgba(255,255,255,0.2); color: #FFF; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              <option value="Solicitado" ${q.status === 'Solicitado' ? 'selected' : ''}>⏳ Solicitado</option>
+              <option value="En Conversación" ${q.status === 'En Conversación' ? 'selected' : ''}>💬 En Conversación</option>
+              <option value="Presupuestado" ${q.status === 'Presupuestado' ? 'selected' : ''}>📋 Presupuestado</option>
+              <option value="En Producción" ${q.status === 'En Producción' ? 'selected' : ''}>🖨️ En Impresión 3D</option>
+              <option value="Finalizado" ${q.status === 'Finalizado' ? 'selected' : ''}>✅ Finalizado</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async updatePrint3DStatus(quoteId, status) {
+    try {
+      await fetch(`/api/print3d-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setStatus', status })
+      });
+      this.loadPrint3DQuotes();
+    } catch (e) {
+      alert('Error actualizando estado.');
+    }
+  }
+
+  async promptPrint3DPrice(quoteId) {
+    const p = prompt('Ingresa el monto presupuestado final en USD (ej. 18.50):');
+    if (!p || isNaN(p)) return;
+
+    try {
+      await fetch(`/api/print3d-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setPrice', price: parseFloat(p), status: 'Presupuestado' })
+      });
+      this.loadPrint3DQuotes();
+    } catch (e) {
+      alert('Error fijando precio.');
+    }
+  }
+
+  // ==========================================
+  // ShelliArt Resina Admin Control
+  // ==========================================
+  async openResinAdminModal(initialTab = 'orders') {
+    const modal = document.getElementById('admin-resin-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+    const badge = document.getElementById('admin-resin-badge');
+    if (badge) badge.style.display = 'none';
+    this.switchResinAdminTab(initialTab);
+    await this.loadResinQuotes();
+    await this.loadResinSettings();
+  }
+
+  closeResinAdminModal() {
+    const modal = document.getElementById('admin-resin-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  switchResinAdminTab(tab = 'orders') {
+    const btnOrders = document.getElementById('tab-btn-resin-orders');
+    const btnSettings = document.getElementById('tab-btn-resin-settings');
+    const tabOrders = document.getElementById('admin-resin-tab-orders');
+    const tabSettings = document.getElementById('admin-resin-tab-settings');
+
+    if (tab === 'settings') {
+      if (btnOrders) {
+        btnOrders.style.background = 'transparent';
+        btnOrders.style.borderColor = 'rgba(255,255,255,0.15)';
+        btnOrders.style.color = '#94A3B8';
+      }
+      if (btnSettings) {
+        btnSettings.style.background = 'rgba(244, 114, 182, 0.2)';
+        btnSettings.style.borderColor = '#F472B6';
+        btnSettings.style.color = '#FFF';
+      }
+      if (tabOrders) tabOrders.style.display = 'none';
+      if (tabSettings) tabSettings.style.display = 'flex';
+      this.loadResinSettings();
+    } else {
+      if (btnOrders) {
+        btnOrders.style.background = 'rgba(244, 114, 182, 0.2)';
+        btnOrders.style.borderColor = '#F472B6';
+        btnOrders.style.color = '#FFF';
+      }
+      if (btnSettings) {
+        btnSettings.style.background = 'transparent';
+        btnSettings.style.borderColor = 'rgba(255,255,255,0.15)';
+        btnSettings.style.color = '#94A3B8';
+      }
+      if (tabOrders) tabOrders.style.display = 'flex';
+      if (tabSettings) tabSettings.style.display = 'none';
+    }
+  }
+
+  handleResinWsEvent(data) {
+    const badge = document.getElementById('admin-resin-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (this.currentInspectingQuote && this.currentInspectingQuote.type === 'resin' && this.currentInspectingQuote.id === data.quoteId) {
+      this.loadQuoteChatMessages();
+    }
+    const modal = document.getElementById('admin-resin-modal');
+    if (modal && modal.style.display === 'flex') {
+      this.loadResinQuotes();
+    }
+  }
+
+  async loadResinSettings() {
+    try {
+      const res = await fetch('/api/resin-services/settings');
+      if (res.ok) {
+        const settings = await res.json();
+        this.resinSettings = settings;
+
+        const letterInp = document.getElementById('admin-resin-setting-letter');
+        const photoInp = document.getElementById('admin-resin-setting-photo');
+        const nfcInp = document.getElementById('admin-resin-setting-nfc');
+        const charmInp = document.getElementById('admin-resin-setting-charm');
+        const phoneInp = document.getElementById('admin-resin-setting-phone');
+
+        if (letterInp) letterInp.value = settings.letterBasePriceUsd ?? 4.5;
+        if (photoInp) photoInp.value = settings.photoBasePriceUsd ?? 5.0;
+        if (nfcInp) nfcInp.value = settings.nfcExtraUsd ?? 2.0;
+        if (charmInp) charmInp.value = settings.charmExtraUsd ?? 1.0;
+        if (phoneInp) phoneInp.value = settings.resinWhatsApp || '573227949751';
+
+        this.renderResinSamplePhotos(settings.samplePhotos || []);
+      }
+    } catch (e) {
+      console.warn('Could not load resin settings:', e);
+    }
+  }
+
+  renderResinSamplePhotos(samples = []) {
+    const listEl = document.getElementById('admin-resin-sample-photos-list');
+    if (!listEl) return;
+
+    if (!samples.length) {
+      listEl.innerHTML = `
+        <div style="grid-column: 1 / -1; color: #94A3B8; font-size: 12px; text-align: center; padding: 14px;">
+          No hay fotos de muestra registradas aún.
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = samples.map(sp => `
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 10px; display: flex; align-items: center; gap: 10px;">
+        <img src="${sp.url}" alt="${sp.title}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);" onerror="this.src='/images/services/shelliart_logo.svg'">
+        <div style="flex: 1; min-width: 0;">
+          <strong style="color: #FFF; font-size: 12px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${sp.title}</strong>
+          <span style="color: #94A3B8; font-size: 10px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${sp.url}</span>
+        </div>
+        <button type="button" onclick="AdminApp.deleteResinSamplePhoto('${sp.id}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #EF4444; color: #FCA5A5; width: 28px; height: 28px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Eliminar foto">✕</button>
+      </div>
+    `).join('');
+  }
+
+  async saveResinSettings() {
+    try {
+      const letterVal = parseFloat(document.getElementById('admin-resin-setting-letter')?.value) || 4.5;
+      const photoVal = parseFloat(document.getElementById('admin-resin-setting-photo')?.value) || 5.0;
+      const nfcVal = parseFloat(document.getElementById('admin-resin-setting-nfc')?.value) || 2.0;
+      const charmVal = parseFloat(document.getElementById('admin-resin-setting-charm')?.value) || 1.0;
+      const phoneVal = (document.getElementById('admin-resin-setting-phone')?.value || '573227949751').trim();
+
+      const payload = {
+        ...(this.resinSettings || {}),
+        letterBasePriceUsd: letterVal,
+        photoBasePriceUsd: photoVal,
+        nfcExtraUsd: nfcVal,
+        charmExtraUsd: charmVal,
+        resinWhatsApp: phoneVal,
+        resinWhatsAppDisplay: phoneVal.startsWith('57') ? `+57 ${phoneVal.slice(2, 5)} ${phoneVal.slice(5, 8)} ${phoneVal.slice(8)}` : phoneVal,
+        samplePhotos: this.resinSettings?.samplePhotos || []
+      };
+
+      const res = await fetch('/api/resin-services/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        this.resinSettings = data.settings;
+        alert('✅ ¡Configuración de ShelliArt guardada exitosamente!');
+      } else {
+        alert('⚠️ No se pudo guardar la configuración.');
+      }
+    } catch(e) {
+      console.error('Error saving resin settings:', e);
+      alert('Error de conexión al guardar configuración.');
+    }
+  }
+
+  async addResinSamplePhoto() {
+    const titleInp = document.getElementById('admin-resin-new-sample-title');
+    const urlInp = document.getElementById('admin-resin-new-sample-url');
+    const title = (titleInp?.value || '').trim();
+    const url = (urlInp?.value || '').trim();
+
+    if (!title || !url) {
+      alert('⚠️ Por favor ingresa el título y la URL de la imagen.');
+      return;
+    }
+
+    if (!this.resinSettings) {
+      this.resinSettings = { samplePhotos: [] };
+    }
+    if (!this.resinSettings.samplePhotos) {
+      this.resinSettings.samplePhotos = [];
+    }
+
+    const newSample = {
+      id: 'sample-' + Date.now(),
+      title,
+      url
+    };
+
+    this.resinSettings.samplePhotos.push(newSample);
+    await this.saveResinSettings();
+    this.renderResinSamplePhotos(this.resinSettings.samplePhotos);
+
+    if (titleInp) titleInp.value = '';
+    if (urlInp) urlInp.value = '';
+  }
+
+  async deleteResinSamplePhoto(sampleId) {
+    if (!confirm('¿Deseas eliminar esta foto de muestra del catálogo de ShelliArt?')) return;
+    if (!this.resinSettings || !this.resinSettings.samplePhotos) return;
+
+    this.resinSettings.samplePhotos = this.resinSettings.samplePhotos.filter(s => s.id !== sampleId);
+    await this.saveResinSettings();
+    this.renderResinSamplePhotos(this.resinSettings.samplePhotos);
+  }
+
+  async loadResinQuotes() {
+    try {
+      const res = await fetch('/api/resin-services/quotes');
+      const quotes = await res.json();
+      this.renderResinQuotes(quotes);
+    } catch (e) {
+      console.warn('Could not load resin quotes:', e);
+    }
+  }
+
+  renderResinQuotes(quotes) {
+    const listEl = document.getElementById('admin-resin-quotes-list');
+    if (!listEl) return;
+
+    const total = quotes.length;
+    const inChat = quotes.filter(q => q.status === 'En Conversación').length;
+    const curing = quotes.filter(q => q.status === 'En Curado UV' || q.status === 'En Elaboración').length;
+    const done = quotes.filter(q => q.status === 'Listo para Entrega' || q.status === 'Entregado').length;
+
+    const totalEl = document.getElementById('admin-resin-kpi-total');
+    const chatEl = document.getElementById('admin-resin-kpi-chat');
+    const curingEl = document.getElementById('admin-resin-kpi-curing');
+    const doneEl = document.getElementById('admin-resin-kpi-done');
+
+    if (totalEl) totalEl.textContent = total;
+    if (chatEl) chatEl.textContent = inChat;
+    if (curingEl) curingEl.textContent = curing;
+    if (doneEl) doneEl.textContent = done;
+
+    if (!quotes.length) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">✨</span>
+          <p style="margin: 0; font-size: 13px;">No hay pedidos de resina registrados aún.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const targetPhone = this.resinSettings?.resinWhatsApp || '573227949751';
+
+    listEl.innerHTML = quotes.map(q => {
+      const isPhoto = q.productType === 'photo';
+      const statusColors = {
+        'Solicitado': '#F59E0B',
+        'En Conversación': '#3B82F6',
+        'En Elaboración': '#F472B6',
+        'En Curado UV': '#EC4899',
+        'Precio Acordado': '#A855F7',
+        'Listo para Entrega': '#10B981',
+        'Entregado': '#059669'
+      };
+      const color = statusColors[q.status] || '#94A3B8';
+      const price = q.agreedPriceUsd || q.estimatedPriceUsd || (isPhoto ? 5.0 : 4.5);
+
+      const avatarMarkup = isPhoto
+        ? (q.photoFrontUrl
+            ? `<div style="width: 48px; height: 48px; border-radius: 12px; overflow: hidden; border: 2px solid #F472B6; box-shadow: 0 4px 10px rgba(0,0,0,0.4);"><img src="${q.photoFrontUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Foto"></div>`
+            : `<div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #EC4899, #8B5CF6); border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.4);">📸</div>`)
+        : `<div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, ${q.baseColor || '#F472B6'} 0%, rgba(255,255,255,0.2) 100%); border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.4);">${q.letter || 'A'}</div>`;
+
+      const titleMarkup = isPhoto
+        ? `Orden #${q.id.slice(-6)}: Llavero Foto & NFC (${q.photoShapeName || q.photoShape || 'Molde'}) - ${q.clientName || 'Cliente'}`
+        : `Orden #${q.id.slice(-6)}: Inicial "${q.letter || 'A'}" - ${q.clientName || 'Cliente'}`;
+
+      const detailsMarkup = isPhoto ? `
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">MOLDE & FORMA:</span><strong style="color: #FFF;">${q.photoShapeName || q.photoShape || 'Polaroid'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">CARA TRASERA:</span><strong style="color: #F472B6;">${q.photoBackType === 'photo' ? 'Segunda Foto' : q.photoBackType === 'spotify' ? `Spotify: ${q.photoBackSpotify || 'Canción'}` : q.photoBackType === 'phrase' ? `Frase: "${q.photoBackPhrase || ''}"` : 'Glitter / Oro'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">CHIP NFC INTELIGENTE:</span>${q.hasNfc ? `<strong style="color: #10B981;">✅ Activo (${q.nfcType || 'NFC'})</strong> ${q.nfcUrl ? `<a href="${q.nfcUrl}" target="_blank" style="color: #38BDF8; font-size: 10.5px; text-decoration: underline; margin-left: 4px;">Enlace</a>` : ''}` : '<span style="color: #94A3B8;">Sin Chip</span>'}</div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">HERRAJE & BORLA:</span><strong style="color: #38BDF8;">${q.hardwareColor || 'Dorado'} • ${q.tasselColor || 'Borla'}</strong></div>
+      ` : `
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">COLOR & ESTILO:</span><strong style="color: #FFF;">${q.baseColorName || 'Rosa'} • ${q.styleName || 'Bicolor'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">BORLA & HERRAJE:</span><strong style="color: #F472B6;">${q.tasselColor || 'Borla'} • ${q.hardwareColor || 'Dorado'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">NOMBRE SELLADO:</span><strong style="color: #FFF;">${q.customName ? `"${q.customName}"` : 'Sin nombre'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">DIJE EXTRA:</span><strong style="color: #38BDF8;">${q.extraCharm || 'Ninguno'}</strong></div>
+      `;
+
+      let waDetails = isPhoto
+        ? `📸 Molde: ${q.photoShapeName || q.photoShape}\n🔄 Reverso: ${q.photoBackType || 'Normal'}\n📶 NFC: ${q.hasNfc ? (q.nfcUrl || 'Sí') : 'No'}\n🪢 Borla: ${q.tasselColor || 'Borla'} - Herraje: ${q.hardwareColor || 'Dorado'}`
+        : `🔤 Inicial: "${q.letter}"\n🎨 Estilo: ${q.styleName} - Color: ${q.baseColorName}\n🪢 Borla: ${q.tasselColor} - Herraje: ${q.hardwareColor}\n✍️ Nombre: ${q.customName || 'Sin nombre'}`;
+
+      const waMsg = `✨ *PEDIDO #${q.id} SHELLIART RESINA*\n👤 Cliente: ${q.clientName} (${q.clientPhone || 'Sin tel'})\n${waDetails}\n💰 Total: $${price} USD`;
+      const chatInspectorTitle = isPhoto
+        ? `Llavero Foto (${q.photoShapeName || 'Personalizado'}) - ${q.clientName}`
+        : `Llavero Inicial ${q.letter} - ${q.clientName}`;
+
+      return `
+        <div style="background: #181F30; border: 1.5px solid rgba(244, 114, 182, 0.25); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              ${avatarMarkup}
+              <div>
+                <strong style="color: #FFF; font-size: 14px;">${titleMarkup}</strong>
+                <div style="font-size: 11.5px; color: #94A3B8;">📞 ${q.clientPhone || 'Sin teléfono'} • <span style="color: #F472B6; font-weight: 700;">$${price} USD</span></div>
+              </div>
+            </div>
+            <span style="background: ${color}20; color: ${color}; border: 1px solid ${color}60; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800;">
+              ${q.status}
+            </span>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-size: 11.5px;">
+            ${detailsMarkup}
+          </div>
+
+          <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; margin-top: 4px;">
+            <a href="https://wa.me/${targetPhone}?text=${encodeURIComponent(waMsg)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+              <span>🟢</span> WhatsApp (${targetPhone})
+            </a>
+            <button type="button" onclick="AdminApp.openQuoteChatInspector('resin', '${q.id}', '${chatInspectorTitle}')" style="background: rgba(244, 114, 182, 0.15); border: 1px solid #F472B6; color: #FBCFE8; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💬 Chatear
+            </button>
+            <button type="button" onclick="AdminApp.promptResinPrice('${q.id}')" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #A855F7; color: #E9D5FF; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💵 Fijar Precio ($ USD)
+            </button>
+            <select onchange="AdminApp.updateResinStatus('${q.id}', this.value)" style="background: #0F172A; border: 1px solid rgba(255,255,255,0.2); color: #FFF; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              <option value="Solicitado" ${q.status === 'Solicitado' ? 'selected' : ''}>⏳ Solicitado</option>
+              <option value="En Conversación" ${q.status === 'En Conversación' ? 'selected' : ''}>💬 En Conversación</option>
+              <option value="En Elaboración" ${q.status === 'En Elaboración' ? 'selected' : ''}>🎨 En Elaboración</option>
+              <option value="En Curado UV" ${q.status === 'En Curado UV' ? 'selected' : ''}>⏳ En Curado UV</option>
+              <option value="Listo para Entrega" ${q.status === 'Listo para Entrega' ? 'selected' : ''}>🎀 Listo para Entrega</option>
+              <option value="Entregado" ${q.status === 'Entregado' ? 'selected' : ''}>✅ Entregado</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async updateResinStatus(quoteId, status) {
+    try {
+      await fetch(`/api/resin-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      this.loadResinQuotes();
+    } catch (e) {
+      alert('Error actualizando estado.');
+    }
+  }
+
+  async promptResinPrice(quoteId) {
+    const p = prompt('Ingresa el monto oficial acordado en USD (ej. 5.50):');
+    if (!p || isNaN(p)) return;
+
+    try {
+      await fetch(`/api/resin-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_agreed_price', agreedPriceUsd: parseFloat(p) })
+      });
+      this.loadResinQuotes();
+    } catch (e) {
+      alert('Error fijando precio.');
+    }
+  }
+
+  // ==========================================
+  // Piñatas Personalizadas Admin & Inventory Control
+  // ==========================================
+  async openPinatasAdminModal(initialTab = 'orders') {
+    const modal = document.getElementById('admin-pinatas-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+    const badge = document.getElementById('admin-pinatas-badge');
+    if (badge) badge.style.display = 'none';
+    this.switchPinatasAdminTab(initialTab);
+    if (initialTab === 'inventory') {
+      await this.loadPinatasCatalog();
+    } else {
+      await this.loadPinatasQuotes();
+    }
+  }
+
+  closePinatasAdminModal() {
+    const modal = document.getElementById('admin-pinatas-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  switchPinatasAdminTab(tab) {
+    const ordersTab = document.getElementById('admin-pinata-tab-orders');
+    const invTab = document.getElementById('admin-pinata-tab-inventory');
+    const btnOrders = document.getElementById('tab-btn-pinata-orders');
+    const btnInv = document.getElementById('tab-btn-pinata-inventory');
+
+    if (tab === 'orders') {
+      if (ordersTab) ordersTab.style.display = 'flex';
+      if (invTab) invTab.style.display = 'none';
+      if (btnOrders) {
+        btnOrders.style.background = 'rgba(244, 63, 94, 0.2)';
+        btnOrders.style.borderColor = '#F43F5E';
+        btnOrders.style.color = '#FFF';
+      }
+      if (btnInv) {
+        btnInv.style.background = 'transparent';
+        btnInv.style.borderColor = 'rgba(255,255,255,0.15)';
+        btnInv.style.color = '#94A3B8';
+      }
+      this.loadPinatasQuotes();
+    } else {
+      if (ordersTab) ordersTab.style.display = 'none';
+      if (invTab) invTab.style.display = 'flex';
+      if (btnInv) {
+        btnInv.style.background = 'rgba(244, 63, 94, 0.2)';
+        btnInv.style.borderColor = '#F43F5E';
+        btnInv.style.color = '#FFF';
+      }
+      if (btnOrders) {
+        btnOrders.style.background = 'transparent';
+        btnOrders.style.borderColor = 'rgba(255,255,255,0.15)';
+        btnOrders.style.color = '#94A3B8';
+      }
+      this.loadPinatasCatalog();
+    }
+  }
+
+  handlePinatasWsEvent(data) {
+    const badge = document.getElementById('admin-pinatas-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (this.currentInspectingQuote && this.currentInspectingQuote.type === 'pinatas' && (this.currentInspectingQuote.id === data.quoteId || this.currentInspectingQuote.id === data.chatId)) {
+      this.loadQuoteChatMessages();
+    }
+    const modal = document.getElementById('admin-pinatas-modal');
+    if (modal && modal.style.display === 'flex') {
+      this.loadPinatasQuotes();
+    }
+  }
+
+  async loadPinatasQuotes() {
+    try {
+      const [resQuotes, resStats] = await Promise.all([
+        fetch('/api/pinata-services/quotes'),
+        fetch('/api/pinata-services/stats')
+      ]);
+      const quotes = await resQuotes.json();
+      const stats = await resStats.json();
+      this.renderPinatasQuotes(quotes, stats);
+    } catch (e) {
+      console.warn('Could not load pinatas quotes:', e);
+    }
+  }
+
+  renderPinatasQuotes(quotes, stats) {
+    const listEl = document.getElementById('admin-pinatas-quotes-list');
+    if (!listEl) return;
+
+    if (stats) {
+      const totalEl = document.getElementById('admin-pinatas-kpi-total');
+      const chatEl = document.getElementById('admin-pinatas-kpi-chat');
+      const agreedEl = document.getElementById('admin-pinatas-kpi-agreed');
+      const curingEl = document.getElementById('admin-pinatas-kpi-curing');
+      const doneEl = document.getElementById('admin-pinatas-kpi-done');
+      const convEl = document.getElementById('admin-pinatas-metric-conversion');
+      const timeEl = document.getElementById('admin-pinatas-metric-time');
+
+      if (totalEl) totalEl.textContent = stats.total;
+      if (chatEl) chatEl.textContent = stats.enConversacion;
+      if (agreedEl) agreedEl.textContent = stats.precioAcordado;
+      if (curingEl) curingEl.textContent = stats.enElaboracion;
+      if (doneEl) doneEl.textContent = stats.entregados;
+      if (convEl) convEl.textContent = `${stats.conversionRate}%`;
+      if (timeEl) timeEl.textContent = `~${stats.avgResponseMinutes || 15} min`;
+    }
+
+    if (!quotes.length) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">🪅</span>
+          <p style="margin: 0; font-size: 13px;">No hay pedidos de piñatas registrados aún.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = quotes.map(q => {
+      const dateStr = new Date(q.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+      const photoHtml = (q.referencePhotos && q.referencePhotos.length) 
+        ? `<div style="display: flex; gap: 6px; margin-top: 6px;">
+            ${q.referencePhotos.map(p => `<img src="${p}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);">`).join('')}
+          </div>` 
+        : '';
+
+      return `
+        <div style="background: #172033; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <span style="font-size: 11px; font-weight: 800; color: #FDA4AF; text-transform: uppercase;">Orden #${q.id} • ${dateStr}</span>
+              <h4 style="margin: 2px 0 0 0; font-size: 14px; font-weight: 900; color: #FFF;">
+                🪅 ${q.styleName || 'Piñata a Medida'} (${q.sizeName})
+              </h4>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="background: rgba(244, 63, 94, 0.2); border: 1px solid #F43F5E; color: #FDA4AF; padding: 3px 8px; border-radius: 8px; font-size: 11px; font-weight: 800;">
+                ${q.status}
+              </span>
+              <span style="font-size: 14px; font-weight: 900; color: #10B981;">
+                ${q.agreedPriceUsd ? `$${q.agreedPriceUsd.toFixed(2)} USD` : (q.estimatedPriceRange || `$${q.estimatedPriceUsd} USD`)}
+              </span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; font-size: 11px; color: #CBD5E1; background: rgba(0,0,0,0.2); padding: 8px 10px; border-radius: 10px;">
+            <div>👤 Cliente: <strong style="color: #FFF;">${q.clientName} ${q.clientPhone ? `(${q.clientPhone})` : ''}</strong></div>
+            <div>🎨 Motivo: <strong style="color: #FFF;">${q.theme}</strong></div>
+            <div>🎀 Apertura: <strong style="color: #FFF;">${q.openingName || 'Tradicional'}</strong></div>
+            <div>🍬 Relleno/Extras: <strong style="color: #FFF;">${q.extrasSummary || 'Solo piñata'}</strong></div>
+            <div>📅 Fecha Evento: <strong style="color: #FCD34D;">${q.eventDate || 'Por coordinar'}</strong></div>
+            ${q.customName ? `<div>✍️ Nombre/Número: <strong style="color: #FFF;">"${q.customName}"</strong></div>` : ''}
+          </div>
+
+          ${photoHtml}
+
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+            <button type="button" onclick="AdminApp.openQuoteChatInspector('pinatas', '${q.id}', '${q.clientName} - Piñata ${q.theme}')" style="background: rgba(244, 63, 94, 0.2); border: 1px solid #F43F5E; color: #FDA4AF; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💬 Chat con Cliente (${(q.messages || []).length})
+            </button>
+            <button type="button" onclick="AdminApp.promptPinataPrice('${q.id}')" style="background: rgba(139, 92, 246, 0.2); border: 1px solid #8B5CF6; color: #C084FC; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              💰 Ajustar Precio Final ($ USD)
+            </button>
+            <button type="button" onclick="AdminApp.setPinataStatus('${q.id}', 'En Elaboración')" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #F59E0B; color: #FCD34D; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              ✂️ Pasar a Elaboración
+            </button>
+            <button type="button" onclick="AdminApp.setPinataStatus('${q.id}', 'Listo / Entregado')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981; color: #6EE7B7; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+              🎉 Marcar Entregada
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async promptPinataPrice(quoteId) {
+    const p = prompt('Ingresa el monto oficial acordado en USD (ej. 24.00):');
+    if (!p || isNaN(p)) return;
+
+    try {
+      await fetch(`/api/pinata-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'adjust_price', agreedPriceUsd: parseFloat(p) })
+      });
+      this.loadPinatasQuotes();
+    } catch (e) {
+      alert('Error fijando precio.');
+    }
+  }
+
+  async setPinataStatus(quoteId, status) {
+    try {
+      await fetch(`/api/pinata-services/quotes/${quoteId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_status', status })
+      });
+      this.loadPinatasQuotes();
+    } catch (e) {
+      alert('Error actualizando estado.');
+    }
+  }
+
+  // ==========================================
+  // Piñatas Inventory & Store Catalog Management
+  // ==========================================
+  async loadPinatasCatalog() {
+    try {
+      const res = await fetch(`/api/pinata-services/catalog?t=${Date.now()}`);
+      const catalog = await res.json();
+      this.pinatasCatalogCache = Array.isArray(catalog) ? catalog : [];
+      this.renderPinatasCatalogAdmin(this.pinatasCatalogCache);
+    } catch (e) {
+      console.warn('Could not load pinatas catalog in admin:', e);
+    }
+  }
+
+  renderPinatasCatalogAdmin(catalog) {
+    const container = document.getElementById('admin-pinatas-catalog-list');
+    const countEl = document.getElementById('admin-pinatas-inventory-count');
+    if (!container) return;
+
+    if (countEl) countEl.textContent = `${catalog.length} productos registrados`;
+
+    if (!catalog.length) {
+      container.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px; grid-column: 1 / -1;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">📦</span>
+          <p style="margin: 0; font-size: 13px;">No hay piñatas registradas en el inventario.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = catalog.map(item => {
+      const catLabels = (Array.isArray(item.categoryLabels) && item.categoryLabels.length > 0)
+        ? item.categoryLabels
+        : (item.categoryLabel ? item.categoryLabel.split('•').map(s => s.trim()) : (Array.isArray(item.categories) ? item.categories : [item.category || 'Piñata']));
+
+      return `
+      <div onclick="AdminApp.openEditPinataModal('${item.id}')" style="background: #172033; border: 1.5px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.25);" onmouseenter="this.style.borderColor='rgba(244,63,94,0.6)'; this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.transform='none'">
+        <div style="width: 100%; height: 180px; position: relative; background: #0F172A; flex-shrink: 0; overflow: hidden;">
+          <img src="${item.image}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='/images/pinatas/pinata_celebracion.jpg'">
+          <div style="position: absolute; top: 8px; left: 8px; display: flex; flex-wrap: wrap; gap: 4px; max-width: 75%; z-index: 2;">
+            ${catLabels.map(lbl => `
+              <span style="background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(4px); color: #FDA4AF; font-size: 9.5px; font-weight: 800; padding: 2.5px 7px; border-radius: 6px; border: 1px solid rgba(244,63,94,0.45); text-transform: uppercase; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                ${this.formatPinataCategoryBadgeLabel(lbl)}
+              </span>
+            `).join('')}
+          </div>
+          <span style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); z-index: 2;">
+            ${item.size || 'Mediana'}
+          </span>
+        </div>
+        <div style="padding: 12px 14px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; gap: 10px; background: #172033;">
+          <div>
+            <h5 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 800; color: #FFF; line-height: 1.3;">${item.name}</h5>
+            <p style="margin: 0; font-size: 11.5px; color: #94A3B8; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${item.desc || 'Sin descripción adicional.'}</p>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; margin-top: auto; gap: 8px;">
+            <div>
+              <span style="font-size: 10px; color: #94A3B8; display: block; font-weight: 600;">Precio Base</span>
+              <strong style="color: #F43F5E; font-size: 15px; font-weight: 900;">$${item.basePriceUsd} USD</strong>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;" onclick="event.stopPropagation()">
+              <button type="button" onclick="AdminApp.openEditPinataModal('${item.id}')" style="background: rgba(59, 130, 246, 0.18); border: 1px solid rgba(59, 130, 246, 0.4); color: #93C5FD; font-size: 11px; font-weight: 800; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Editar especificaciones">
+                <span>✏️</span> Editar
+              </button>
+              <button type="button" onclick="AdminApp.deletePinataProduct('${item.id}', '${(item.name || '').replace(/'/g, "\\'")}')" style="background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.4); color: #FCA5A5; font-size: 11px; font-weight: 800; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Eliminar del catálogo">
+                <span>🗑️</span> Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      `;
+    }).join('');
+  }
+
+  getPinataPresetCategories() {
+    return [
+      { id: 'personajes', label: '👑 Personajes Infantiles' },
+      { id: 'numeros', label: '🔢 Números & Letras' },
+      { id: 'figuras3d', label: '🦄 Figuras Esculturales 3D' },
+      { id: 'mini', label: '✨ Mini-Piñatas' },
+      { id: 'eventos', label: '🎉 Eventos Especiales' }
+    ];
+  }
+
+  formatPinataCategoryBadgeLabel(idOrLabel) {
+    if (!idOrLabel) return 'Piñata';
+    const clean = String(idOrLabel).trim();
+    const presets = this.getPinataPresetCategories();
+    const found = presets.find(p => p.id === clean.toLowerCase() || p.label.toLowerCase() === clean.toLowerCase());
+    return found ? found.label : clean;
+  }
+
+  renderPinataCategoryChips(target = 'add') {
+    const containerId = target === 'add' ? 'admin-pinata-add-chips-container' : 'admin-pinata-edit-chips-container';
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (target === 'add' && (!this.pinataAddCategories || !this.pinataAddCategories.length)) {
+      this.pinataAddCategories = ['personajes'];
+    }
+    if (target === 'edit' && (!this.pinataEditCategories || !this.pinataEditCategories.length)) {
+      this.pinataEditCategories = ['personajes'];
+    }
+
+    const currentList = target === 'add' ? this.pinataAddCategories : this.pinataEditCategories;
+    const presets = this.getPinataPresetCategories();
+
+    // Collect all options: presets + any custom ones
+    const allOptions = [...presets];
+    currentList.forEach(item => {
+      const match = presets.find(p => p.id === item || p.label === item);
+      if (!match && !allOptions.some(o => o.id === item)) {
+        allOptions.push({ id: item, label: `✨ ${item}`, isCustom: true });
+      }
+    });
+
+    container.innerHTML = allOptions.map(cat => {
+      const isSelected = currentList.includes(cat.id);
+      if (isSelected) {
+        return `
+          <button type="button" onclick="AdminApp.togglePinataCategory('${target}', '${cat.id}')" style="background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%); color: #FFF; border: 1.5px solid #FDA4AF; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(244,63,94,0.4); transition: all 0.15s ease;">
+            <span>✓</span> ${cat.label}
+            ${cat.isCustom ? `<span onclick="event.stopPropagation(); AdminApp.removeCustomPinataCategory('${target}', '${cat.id}')" style="margin-left: 4px; padding: 0 4px; background: rgba(0,0,0,0.35); border-radius: 4px; font-size: 10px;" title="Eliminar categoría manual">✕</span>` : ''}
+          </button>
+        `;
+      } else {
+        return `
+          <button type="button" onclick="AdminApp.togglePinataCategory('${target}', '${cat.id}')" style="background: rgba(255,255,255,0.06); color: #CBD5E1; border: 1px solid rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(244,63,94,0.5)'; this.style.color='#FDA4AF'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.15)'; this.style.color='#CBD5E1'">
+            <span>+</span> ${cat.label}
+            ${cat.isCustom ? `<span onclick="event.stopPropagation(); AdminApp.removeCustomPinataCategory('${target}', '${cat.id}')" style="margin-left: 4px; padding: 0 4px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 10px;" title="Eliminar categoría manual">✕</span>` : ''}
+          </button>
+        `;
+      }
+    }).join('');
+  }
+
+  togglePinataCategory(target, catId) {
+    let list = target === 'add' ? this.pinataAddCategories : this.pinataEditCategories;
+    if (!Array.isArray(list)) list = [];
+
+    if (list.includes(catId)) {
+      if (list.length > 1) {
+        list = list.filter(c => c !== catId);
+      } else {
+        this.showToast('⚠️ La piñata debe tener al menos una categoría seleccionada.');
+        return;
+      }
+    } else {
+      list.push(catId);
+    }
+
+    if (target === 'add') this.pinataAddCategories = list;
+    else this.pinataEditCategories = list;
+
+    this.renderPinataCategoryChips(target);
+  }
+
+  addCustomPinataCategory(target = 'add') {
+    const inputId = target === 'add' ? 'admin-pinata-add-custom-cat' : 'admin-pinata-edit-custom-cat';
+    const inputEl = document.getElementById(inputId);
+    const val = inputEl ? inputEl.value.trim() : '';
+    if (!val) return;
+
+    const parts = val.split(',').map(s => s.trim()).filter(Boolean);
+    let list = target === 'add' ? (this.pinataAddCategories || []) : (this.pinataEditCategories || []);
+    parts.forEach(p => {
+      if (!list.includes(p)) list.push(p);
+    });
+
+    if (target === 'add') this.pinataAddCategories = list;
+    else this.pinataEditCategories = list;
+
+    if (inputEl) inputEl.value = '';
+    this.renderPinataCategoryChips(target);
+  }
+
+  removeCustomPinataCategory(target, catId) {
+    let list = target === 'add' ? this.pinataAddCategories : this.pinataEditCategories;
+    if (!Array.isArray(list)) list = [];
+    list = list.filter(c => c !== catId);
+    if (list.length === 0) list = ['personajes'];
+
+    if (target === 'add') this.pinataAddCategories = list;
+    else this.pinataEditCategories = list;
+
+    this.renderPinataCategoryChips(target);
+  }
+
+  formatPinataSizeText(val) {
+    const cm = parseInt(val, 10) || 80;
+    let desc = 'Mediana';
+    if (cm < 40) desc = 'Mini-Piñata';
+    else if (cm <= 65) desc = 'Pequeña';
+    else if (cm <= 90) desc = 'Mediana';
+    else if (cm <= 120) desc = 'Grande (~1m)';
+    else desc = 'Gigante';
+    return `${cm} cm (${desc})`;
+  }
+
+  updatePinataSizeLabel(target, value) {
+    const formatted = this.formatPinataSizeText(value);
+    const elId = target === 'add' ? 'admin-pinata-size-val' : 'edit-pinata-size-val';
+    const el = document.getElementById(elId);
+    if (el) el.textContent = formatted;
+  }
+
+  openEditPinataModal(pinataId) {
+    const item = (this.pinatasCatalogCache || []).find(p => String(p.id) === String(pinataId));
+    if (!item) return;
+
+    this.currentEditingPinata = item;
+
+    const modal = document.getElementById('admin-pinata-edit-modal');
+    const idInput = document.getElementById('edit-pinata-id');
+    const nameInput = document.getElementById('edit-pinata-name');
+    const sizeInput = document.getElementById('edit-pinata-size');
+    const priceInput = document.getElementById('edit-pinata-price');
+    const imageInput = document.getElementById('edit-pinata-image');
+    const previewImg = document.getElementById('edit-pinata-preview-img');
+    const descInput = document.getElementById('edit-pinata-desc');
+    const modalTitle = document.getElementById('admin-pinata-edit-modal-title');
+
+    if (idInput) idInput.value = item.id;
+    if (nameInput) nameInput.value = item.name || '';
+    if (sizeInput) {
+      const match = (item.size || '').match(/(\d+)\s*cm/i) || (item.size || '').match(/(\d+)/);
+      const cmVal = match ? parseInt(match[1], 10) : 80;
+      sizeInput.value = cmVal;
+      this.updatePinataSizeLabel('edit', cmVal);
+    }
+    if (priceInput) priceInput.value = item.basePriceUsd || 0;
+    if (imageInput) imageInput.value = item.image || '';
+    if (previewImg) previewImg.src = item.image || '/images/pinatas/pinata_celebracion.jpg';
+    if (descInput) descInput.value = item.desc || '';
+    if (modalTitle) modalTitle.textContent = `Modificar: ${item.name || 'Piñata'}`;
+
+    // Initialize edit categories array from item
+    if (Array.isArray(item.categories) && item.categories.length > 0) {
+      this.pinataEditCategories = [...item.categories];
+    } else if (item.category) {
+      this.pinataEditCategories = item.category.split(',').map(s => s.trim()).filter(Boolean);
+    } else {
+      this.pinataEditCategories = ['personajes'];
+    }
+    this.renderPinataCategoryChips('edit');
+
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  closeEditPinataModal() {
+    const modal = document.getElementById('admin-pinata-edit-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+    this.currentEditingPinata = null;
+  }
+
+  async savePinataProductEdits() {
+    const id = document.getElementById('edit-pinata-id')?.value;
+    const name = document.getElementById('edit-pinata-name')?.value.trim();
+    const categories = (this.pinataEditCategories && this.pinataEditCategories.length > 0)
+      ? this.pinataEditCategories
+      : ['personajes'];
+    const category = categories[0];
+    const rawSize = document.getElementById('edit-pinata-size')?.value || '80';
+    const size = this.formatPinataSizeText(rawSize);
+    let price = parseFloat(document.getElementById('edit-pinata-price')?.value);
+    if (isNaN(price) || price <= 0) price = 18.0;
+    const image = document.getElementById('edit-pinata-image')?.value.trim() || '/images/pinatas/pinata_celebracion.jpg';
+    const desc = document.getElementById('edit-pinata-desc')?.value.trim() || 'Piñata artesanal personalizada.';
+
+    if (!id || !name) {
+      alert('Por favor completa al menos el Nombre del Modelo.');
+      return;
+    }
+
+    const payload = {
+      name,
+      title: name,
+      category,
+      categories,
+      size,
+      basePriceUsd: price,
+      priceRange: `$${price - 2} - $${price + 4} USD`,
+      image,
+      desc
+    };
+
+    try {
+      const res = await fetch(`/api/pinata-services/catalog/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.closeEditPinataModal();
+        this.loadPinatasCatalog();
+      } else {
+        alert(data.error || 'Error al actualizar el producto.');
+      }
+    } catch (e) {
+      alert('Error de conexión al actualizar piñata.');
+    }
+  }
+
+  async deleteCurrentEditingPinata() {
+    if (!this.currentEditingPinata) return;
+    const { id, name } = this.currentEditingPinata;
+    if (!confirm(`¿Eliminar definitivamente "${name}" del inventario de piñatas?`)) return;
+
+    try {
+      const res = await fetch(`/api/pinata-services/catalog/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.closeEditPinataModal();
+        this.loadPinatasCatalog();
+      } else {
+        alert(data.error || 'Error al eliminar el producto.');
+      }
+    } catch (e) {
+      alert('Error de conexión al eliminar producto.');
+    }
+  }
+
+  async handlePinataFileSelect(event, target = 'add') {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Show loading preview immediately
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = e.target.result;
+      const previewEl = document.getElementById(target === 'add' ? 'admin-pinata-add-preview-img' : 'edit-pinata-preview-img');
+      const inputEl = document.getElementById(target === 'add' ? 'admin-pinata-input-image' : 'edit-pinata-image');
+      if (previewEl) previewEl.src = dataUrl;
+      if (inputEl) inputEl.value = dataUrl; // fallback immediately
+
+      // Upload to server and Supabase Cloud Storage
+      try {
+        const res = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageBase64: dataUrl,
+            folder: 'services/pinatas',
+            establishmentId: 'serv-pinatas',
+            fileName: file.name
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          if (inputEl) inputEl.value = data.url;
+          if (previewEl) previewEl.src = data.url;
+        }
+      } catch (err) {
+        console.warn('Could not upload image to server, preserving data URL:', err);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  toggleAddPinataForm(forceState) {
+    const form = document.getElementById('admin-pinata-add-form');
+    if (!form) return;
+    const willShow = typeof forceState === 'boolean' ? forceState : form.style.display === 'none';
+    form.style.display = willShow ? 'block' : 'none';
+    if (willShow) {
+      if (!this.pinataAddCategories || !this.pinataAddCategories.length) {
+        this.pinataAddCategories = ['personajes'];
+      }
+      this.renderPinataCategoryChips('add');
+    }
+  }
+
+  async saveNewPinataProduct() {
+    const name = document.getElementById('admin-pinata-input-name')?.value.trim();
+    if (!name) {
+      alert('Por favor ingresa al menos el Nombre del Modelo de la piñata.');
+      return;
+    }
+
+    let price = parseFloat(document.getElementById('admin-pinata-input-price')?.value);
+    if (isNaN(price) || price <= 0) {
+      price = 18.0; // Smart default so adding is ultra fast with just name and photo!
+    }
+
+    const rawSize = document.getElementById('admin-pinata-input-size')?.value || '80';
+    const size = this.formatPinataSizeText(rawSize);
+    const categories = (this.pinataAddCategories && this.pinataAddCategories.length > 0)
+      ? this.pinataAddCategories
+      : ['personajes'];
+    const category = categories[0];
+    let image = document.getElementById('admin-pinata-input-image')?.value.trim();
+    if (!image) {
+      image = '/images/pinatas/pinata_celebracion.jpg';
+    }
+    const desc = document.getElementById('admin-pinata-input-desc')?.value.trim() || 'Piñata artesanal personalizada.';
+
+    const payload = {
+      name,
+      title: name,
+      size,
+      category,
+      categories,
+      basePriceUsd: price,
+      priceRange: `$${price - 2} - $${price + 4} USD`,
+      image,
+      desc
+    };
+
+    try {
+      const res = await fetch('/api/pinata-services/catalog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.toggleAddPinataForm(false);
+        // Clean inputs
+        const nameInput = document.getElementById('admin-pinata-input-name');
+        const priceInput = document.getElementById('admin-pinata-input-price');
+        const imgInput = document.getElementById('admin-pinata-input-image');
+        const descInput = document.getElementById('admin-pinata-input-desc');
+        const fileInput = document.getElementById('admin-pinata-add-file-input');
+        const previewEl = document.getElementById('admin-pinata-add-preview-img');
+        const sizeInput = document.getElementById('admin-pinata-input-size');
+        if (nameInput) nameInput.value = '';
+        if (priceInput) priceInput.value = '';
+        if (imgInput) imgInput.value = '';
+        if (descInput) descInput.value = '';
+        if (fileInput) fileInput.value = '';
+        if (sizeInput) sizeInput.value = '80';
+        this.updatePinataSizeLabel('add', 80);
+        this.pinataAddCategories = ['personajes'];
+        this.renderPinataCategoryChips('add');
+        if (previewEl) previewEl.src = '/images/pinatas/pinata_celebracion.jpg';
+        this.loadPinatasCatalog();
+      } else {
+        alert(data.error || 'Error al guardar producto.');
+      }
+    } catch (e) {
+      alert('Error de conexión al registrar producto.');
+    }
+  }
+
+  async deletePinataProduct(id, name) {
+    if (!confirm(`¿Estás seguro de eliminar "${name}" del inventario de piñatas?`)) return;
+
+    try {
+      const res = await fetch(`/api/pinata-services/catalog/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.loadPinatasCatalog();
+      } else {
+        alert(data.error || 'Error al eliminar producto.');
+      }
+    } catch (e) {
+      alert('Error de conexión al eliminar producto.');
+    }
+  }
+
+  // ==========================================
+  // Quote Chat Inspector for Admin
+  // ==========================================
+  openQuoteChatInspector(type, quoteId, title) {
+    this.currentInspectingQuote = { type, id: quoteId, title };
+    const modal = document.getElementById('admin-quote-chat-modal');
+    const titleEl = document.getElementById('admin-quote-chat-title');
+    const subEl = document.getElementById('admin-quote-chat-sub');
+
+    if (titleEl) titleEl.textContent = `Chat con Cliente: ${title || quoteId}`;
+    if (subEl) subEl.textContent = type === 'paint' ? 'Latonería y Pintura' : (type === 'resin' ? 'ShelliArt Resina' : (type === 'pinatas' ? 'Taller de Piñatas Artesanales' : 'Laboratorio 3D Maker'));
+
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+    this.loadQuoteChatMessages();
+  }
+
+  closeQuoteChatInspector() {
+    this.currentInspectingQuote = null;
+    const modal = document.getElementById('admin-quote-chat-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  async loadQuoteChatMessages() {
+    if (!this.currentInspectingQuote) return;
+    const { type, id } = this.currentInspectingQuote;
+    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}` : (type === 'resin' ? `/api/resin-services/quotes/${id}` : (type === 'pinatas' ? `/api/pinata-services/quotes/${id}` : `/api/print3d-services/quotes/${id}`));
+
+    try {
+      const res = await fetch(endpoint);
+      const quote = await res.json();
+      const feed = document.getElementById('admin-quote-chat-feed');
+      if (!feed) return;
+
+      feed.innerHTML = (quote.messages || []).map(m => {
+        const isAdmin = m.senderRole === 'workshop' || m.senderRole === 'admin' || m.sender === 'admin' || m.sender === 'workshop' || m.sender === 'lab';
+        return `
+          <div style="align-self: ${isAdmin ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isAdmin ? '#10B981' : '#1E293B'}; color: #FFF; padding: 8px 12px; border-radius: 12px; font-size: 12.5px;">
+            <div>${m.text}</div>
+            <div style="font-size: 9.5px; opacity: 0.8; margin-top: 3px; text-align: right;">
+              <span>${m.senderName || (isAdmin ? 'Taller / Admin' : 'Cliente')}</span> • <span>${new Date(m.timestamp || m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      feed.scrollTop = feed.scrollHeight;
+    } catch (e) {
+      console.warn('Error loading quote chat messages:', e);
+    }
+  }
+
+  async sendQuoteChatMessage() {
+    if (!this.currentInspectingQuote) return;
+    const input = document.getElementById('admin-quote-chat-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    const { type, id } = this.currentInspectingQuote;
+    const endpoint = type === 'paint' ? `/api/paint-services/quotes/${id}/messages` : (type === 'resin' ? `/api/resin-services/quotes/${id}/messages` : (type === 'pinatas' ? `/api/pinata-services/quotes/${id}/messages` : `/api/print3d-services/quotes/${id}/messages`));
+
+    const payload = {
+      senderRole: 'admin',
+      sender: type === 'paint' ? 'workshop' : (type === 'resin' ? 'workshop' : (type === 'pinatas' ? 'workshop' : 'lab')),
+      senderName: type === 'paint' ? 'Taller Aliado' : (type === 'resin' ? 'ShelliArt Resina' : (type === 'pinatas' ? 'Taller de Piñatas' : 'Fabricante 3D')),
+      text
+    };
+
+    input.value = '';
+
+    try {
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      this.loadQuoteChatMessages();
+    } catch (e) {
+      alert('Error enviando mensaje.');
+    }
+  }
+
+  // ==========================================
+  // Cauchera Móvil 24/7 Admin Control
+  // ==========================================
+  openCaucheraAdminModal() {
+    const modal = document.getElementById('admin-cauchera-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+
+    try {
+      const savedPhone = localStorage.getItem('pedigochos_cauchera_phone') || '+57 322 794 9751';
+      const savedMoto = localStorage.getItem('pedigochos_cauchera_price_moto') || '10000';
+      const savedAuto = localStorage.getItem('pedigochos_cauchera_price_auto') || '15000';
+      const savedNight = localStorage.getItem('pedigochos_cauchera_price_night') || '5000';
+
+      const phoneInp = document.getElementById('admin-cauchera-phone');
+      const motoInp = document.getElementById('admin-cauchera-price-moto');
+      const autoInp = document.getElementById('admin-cauchera-price-auto');
+      const nightInp = document.getElementById('admin-cauchera-price-night');
+
+      if (phoneInp) phoneInp.value = savedPhone;
+      if (motoInp) motoInp.value = savedMoto;
+      if (autoInp) autoInp.value = savedAuto;
+      if (nightInp) nightInp.value = savedNight;
+    } catch(e) {}
+
+    this.renderCaucheraModalOrders();
+  }
+
+  closeCaucheraAdminModal() {
+    const modal = document.getElementById('admin-cauchera-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  saveCaucheraSettings() {
+    const phone = document.getElementById('admin-cauchera-phone')?.value.trim() || '+57 322 794 9751';
+    const priceMoto = document.getElementById('admin-cauchera-price-moto')?.value.trim() || '10000';
+    const priceAuto = document.getElementById('admin-cauchera-price-auto')?.value.trim() || '15000';
+    const priceNight = document.getElementById('admin-cauchera-price-night')?.value.trim() || '5000';
+
+    try {
+      localStorage.setItem('pedigochos_cauchera_phone', phone);
+      localStorage.setItem('pedigochos_cauchera_price_moto', priceMoto);
+      localStorage.setItem('pedigochos_cauchera_price_auto', priceAuto);
+      localStorage.setItem('pedigochos_cauchera_price_night', priceNight);
+      this.showToast('✅ Parámetros de Cauchera 24/7 guardados correctamente.');
+    } catch(e) {
+      alert('Error guardando parámetros: ' + e.message);
+    }
+  }
+
+  renderCaucheraModalOrders() {
+    const listEl = document.getElementById('admin-cauchera-orders-list');
+    if (!listEl) return;
+
+    const caucheraOrders = (this.orders || []).filter(o => this.isCaucheraOrder(o));
+    const total = caucheraOrders.length;
+    const pending = caucheraOrders.filter(o => {
+      const s = (o.status || '').toLowerCase();
+      return s === 'pendiente' || s === 'solicitado';
+    }).length;
+    const road = caucheraOrders.filter(o => {
+      const s = (o.status || '').toLowerCase();
+      return s === 'en camino' || s === 'preparando' || s === 'asignado';
+    }).length;
+    const done = caucheraOrders.filter(o => {
+      const s = (o.status || '').toLowerCase();
+      return s === 'entregado' || s === 'completado' || s === 'finalizado';
+    }).length;
+
+    const kpiTotal = document.getElementById('admin-cauchera-kpi-total');
+    const kpiPending = document.getElementById('admin-cauchera-kpi-pending');
+    const kpiRoad = document.getElementById('admin-cauchera-kpi-road');
+    const kpiDone = document.getElementById('admin-cauchera-kpi-done');
+
+    if (kpiTotal) kpiTotal.textContent = total;
+    if (kpiPending) kpiPending.textContent = pending;
+    if (kpiRoad) kpiRoad.textContent = road;
+    if (kpiDone) kpiDone.textContent = done;
+
+    if (caucheraOrders.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 24px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 6px;">🛞</span>
+          <strong style="color: #FFF; font-size: 13px;">No hay auxilios de cauchera registrados</strong>
+          <p style="margin: 4px 0 0 0; font-size: 11.5px; color: #94A3B8;">
+            Las solicitudes de auxilio vial enviadas desde la app de clientes aparecerán aquí automáticamente en tiempo real.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = caucheraOrders.slice(0, 20).map(o => {
+      const cName = o.customerName || o.deliveryDetails?.name || 'Cliente';
+      const cPhone = o.customerPhone || o.deliveryDetails?.phone || '';
+      const address = o.deliveryDetails?.destination || o.deliveryDetails?.address || o.deliveryDetails?.origin || 'San Antonio del Táchira';
+      const vehicle = o.deliveryDetails?.vehicle || o.items?.[0]?.name || 'Vehículo';
+      const status = o.status || 'Pendiente';
+      const totalAmount = this.formatPesos(o.total || o.deliveryFee || 10000);
+      const cleanPhone = (cPhone || '').replace(/\D/g, '');
+
+      return `
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">🛞</span>
+              <strong style="color: #FFF; font-size: 13px;">#${o.id || o.deliveryDetails?.code || 'AUX'} - ${cName}</strong>
+              <span style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">
+                ${vehicle}
+              </span>
+            </div>
+            <span style="font-weight: 900; color: #10B981; font-size: 13px;">${totalAmount}</span>
+          </div>
+
+          <div style="font-size: 12px; color: #CBD5E1; display: flex; align-items: center; gap: 6px;">
+            <span>📍</span>
+            <span>${address}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 4px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              ${cleanPhone ? `
+                <a href="https://wa.me/${cleanPhone}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                  <span>💬</span> WhatsApp (${cPhone})
+                </a>
+              ` : `<span style="font-size: 11px; color: #94A3B8;">${cPhone || 'Sin teléfono'}</span>`}
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span style="font-size: 11px; color: #94A3B8;">Estado: <b style="color: #FBBF24;">${status}</b></span>
+              <button type="button" onclick="AdminApp.updateOrderStatus('${o.id}', 'en camino')" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #F59E0B; color: #FDE68A; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                🛵 Despachar
+              </button>
+              <button type="button" onclick="AdminApp.updateOrderStatus('${o.id}', 'entregado')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981; color: #6EE7B7; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                ✅ Atendido
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ==========================================
+  // Merchant Registration Leads & Custom Fit Management
+  // ==========================================
+  handleMerchantLeadWs(data) {
+    const badge = document.getElementById('admin-merchant-leads-badge');
+    if (badge) {
+      const count = parseInt(badge.textContent || '0', 10) + 1;
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    }
+    if (typeof Sound !== 'undefined' && Sound.playNotification) {
+      Sound.playNotification();
+    }
+    const modal = document.getElementById('admin-merchant-leads-modal');
+    if (modal && modal.style.display !== 'none') {
+      this.loadMerchantLeads();
+    }
+  }
+
+  async openMerchantLeadsModal() {
+    const modal = document.getElementById('admin-merchant-leads-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+      this.checkModalOpenState();
+    }
+    const badge = document.getElementById('admin-merchant-leads-badge');
+    if (badge) {
+      badge.textContent = '0';
+      badge.style.display = 'none';
+    }
+    await this.loadMerchantLeads();
+  }
+
+  closeMerchantLeadsModal() {
+    const modal = document.getElementById('admin-merchant-leads-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      this.checkModalOpenState();
+    }
+  }
+
+  async loadMerchantLeads() {
+    try {
+      const res = await fetch('/api/merchants/leads');
+      const leads = await res.json();
+      this.merchantLeadsList = Array.isArray(leads) ? leads : [];
+      this.updateLeadFilterCounts();
+      this.renderMerchantLeads();
+    } catch(e) {
+      console.warn('Error loading merchant leads in admin:', e);
+      const container = document.getElementById('admin-merchant-leads-list');
+      if (container) {
+        container.innerHTML = '<div style="text-align: center; color: #F87171; padding: 20px;">Error al cargar leads de comercios.</div>';
+      }
+    }
+  }
+
+  updateLeadFilterCounts() {
+    const leads = this.merchantLeadsList || [];
+    const all = leads.length;
+    const newCount = leads.filter(l => !l.status || l.status === 'new').length;
+    const contacted = leads.filter(l => l.status === 'contacted').length;
+    const active = leads.filter(l => l.status === 'active').length;
+
+    const elAll = document.getElementById('leads-count-all');
+    const elNew = document.getElementById('leads-count-new');
+    const elContacted = document.getElementById('leads-count-contacted');
+    const elActive = document.getElementById('leads-count-active');
+
+    if (elAll) elAll.textContent = all;
+    if (elNew) elNew.textContent = newCount;
+    if (elContacted) elContacted.textContent = contacted;
+    if (elActive) elActive.textContent = active;
+  }
+
+  filterMerchantLeads(filter, btnEl) {
+    this.activeLeadFilter = filter;
+    document.querySelectorAll('.btn-filter-lead').forEach(btn => {
+      btn.style.background = 'transparent';
+      btn.style.borderColor = 'rgba(255,255,255,0.15)';
+      btn.style.color = '#94A3B8';
+    });
+    if (btnEl) {
+      btnEl.style.background = 'rgba(255, 107, 0, 0.2)';
+      btnEl.style.borderColor = '#FF6B00';
+      btnEl.style.color = '#FFF';
+    }
+    this.renderMerchantLeads();
+  }
+
+  renderMerchantLeads() {
+    const container = document.getElementById('admin-merchant-leads-list');
+    if (!container) return;
+
+    let leads = this.merchantLeadsList || [];
+    const filter = this.activeLeadFilter || 'all';
+
+    if (filter === 'new') {
+      leads = leads.filter(l => !l.status || l.status === 'new');
+    } else if (filter === 'contacted') {
+      leads = leads.filter(l => l.status === 'contacted');
+    } else if (filter === 'active') {
+      leads = leads.filter(l => l.status === 'active');
+    }
+
+    if (!leads.length) {
+      container.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 40px;">
+          <span style="font-size: 32px; display: block; margin-bottom: 8px;">🏪</span>
+          <p style="margin: 0; font-size: 13px;">No hay leads de comercios en este filtro.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const modelLabels = {
+      custom_craft: '🪅 Por Encargo / Artesanías (Piñatas, Resina, Repostería)',
+      food: '🍔 Gastronomía & Restaurante',
+      retail: '👗 Retail & Stock Físico',
+      service: '🔧 Servicios Técnicos & Auxilio'
+    };
+
+    container.innerHTML = leads.map(lead => {
+      const attrs = lead.productAttributes || {};
+      const attrPills = [];
+      if (attrs.photo) attrPills.push('📸 Foto Obligatoria');
+      if (attrs.size) attrPills.push('📏 Tamaño / Medidas');
+      if (attrs.customName) attrPills.push('✍️ Nombre Personalizado');
+      if (attrs.customNumber) attrPills.push('🔢 Número / Edad');
+      if (attrs.extras) attrPills.push('🎁 Extras / Rellenos');
+      if (attrs.leadTimeDays) attrPills.push('📅 Anticipación');
+      if (attrs.variantsStock) attrPills.push('🏷️ Variantes / Stock');
+      if (attrs.tableIngredients) attrPills.push('🍔 Ingredientes / Salsas');
+
+      const statusMap = {
+        new: { text: 'Nuevo Lead', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)' },
+        contacted: { text: 'Contactado', color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.15)' },
+        active: { text: 'Tienda Creada / Activo', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' }
+      };
+      const st = statusMap[lead.status || 'new'] || statusMap.new;
+
+      const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+      const waMsg = encodeURIComponent(`Hola ${lead.contactName || lead.businessName}, te escribimos desde la Administración de PediGochos respecto a tu solicitud de registro de comercio. ¡Ya tenemos lista la plantilla técnica de tu tienda!`);
+      const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${waMsg}` : '#';
+
+      return `
+        <div style="background: #172033; border: 1.5px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <!-- Top Row: Name, Status, Date -->
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h4 style="margin: 0; font-size: 15px; font-weight: 900; color: #FFF;">${lead.businessName || 'Comercio Sin Nombre'}</h4>
+                <span style="background: ${st.bg}; color: ${st.color}; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; border: 1px solid ${st.color};">
+                  ${st.text}
+                </span>
+              </div>
+              <span style="font-size: 11.5px; color: #FDA4AF; font-weight: 700;">${modelLabels[lead.businessModel] || lead.businessModel}</span>
+            </div>
+
+            <div style="text-align: right;">
+              <span style="font-size: 10.5px; color: #94A3B8;">${lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() + ' ' + new Date(lead.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+              <div style="font-size: 11px; color: #CBD5E1; font-weight: 700; margin-top: 2px;">📍 ${lead.city || 'San Cristóbal'} ${lead.address ? '• ' + lead.address : ''}</div>
+            </div>
+          </div>
+
+          <!-- Middle Row: Contact & Attributes -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: rgba(0,0,0,0.25); border-radius: 10px; padding: 10px 12px; font-size: 11.5px; color: #CBD5E1;">
+            <div>
+              <strong style="color: #FFF; display: block; margin-bottom: 2px;">👤 Contacto:</strong>
+              <span>${lead.contactName || 'No indicado'}</span>
+            </div>
+            <div>
+              <strong style="color: #FFF; display: block; margin-bottom: 2px;">📱 WhatsApp:</strong>
+              <a href="${waLink}" target="_blank" style="color: #34D399; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                <span>💬</span> ${lead.phone || 'Sin número'}
+              </a>
+            </div>
+            <div>
+              <strong style="color: #FFF; display: block; margin-bottom: 2px;">⏱️ Tiempos & Despacho:</strong>
+              <span>${lead.prepTime === 'order_days' ? '2-5 días' : lead.prepTime === 'same_day' ? '1-4h' : '15-45m'} • ${lead.deliveryMethod === 'pedigochos' ? 'PediGochos' : 'Propio'}</span>
+            </div>
+            <div>
+              <strong style="color: #FFF; display: block; margin-bottom: 2px;">🌟 Producto Estrella:</strong>
+              <span style="color: #FCD34D;">${lead.sampleProduct || 'No especificado'}</span>
+            </div>
+          </div>
+
+          <!-- Attributes Pills -->
+          <div>
+            <span style="font-size: 10.5px; color: #94A3B8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 5px;">Atributos Requeridos para su Fit Personalizado:</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${attrPills.map(p => `<span style="background: rgba(255, 107, 0, 0.15); border: 1px solid rgba(255, 107, 0, 0.35); color: #FFA94D; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px;">${p}</span>`).join('')}
+            </div>
+          </div>
+
+          <!-- Bottom Actions Bar -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; color: #94A3B8;">Cambiar Estado:</span>
+              <select onchange="AdminApp.updateMerchantLeadStatus('${lead.id}', this.value)" style="background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 4px 8px; border-radius: 6px; font-size: 11px;">
+                <option value="new" ${lead.status === 'new' ? 'selected' : ''}>Nuevo</option>
+                <option value="contacted" ${lead.status === 'contacted' ? 'selected' : ''}>Contactado</option>
+                <option value="active" ${lead.status === 'active' ? 'selected' : ''}>Activado en App</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <a href="${waLink}" target="_blank" style="background: #10B981; color: #FFF; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                <span>💬</span> Chatear WhatsApp
+              </a>
+              <button type="button" onclick="AdminApp.copyLeadFitTemplate('${lead.id}')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                <span>📋</span> Copiar Fit
+              </button>
+              ${lead.businessModel === 'custom_craft' ? `
+                <button type="button" onclick="AdminApp.closeMerchantLeadsModal(); AdminApp.openPinatasAdminModal(); AdminApp.switchPinatasAdminTab('inventory');" style="background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%); color: #FFF; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                  <span>🪅</span> Ver Inventario Piñatas
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async updateMerchantLeadStatus(leadId, status) {
+    try {
+      const res = await fetch(`/api/merchants/leads/${leadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const lead = (this.merchantLeadsList || []).find(l => l.id === leadId);
+        if (lead) lead.status = status;
+        this.updateLeadFilterCounts();
+        this.renderMerchantLeads();
+      } else {
+        alert(data.error || 'No se pudo actualizar el estado.');
+      }
+    } catch(e) {
+      alert('Error de conexión actualizando estado.');
+    }
+  }
+
+  copyLeadFitTemplate(leadId) {
+    const lead = (this.merchantLeadsList || []).find(l => l.id === leadId);
+    if (!lead || !lead.templateText) {
+      alert('No hay plantilla técnica generada para este lead.');
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lead.templateText).then(() => {
+        alert('📋 ¡Ficha técnica copiada al portapapeles!');
+      }).catch(() => {
+        alert('No se pudo copiar automáticamente.');
+      });
+    } else {
+      alert('Portapapeles no soportado.');
+    }
+  }
+}
+
+const AdminApp = new AdminController();
+window.AdminApp = AdminApp;
+
+window.getTodayDayId = function() {
+  const dayIndex = new Date().getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+  const map = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+  return map[dayIndex];
+};
+
+window.toggleFormDayPill = function(el, containerId) {
+  const day = el.getAttribute('data-day');
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (day === 'todos') {
+    container.querySelectorAll('.day-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+  } else {
+    const todosPill = container.querySelector('[data-day="todos"]');
+    if (todosPill) todosPill.classList.remove('active');
+    el.classList.toggle('active');
+
+    const anyActive = container.querySelectorAll('.day-pill.active').length > 0;
+    if (!anyActive && todosPill) {
+      todosPill.classList.add('active');
+    }
+  }
+};
+
+window.toggleSpecsDayPill = function(el) {
+  window.toggleFormDayPill(el, 'specs-available-days-pills');
+};
+
+window.getSelectedDaysFromContainer = function(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return ['todos'];
+  const activePills = container.querySelectorAll('.day-pill.active');
+  const days = Array.from(activePills).map(p => p.getAttribute('data-day'));
+  return (days.length === 0 || days.includes('todos')) ? ['todos'] : days;
+};
+
+window.setSelectedDaysToContainer = function(containerId, daysArray) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const days = (Array.isArray(daysArray) && daysArray.length > 0) ? daysArray.map(d => String(d).toLowerCase()) : ['todos'];
+  container.querySelectorAll('.day-pill').forEach(p => {
+    const d = p.getAttribute('data-day');
+    p.classList.toggle('active', days.includes(d) || (days.includes('todos') && d === 'todos'));
+  });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  AdminApp.init();
+});

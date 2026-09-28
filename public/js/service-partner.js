@@ -169,8 +169,32 @@ const ServicePartnerApp = {
   },
 
   restoreSavedService() {
+    const validServices = ['paint', 'print3d', 'resin', 'cauchera', 'pinatas'];
+    // 1. Dedicated APK build preset check
+    if (window.PRESET_SERVICE && validServices.includes(window.PRESET_SERVICE)) {
+      this.currentService = window.PRESET_SERVICE;
+      // Hide service switch dropdown arrow when compiled as dedicated APK
+      const switchBtn = document.querySelector('.btn-sp-switch-service');
+      if (switchBtn) {
+        const arrow = switchBtn.querySelector('.sp-switch-arrow');
+        if (arrow) arrow.style.display = 'none';
+        switchBtn.onclick = null;
+      }
+      return;
+    }
+
+    // 2. Query param ?service=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const serviceParam = urlParams.get('service');
+    if (serviceParam && validServices.includes(serviceParam)) {
+      this.currentService = serviceParam;
+      localStorage.setItem('pedigochos_service_partner_mode', serviceParam);
+      return;
+    }
+
+    // 3. Saved localStorage
     const saved = localStorage.getItem('pedigochos_service_partner_mode');
-    if (saved && ['paint', 'print3d', 'resin', 'cauchera'].includes(saved)) {
+    if (saved && validServices.includes(saved)) {
       this.currentService = saved;
     } else {
       // Show gate on first open
@@ -247,6 +271,8 @@ const ServicePartnerApp = {
       this.fetchQuotes();
     } else if (tabKey === 'chat') {
       this.renderChatThreads();
+    } else if (tabKey === 'business') {
+      this.loadBusinessProfile();
     }
   },
 
@@ -258,8 +284,102 @@ const ServicePartnerApp = {
     await Promise.all([
       this.fetchQuotes(true),
       this.fetchCatalog(),
-      this.fetchStats()
+      this.fetchStats(),
+      this.loadBusinessProfile()
     ]);
+  },
+
+  getEstablishmentId() {
+    switch (this.currentService) {
+      case 'paint': return 'serv-paint';
+      case 'print3d': return 'serv-print3d';
+      case 'resin': return 'serv-resin';
+      case 'cauchera': return 'serv-cauchera';
+      case 'pinatas': return 'serv-pinatas';
+      default: return 'serv-paint';
+    }
+  },
+
+  async loadBusinessProfile() {
+    try {
+      const res = await fetch(`${this.getApiBaseUrl()}/api/service-establishments`);
+      if (!res.ok) throw new Error('Error al cargar datos del negocio');
+      const list = await res.json();
+      const estId = this.getEstablishmentId();
+      const est = list.find(e => e.id === estId) || {};
+      this.currentBusinessData = est;
+
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val !== undefined && val !== null ? val : '';
+      };
+
+      setVal('biz-displayName', est.displayName || est.name || '');
+      setVal('biz-name', est.name || '');
+      setVal('biz-slogan', est.slogan || '');
+      setVal('biz-description', est.description || '');
+      setVal('biz-openTime', est.openTime || '08:00');
+      setVal('biz-closeTime', est.closeTime || '19:00');
+      setVal('biz-deliveryTime', est.deliveryTime || '24 a 48 horas');
+      setVal('biz-phone', est.phone || '+57 322 794 9751');
+      setVal('biz-logo', est.logo || '');
+      setVal('biz-image', est.image || '');
+
+      const isAvail = document.getElementById('biz-isAvailable');
+      if (isAvail) isAvail.checked = est.isAvailable !== false;
+
+      const workingDays = Array.isArray(est.workingDays) ? est.workingDays : ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+      ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'].forEach(d => {
+        const dayMap = { lun: 'lunes', mar: 'martes', mie: 'miercoles', jue: 'jueves', vie: 'viernes', sab: 'sabado', dom: 'domingo' };
+        const chk = document.getElementById(`biz-day-${d}`);
+        if (chk) chk.checked = workingDays.includes(dayMap[d]);
+      });
+    } catch (e) {
+      console.error('Error loading business profile:', e);
+    }
+  },
+
+  async saveBusinessProfile() {
+    const estId = this.getEstablishmentId();
+    const getVal = (id) => (document.getElementById(id)?.value || '').trim();
+
+    const selectedDays = [];
+    ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'].forEach(d => {
+      const dayMap = { lun: 'lunes', mar: 'martes', mie: 'miercoles', jue: 'jueves', vie: 'viernes', sab: 'sabado', dom: 'domingo' };
+      const chk = document.getElementById(`biz-day-${d}`);
+      if (chk && chk.checked) selectedDays.push(dayMap[d]);
+    });
+
+    const payload = {
+      displayName: getVal('biz-displayName'),
+      name: getVal('biz-name') || getVal('biz-displayName'),
+      slogan: getVal('biz-slogan'),
+      description: getVal('biz-description'),
+      openTime: getVal('biz-openTime') || '08:00',
+      closeTime: getVal('biz-closeTime') || '19:00',
+      workingDays: selectedDays,
+      deliveryTime: getVal('biz-deliveryTime'),
+      phone: getVal('biz-phone'),
+      logo: getVal('biz-logo'),
+      image: getVal('biz-image'),
+      isAvailable: document.getElementById('biz-isAvailable')?.checked ?? true
+    };
+
+    try {
+      const res = await fetch(`${this.getApiBaseUrl()}/api/service-establishments/${estId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Error guardando perfil');
+      const data = await res.json();
+      this.currentBusinessData = data.establishment;
+      alert('✅ ¡Datos de tu negocio guardados con éxito!');
+      this.updateHeaderUI();
+    } catch(err) {
+      console.error('Error saving business profile:', err);
+      alert('❌ Error al guardar datos: ' + err.message);
+    }
   },
 
   // =========================================================================

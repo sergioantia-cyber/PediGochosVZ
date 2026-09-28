@@ -1,0 +1,50 @@
+[
+  {
+    "id": "print-1",
+    "slug": "soporte-celular-auto-moto",
+    "title": "Soporte Universal de Celular para Auto & Moto (PETG)",
+    "category": "soportes",
+    "material": "petg",
+    "baseDimensions": {
+      "x": 8.5,
+      "y": 7.0,
+      "z": 9.5
+    },
+    "basePriceUsd": 12.0,
+    "estPrintHours": 4.5,
+    "weightGrams": 68,
+    "image": "/images/services/soporte_celular_3d.jpg",
+    "modelGlb": "/models/soporte_celular.glb",
+    "desc": "Soporte ergonómico reforzado para auto y moto en PETG técnico. Resiste altas temperaturas solares (hasta 85°C) y vibraciones continuas en carretera o manillar con fijación precisa y paso de cable de carga integrado.",
+    "tags": [
+      "Resistente 85°C",
+      "Antivibración Moto",
+      "PETG Reforzado"
+    ],
+    "active": true
+  },
+  {
+    "id": "print-2",
+    "slug": "llavero-personalizado-pedigochos",
+    "title": "Llavero Personalizado PediGochos / Emprendedores 3D",
+    "category": "personalizados",
+    "material": "pla",
+    "baseDimensions": {
+      "x": 6.2,
+      "y": 2.5,
+      "z": 0.8
+    },
+    "basePriceUsd": 3.5,
+    "estPrintHours": 0.8,
+    "weightGrams": 18,
+    "image": "/images/services/llavero_3d_pedigochos.jpg",
+    "modelGlb": "/models/llavero_pedigochos.glb",
+    "desc": "Llavero tridimensional de alta resolución en relieve bicapa (doble color). Personalizable con tu logo corporativo, marca o nombre. Incluye aro metálico de acero inoxidable reforzado. Descuento especial por volumen para negocios.",
+    "tags": [
+      "Doble Color",
+      "Relieve 3D",
+      "Aro Metálico"
+    ],
+    "active": true
+  }
+]

@@ -633,7 +633,7 @@ Hola, adjunto mi foto y los detalles de cómo deseo mi piñata personalizada. ¿
             <div style="display: flex; flex-direction: column; justify-content: center;">
               <strong style="color: #FFF; font-size: 14px; margin-bottom: 2px;">${item.name}</strong>
               <span style="font-size: 11.5px; color: #94A3B8; margin-bottom: 4px;">${item.desc || 'Modelo artesanal reforzado.'}</span>
-              <span style="font-size: 12px; font-weight: 800; color: #F43F5E;">Ref: ${item.priceRange || `$${item.basePriceUsd} USD`}</span>
+              <span style="font-size: 12px; font-weight: 800; color: #FDA4AF;">🎨 Elaboración Bajo Cotización Previa</span>
             </div>
           </div>
 
@@ -776,7 +776,7 @@ Hola, adjunto mi foto y los detalles de cómo deseo mi piñata personalizada. ¿
 📏 *Tamaño Deseado:* ${sizeObj.name}
 ${customName ? `✍️ *Personalizado con:* "${customName}"\n` : ''}🎀 *Apertura:* ${openingText}
 📅 *Fecha del Evento:* ${eventDate || 'A coordinar con el taller'}
-💰 *Tarifa Referencial:* ${item.priceRange || `$${item.basePriceUsd} USD`}
+📋 *Modalidad:* Elaboración Artesanal Bajo Cotización Previa (Presupuesto sin compromiso)
 ━━━━━━━━━━━━━━━━━━━━
 👤 *Cliente:* ${clientName}
 ${clientPhone ? `📱 *Contacto:* ${clientPhone}\n` : ''}━━━━━━━━━━━━━━━━━━━━
@@ -943,7 +943,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
             <p class="pinata-sample-desc">${item.desc || 'Acabado artesanal de alta durabilidad.'}</p>
           </div>
           <div class="pinata-sample-bottom">
-            <span class="pinata-sample-price">${item.priceRange || `$${item.basePriceUsd} USD`}</span>
+            <span class="pinata-sample-price" style="color: #FDA4AF; font-size: 11px; font-weight: 800;">🎨 Bajo Cotización</span>
             <button type="button" class="btn-sample-quote-sim" onclick="PinataServiceApp.openCatalogOrderModal('${item.id}')">
               Pedir este Modelo ➔
             </button>
@@ -1215,7 +1215,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
               <span class="capacity">Capacidad aprox: 1 a 2 kg de dulces • Fiestas íntimas</span>
             </div>
           </div>
-          <span style="font-weight: 800; color: #FDA4AF; font-size: 13px;">Desde $12</span>
+          <span style="font-weight: 700; color: #FDA4AF; font-size: 11.5px;">A Cotizar</span>
         </div>
 
         <div class="pinata-size-pill ${sz === 'mediana' ? 'selected' : ''}" onclick="PinataServiceApp.selectSize('mediana')">
@@ -1229,7 +1229,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
               <span class="capacity">Capacidad aprox: 3 a 5 kg de dulces • Estándar para cumpleaños</span>
             </div>
           </div>
-          <span style="font-weight: 800; color: #FDA4AF; font-size: 13px;">Desde $18</span>
+          <span style="font-weight: 700; color: #FDA4AF; font-size: 11.5px;">A Cotizar</span>
         </div>
 
         <div class="pinata-size-pill ${sz === 'grande' ? 'selected' : ''}" onclick="PinataServiceApp.selectSize('grande')">
@@ -1240,7 +1240,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
               <span class="capacity">Capacidad aprox: 6 a 10 kg de dulces • Alto impacto visual</span>
             </div>
           </div>
-          <span style="font-weight: 800; color: #FDA4AF; font-size: 13px;">Desde $26</span>
+          <span style="font-weight: 700; color: #FDA4AF; font-size: 11.5px;">A Cotizar</span>
         </div>
       </div>
     `;
@@ -1302,7 +1302,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
               <span style="font-size: 11px; color: #94a3b8; display: block;">Tú colocas los dulces y sorpresas en casa.</span>
             </div>
           </div>
-          <span class="pinata-extra-price">$0 USD</span>
+          <span class="pinata-extra-price" style="color: #94A3B8;">Incluido</span>
         </div>
 
         <div class="pinata-extra-checkbox-item ${f === 'candies' ? 'selected' : ''}" onclick="PinataServiceApp.selectFilling('candies')">
@@ -1313,7 +1313,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
               <span style="font-size: 11px; color: #94a3b8; display: block;">Mix de chupetas, gomitas, chocolates y caramelos seleccionados.</span>
             </div>
           </div>
-          <span class="pinata-extra-price">+ $6.00 USD</span>
+          <span class="pinata-extra-price" style="color: #FDA4AF;">A Cotizar</span>
         </div>
       </div>
 
@@ -1327,7 +1327,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
               <span style="font-size: 11px; color: #94a3b8; display: block;">Forrado con los mismos colores y flecos de la piñata.</span>
             </div>
           </div>
-          <span class="pinata-extra-price">+ $2.50 USD</span>
+          <span class="pinata-extra-price" style="color: #FDA4AF;">A Cotizar</span>
         </div>
 
         <div class="pinata-extra-checkbox-item ${ex.includes('antifaz') ? 'selected' : ''}" onclick="PinataServiceApp.toggleExtra('antifaz')">
@@ -1338,7 +1338,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
               <span style="font-size: 11px; color: #94a3b8; display: block;">Venda cómoda decorada al estilo de la fiesta.</span>
             </div>
           </div>
-          <span class="pinata-extra-price">+ $1.50 USD</span>
+          <span class="pinata-extra-price" style="color: #FDA4AF;">A Cotizar</span>
         </div>
 
         <div class="pinata-extra-checkbox-item ${ex.includes('confeti') ? 'selected' : ''}" onclick="PinataServiceApp.toggleExtra('confeti')">
@@ -1349,7 +1349,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
               <span style="font-size: 11px; color: #94a3b8; display: block;">Lluvia de papel multicolor para el interior.</span>
             </div>
           </div>
-          <span class="pinata-extra-price">+ $1.00 USD</span>
+          <span class="pinata-extra-price" style="color: #FDA4AF;">A Cotizar</span>
         </div>
       </div>
     `;
@@ -1426,16 +1426,16 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
           <strong>${this.wizardState.photos.length} foto(s) de referencia</strong>
         </div>
 
-        <!-- Estimated Price Box -->
-        <div class="pinata-price-estimate-box">
-          <span class="title">Rango de Precio Estimado</span>
-          <div class="range">${pricing.rangeUsd}</div>
-          <span class="equiv">~${pricing.rangeCop} • ${pricing.rangeBs}</span>
+        <!-- Banner de Cotización Artesanal -->
+        <div class="pinata-quote-notice-card" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #F43F5E; border-radius: 14px; padding: 14px; margin-top: 14px; text-align: left;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <span style="font-size: 20px;">📋</span>
+            <strong style="color: #FFF; font-size: 13.5px;">Fabricación Artesanal Bajo Cotización Previa</strong>
+          </div>
+          <p style="color: #CBD5E1; font-size: 11.5px; line-height: 1.5; margin: 0;">
+            Cada piñata se confecciona a medida según dimensiones, relieve y complejidad. Al enviar tu solicitud, el taller evaluará los detalles y te responderá con el presupuesto exacto antes de iniciar la confección.
+          </p>
         </div>
-
-        <p class="pinata-legal-disclaimer">
-          * Tarifa estimada referencial. El monto final se confirma con la creadora dentro del chat tras evaluar los detalles y la complejidad del diseño solicitado.
-        </p>
       </div>
 
       <!-- Action Button Options -->
@@ -1565,8 +1565,8 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
       extrasSummary: this.getExtrasSummary(),
       eventDate: this.wizardState.eventDate || document.getElementById('pinata-input-date')?.value || '',
       referencePhotos: this.wizardState.photos,
-      estimatedPriceUsd: pricing.base,
-      estimatedPriceRange: pricing.rangeUsd
+      estimatedPriceUsd: null,
+      estimatedPriceRange: 'Bajo Cotización Previa'
     };
 
     try {
@@ -1588,7 +1588,6 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
   },
 
   sendViaWhatsApp() {
-    const pricing = this.calculatePricing();
     const styleObj = this.getStyleObject(this.wizardState.styleId);
     const sizeObj = this.getSizeObject(this.wizardState.sizeId);
     const clientName = localStorage.getItem('customer_name') || '';
@@ -1603,13 +1602,12 @@ ${this.wizardState.customName ? `✍️ *Nombre/Número:* "${this.wizardState.cu
 🍬 *Relleno & Extras:* ${this.getExtrasSummary()}
 📅 *Fecha del Evento:* ${this.wizardState.eventDate || 'A coordinar'}
 ━━━━━━━━━━━━━━━━━━━━
-💰 *Presupuesto Estimado:* ${pricing.rangeUsd}
-💵 *Equivalente:* ~${pricing.rangeCop} • ${pricing.rangeBs}
+📋 *Modalidad:* Elaboración Artesanal Bajo Cotización Previa (Presupuesto sin compromiso)
 ${clientName ? `👤 *Cliente:* ${clientName}\n` : ''}━━━━━━━━━━━━━━━━━━━━
 📍 *Enviado desde PediGochos App* (San Antonio / Cúcuta / Frontera)
 💬 *Taller Artesanal WhatsApp: +57 322 794 9751*
 
-Hola, ¿podrían confirmarme la disponibilidad y precio final para esta piñata? ¡Muchas gracias!`;
+Hola, ¿podrían confirmarme la disponibilidad y cotización para esta piñata? ¡Muchas gracias!`;
 
     const waUrl = `https://wa.me/${this.whatsAppNumber}?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank');

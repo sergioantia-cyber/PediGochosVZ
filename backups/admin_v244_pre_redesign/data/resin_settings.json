@@ -1,0 +1,20 @@
+{
+  "letterBasePriceUsd": 4.5,
+  "photoBasePriceUsd": 5.0,
+  "nfcExtraUsd": 2.0,
+  "charmExtraUsd": 1.0,
+  "resinWhatsApp": "573227949751",
+  "resinWhatsAppDisplay": "+57 322 794 9751",
+  "samplePhotos": [
+    {
+      "id": "sample-1",
+      "title": "Pareja Romántica",
+      "url": "/images/services/shelliart_banner.jpg"
+    },
+    {
+      "id": "sample-2",
+      "title": "Llavero Pedigochos",
+      "url": "/images/services/llavero_3d_pedigochos.jpg"
+    }
+  ]
+}

@@ -10,7 +10,7 @@
       "y": 7.0,
       "z": 9.5
     },
-    "basePriceUsd": 12.0,
+    "priceRange": "Bajo Cotización Previa",
     "estPrintHours": 4.5,
     "weightGrams": 68,
     "image": "/images/services/soporte_celular_3d.jpg",
@@ -34,7 +34,7 @@
       "y": 2.5,
       "z": 0.8
     },
-    "basePriceUsd": 3.5,
+    "priceRange": "Bajo Cotización Previa",
     "estPrintHours": 0.8,
     "weightGrams": 18,
     "image": "/images/services/llavero_3d_pedigochos.jpg",
@@ -44,6 +44,102 @@
       "Doble Color",
       "Relieve 3D",
       "Aro Metálico"
+    ],
+    "active": true
+  },
+  {
+    "id": "print-3",
+    "slug": "soporte-escritorio-cable-3d",
+    "title": "Soporte Ergonómico de Mesa con Ranura Pasacables (PLA+ Pro)",
+    "category": "soportes",
+    "material": "pla",
+    "baseDimensions": {
+      "x": 11.0,
+      "y": 8.5,
+      "z": 12.0
+    },
+    "priceRange": "Bajo Cotización Previa",
+    "estPrintHours": 5.2,
+    "weightGrams": 85,
+    "image": "/images/services/soporte_escritorio_3d.jpg",
+    "modelGlb": "/models/soporte_celular.glb",
+    "desc": "Base de escritorio a 60° con canal oculto para cable de carga Lightning/Type-C y topes antideslizantes. Ideal para videollamadas, tablets o smartphones en oficina sin forzar los cables.",
+    "tags": [
+      "Canal Oculto",
+      "Inclinación 60°",
+      "Antideslizante"
+    ],
+    "active": true
+  },
+  {
+    "id": "print-4",
+    "slug": "embudo-automotriz-antiderrames",
+    "title": "Embudo Automotriz Antiderrames con Rosca Universal (PETG)",
+    "category": "repuestos",
+    "material": "petg",
+    "baseDimensions": {
+      "x": 9.5,
+      "y": 9.5,
+      "z": 14.0
+    },
+    "priceRange": "Bajo Cotización Previa",
+    "estPrintHours": 6.0,
+    "weightGrams": 110,
+    "image": "/images/services/embudo_automotriz_3d.jpg",
+    "modelGlb": "/models/soporte_celular.glb",
+    "desc": "Embudo técnico resistente a aceites de motor, gasolina, refrigerante y líquido de frenos. Con boquilla acodada antirreflujo y rosca compatible con bidones estándar para cambio limpio de fluidos.",
+    "tags": [
+      "Resistente Químicos",
+      "PETG Alto Impacto",
+      "Antirreflujo"
+    ],
+    "active": true
+  },
+  {
+    "id": "print-5",
+    "slug": "clip-dispensador-tapa-rosca",
+    "title": "Clip Dispensador con Tapa a Rosca Hermética para Bolsas (PLA)",
+    "category": "hogar",
+    "material": "pla",
+    "baseDimensions": {
+      "x": 12.5,
+      "y": 4.8,
+      "z": 3.2
+    },
+    "priceRange": "Bajo Cotización Previa",
+    "estPrintHours": 2.1,
+    "weightGrams": 35,
+    "image": "/images/services/clip_dispensador_3d.jpg",
+    "modelGlb": "/models/llavero_pedigochos.glb",
+    "desc": "Boquilla dosificadora con clip hermético que sella empaques de café, cereales, granos o azúcar. Permite verter cómodamente el contenido y cerrarlo con su tapa roscada sin derrames.",
+    "tags": [
+      "Cierre Hermético",
+      "Dosificador",
+      "Uso Diario"
+    ],
+    "active": true
+  },
+  {
+    "id": "print-6",
+    "slug": "caja-magnetica-oculta-neodimio",
+    "title": "Caja Protectora Oculta con Imán de Neodimio (PETG Industrial)",
+    "category": "seguridad",
+    "material": "petg",
+    "baseDimensions": {
+      "x": 8.0,
+      "y": 5.5,
+      "z": 3.0
+    },
+    "priceRange": "Bajo Cotización Previa",
+    "estPrintHours": 3.8,
+    "weightGrams": 55,
+    "image": "/images/services/caja_magnetica_3d.jpg",
+    "modelGlb": "/models/soporte_celular.glb",
+    "desc": "Cápsula resistente al agua con junta tórica y dos potentes imanes de neodimio N52. Diseñada para ocultar llaves de emergencia, dinero o localizadores GPS/AirTag bajo el chasis o vigas metálicas.",
+    "tags": [
+      "Imán Neodimio N52",
+      "Impermeable",
+      "Chasis Auto/Moto"
     ],
     "active": true
   }

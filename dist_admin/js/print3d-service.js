@@ -240,13 +240,22 @@ const Print3DServiceApp = {
         <!-- Filter Chips -->
         <div class="print3d-filter-scroll">
           <button type="button" class="print3d-filter-btn active" onclick="Print3DServiceApp.filterCategory('all', this)">
-            ✨ Todos los Diseños (2)
+            ✨ Todos los Diseños (${this.products.length})
           </button>
           <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('soportes', this)">
-            📱 Soportes & Auto/Moto
+            📱 Soportes & Dispositivos
           </button>
           <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('personalizados', this)">
             🔑 Llaveros & Merch
+          </button>
+          <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('repuestos', this)">
+            🔧 Repuestos & Automotriz
+          </button>
+          <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('hogar', this)">
+            🏠 Hogar & Cocina
+          </button>
+          <button type="button" class="print3d-filter-btn" onclick="Print3DServiceApp.filterCategory('seguridad', this)">
+            🛡️ Seguridad & Exterior
           </button>
         </div>
 
@@ -585,7 +594,7 @@ const Print3DServiceApp = {
                 <div class="print3d-similar-thumb" style="background-image: url('${item.image}');"></div>
                 <div style="padding: 8px 10px;">
                   <strong style="color: #FFF; font-size: 11.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</strong>
-                  <span style="color: #38BDF8; font-size: 11px; font-weight: 800;">$${item.basePriceUsd.toFixed(2)} USD</span>
+                  <span style="color: #F59E0B; font-size: 11px; font-weight: 800;">🎨 Bajo Cotización</span>
                 </div>
               </div>
             `).join('')}

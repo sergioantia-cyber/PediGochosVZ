@@ -1,0 +1,90 @@
+[
+  {
+    "id": "pin-cat-1",
+    "name": "Piñata Oso Superhéroe 3D",
+    "title": "Piñata Oso Superhéroe 3D",
+    "category": "personajes",
+    "categoryLabel": "Personajes Infantiles",
+    "size": "Mediana (~80 cm)",
+    "sizeId": "mediana",
+    "style": "Escultural / Volumen 3D",
+    "styleId": "3d",
+    "basePriceUsd": 20,
+    "priceRange": " -  USD",
+    "capacity": "3 a 5 kg de caramelos",
+    "desc": "Figura artesanal tridimensional de alto impacto elaborada con capas de papel maché reforzado, relieves y detalles satinados.",
+    "image": "/images/pinatas/pinata_super_bear.jpg",
+    "tags": [
+      "100% Hecho a Mano",
+      "Volumen 3D",
+      "Reforzada"
+    ],
+    "active": true
+  },
+  {
+    "id": "pin-cat-2",
+    "name": "Número Temático Floral & Mariposas",
+    "title": "Número Temático Floral & Mariposas",
+    "category": "numeros",
+    "categoryLabel": "Números & Letras",
+    "size": "Mediana (~80 cm)",
+    "sizeId": "mediana",
+    "style": "Número o Letra Personalizada",
+    "styleId": "numero",
+    "basePriceUsd": 18,
+    "priceRange": " -  USD",
+    "capacity": "3 a 4 kg de caramelos",
+    "desc": "Número o inicial decorada con flores de papel crepé moldeadas a mano, mariposas tridimensionales y toques dorados.",
+    "image": "/images/pinatas/pinata_numero_tematico.jpg",
+    "tags": [
+      "100% Hecho a Mano",
+      "Flores 3D",
+      "Cumpleaños Elegante"
+    ],
+    "active": true
+  },
+  {
+    "id": "pin-cat-3",
+    "name": "Figura Escultural Unicornio Mágico",
+    "title": "Figura Escultural Unicornio Mágico",
+    "category": "figuras3d",
+    "categoryLabel": "Figuras Esculturales 3D",
+    "size": "Grande (~1 metro)",
+    "sizeId": "grande",
+    "style": "Escultural / Volumen 3D",
+    "styleId": "3d",
+    "basePriceUsd": 28,
+    "priceRange": " -  USD",
+    "capacity": "6 a 8 kg de caramelos",
+    "desc": "Escultura artesanal en volumen con crin pastel en degradé, cuerno dorado brillante y sistema de cintas de seguridad.",
+    "image": "/images/pinatas/pinata_figura_3d.jpg",
+    "tags": [
+      "Volumen 3D",
+      "Pastel",
+      "Gran Impacto"
+    ],
+    "active": true
+  },
+  {
+    "id": "pin-cat-4",
+    "name": "Piñata Fiesta & Celebración Tradicional",
+    "title": "Piñata Fiesta & Celebración Tradicional",
+    "category": "eventos",
+    "categoryLabel": "Eventos Especiales",
+    "size": "Mediana (~80 cm)",
+    "sizeId": "mediana",
+    "style": "Silueta / Relieve (2D)",
+    "styleId": "2d",
+    "basePriceUsd": 16,
+    "priceRange": " -  USD",
+    "capacity": "3 a 5 kg de caramelos",
+    "desc": "Diseño clásico festivo con flecos finos en papel crepé premium, gran resistencia estructural y apertura tradicional o con tiras.",
+    "image": "/images/pinatas/pinata_celebracion.jpg",
+    "tags": [
+      "Clásico Festivo",
+      "Multicolor",
+      "Alta Resistencia"
+    ],
+    "active": true
+  }
+]

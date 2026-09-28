@@ -1184,4 +1184,299 @@ body.modal-open {
   font-weight: 900 !important;
 }
 
+/* ==========================================================================
+   GEMINI 3.8 EDITION: ADMIN WORKSPACE DOCK & 3D TACTILE BUTTONS
+   ========================================================================== */
+
+/* Top Workspace Navigation Dock */
+.admin-nav-dock {
+  position: sticky;
+  top: 61px;
+  z-index: 95;
+  background: rgba(11, 15, 25, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 87, 34, 0.5) transparent;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.admin-nav-dock::-webkit-scrollbar {
+  height: 4px;
+}
+.admin-nav-dock::-webkit-scrollbar-thumb {
+  background: rgba(255, 87, 34, 0.5);
+  border-radius: 4px;
+}
+
+.admin-dock-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #94A3B8;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.admin-dock-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.admin-dock-tab:active {
+  transform: translateY(2px);
+}
+
+.admin-dock-tab.active {
+  background: linear-gradient(135deg, rgba(255, 87, 34, 0.25) 0%, rgba(234, 88, 12, 0.15) 100%);
+  color: #FF7043;
+  border-color: #FF5722;
+  box-shadow: 0 0 16px rgba(255, 87, 34, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.dock-tab-icon {
+  font-size: 16px;
+}
+
+.dock-tab-badge {
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1.5px solid #0B0F19;
+  animation: pulse 2s infinite;
+}
+
+/* 3D Tactile Buttons Suite */
+.btn-3d {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  position: relative;
+  user-select: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-3d:active {
+  transform: translateY(3px) !important;
+}
+
+/* Primary Flame Orange 3D */
+.btn-3d-primary {
+  background: linear-gradient(180deg, #FF6B35 0%, #EA580C 100%);
+  color: #FFFFFF !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 0 #9A3412, 0 8px 18px rgba(234, 88, 12, 0.4);
+}
+.btn-3d-primary:hover {
+  filter: brightness(1.08);
+}
+.btn-3d-primary:active {
+  box-shadow: 0 1px 0 #9A3412, 0 3px 8px rgba(234, 88, 12, 0.4);
+}
+
+/* Success Emerald 3D */
+.btn-3d-success {
+  background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 0 #047857, 0 8px 18px rgba(16, 185, 129, 0.4);
+}
+.btn-3d-success:hover {
+  filter: brightness(1.08);
+}
+.btn-3d-success:active {
+  box-shadow: 0 1px 0 #047857, 0 3px 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Cyber Blue / Cyan 3D */
+.btn-3d-cyan {
+  background: linear-gradient(180deg, #0284C7 0%, #0369A1 100%);
+  color: #FFFFFF !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 0 #075985, 0 8px 18px rgba(2, 132, 199, 0.4);
+}
+.btn-3d-cyan:hover {
+  filter: brightness(1.08);
+}
+.btn-3d-cyan:active {
+  box-shadow: 0 1px 0 #075985, 0 3px 8px rgba(2, 132, 199, 0.4);
+}
+
+/* Electric Purple 3D */
+.btn-3d-purple {
+  background: linear-gradient(180deg, #8B5CF6 0%, #6D28D9 100%);
+  color: #FFFFFF !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 0 #4C1D95, 0 8px 18px rgba(139, 92, 246, 0.4);
+}
+.btn-3d-purple:hover {
+  filter: brightness(1.08);
+}
+.btn-3d-purple:active {
+  box-shadow: 0 1px 0 #4C1D95, 0 3px 8px rgba(139, 92, 246, 0.4);
+}
+
+/* Amber Gold 3D */
+.btn-3d-amber {
+  background: linear-gradient(180deg, #F59E0B 0%, #D97706 100%);
+  color: #1E293B !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 0 #B45309, 0 8px 18px rgba(245, 158, 11, 0.4);
+}
+.btn-3d-amber:hover {
+  filter: brightness(1.08);
+}
+.btn-3d-amber:active {
+  box-shadow: 0 1px 0 #B45309, 0 3px 8px rgba(245, 158, 11, 0.4);
+}
+
+/* Dark Obsidian 3D */
+.btn-3d-dark {
+  background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
+  color: #E2E8F0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 0 #020617, 0 8px 16px rgba(0, 0, 0, 0.5);
+}
+.btn-3d-dark:hover {
+  filter: brightness(1.15);
+}
+.btn-3d-dark:active {
+  box-shadow: 0 1px 0 #020617, 0 3px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Crimson Danger 3D */
+.btn-3d-danger {
+  background: linear-gradient(180deg, #EF4444 0%, #DC2626 100%);
+  color: #FFFFFF !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 0 #991B1B, 0 8px 18px rgba(239, 68, 68, 0.4);
+}
+.btn-3d-danger:hover {
+  filter: brightness(1.08);
+}
+.btn-3d-danger:active {
+  box-shadow: 0 1px 0 #991B1B, 0 3px 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Workspace Panes & Micro-animations */
+@keyframes adminPaneFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.admin-workspace-pane {
+  display: none;
+}
+
+.admin-workspace-pane.active {
+  display: block !important;
+  animation: adminPaneFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Taller de Menú & Mesas Studio Styling */
+.studio-top-selector-card {
+  background: linear-gradient(135deg, #131E2C 0%, #0F172A 100%);
+  border: 1.5px solid rgba(59, 130, 246, 0.35);
+  border-radius: 18px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.studio-restaurant-dropdown {
+  background: #0B0F19;
+  color: #FFFFFF;
+  border: 1.5px solid rgba(59, 130, 246, 0.5);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 800;
+  outline: none;
+  cursor: pointer;
+  min-width: 260px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.studio-restaurant-dropdown:focus {
+  border-color: #38BDF8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+}
+
+.studio-nav-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.studio-nav-tab {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94A3B8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.studio-nav-tab:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #FFFFFF;
+}
+
+.studio-nav-tab.active {
+  background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%);
+  color: #FFFFFF;
+  border-color: #FF5722;
+  box-shadow: 0 4px 14px rgba(255, 107, 0, 0.35);
+}
+
+
 

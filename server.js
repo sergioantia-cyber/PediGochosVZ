@@ -438,8 +438,13 @@ async function uploadToSupabase() {
       promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/service_establishments.json`, { method: 'POST', headers, body: servEstContent }));
     }
 
+    if (fs.existsSync(RESIN_SETTINGS_FILE)) {
+      const resinContent = fs.readFileSync(RESIN_SETTINGS_FILE, 'utf8');
+      promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/resin_settings.json`, { method: 'POST', headers, body: resinContent }));
+    }
+
     await Promise.all(promises);
-    console.log('☁️ Database state, disabled stores, GPS, Drivers & Pinatas backup updated successfully in Supabase Storage!');
+    console.log('☁️ Database state, disabled stores, GPS, Drivers, Resin & Pinatas backup updated successfully in Supabase Storage!');
   } catch (err) {
     console.error('Error backing up database to Supabase:', err);
     logAppError('uploadToSupabase', err);
@@ -496,17 +501,20 @@ async function syncFromPostgres() {
         establishments.forEach(est => {
           const localMatch = localEsts.find(l => String(l.id).trim() === String(est.id).trim());
           if (localMatch) {
-            if (!Array.isArray(est.products) || est.products.length === 0 || (Array.isArray(localMatch.products) && localMatch.products.length > est.products.length)) {
-              est.products = localMatch.products || [];
+            // Local products always take precedence over cloud if local exists and has items
+            if (Array.isArray(localMatch.products) && localMatch.products.length > 0) {
+              est.products = localMatch.products;
+            } else if (!Array.isArray(est.products)) {
+              est.products = [];
             }
-            if (localMatch.linkKey && !est.linkKey) est.linkKey = localMatch.linkKey;
-            if (localMatch.open_time && !est.open_time) est.open_time = localMatch.open_time;
-            if (localMatch.close_time && !est.close_time) est.close_time = localMatch.close_time;
-            if (localMatch.tables && (!est.tables || est.tables.length === 0)) est.tables = localMatch.tables;
-            if (localMatch.layout && (!est.layout || est.layout.length === 0)) est.layout = localMatch.layout;
-            if (localMatch.isHighTraffic !== undefined && est.isHighTraffic === undefined) est.isHighTraffic = localMatch.isHighTraffic;
-            if (localMatch.extraPrepTime !== undefined && est.extraPrepTime === undefined) est.extraPrepTime = localMatch.extraPrepTime;
-            if (localMatch.working_days && (!est.working_days || est.working_days.length === 0)) est.working_days = localMatch.working_days;
+            if (localMatch.linkKey) est.linkKey = localMatch.linkKey;
+            if (localMatch.open_time) est.open_time = localMatch.open_time;
+            if (localMatch.close_time) est.close_time = localMatch.close_time;
+            if (localMatch.tables && localMatch.tables.length > 0) est.tables = localMatch.tables;
+            if (localMatch.layout && localMatch.layout.length > 0) est.layout = localMatch.layout;
+            if (localMatch.isHighTraffic !== undefined) est.isHighTraffic = localMatch.isHighTraffic;
+            if (localMatch.extraPrepTime !== undefined) est.extraPrepTime = localMatch.extraPrepTime;
+            if (localMatch.working_days && localMatch.working_days.length > 0) est.working_days = localMatch.working_days;
           }
 
           // Normalize food sub-categories to main 'comidas' category
@@ -605,7 +613,15 @@ async function saveToPostgres() {
       const normalizedEsts = localData.establishments.map(est => {
         const obj = {};
         PG_COLS.forEach(col => {
-          if (est[col] !== undefined) obj[col] = est[col];
+          let val = est[col] !== undefined ? est[col] : null;
+          if (col === 'prep_time' || col === 'delivery_time') {
+            const parsed = parseInt(val, 10);
+            val = isNaN(parsed) ? null : parsed;
+          } else if (col === 'delivery_fee') {
+            const parsed = parseFloat(val);
+            val = isNaN(parsed) ? 0 : parsed;
+          }
+          obj[col] = val;
         });
         return obj;
       });
@@ -619,6 +635,8 @@ async function saveToPostgres() {
         const errText = await estRes.text();
         console.error('Failed to upsert establishments to Postgres:', estRes.status, errText);
         logAppError('saveToPostgres_establishments_http_error', new Error(`Status: ${estRes.status}, Body: ${errText}`));
+      } else {
+        console.log(`✅ ${normalizedEsts.length} establishments successfully backed up to Supabase PostgreSQL!`);
       }
     }
 
@@ -3343,6 +3361,8 @@ function readPrint3dCatalog() {
 function writePrint3dCatalog(data) {
   try {
     fs.writeFileSync(PRINT3D_CATALOG_FILE, JSON.stringify(data, null, 2), 'utf8');
+    uploadJsonToSupabaseStorage('print3d_catalog.json', JSON.stringify(data, null, 2))
+      .catch(e => console.warn('Background sync print3d_catalog error:', e));
   } catch(e) {
     console.error('Error writing print3d_catalog.json:', e);
   }
@@ -4151,8 +4171,7 @@ function readPinatasCatalog() {
       sizeId: 'mediana',
       style: 'Escultural / Volumen 3D',
       styleId: '3d',
-      basePriceUsd: 20.0,
-      priceRange: '$18 - $24 USD',
+      priceRange: 'Bajo Cotización Previa',
       capacity: '3 a 5 kg de caramelos',
       desc: 'Figura artesanal tridimensional de alto impacto elaborada con capas de papel maché reforzado, relieves y detalles satinados.',
       image: '/images/pinatas/pinata_super_bear.jpg',
@@ -4169,8 +4188,7 @@ function readPinatasCatalog() {
       sizeId: 'mediana',
       style: 'Número o Letra Personalizada',
       styleId: 'numero',
-      basePriceUsd: 18.0,
-      priceRange: '$15 - $22 USD',
+      priceRange: 'Bajo Cotización Previa',
       capacity: '3 a 4 kg de caramelos',
       desc: 'Número o inicial decorada con flores de papel crepé moldeadas a mano, mariposas tridimensionales y toques dorados.',
       image: '/images/pinatas/pinata_numero_tematico.jpg',
@@ -4187,8 +4205,7 @@ function readPinatasCatalog() {
       sizeId: 'grande',
       style: 'Escultural / Volumen 3D',
       styleId: '3d',
-      basePriceUsd: 28.0,
-      priceRange: '$25 - $35 USD',
+      priceRange: 'Bajo Cotización Previa',
       capacity: '6 a 8 kg de caramelos',
       desc: 'Escultura artesanal en volumen con crin pastel en degradé, cuerno dorado brillante y sistema de cintas de seguridad.',
       image: '/images/pinatas/pinata_figura_3d.jpg',
@@ -4205,8 +4222,7 @@ function readPinatasCatalog() {
       sizeId: 'mediana',
       style: 'Silueta / Relieve (2D)',
       styleId: '2d',
-      basePriceUsd: 16.0,
-      priceRange: '$14 - $20 USD',
+      priceRange: 'Bajo Cotización Previa',
       capacity: '3 a 5 kg de caramelos',
       desc: 'Diseño clásico festivo con flecos finos en papel crepé premium, gran resistencia estructural y apertura tradicional o con tiras.',
       image: '/images/pinatas/pinata_celebracion.jpg',
