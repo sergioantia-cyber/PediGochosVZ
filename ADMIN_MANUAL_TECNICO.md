@@ -132,8 +132,9 @@ Control técnico de los 6 servicios integrados en la plataforma:
 - **Cotizador STL**: Permite evaluar gramos de filamento PLA/PETG o resina fotosensible, horas de impresión y emitir cotización al cliente.
 
 ### 3. ✨ ShelliArt - Resina y Recuerdos (`#admin-resin-modal`)
-- **Apertura**: `AdminApp.openResinAdminModal()`.
-- **Fichas Técnicas**: Inspecciona personalización de llaveros de letras, pan de oro, borlas, glitter y recuerdos de eventos.
+- **Apertura**: `AdminApp.openResinAdminModal('orders')` o `AdminApp.openResinAdminModal('settings')`.
+- **Pestaña Pedidos & Solicitudes**: Monitoreo en vivo de pedidos de llaveros tanto de iniciales como de fotos con chip NFC inteligente, inspección de molde, cara trasera, enlace NFC y chat directo.
+- **Pestaña Parámetros, Precios & Fotos**: Modificación centralizada de tarifas (precio base letra, precio base foto, recargo chip NFC, recargo dije/segunda foto, teléfono oficial WhatsApp) y administración de fotos de muestra para clientes (`saveResinSettings`, `addResinSamplePhoto`, `deleteResinSamplePhoto`).
 
 ### 4. 🪅 Piñatas Personalizadas & Catálogo (`#admin-pinatas-modal`)
 - **Apertura**: `AdminApp.openPinatasAdminModal()`.

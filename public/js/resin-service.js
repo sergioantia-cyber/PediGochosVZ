@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Llaveros y Arte en Resina ("ShelliArt Resina") - Logic & Customizer
+   Llaveros y Arte en Resina ("ShelliArt Resina") - Logic & Customizer Studio
    PediGochos Specialized Services Module
    ========================================================================== */
 
@@ -7,7 +7,49 @@ const ResinServiceApp = {
   activeQuote: null,
   ws: null,
   resinWhatsAppNumber: '573227949751',
-  resinWhatsAppDisplay: '322 794 9751',
+  resinWhatsAppDisplay: '+57 322 794 9751',
+
+  settings: {
+    letterBasePriceUsd: 4.5,
+    photoBasePriceUsd: 5.0,
+    nfcExtraUsd: 2.0,
+    charmExtraUsd: 1.0,
+    resinWhatsApp: '573227949751',
+    resinWhatsAppDisplay: '+57 322 794 9751',
+    samplePhotos: [
+      { id: 'sample-1', title: 'Pareja Romántica', url: '/images/services/shelliart_banner.jpg' },
+      { id: 'sample-2', title: 'Mascota Querida', url: '/images/services/llavero_3d_pedigochos.jpg' }
+    ]
+  },
+
+  shapes: [
+    { id: 'rectangle', name: 'Plaquita Polaroid', icon: '🔲', desc: 'Marco vertical con foto' },
+    { id: 'circle', name: 'Círculo Medalla', icon: '⚪', desc: 'Redondo clásico 1:1' },
+    { id: 'heart', name: 'Corazón Romántico', icon: '💖', desc: 'Parejas y aniversarios' },
+    { id: 'hexagon', name: 'Hexágono Chic', icon: '🔷', desc: 'Geométrico moderno' },
+    { id: 'dogtag', name: 'Placa Dog Tag', icon: '🏷️', desc: 'Estilo militar urbano' }
+  ],
+
+  borderEffects: [
+    { id: 'gold_flakes', name: 'Borde Pan de Oro 24K', desc: 'Copos dorados brillantes' },
+    { id: 'silver_flakes', name: 'Borde Pan de Plata', desc: 'Copos plateados glaciares' },
+    { id: 'glitter', name: 'Borde Glitter Rosa/Oro', desc: 'Destellos holográficos' },
+    { id: 'crystal', name: 'Resina Cristalina Pura', desc: 'Transparencia total sin borde' }
+  ],
+
+  backOptions: [
+    { id: 'photo', name: '2da Foto Personalizada', icon: '📷', desc: 'Subir otra foto para el reverso' },
+    { id: 'spotify', name: 'Onda / Canción Spotify', icon: '🎵', desc: 'Canción y artista con barras musicales' },
+    { id: 'phrase', name: 'Dedicatoria / Frase', icon: '✍️', desc: 'Frase o fecha en vinil caligráfico' },
+    { id: 'glitter', name: 'Fondo Glitter & Oro', icon: '✨', desc: 'Fondo artesanal brillante' }
+  ],
+
+  nfcTypes: [
+    { id: 'instagram', name: 'Instagram', icon: '📸', placeholder: 'https://instagram.com/tu_usuario' },
+    { id: 'spotify', name: 'Canción Spotify', icon: '🎵', placeholder: 'https://open.spotify.com/track/...' },
+    { id: 'whatsapp', name: 'WhatsApp Directo', icon: '💬', placeholder: 'https://wa.me/57...' },
+    { id: 'web', name: 'Web / Portafolio', icon: '🌐', placeholder: 'https://tu-sitio.com' }
+  ],
 
   alphabet: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'],
 
@@ -25,36 +67,12 @@ const ResinServiceApp = {
   ],
 
   styles: [
-    {
-      id: 'bicolor',
-      name: 'Bicolor con Glitter & Hoja de Oro',
-      desc: 'Mitad color sólido y mitad cristal transparente con destellos'
-    },
-    {
-      id: 'gold_flakes',
-      name: 'Hoja de Oro 24K Encapsulada',
-      desc: 'Elegante baño de láminas doradas flotando en resina'
-    },
-    {
-      id: 'glitter_full',
-      name: 'Glitter Holográfico Completo',
-      desc: 'Brillo ultra reflectante en toda la pieza'
-    },
-    {
-      id: 'silver_flakes',
-      name: 'Hoja de Plata Glacial',
-      desc: 'Copos de plata con acabado moderno y frío'
-    },
-    {
-      id: 'flowers',
-      name: 'Mini Flores Silvestres',
-      desc: 'Flores secas naturales prensadas (Girasol, Margaritas)'
-    },
-    {
-      id: 'crystal',
-      name: 'Resina Cristalina Pulida',
-      desc: 'Transparencia óptica con sutil toque perlado'
-    }
+    { id: 'bicolor', name: 'Bicolor con Glitter & Hoja de Oro', desc: 'Mitad color sólido y mitad cristal transparente con destellos' },
+    { id: 'gold_flakes', name: 'Hoja de Oro 24K Encapsulada', desc: 'Elegante baño de láminas doradas flotando en resina' },
+    { id: 'glitter_full', name: 'Glitter Holográfico Completo', desc: 'Brillo ultra reflectante en toda la pieza' },
+    { id: 'silver_flakes', name: 'Hoja de Plata Glacial', desc: 'Copos de plata con acabado moderno y frío' },
+    { id: 'flowers', name: 'Mini Flores Silvestres', desc: 'Flores secas naturales prensadas' },
+    { id: 'crystal', name: 'Resina Cristalina Pulida', desc: 'Transparencia óptica con sutil toque perlado' }
   ],
 
   tassels: [
@@ -77,30 +95,72 @@ const ResinServiceApp = {
 
   // Current customization state
   state: {
+    productType: 'photo', // 'photo' | 'letter'
+    activeTab: 'shape', // 'shape' | 'photo' | 'nfc' | 'finishes'
+    isFlipped: false, // false: front, true: back
+
+    // Photo Keychain properties:
+    photoShape: 'rectangle',
+    photoShapeName: 'Plaquita Polaroid',
+    photoFrontUrl: '', // uploaded data URL
+    photoBorderEffect: 'gold_flakes',
+    photoBackType: 'photo', // 'photo' | 'spotify' | 'phrase' | 'glitter'
+    photoBackUrl: '', // uploaded data URL for 2nd photo
+    photoBackSpotifySong: '',
+    photoBackSpotifyArtist: '',
+    photoBackPhrase: '',
+
+    // NFC Smart Chip:
+    hasNfc: false,
+    nfcType: 'instagram',
+    nfcUrl: '',
+
+    // Letter Keychain properties:
     letter: 'M',
     styleId: 'bicolor',
     baseColorHex: '#F472B6',
     baseColorName: 'Rosa Pastel',
     inclusions: 'Bicolor con Glitter & Hoja de Oro',
+    customName: '',
+
+    // Shared finishes:
     tasselName: 'Rosa Pastel',
     tasselHex: '#F472B6',
     hardware: 'gold', // 'gold' | 'silver'
-    customName: '',
     extraCharmId: 'none',
     quantity: 1,
-    customerName: localStorage.getItem('customer_name') || '',
-    customerPhone: localStorage.getItem('customer_phone') || '',
-    deliveryCity: 'San Antonio del Táchira',
-    deliveryAddress: localStorage.getItem('customer_address') || '',
+
+    // Delivery fields: ZERO default values!
+    customerName: '',
+    customerPhone: '',
+    deliveryCity: '',
+    deliveryAddress: '',
     deliveryReference: '',
-    paymentMethod: 'Efectivo en Pesos COP (Contra Entrega / Acordar)',
+    paymentMethod: '',
     gps: null
   },
 
-  init() {
+  async init() {
+    await this.loadSettings();
     this.setupWebSocket();
     this.checkHashRoute();
     window.addEventListener('hashchange', () => this.checkHashRoute());
+  },
+
+  async loadSettings() {
+    try {
+      const res = await fetch('/api/resin-services/settings');
+      if (res.ok) {
+        const data = await res.json();
+        this.settings = { ...this.settings, ...data };
+        if (data.resinWhatsApp) {
+          this.resinWhatsAppNumber = data.resinWhatsApp;
+          this.resinWhatsAppDisplay = data.resinWhatsAppDisplay || data.resinWhatsApp;
+        }
+      }
+    } catch(e) {
+      console.warn('Could not load resin settings:', e);
+    }
   },
 
   checkHashRoute() {
@@ -124,6 +184,9 @@ const ResinServiceApp = {
           } else if (data.type === 'RESIN_QUOTE_UPDATE' && this.activeQuote && data.quote.id === this.activeQuote.id) {
             this.activeQuote = data.quote;
             this.updateFichaTecnica(data.quote);
+          } else if (data.type === 'RESIN_SETTINGS_UPDATE' && data.settings) {
+            this.settings = { ...this.settings, ...data.settings };
+            this.updateVisualPreview();
           }
         } catch(e) {
           console.warn('WS resin message parse error:', e);
@@ -157,6 +220,7 @@ const ResinServiceApp = {
   close() {
     const modal = document.getElementById('resin-service-modal');
     if (modal) modal.classList.add('hidden');
+    this.closeDeliveryDrawer();
     if (window.location.hash.startsWith('#servicios/resina')) {
       window.history.pushState(null, '', window.location.pathname);
     }
@@ -165,376 +229,132 @@ const ResinServiceApp = {
     }
   },
 
-  renderMainModalMarkup() {
-    const modal = document.createElement('div');
-    modal.id = 'resin-service-modal';
-    modal.className = 'resin-service-modal hidden';
-    modal.innerHTML = `
-      <!-- Header -->
-      <header class="resin-header">
-        <div class="resin-header-brand">
-          <span class="resin-brand-icon">✨</span>
-          <div>
-            <h2>ShelliArt <span>Resina</span></h2>
-            <p>Hecho a Mano con Amor • Cúcuta / San Antonio / Ureña</p>
-          </div>
-        </div>
-        <button type="button" class="resin-close-btn" onclick="ResinServiceApp.close()">✕</button>
-      </header>
+  // Switch between Photo Keychain & Letter Keychain
+  setProductType(type) {
+    this.state.productType = type;
+    const btnPhoto = document.getElementById('btn-mode-photo');
+    const btnLetter = document.getElementById('btn-mode-letter');
+    if (btnPhoto) btnPhoto.classList.toggle('active', type === 'photo');
+    if (btnLetter) btnLetter.classList.toggle('active', type === 'letter');
 
-      <!-- Main Container -->
-      <div class="resin-container">
+    // Switch view content
+    this.renderActiveTabContent();
+    this.updateVisualPreview();
+  },
 
-        <!-- Hero Card -->
-        <div class="resin-hero-card">
-          <div class="resin-hero-badge">💎 Pedidos 100% Personalizados</div>
-          <h3>Diseña tu Llavero de Letra en Resina</h3>
-          <p>
-            Elige cualquier letra del abecedario, tus colores favoritos, baño en pan de oro 24K, escarchas holográficas, tu nombre y borla de gamuza.
-          </p>
-        </div>
+  // Switch active control tab (Shape, Photos, NFC, Finishes)
+  setActiveTab(tab) {
+    this.state.activeTab = tab;
+    document.querySelectorAll('.resin-tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    this.renderActiveTabContent();
+  },
 
-        <!-- Interactive Keychain Visual Stage -->
-        <div class="resin-preview-stage">
-          <span class="resin-live-tag">🟢 Vista Previa en Vivo</span>
+  // Toggle 3D card flip between Front and Back
+  toggleFlip() {
+    this.state.isFlipped = !this.state.isFlipped;
+    const inner = document.getElementById('keychain-flip-inner');
+    const sideLbl = document.getElementById('lbl-flip-side');
+    const sideBadge = document.getElementById('resin-side-badge');
 
-          <div class="keychain-visual-wrapper">
-            <svg id="resin-keychain-svg" viewBox="0 0 340 430" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <!-- Hardware Gradients -->
-                <linearGradient id="goldHardwareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#FFF5BA" />
-                  <stop offset="25%" stop-color="#FACC15" />
-                  <stop offset="55%" stop-color="#CA8A04" />
-                  <stop offset="85%" stop-color="#EAB308" />
-                  <stop offset="100%" stop-color="#854D0E" />
-                </linearGradient>
+    if (inner) {
+      inner.classList.toggle('is-flipped', this.state.isFlipped);
+    }
+    const sideText = this.state.isFlipped ? 'Cara Trasera (Reverso)' : 'Cara Delantera (Frente)';
+    if (sideLbl) sideLbl.textContent = sideText;
+    if (sideBadge) sideBadge.textContent = this.state.isFlipped ? '🔄 Reverso' : '✨ Frente';
+  },
 
-                <linearGradient id="silverHardwareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#FFFFFF" />
-                  <stop offset="30%" stop-color="#E2E8F0" />
-                  <stop offset="60%" stop-color="#94A3B8" />
-                  <stop offset="90%" stop-color="#CBD5E1" />
-                  <stop offset="100%" stop-color="#475569" />
-                </linearGradient>
+  setShape(shapeId) {
+    this.state.photoShape = shapeId;
+    const shapeObj = this.shapes.find(s => s.id === shapeId);
+    if (shapeObj) this.state.photoShapeName = shapeObj.name;
+    document.querySelectorAll('.resin-shape-card').forEach(c => {
+      c.classList.toggle('active', c.dataset.shape === shapeId);
+    });
+    this.updateVisualPreview();
+  },
 
-                <!-- Specular Liquid Gloss Highlight -->
-                <linearGradient id="liquidGlossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="rgba(255, 255, 255, 0.75)" />
-                  <stop offset="45%" stop-color="rgba(255, 255, 255, 0.25)" />
-                  <stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)" />
-                </linearGradient>
+  handleFrontPhotoUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      this.state.photoFrontUrl = evt.target.result;
+      this.updateVisualPreview();
+      this.renderActiveTabContent();
+    };
+    reader.readAsDataURL(file);
+  },
 
-                <!-- Gold Glitter & Flakes Pattern (matches real photo) -->
-                <pattern id="goldGlitterPattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <rect width="40" height="40" fill="#CA8A04" />
-                  <circle cx="6" cy="8" r="1.8" fill="#FEF08A" />
-                  <circle cx="18" cy="4" r="1.2" fill="#FFF" />
-                  <circle cx="28" cy="12" r="2.2" fill="#FACC15" />
-                  <circle cx="34" cy="24" r="1.5" fill="#FEF08A" />
-                  <circle cx="12" cy="26" r="2.5" fill="#FDE047" />
-                  <circle cx="22" cy="34" r="1.8" fill="#FFF" />
-                  <circle cx="4" cy="36" r="1.2" fill="#EAB308" />
-                  <polygon points="14,14 19,16 17,21 12,18" fill="#FEF08A" opacity="0.95" />
-                  <polygon points="26,2 30,6 28,10 24,6" fill="#FDE047" opacity="0.9" />
-                  <polygon points="2,18 7,20 5,24 1,22" fill="#FEF08A" opacity="0.85" />
-                  <polygon points="22,18 29,22 26,28 20,24" fill="#F59E0B" opacity="0.95" />
-                  <polygon points="8,32 14,35 12,39 6,37" fill="#FEF08A" opacity="0.9" />
-                  <polygon points="30,30 36,33 34,38 28,35" fill="#FDE047" opacity="0.95" />
-                  <path d="M 20,10 L 21,12 L 23,13 L 21,14 L 20,16 L 19,14 L 17,13 L 19,12 Z" fill="#FFF" opacity="0.9" />
-                  <path d="M 10,22 L 10.5,23.5 L 12,24 L 10.5,24.5 L 10,26 L 9.5,24.5 L 8,24 L 9.5,23.5 Z" fill="#FFF" opacity="0.9" />
-                </pattern>
+  setSampleFrontPhoto(url) {
+    this.state.photoFrontUrl = url;
+    this.updateVisualPreview();
+    this.renderActiveTabContent();
+  },
 
-                <!-- Chunky Iridescent Glitter Pattern -->
-                <pattern id="chunkyGlitterPattern" width="45" height="45" patternUnits="userSpaceOnUse">
-                  <circle cx="10" cy="12" r="2.5" fill="rgba(255,255,255,0.85)" />
-                  <circle cx="32" cy="8" r="3.2" fill="rgba(253,224,71,0.9)" />
-                  <circle cx="22" cy="24" r="2" fill="rgba(255,255,255,0.95)" />
-                  <circle cx="8" cy="34" r="3" fill="rgba(251,113,133,0.85)" />
-                  <circle cx="36" cy="36" r="2.8" fill="rgba(253,224,71,0.9)" />
-                  <polygon points="16,6 19,8 19,12 16,14 13,12 13,8" fill="rgba(254,240,138,0.85)" />
-                  <polygon points="36,20 39,22 39,26 36,28 33,26 33,22" fill="rgba(255,255,255,0.9)" />
-                  <polygon points="26,36 29,38 29,42 26,44 23,42 23,38" fill="rgba(253,224,71,0.85)" />
-                  <polygon points="4,22 7,24 7,28 4,30 1,28 1,24" fill="rgba(244,114,182,0.8)" />
-                </pattern>
+  setBorderEffect(effId) {
+    this.state.photoBorderEffect = effId;
+    document.querySelectorAll('.border-effect-card').forEach(c => {
+      c.classList.toggle('active', c.dataset.effect === effId);
+    });
+    this.updateVisualPreview();
+  },
 
-                <!-- Silver Glacial Flakes Pattern -->
-                <pattern id="silverGlitterPattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <rect width="40" height="40" fill="#64748B" />
-                  <circle cx="8" cy="10" r="1.8" fill="#FFF" />
-                  <circle cx="26" cy="14" r="2.5" fill="#E2E8F0" />
-                  <circle cx="16" cy="30" r="2.2" fill="#FFF" />
-                  <polygon points="12,4 18,7 15,12 9,9" fill="#FFF" opacity="0.95" />
-                  <polygon points="24,22 31,25 28,31 21,28" fill="#CBD5E1" opacity="0.95" />
-                  <polygon points="4,20 10,23 7,28 1,25" fill="#FFF" opacity="0.9" />
-                  <path d="M 22,8 L 23,10 L 25,11 L 23,12 L 22,14 L 21,12 L 19,11 L 21,10 Z" fill="#FFF" />
-                </pattern>
+  setBackType(typeId) {
+    this.state.photoBackType = typeId;
+    document.querySelectorAll('.back-type-card').forEach(c => {
+      c.classList.toggle('active', c.dataset.backtype === typeId);
+    });
+    // Auto flip to back so user sees what they're configuring!
+    if (!this.state.isFlipped) {
+      this.toggleFlip();
+    }
+    this.renderActiveTabContent();
+    this.updateVisualPreview();
+  },
 
-                <!-- Master Letter ClipPath (The letter itself is the resin mold!) -->
-                <clipPath id="resin-letter-clip">
-                  <text id="svg-clip-char" x="170" y="340" text-anchor="middle" font-family="'Arial Black', 'Montserrat', Impact, sans-serif" font-weight="900" font-size="205">${this.state.letter}</text>
-                </clipPath>
+  handleBackPhotoUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      this.state.photoBackUrl = evt.target.result;
+      this.updateVisualPreview();
+      this.renderActiveTabContent();
+    };
+    reader.readAsDataURL(file);
+  },
 
-                <!-- Soft Ambient Surface Contact Shadow -->
-                <filter id="softContactShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="8" result="blur" />
-                  <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0" />
-                </filter>
-              </defs>
+  handleBackSpotifySong(val) {
+    this.state.photoBackSpotifySong = val;
+    this.updateVisualPreview();
+  },
 
-              <!-- 1. Ambient Drop Shadow on Table/Surface -->
-              <text id="svg-shadow-char" x="172" y="352" text-anchor="middle" font-family="'Arial Black', 'Montserrat', Impact, sans-serif" font-weight="900" font-size="205" fill="#000000" filter="url(#softContactShadow)">${this.state.letter}</text>
+  handleBackSpotifyArtist(val) {
+    this.state.photoBackSpotifyArtist = val;
+    this.updateVisualPreview();
+  },
 
-              <!-- 2. Physical 3D Cast Depth / Molded Sidewalls -->
-              <g id="svg-resin-depth-layers">
-                <text id="svg-depth-4" x="170" y="348" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="#831843">${this.state.letter}</text>
-                <text id="svg-depth-3" x="170" y="346" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="#9D174D">${this.state.letter}</text>
-                <text id="svg-depth-2" x="170" y="344" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="#BE185D">${this.state.letter}</text>
-                <text id="svg-depth-1" x="170" y="342" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="#DB2777">${this.state.letter}</text>
-              </g>
+  handleBackPhrase(val) {
+    this.state.photoBackPhrase = val;
+    this.updateVisualPreview();
+  },
 
-              <!-- 3. Front Face: PURE RESIN CAST AS THE LETTER -->
-              <g clip-path="url(#resin-letter-clip)" id="svg-front-face-group">
-                <!-- Base Color Resin Layer -->
-                <rect id="svg-resin-base-fill" x="10" y="120" width="320" height="250" fill="${this.state.baseColorHex}" />
-                
-                <!-- Base Resin Glitter Sprinkles -->
-                <rect id="svg-resin-base-glitter" x="10" y="120" width="320" height="250" fill="url(#chunkyGlitterPattern)" opacity="0.8" />
+  toggleNfc(checked) {
+    this.state.hasNfc = checked;
+    this.updateVisualPreview();
+    this.renderActiveTabContent();
+  },
 
-                <!-- Inclusions & Internal Styling (e.g. Diagonal Gold Wave for Bicolor) -->
-                <g id="svg-style-inclusions"></g>
+  setNfcType(typeId) {
+    this.state.nfcType = typeId;
+    this.renderActiveTabContent();
+  },
 
-                <!-- Liquid Meniscus Beveled Border (Simulates rounded mold edge) -->
-                <text id="svg-meniscus-char" x="170" y="340" text-anchor="middle" font-family="'Arial Black', 'Montserrat', Impact, sans-serif" font-weight="900" font-size="205" fill="none" stroke="rgba(255, 255, 255, 0.65)" stroke-width="3" stroke-linejoin="round">${this.state.letter}</text>
-
-                <!-- Signature Mirror-Gloss Specular Highlight (Wet Resin Reflection) -->
-                <path d="M 50,150 Q 170,210 290,165 L 290,205 Q 170,250 50,195 Z" fill="url(#liquidGlossGrad)" opacity="0.65" pointer-events="none" />
-                <ellipse cx="120" cy="315" rx="35" ry="12" fill="rgba(255,255,255,0.22)" transform="rotate(-18 120 315)" pointer-events="none" />
-                <ellipse cx="225" cy="315" rx="35" ry="12" fill="rgba(255,255,255,0.22)" transform="rotate(-18 225 315)" pointer-events="none" />
-              </g>
-
-              <!-- Optional Custom Name in Sealed Vinyl Lettering -->
-              <text id="svg-custom-name" x="170" y="278" text-anchor="middle" font-family="'Caveat', 'Brush Script MT', 'Dancing Script', cursive, sans-serif" font-weight="700" font-size="30" fill="#FFFFFF" stroke="#0F172A" stroke-width="0.75" filter="drop-shadow(0 2px 5px rgba(0,0,0,0.8))" class="hidden"></text>
-
-              <!-- 4. Real Hardware Assembly -->
-              <g id="svg-hardware-group">
-                <!-- Top Split Key Ring (Argolla plana de llavero) -->
-                <circle cx="170" cy="45" r="26" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="7" class="svg-metal-element" />
-                <circle cx="170" cy="45" r="23" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="1" />
-                <line x1="168" y1="19" x2="172" y2="71" stroke="rgba(0,0,0,0.25)" stroke-width="1.5" />
-
-                <!-- Continuous Interlocking Chain Links Container & Screw Eye Pin -->
-                <g id="svg-chain-container"></g>
-
-                <!-- Suede Tassel (Borla de Gamuza colgada de la argolla) -->
-                <g id="svg-tassel-group" transform="translate(60, 82)">
-                  <ellipse cx="25" cy="5" rx="4" ry="5.5" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="2.5" transform="rotate(15 25 5)" class="svg-metal-element" />
-                  <path d="M 16,10 Q 25,6 34,10 L 37,24 Q 25,28 13,24 Z" fill="url(#goldHardwareGrad)" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))" class="svg-metal-element" />
-                  <ellipse cx="25" cy="11" rx="9" ry="2.5" fill="#FFF5BA" opacity="0.6" />
-                  <path id="svg-tassel-body" d="M 14,24 Q 25,28 36,24 L 42,78 Q 25,84 8,78 Z" fill="${this.state.tasselHex}" filter="drop-shadow(0 4px 8px rgba(0,0,0,0.35))" />
-                  <line x1="16" y1="28" x2="14" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
-                  <line x1="22" y1="28" x2="21" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
-                  <line x1="28" y1="28" x2="29" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
-                  <line x1="34" y1="28" x2="36" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
-                  <line x1="18" y1="28" x2="16" y2="76" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
-                  <line x1="24" y1="28" x2="23" y2="78" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
-                </g>
-
-                <!-- Extra Charm (Dije Opcional) -->
-                <g id="svg-charm-group" transform="translate(205, 95)" class="hidden">
-                  <ellipse cx="15" cy="5" rx="3.5" ry="5" fill="none" stroke="url(#goldHardwareGrad)" stroke-width="2.5" class="svg-metal-element" />
-                  <g id="svg-charm-graphic"></g>
-                </g>
-              </g>
-            </svg>
-          </div>
-
-          <div style="font-size: 11.5px; color: #FDA4AF; font-weight: 700; margin-top: 6px;">
-            ✨ Llavero artesanal vaciado en molde 3D de resina epóxica pura
-          </div>
-        </div>
-
-        <!-- 1. Alphabet Letter Picker -->
-        <div class="resin-section-card">
-          <div class="resin-section-title">
-            <span>1. Elige tu Letra / Inicial</span>
-            <span class="badge-opt">Letra Activa: <strong id="lbl-active-letter" style="color: #FFF; font-size: 14px;">${this.state.letter}</strong></span>
-          </div>
-          <div class="alphabet-grid" id="resin-alphabet-grid">
-            ${this.alphabet.map(char => `
-              <button type="button" class="btn-letter-pick ${char === this.state.letter ? 'active' : ''}" onclick="ResinServiceApp.setLetter('${char}')">
-                ${char}
-              </button>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- 2. Resin Style Selection -->
-        <div class="resin-section-card">
-          <div class="resin-section-title">
-            <span>2. Estilo de Vaciado & Textura</span>
-          </div>
-          <div class="resin-styles-grid">
-            ${this.styles.map(st => `
-              <div class="resin-style-card ${st.id === 'bicolor' ? 'active' : ''}" id="style-card-${st.id}" onclick="ResinServiceApp.setStyle('${st.id}')">
-                <strong>${st.name}</strong>
-                <span>${st.desc}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- 3. Base Color Pigment -->
-        <div class="resin-section-card">
-          <div class="resin-section-title">
-            <span>3. Color / Pigmento Base</span>
-            <span class="badge-opt" id="lbl-active-color">Rosa Pastel</span>
-          </div>
-          <div class="swatches-scroll-row">
-            ${this.colors.map(c => `
-              <div class="color-swatch-pill ${c.name === 'Rosa Pastel' ? 'active' : ''}" id="color-pill-${c.hex.replace('#','')}" onclick="ResinServiceApp.setColor('${c.hex}', '${c.name}')">
-                <span class="swatch-circle" style="background: ${c.hex};"></span>
-                <span>${c.name}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- 4. Tassel (Borla de Gamuza) Color -->
-        <div class="resin-section-card">
-          <div class="resin-section-title">
-            <span>4. Color de la Borla Decorativa (Tassel)</span>
-            <span class="badge-opt" id="lbl-active-tassel">Rosa Pastel</span>
-          </div>
-          <div class="swatches-scroll-row">
-            ${this.tassels.map(t => `
-              <div class="color-swatch-pill ${t.name === 'Rosa Pastel' ? 'active' : ''}" id="tassel-pill-${t.hex.replace('#','')}" onclick="ResinServiceApp.setTassel('${t.hex}', '${t.name}')">
-                <span class="swatch-circle" style="background: ${t.hex};"></span>
-                <span>${t.name}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- 5. Hardware & Extras -->
-        <div class="resin-section-card">
-          <div class="resin-section-title">
-            <span>5. Herraje Metálico & Dije Extra</span>
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">COLOR DEL HERRAJE (ARGOLLA Y CADENA)</label>
-            <div style="display: flex; gap: 10px;">
-              <button type="button" class="color-swatch-pill active" id="btn-metal-gold" onclick="ResinServiceApp.setHardware('gold')" style="flex: 1; justify-content: center;">
-                ✨ Dorado Clásico
-              </button>
-              <button type="button" class="color-swatch-pill" id="btn-metal-silver" onclick="ResinServiceApp.setHardware('silver')" style="flex: 1; justify-content: center;">
-                🔘 Plateado Cromado
-              </button>
-            </div>
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">DIJE ADICIONAL DECORATIVO (OPCIONAL)</label>
-            <div class="swatches-scroll-row">
-              ${this.charms.map(ch => `
-                <div class="color-swatch-pill ${ch.id === 'none' ? 'active' : ''}" id="charm-pill-${ch.id}" onclick="ResinServiceApp.setCharm('${ch.id}')">
-                  <span>${ch.icon}</span>
-                  <span>${ch.name} ${ch.extraUsd > 0 ? `(+$${ch.extraUsd} USD)` : ''}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-
-          <div>
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">NOMBRE PERSONALIZADO SOBRE LA LETRA (OPCIONAL)</label>
-            <input type="text" class="resin-input-text" id="input-custom-name" placeholder="Ej. Camila, Sofía, Andrés (en vinil sellado)" maxlength="14" oninput="ResinServiceApp.handleCustomNameInput(this.value)">
-          </div>
-        </div>
-
-        <!-- 6. Delivery & Live GPS Detection Section -->
-        <div class="resin-section-card" id="resin-delivery-section" style="border-left: 3px solid #38BDF8;">
-          <div class="resin-section-title" style="display: flex; align-items: center; justify-content: space-between;">
-            <span>6. Datos de Entrega & Ubicación GPS</span>
-            <span style="font-size: 10px; background: rgba(56, 189, 248, 0.15); color: #38BDF8; padding: 2px 8px; border-radius: 10px; font-weight: 700;">Requerido</span>
-          </div>
-          <p style="font-size: 11.5px; color: #94A3B8; margin-top: 2px; margin-bottom: 12px; line-height: 1.4;">
-            Ingresa tus datos para que el taller de ShelliArt y el repartidor de PediGochos puedan llevarte tu pedido exacto hasta tu puerta.
-          </p>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-            <div>
-              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">TU NOMBRE Y APELLIDO *</label>
-              <input type="text" class="resin-input-text" id="input-resin-customer-name" placeholder="Ej. Camila Pérez" value="${localStorage.getItem('customer_name') || ''}" oninput="ResinServiceApp.handleDeliveryFieldChange('customerName', this.value)">
-            </div>
-            <div>
-              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">TELÉFONO / WHATSAPP *</label>
-              <input type="tel" class="resin-input-text" id="input-resin-customer-phone" placeholder="Ej. 0414 1234567" value="${localStorage.getItem('customer_phone') || ''}" oninput="ResinServiceApp.handleDeliveryFieldChange('customerPhone', this.value)">
-            </div>
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">CIUDAD O MUNICIPIO DE ENTREGA *</label>
-            <select class="resin-input-select" id="select-resin-city" onchange="ResinServiceApp.handleDeliveryFieldChange('deliveryCity', this.value)">
-              <option value="San Antonio del Táchira" selected>🇻🇪 San Antonio del Táchira (Frontera)</option>
-              <option value="Ureña">🇻🇪 Pedro María Ureña</option>
-              <option value="Cúcuta (Norte de Santander)">🇨🇴 Cúcuta / Villa del Rosario / Los Patios</option>
-              <option value="San Cristóbal (Táchira)">🇻🇪 San Cristóbal y resto de Táchira</option>
-              <option value="Envío Nacional (Venezuela)">📦 Envío Nacional Venezuela (MRW / Zoom / Tealca)</option>
-              <option value="Envío Nacional (Colombia)">📦 Envío Nacional Colombia (Interrapidísimo / Servientrega)</option>
-            </select>
-          </div>
-
-          <!-- GPS Detection Box -->
-          <div style="margin-bottom: 14px; background: rgba(56, 189, 248, 0.05); border: 1px dashed rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 12px;">
-            <label style="font-size: 11px; color: #38BDF8; font-weight: 800; display: block; margin-bottom: 6px;">📍 DETECTOR GPS EN VIVO (OPCIONAL PERO RECOMENDADO)</label>
-            <button type="button" class="btn-resin-gps" id="btn-resin-gps-detect" onclick="ResinServiceApp.detectLiveGps()">
-              <span id="resin-gps-icon">📡</span>
-              <span id="resin-gps-btn-text">Detectar mi Ubicación GPS en Vivo</span>
-            </button>
-            <div id="resin-gps-status-box" class="resin-gps-status-box" style="display: none;"></div>
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">DIRECCIÓN EXACTA DE ENTREGA *</label>
-            <textarea class="resin-textarea" id="input-resin-address" rows="2" placeholder="Calle, carrera, número de casa/apto, urbanización o sector..." oninput="ResinServiceApp.handleDeliveryFieldChange('deliveryAddress', this.value)">${localStorage.getItem('customer_address') || ''}</textarea>
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">PUNTO DE REFERENCIA (CASA / LOCAL / FACHADA)</label>
-            <input type="text" class="resin-input-text" id="input-resin-reference" placeholder="Ej. Casa de rejas blancas, frente a la bodega, al lado de la farmacia" oninput="ResinServiceApp.handleDeliveryFieldChange('deliveryReference', this.value)">
-          </div>
-
-          <div>
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">MÉTODO DE PAGO PREFERIDO</label>
-            <select class="resin-input-select" id="select-resin-payment" onchange="ResinServiceApp.handleDeliveryFieldChange('paymentMethod', this.value)">
-              <option value="Efectivo en Pesos COP (Contra Entrega / Acordar)" selected>💵 Efectivo en Pesos COP</option>
-              <option value="Transferencia Bancolombia / Nequi">📱 Transferencia Bancolombia / Nequi</option>
-              <option value="Pago Móvil en Bolívares (Tasa del día)">🇻🇪 Pago Móvil en Bolívares (VES)</option>
-              <option value="Efectivo en Divisas USD ($)">💵 Efectivo Divisas USD ($)</option>
-              <option value="Binance USDT / Zelle">🌐 Binance Pay USDT / Zelle</option>
-            </select>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Fixed Bottom Price & WhatsApp CTA Bar -->
-      <footer class="resin-bottom-bar">
-        <div class="resin-bottom-pricing">
-          <span class="resin-price-total" id="resin-total-usd">$4.50 USD</span>
-          <span class="resin-price-cop" id="resin-total-cop">~$18.000 COP • 202 Bs</span>
-        </div>
-
-        <div class="resin-bottom-actions">
-          <a id="btn-resin-wa-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-resin-order-wa-full" onclick="ResinServiceApp.handleWhatsAppClick(event)">
-            <span>🟢</span> Pedir en WhatsApp
-          </a>
-        </div>
-      </footer>
-    `;
-
-    document.body.appendChild(modal);
+  handleNfcUrl(val) {
+    this.state.nfcUrl = val.trim();
   },
 
   setLetter(letter) {
@@ -603,16 +423,943 @@ const ResinServiceApp = {
   },
 
   calculatePricing() {
-    const basePrice = 4.5;
+    const isPhoto = this.state.productType === 'photo';
+    const basePrice = isPhoto
+      ? (parseFloat(this.settings.photoBasePriceUsd) || 5.0)
+      : (parseFloat(this.settings.letterBasePriceUsd) || 4.5);
+
+    const nfcPrice = (isPhoto && this.state.hasNfc)
+      ? (parseFloat(this.settings.nfcExtraUsd) || 2.0)
+      : 0.0;
+
     const charmObj = this.charms.find(c => c.id === this.state.extraCharmId);
-    const extraCharmPrice = charmObj ? charmObj.extraUsd : 0.0;
-    const totalUsd = (basePrice + extraCharmPrice) * this.state.quantity;
+    const charmPrice = charmObj ? charmObj.extraUsd : 0.0;
 
-    // Currency conversions: 1 USD ~ 4.000 COP, 45 Bs
-    const totalCop = Math.round(totalUsd * 4000);
-    const totalBs = Math.round(totalUsd * 45);
+    const secondPhotoPrice = (isPhoto && this.state.photoBackType === 'photo' && this.state.photoBackUrl)
+      ? (parseFloat(this.settings.charmExtraUsd) || 1.0)
+      : 0.0;
 
-    return { basePrice, extraCharmPrice, totalUsd, totalCop, totalBs };
+    const totalUsd = (basePrice + nfcPrice + charmPrice + secondPhotoPrice) * this.state.quantity;
+
+    // Currency conversions
+    const copRate = (window.systemSettings && window.systemSettings.cop_rate) ? window.systemSettings.cop_rate : 4000;
+    const vesRate = (window.systemSettings && window.systemSettings.ves_rate) ? window.systemSettings.ves_rate : 45;
+
+    const totalCop = Math.round(totalUsd * copRate);
+    const totalBs = Math.round(totalUsd * vesRate);
+
+    return { basePrice, nfcPrice, charmPrice, secondPhotoPrice, totalUsd, totalCop, totalBs };
+  },
+
+  // =========================================================================
+  // Render Main Layout (Split Studio: Left/Top Stage, Right/Bottom Controls)
+  // =========================================================================
+  renderMainModalMarkup() {
+    const modal = document.createElement('div');
+    modal.id = 'resin-service-modal';
+    modal.className = 'resin-service-modal hidden';
+    modal.innerHTML = `
+      <!-- Header -->
+      <header class="resin-header">
+        <div class="resin-header-brand">
+          <span class="resin-brand-icon">✨</span>
+          <div>
+            <h2>ShelliArt <span>Resina Studio</span></h2>
+            <p>Llaveros Fotográficos & Letras • Acabado Vidrio Epóxico</p>
+          </div>
+        </div>
+        <button type="button" class="resin-close-btn" onclick="ResinServiceApp.close()" title="Cerrar">✕</button>
+      </header>
+
+      <!-- Main Container: Split Studio Layout -->
+      <div class="resin-container">
+        <div class="resin-studio-grid">
+
+          <!-- Left / Sticky Column: Live 3D Keychain Preview Stage -->
+          <div class="resin-studio-stage-col">
+            <div class="resin-preview-stage">
+              <div class="resin-stage-top-bar">
+                <span class="resin-live-tag">🟢 Vista Previa en Vivo</span>
+                <span class="resin-side-badge" id="resin-side-badge">✨ Frente</span>
+              </div>
+
+              <!-- 3D Flip Card Assembly Wrapper -->
+              <div class="keychain-flip-container">
+                <div class="keychain-flip-inner" id="keychain-flip-inner">
+                  
+                  <!-- Front Face -->
+                  <div class="keychain-flip-front">
+                    <svg id="resin-keychain-svg" viewBox="0 0 340 430" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+                      <!-- Filled dynamically in updateVisualPreview -->
+                    </svg>
+                  </div>
+
+                  <!-- Back Face -->
+                  <div class="keychain-flip-back">
+                    <svg id="resin-keychain-svg-back" viewBox="0 0 340 430" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+                      <!-- Filled dynamically in updateVisualPreview -->
+                    </svg>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Flip Button -->
+              <button type="button" class="btn-flip-keychain" onclick="ResinServiceApp.toggleFlip()">
+                <span>🔄 Girar:</span> <span id="lbl-flip-side">Cara Delantera (Frente)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right / Scrollable Column: Customization Controls Pane -->
+          <div class="resin-studio-controls-col">
+            
+            <!-- Mode Switcher: Photo & NFC vs Initial Letter -->
+            <div class="resin-mode-switcher">
+              <button type="button" class="resin-mode-btn active" id="btn-mode-photo" onclick="ResinServiceApp.setProductType('photo')">
+                <span>📸</span> Llavero con Foto & NFC
+              </button>
+              <button type="button" class="resin-mode-btn" id="btn-mode-letter" onclick="ResinServiceApp.setProductType('letter')">
+                <span>🔤</span> Llavero de Inicial (Letra)
+              </button>
+            </div>
+
+            <!-- Tabs Navigation Bar -->
+            <div class="resin-nav-tabs-bar" id="resin-nav-tabs-bar">
+              <button type="button" class="resin-tab-btn active" data-tab="shape" onclick="ResinServiceApp.setActiveTab('shape')">
+                <span>🔲</span> 1. Forma & Molde
+              </button>
+              <button type="button" class="resin-tab-btn" data-tab="photo" onclick="ResinServiceApp.setActiveTab('photo')">
+                <span>📸</span> 2. Fotos & Caras
+              </button>
+              <button type="button" class="resin-tab-btn" data-tab="nfc" onclick="ResinServiceApp.setActiveTab('nfc')">
+                <span>📶</span> 3. Chip NFC
+              </button>
+              <button type="button" class="resin-tab-btn" data-tab="finishes" onclick="ResinServiceApp.setActiveTab('finishes')">
+                <span>✨</span> 4. Borla & Herrajes
+              </button>
+            </div>
+
+            <!-- Tab Content Dynamic Container -->
+            <div id="resin-tab-content-area">
+              <!-- Rendered dynamically -->
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Fixed Bottom Price & Delivery Drawer Trigger Bar -->
+      <footer class="resin-bottom-bar">
+        <div class="resin-bottom-pricing">
+          <span class="resin-price-total" id="resin-total-usd">$5.00 USD</span>
+          <span class="resin-price-cop" id="resin-total-cop">~$20.000 COP • 225 Bs</span>
+        </div>
+
+        <div class="resin-bottom-actions">
+          <button type="button" class="btn-resin-order-wa-full" onclick="ResinServiceApp.openDeliveryDrawer()">
+            <span>Continuar con la Entrega</span> <span>➔</span>
+          </button>
+        </div>
+      </footer>
+
+      <!-- Separate Delivery & Location Drawer Modal (Clean / Zero Defaults) -->
+      <div id="resin-delivery-drawer" class="resin-delivery-drawer" onclick="if(event.target === this) ResinServiceApp.closeDeliveryDrawer()">
+        <div class="resin-delivery-sheet">
+          <div class="resin-delivery-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" onclick="ResinServiceApp.closeDeliveryDrawer()" style="background: none; border: none; color: #FDA4AF; font-size: 16px; cursor: pointer; font-weight: 800;">← Volver</button>
+              <strong style="color: #FFF; font-size: 14px;">📦 Datos de Entrega & Despacho</strong>
+            </div>
+            <button type="button" onclick="ResinServiceApp.closeDeliveryDrawer()" style="background: rgba(255,255,255,0.08); border: none; color: #FFF; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer;">✕</button>
+          </div>
+
+          <div class="resin-delivery-body">
+            <!-- Order Summary Banner -->
+            <div id="resin-delivery-summary-box" style="background: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.3); border-radius: 14px; padding: 12px; font-size: 12px; color: #E2E8F0;">
+              <!-- Filled dynamically in openDeliveryDrawer -->
+            </div>
+
+            <!-- Customer Inputs: Completely Empty / Clean for Google & Browser Autofill -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">TU NOMBRE Y APELLIDO *</label>
+                <input type="text" class="resin-input-text" id="input-resin-customer-name" placeholder="Escribe tu nombre..." autocomplete="name" value="">
+              </div>
+              <div>
+                <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">TELÉFONO / WHATSAPP *</label>
+                <input type="tel" class="resin-input-text" id="input-resin-customer-phone" placeholder="Ej. 0414... / 320..." autocomplete="tel" value="">
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">CIUDAD O MUNICIPIO DE ENTREGA *</label>
+              <select class="resin-input-select" id="select-resin-city">
+                <option value="" disabled selected>Selecciona tu ciudad...</option>
+                <option value="San Antonio del Táchira">🇻🇪 San Antonio del Táchira (Frontera)</option>
+                <option value="Ureña">🇻🇪 Pedro María Ureña</option>
+                <option value="Cúcuta (Norte de Santander)">🇨🇴 Cúcuta / Villa del Rosario / Los Patios</option>
+                <option value="San Cristóbal (Táchira)">🇻🇪 San Cristóbal y resto de Táchira</option>
+                <option value="Envío Nacional (Venezuela)">📦 Envío Nacional Venezuela (MRW / Zoom / Tealca)</option>
+                <option value="Envío Nacional (Colombia)">📦 Envío Nacional Colombia (Interrapidísimo / Servientrega)</option>
+              </select>
+            </div>
+
+            <!-- GPS Detection -->
+            <div style="background: rgba(56, 189, 248, 0.05); border: 1px dashed rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 10px;">
+              <button type="button" class="btn-resin-gps" id="btn-resin-gps-detect" onclick="ResinServiceApp.detectLiveGps()">
+                <span id="resin-gps-icon">📡</span>
+                <span id="resin-gps-btn-text">Detectar mi Ubicación GPS en Vivo</span>
+              </button>
+              <div id="resin-gps-status-box" class="resin-gps-status-box" style="display: none;"></div>
+            </div>
+
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">DIRECCIÓN EXACTA DE ENTREGA *</label>
+              <textarea class="resin-textarea" id="input-resin-address" rows="2" placeholder="Calle, carrera, número de casa/apto, sector..." autocomplete="street-address"></textarea>
+            </div>
+
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">PUNTO DE REFERENCIA (FACHADA / COLOR DE CASA)</label>
+              <input type="text" class="resin-input-text" id="input-resin-reference" placeholder="Ej. Casa de rejas blancas, frente a panadería..." value="">
+            </div>
+
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">MÉTODO DE PAGO PREFERIDO *</label>
+              <select class="resin-input-select" id="select-resin-payment">
+                <option value="" disabled selected>Selecciona método de pago...</option>
+                <option value="Efectivo en Pesos COP (Contra Entrega / Acordar)">💵 Efectivo en Pesos COP</option>
+                <option value="Transferencia Bancolombia / Nequi">📱 Transferencia Bancolombia / Nequi</option>
+                <option value="Pago Móvil en Bolívares (Tasa del día)">🇻🇪 Pago Móvil en Bolívares (VES)</option>
+                <option value="Efectivo en Divisas USD ($)">💵 Efectivo Divisas USD ($)</option>
+                <option value="Binance USDT / Zelle">🌐 Binance Pay USDT / Zelle</option>
+              </select>
+            </div>
+
+            <!-- Submit Buttons -->
+            <button type="button" class="btn-resin-order-wa-full" onclick="ResinServiceApp.handleConfirmOrderClick()" style="margin-top: 6px;">
+              <span>🟢 Confirmar y Enviar Pedido por WhatsApp</span>
+            </button>
+
+            <button type="button" onclick="ResinServiceApp.submitInAppOrder()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; text-align: center;">
+              💬 Enviar y Chatear con ShelliArt en la App
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    this.renderActiveTabContent();
+  },
+
+  // =========================================================================
+  // Render Tab Content (Shape, Photo, NFC, Finishes)
+  // =========================================================================
+  renderActiveTabContent() {
+    const area = document.getElementById('resin-tab-content-area');
+    if (!area) return;
+
+    const isPhoto = this.state.productType === 'photo';
+
+    if (this.state.activeTab === 'shape') {
+      if (isPhoto) {
+        area.innerHTML = `
+          <div class="resin-section-card">
+            <div class="resin-section-title">
+              <span>Silueta / Forma del Molde en Resina</span>
+              <span class="badge-opt">${this.state.photoShapeName}</span>
+            </div>
+            <div class="resin-shapes-grid">
+              ${this.shapes.map(s => `
+                <div class="resin-shape-card ${s.id === this.state.photoShape ? 'active' : ''}" data-shape="${s.id}" onclick="ResinServiceApp.setShape('${s.id}')">
+                  <span class="resin-shape-icon">${s.icon}</span>
+                  <span class="resin-shape-name">${s.name}</span>
+                  <span class="resin-shape-desc">${s.desc}</span>
+                </div>
+              `).join('')}
+            </div>
+            <p style="font-size: 11.5px; color: #94A3B8; margin: 4px 0 0 0; line-height: 1.4;">
+              💡 Cada pieza se vacía artesanalmente con resina epóxica de alta pureza cristalina y filtro UV contra amarillamiento.
+            </p>
+          </div>
+        `;
+      } else {
+        area.innerHTML = `
+          <div class="resin-section-card">
+            <div class="resin-section-title">
+              <span>Elige tu Letra / Inicial</span>
+              <span class="badge-opt">Letra: <strong style="color: #FFF; font-size: 14px;">${this.state.letter}</strong></span>
+            </div>
+            <div class="alphabet-grid" id="resin-alphabet-grid">
+              ${this.alphabet.map(char => `
+                <button type="button" class="btn-letter-pick ${char === this.state.letter ? 'active' : ''}" onclick="ResinServiceApp.setLetter('${char}')">
+                  ${char}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="resin-section-card">
+            <div class="resin-section-title">
+              <span>Estilo de Vaciado & Textura</span>
+            </div>
+            <div class="resin-styles-grid">
+              ${this.styles.map(st => `
+                <div class="resin-style-card ${st.id === this.state.styleId ? 'active' : ''}" id="style-card-${st.id}" onclick="ResinServiceApp.setStyle('${st.id}')">
+                  <strong>${st.name}</strong>
+                  <span>${st.desc}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+    } else if (this.state.activeTab === 'photo') {
+      if (isPhoto) {
+        area.innerHTML = `
+          <!-- Cara Delantera -->
+          <div class="resin-section-card">
+            <div class="resin-section-title">
+              <span>1️⃣ Foto de la Cara Delantera (Frente)</span>
+              <span class="badge-opt">${this.state.photoFrontUrl ? '✅ Foto Lista' : '📷 Pendiente'}</span>
+            </div>
+
+            <div class="resin-photo-dropzone" onclick="document.getElementById('input-file-front-photo').click()">
+              <input type="file" id="input-file-front-photo" accept="image/*" style="display: none;" onchange="ResinServiceApp.handleFrontPhotoUpload(event)">
+              ${this.state.photoFrontUrl ? `
+                <img src="${this.state.photoFrontUrl}" class="resin-photo-preview-thumb" alt="Frente">
+                <span style="font-size: 12px; font-weight: 800; color: #FFF; display: block;">🔄 Toca para cambiar foto</span>
+                <span style="font-size: 10.5px; color: #34D399;">Foto cargada y ajustada en el molde</span>
+              ` : `
+                <span style="font-size: 32px; display: block; margin-bottom: 4px;">📸</span>
+                <strong style="font-size: 13px; color: #FFF; display: block;">Toca aquí para subir tu foto favorita</strong>
+                <span style="font-size: 11px; color: #94A3B8;">Compatible con fotos de galería, retratos, parejas o mascotas</span>
+              `}
+            </div>
+
+            <!-- Sample Photos Quick Pick -->
+            ${this.settings.samplePhotos && this.settings.samplePhotos.length ? `
+              <div style="margin-top: 10px;">
+                <span style="font-size: 10.5px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">O prueba con fotos de muestra:</span>
+                <div style="display: flex; gap: 8px;">
+                  ${this.settings.samplePhotos.map(sp => `
+                    <button type="button" onclick="ResinServiceApp.setSampleFrontPhoto('${sp.url}')" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 4px 10px; border-radius: 8px; font-size: 11px; cursor: pointer;">
+                      ${sp.title}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Border Effect -->
+            <div style="margin-top: 14px;">
+              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">ACABADO DEL BORDE / ENCAPSULADO</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                ${this.borderEffects.map(be => `
+                  <div class="border-effect-card color-swatch-pill ${be.id === this.state.photoBorderEffect ? 'active' : ''}" data-effect="${be.id}" onclick="ResinServiceApp.setBorderEffect('${be.id}')" style="justify-content: center; padding: 8px 6px;">
+                    <span>${be.name}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- Cara Trasera -->
+          <div class="resin-section-card">
+            <div class="resin-section-title">
+              <span>2️⃣ ¿Qué deseas en la Cara Trasera (Reverso)?</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px;">
+              ${this.backOptions.map(bo => `
+                <div class="back-type-card color-swatch-pill ${bo.id === this.state.photoBackType ? 'active' : ''}" data-backtype="${bo.id}" onclick="ResinServiceApp.setBackType('${bo.id}')" style="justify-content: flex-start; padding: 8px 10px;">
+                  <span>${bo.icon}</span> <span>${bo.name}</span>
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- Dynamic Back Configuration Box -->
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px;">
+              ${this.state.photoBackType === 'photo' ? `
+                <div class="resin-photo-dropzone" onclick="document.getElementById('input-file-back-photo').click()">
+                  <input type="file" id="input-file-back-photo" accept="image/*" style="display: none;" onchange="ResinServiceApp.handleBackPhotoUpload(event)">
+                  ${this.state.photoBackUrl ? `
+                    <img src="${this.state.photoBackUrl}" class="resin-photo-preview-thumb" alt="Reverso">
+                    <span style="font-size: 12px; font-weight: 800; color: #FFF; display: block;">🔄 Toca para cambiar 2da foto</span>
+                  ` : `
+                    <span style="font-size: 26px; display: block; margin-bottom: 2px;">🖼️</span>
+                    <strong style="font-size: 12.5px; color: #FFF; display: block;">Subir Segunda Foto para el Reverso (+${this.settings.charmExtraUsd || 1.0}$ USD)</strong>
+                    <span style="font-size: 10.5px; color: #94A3B8;">Foto doble cara en resina cristalina</span>
+                  `}
+                </div>
+              ` : ''}
+
+              ${this.state.photoBackType === 'spotify' ? `
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <span style="font-size: 11px; color: #10B981; font-weight: 800; display: flex; align-items: center; gap: 4px;">
+                    <span>🎵</span> Personaliza tu Código / Onda Spotify
+                  </span>
+                  <input type="text" class="resin-input-text" placeholder="Nombre de la Canción..." value="${this.state.photoBackSpotifySong}" oninput="ResinServiceApp.handleBackSpotifySong(this.value)">
+                  <input type="text" class="resin-input-text" placeholder="Nombre del Artista..." value="${this.state.photoBackSpotifyArtist}" oninput="ResinServiceApp.handleBackSpotifyArtist(this.value)">
+                </div>
+              ` : ''}
+
+              ${this.state.photoBackType === 'phrase' ? `
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 11px; color: #F472B6; font-weight: 800;">✍️ Frase o Dedicatoria en Vinil Caligráfico</span>
+                  <input type="text" class="resin-input-text" placeholder="Ej. Siempre juntos • 14.02.2023" maxlength="35" value="${this.state.photoBackPhrase}" oninput="ResinServiceApp.handleBackPhrase(this.value)">
+                  <span style="font-size: 10.5px; color: #94A3B8;">Se sellará con relieve dorado o blanco dentro de la resina.</span>
+                </div>
+              ` : ''}
+
+              ${this.state.photoBackType === 'glitter' ? `
+                <div style="text-align: center; color: #E2E8F0; font-size: 12px; padding: 6px;">
+                  ✨ Fondo artesanal en resina translúcida con lluvia de pan de oro y escarchas holográficas.
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      } else {
+        area.innerHTML = `
+          <div class="resin-section-card">
+            <div class="resin-section-title">
+              <span>Color / Pigmento Base de la Letra</span>
+              <span class="badge-opt">${this.state.baseColorName}</span>
+            </div>
+            <div class="swatches-scroll-row">
+              ${this.colors.map(c => `
+                <div class="color-swatch-pill ${c.name === this.state.baseColorName ? 'active' : ''}" id="color-pill-${c.hex.replace('#','')}" onclick="ResinServiceApp.setColor('${c.hex}', '${c.name}')">
+                  <span class="swatch-circle" style="background: ${c.hex};"></span>
+                  <span>${c.name}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="resin-section-card">
+            <div class="resin-section-title">
+              <span>Nombre Personalizado en Vinil sobre la Letra</span>
+            </div>
+            <input type="text" class="resin-input-text" placeholder="Ej. Camila, Sofía, Andrés..." maxlength="14" value="${this.state.customName}" oninput="ResinServiceApp.handleCustomNameInput(this.value)">
+          </div>
+        `;
+      }
+    } else if (this.state.activeTab === 'nfc') {
+      area.innerHTML = `
+        <div class="resin-nfc-card">
+          <div class="resin-nfc-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="resin-nfc-badge">((📶 NFC)) SMART CHIP</span>
+              <strong style="color: #FFF; font-size: 13px;">Chip Inteligente Encapsulado</strong>
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="checkbox" id="check-enable-nfc" ${this.state.hasNfc ? 'checked' : ''} onchange="ResinServiceApp.toggleNfc(this.checked)" style="width: 18px; height: 18px; accent-color: #38BDF8; cursor: pointer;">
+              <span style="font-size: 12px; font-weight: 800; color: #38BDF8;">Incluir (+$${this.settings.nfcExtraUsd || 2.0} USD)</span>
+            </label>
+          </div>
+
+          <p style="font-size: 11.5px; color: #CBD5E1; margin: 0 0 10px 0; line-height: 1.45;">
+            El chip NFC queda <strong>sellado e invisible dentro de la resina</strong>, 100% resistente al agua. Al acercar cualquier teléfono móvil (iPhone o Android) al llavero, se abrirá automáticamente tu enlace digital sin necesidad de descargar apps.
+          </p>
+
+          ${this.state.hasNfc ? `
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+              <div>
+                <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">¿QUÉ DESEAS QUE ABRA EL CHIP AL ACERCAR EL TELÉFONO?</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px;">
+                  ${this.nfcTypes.map(nt => `
+                    <div class="color-swatch-pill ${nt.id === this.state.nfcType ? 'active' : ''}" onclick="ResinServiceApp.setNfcType('${nt.id}')" style="justify-content: center; font-size: 11.5px; padding: 7px;">
+                      <span>${nt.icon}</span> <span>${nt.name}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div>
+                <label style="font-size: 11px; color: #38BDF8; font-weight: 800; display: block; margin-bottom: 4px;">ENLACE / URL A PROGRAMAR EN EL CHIP *</label>
+                <input type="url" class="resin-input-text" id="input-nfc-url" placeholder="${this.nfcTypes.find(n => n.id === this.state.nfcType)?.placeholder || 'https://...'}" value="${this.state.nfcUrl}" oninput="ResinServiceApp.handleNfcUrl(this.value)">
+                <span style="font-size: 10.5px; color: #94A3B8; display: block; margin-top: 3px;">
+                  ℹ️ Puedes programar tu perfil de Instagram, canción o playlist de Spotify, chat de WhatsApp o página web.
+                </span>
+              </div>
+            </div>
+          ` : `
+            <div style="text-align: center; padding: 8px; color: #94A3B8; font-size: 11.5px;">
+              👆 Marca la casilla para agregar el chip NFC a tu llavero de resina.
+            </div>
+          `}
+        </div>
+      `;
+    } else if (this.state.activeTab === 'finishes') {
+      area.innerHTML = `
+        <!-- Color de Borla -->
+        <div class="resin-section-card">
+          <div class="resin-section-title">
+            <span>Color de la Borla Decorativa (Tassel de Gamuza)</span>
+            <span class="badge-opt">${this.state.tasselName}</span>
+          </div>
+          <div class="swatches-scroll-row">
+            ${this.tassels.map(t => `
+              <div class="color-swatch-pill ${t.name === this.state.tasselName ? 'active' : ''}" id="tassel-pill-${t.hex.replace('#','')}" onclick="ResinServiceApp.setTassel('${t.hex}', '${t.name}')">
+                <span class="swatch-circle" style="background: ${t.hex};"></span>
+                <span>${t.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Herraje & Dije -->
+        <div class="resin-section-card">
+          <div class="resin-section-title">
+            <span>Herraje Metálico & Dije Opcional</span>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">COLOR DE LA ARGOLLA Y CADENA</label>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="color-swatch-pill ${this.state.hardware === 'gold' ? 'active' : ''}" id="btn-metal-gold" onclick="ResinServiceApp.setHardware('gold')" style="flex: 1; justify-content: center;">
+                ✨ Dorado de Lujo
+              </button>
+              <button type="button" class="color-swatch-pill ${this.state.hardware === 'silver' ? 'active' : ''}" id="btn-metal-silver" onclick="ResinServiceApp.setHardware('silver')" style="flex: 1; justify-content: center;">
+                🔘 Plateado Cromado
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">DIJE ADICIONAL EN RESINA (OPCIONAL)</label>
+            <div class="swatches-scroll-row">
+              ${this.charms.map(ch => `
+                <div class="color-swatch-pill ${ch.id === this.state.extraCharmId ? 'active' : ''}" id="charm-pill-${ch.id}" onclick="ResinServiceApp.setCharm('${ch.id}')">
+                  <span>${ch.icon}</span>
+                  <span>${ch.name} ${ch.extraUsd > 0 ? `(+$${ch.extraUsd} USD)` : ''}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  },
+
+  // =========================================================================
+  // Update Live Visual Preview (SVG Shapes, Photos, Back Side, NFC, Reflections)
+  // =========================================================================
+  updateVisualPreview() {
+    const isSilver = this.state.hardware === 'silver';
+    const metalGrad = isSilver ? 'url(#silverHardwareGrad)' : 'url(#goldHardwareGrad)';
+    const isPhoto = this.state.productType === 'photo';
+    const shape = this.state.photoShape || 'rectangle';
+
+    // Update Bottom Bar Pricing
+    const pricing = this.calculatePricing();
+    const usdEl = document.getElementById('resin-total-usd');
+    const copEl = document.getElementById('resin-total-cop');
+    if (usdEl) usdEl.textContent = `$${pricing.totalUsd.toFixed(2)} USD`;
+    if (copEl) copEl.textContent = `~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs`;
+
+    const svgFront = document.getElementById('resin-keychain-svg');
+    const svgBack = document.getElementById('resin-keychain-svg-back');
+    if (!svgFront || !svgBack) return;
+
+    // Common SVG Defs (Gradients, Hardware, Glitter Patterns)
+    const commonDefs = `
+      <defs>
+        <linearGradient id="goldHardwareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FFF5BA" />
+          <stop offset="25%" stop-color="#FACC15" />
+          <stop offset="55%" stop-color="#CA8A04" />
+          <stop offset="85%" stop-color="#EAB308" />
+          <stop offset="100%" stop-color="#854D0E" />
+        </linearGradient>
+
+        <linearGradient id="silverHardwareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FFFFFF" />
+          <stop offset="30%" stop-color="#E2E8F0" />
+          <stop offset="60%" stop-color="#94A3B8" />
+          <stop offset="90%" stop-color="#CBD5E1" />
+          <stop offset="100%" stop-color="#475569" />
+        </linearGradient>
+
+        <linearGradient id="liquidGlossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.75)" />
+          <stop offset="45%" stop-color="rgba(255, 255, 255, 0.22)" />
+          <stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)" />
+        </linearGradient>
+
+        <pattern id="goldGlitterPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+          <rect width="40" height="40" fill="#CA8A04" />
+          <circle cx="6" cy="8" r="1.8" fill="#FEF08A" />
+          <circle cx="18" cy="4" r="1.2" fill="#FFF" />
+          <circle cx="28" cy="12" r="2.2" fill="#FACC15" />
+          <circle cx="34" cy="24" r="1.5" fill="#FEF08A" />
+          <circle cx="12" cy="26" r="2.5" fill="#FDE047" />
+          <polygon points="14,14 19,16 17,21 12,18" fill="#FEF08A" opacity="0.95" />
+          <polygon points="26,2 30,6 28,10 24,6" fill="#FDE047" opacity="0.9" />
+          <polygon points="22,18 29,22 26,28 20,24" fill="#F59E0B" opacity="0.95" />
+        </pattern>
+
+        <pattern id="chunkyGlitterPattern" width="45" height="45" patternUnits="userSpaceOnUse">
+          <circle cx="10" cy="12" r="2.5" fill="rgba(255,255,255,0.85)" />
+          <circle cx="32" cy="8" r="3.2" fill="rgba(253,224,71,0.9)" />
+          <circle cx="22" cy="24" r="2" fill="rgba(255,255,255,0.95)" />
+          <polygon points="16,6 19,8 19,12 16,14 13,12 13,8" fill="rgba(254,240,138,0.85)" />
+          <polygon points="26,36 29,38 29,42 26,44 23,42 23,38" fill="rgba(253,224,71,0.85)" />
+        </pattern>
+
+        <pattern id="silverGlitterPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+          <rect width="40" height="40" fill="#64748B" />
+          <circle cx="8" cy="10" r="1.8" fill="#FFF" />
+          <circle cx="26" cy="14" r="2.5" fill="#E2E8F0" />
+          <polygon points="12,4 18,7 15,12 9,9" fill="#FFF" opacity="0.95" />
+          <polygon points="24,22 31,25 28,31 21,28" fill="#CBD5E1" opacity="0.95" />
+        </pattern>
+
+        <!-- Shape ClipPaths for Photo Resin Keychains -->
+        <clipPath id="clip-rectangle">
+          <rect x="55" y="120" width="230" height="260" rx="26" />
+        </clipPath>
+
+        <clipPath id="clip-circle">
+          <circle cx="170" cy="250" r="125" />
+        </clipPath>
+
+        <clipPath id="clip-heart">
+          <path d="M 170,165 C 130,100 55,115 55,195 C 55,265 130,325 170,375 C 210,325 285,265 285,195 C 285,115 210,100 170,165 Z" />
+        </clipPath>
+
+        <clipPath id="clip-hexagon">
+          <polygon points="170,125 285,190 285,315 170,380 55,315 55,190" />
+        </clipPath>
+
+        <clipPath id="clip-dogtag">
+          <rect x="75" y="120" width="190" height="260" rx="38" />
+        </clipPath>
+
+        <!-- Master Letter ClipPath -->
+        <clipPath id="resin-letter-clip">
+          <text x="170" y="340" text-anchor="middle" font-family="'Arial Black', 'Montserrat', Impact, sans-serif" font-weight="900" font-size="205">${this.state.letter}</text>
+        </clipPath>
+
+        <filter id="softContactShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0" />
+        </filter>
+      </defs>
+    `;
+
+    // Hardware Assembly (Top Ring + Chains + Tassel)
+    const renderHardwareAssembly = (anchorX = 170, anchorY = 120) => {
+      return `
+        <!-- Hardware Assembly -->
+        <g id="svg-hardware-group">
+          <!-- Split Key Ring -->
+          <circle cx="170" cy="45" r="26" fill="none" stroke="${metalGrad}" stroke-width="7" />
+          <circle cx="170" cy="45" r="23" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="1" />
+          <line x1="168" y1="19" x2="172" y2="71" stroke="rgba(0,0,0,0.25)" stroke-width="1.5" />
+
+          <!-- Chain Links to Anchor -->
+          ${this.renderChain(anchorX, anchorY, isSilver)}
+
+          <!-- Suede Tassel -->
+          <g transform="translate(60, 82)">
+            <ellipse cx="25" cy="5" rx="4" ry="5.5" fill="none" stroke="${metalGrad}" stroke-width="2.5" transform="rotate(15 25 5)" />
+            <path d="M 16,10 Q 25,6 34,10 L 37,24 Q 25,28 13,24 Z" fill="${metalGrad}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))" />
+            <ellipse cx="25" cy="11" rx="9" ry="2.5" fill="#FFF5BA" opacity="0.6" />
+            <path d="M 14,24 Q 25,28 36,24 L 42,78 Q 25,84 8,78 Z" fill="${this.state.tasselHex || '#F472B6'}" filter="drop-shadow(0 4px 8px rgba(0,0,0,0.35))" />
+            <line x1="16" y1="28" x2="14" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+            <line x1="22" y1="28" x2="21" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+            <line x1="28" y1="28" x2="29" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+            <line x1="34" y1="28" x2="36" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+          </g>
+
+          <!-- Extra Charm -->
+          ${this.state.extraCharmId !== 'none' ? `
+            <g transform="translate(205, 95)">
+              <ellipse cx="15" cy="5" rx="3.5" ry="5" fill="none" stroke="${metalGrad}" stroke-width="2.5" />
+              <circle cx="15" cy="18" r="10" fill="${metalGrad}" />
+              <text x="15" y="22" text-anchor="middle" font-size="12" fill="#FFF">✨</text>
+            </g>
+          ` : ''}
+        </g>
+      `;
+    };
+
+    // Border Flakes HTML for Shape
+    const getBorderFlakesHtml = (clipId) => {
+      if (this.state.photoBorderEffect === 'gold_flakes') {
+        return `<rect x="10" y="100" width="320" height="300" fill="url(#goldGlitterPattern)" clip-path="url(#${clipId})" opacity="0.45" />`;
+      } else if (this.state.photoBorderEffect === 'silver_flakes') {
+        return `<rect x="10" y="100" width="320" height="300" fill="url(#silverGlitterPattern)" clip-path="url(#${clipId})" opacity="0.4" />`;
+      } else if (this.state.photoBorderEffect === 'glitter') {
+        return `<rect x="10" y="100" width="320" height="300" fill="url(#chunkyGlitterPattern)" clip-path="url(#${clipId})" opacity="0.5" />`;
+      }
+      return '';
+    };
+
+    // NFC Encapsulated Badge (Visible on the bottom right inside the resin)
+    const nfcBadgeHtml = this.state.hasNfc ? `
+      <g transform="translate(220, 320)">
+        <rect x="0" y="0" width="56" height="24" rx="12" fill="rgba(2, 132, 199, 0.85)" stroke="rgba(255,255,255,0.7)" stroke-width="1.2" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.6))" />
+        <text x="28" y="16" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="10" fill="#FFF" letter-spacing="0.5">((📶 NFC))</text>
+      </g>
+    ` : '';
+
+    // ==========================================
+    // 1. BUILD FRONT SVG
+    // ==========================================
+    if (isPhoto) {
+      const clipId = `clip-${shape}`;
+      let shapePathOutline = '';
+      if (shape === 'rectangle') shapePathOutline = `<rect x="55" y="120" width="230" height="260" rx="26" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+      else if (shape === 'circle') shapePathOutline = `<circle cx="170" cy="250" r="125" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+      else if (shape === 'heart') shapePathOutline = `<path d="M 170,165 C 130,100 55,115 55,195 C 55,265 130,325 170,375 C 210,325 285,265 285,195 C 285,115 210,100 170,165 Z" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+      else if (shape === 'hexagon') shapePathOutline = `<polygon points="170,125 285,190 285,315 170,380 55,315 55,190" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+      else if (shape === 'dogtag') shapePathOutline = `<rect x="75" y="120" width="190" height="260" rx="38" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+
+      svgFront.innerHTML = `
+        ${commonDefs}
+        
+        <!-- Drop Shadow -->
+        <g opacity="0.6" filter="url(#softContactShadow)">
+          ${shapePathOutline.replace(/fill="none"/g, 'fill="#000"').replace(/stroke="[^"]*"/g, 'stroke="#000"')}
+        </g>
+
+        <!-- 3D Resin Side Wall / Mold Rim -->
+        <g transform="translate(0, 4)" opacity="0.4">
+          ${shapePathOutline.replace(/fill="none"/g, 'fill="#BE185D"')}
+        </g>
+
+        <!-- Main Cast Front Content -->
+        <g clip-path="url(#${clipId})">
+          <!-- Background Base Layer -->
+          <rect x="0" y="100" width="340" height="300" fill="#1E293B" />
+
+          ${this.state.photoFrontUrl ? `
+            <image href="${this.state.photoFrontUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
+          ` : `
+            <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #831843 0%, #1E1B4B 100%)" />
+            <g transform="translate(170, 240)">
+              <circle cx="0" cy="0" r="36" fill="rgba(244, 114, 182, 0.25)" stroke="#F472B6" stroke-width="2" />
+              <text x="0" y="8" text-anchor="middle" font-size="28">📸</text>
+              <text x="0" y="48" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="13" fill="#FFF">Toca "Subir Foto"</text>
+              <text x="0" y="65" text-anchor="middle" font-size="10.5" fill="#FDA4AF">Tu recuerdo aquí en resina</text>
+            </g>
+          `}
+
+          <!-- Border Inclusions (Gold / Silver / Glitter) -->
+          ${getBorderFlakesHtml(clipId)}
+
+          <!-- Specular Liquid Gloss Highlight (Realistic Curved Glass Reflection) -->
+          <path d="M 50,140 Q 170,200 290,150 L 290,210 Q 170,260 50,200 Z" fill="url(#liquidGlossGrad)" opacity="0.65" pointer-events="none" />
+          <ellipse cx="120" cy="320" rx="35" ry="12" fill="rgba(255,255,255,0.2)" transform="rotate(-18 120 320)" pointer-events="none" />
+        </g>
+
+        <!-- Meniscus Border Bevel Line -->
+        ${shapePathOutline}
+
+        <!-- Encapsulated Smart NFC Chip Badge -->
+        ${nfcBadgeHtml}
+
+        <!-- Hardware & Chains -->
+        ${renderHardwareAssembly(170, 122)}
+      `;
+    } else {
+      // Classic Letter Mode
+      const letter = this.state.letter || 'M';
+      const c = this.state.baseColorHex || '#F472B6';
+      const anchor = this.getLetterAnchor(letter);
+
+      svgFront.innerHTML = `
+        ${commonDefs}
+        
+        <!-- Ambient Shadow -->
+        <text x="172" y="352" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="#000" filter="url(#softContactShadow)">${letter}</text>
+
+        <!-- 3D Sidewalls -->
+        <text x="170" y="348" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="${this.adjustColor(c, -0.55)}">${letter}</text>
+        <text x="170" y="346" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="${this.adjustColor(c, -0.38)}">${letter}</text>
+        <text x="170" y="344" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="${this.adjustColor(c, -0.22)}">${letter}</text>
+
+        <!-- Front Resin Letter -->
+        <g clip-path="url(#resin-letter-clip)">
+          <rect x="10" y="120" width="320" height="250" fill="${c}" />
+          <rect x="10" y="120" width="320" height="250" fill="url(#chunkyGlitterPattern)" opacity="0.8" />
+          
+          ${this.state.styleId === 'bicolor' ? `
+            <path d="M 0,210 Q 170,270 340,220 L 340,295 Q 170,345 0,285 Z" fill="url(#goldGlitterPattern)" />
+          ` : ''}
+
+          <text x="170" y="340" text-anchor="middle" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="205" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="3">${letter}</text>
+          <path d="M 50,150 Q 170,210 290,165 L 290,205 Q 170,250 50,195 Z" fill="url(#liquidGlossGrad)" opacity="0.65" />
+        </g>
+
+        ${this.state.customName ? `
+          <text x="170" y="278" text-anchor="middle" font-family="'Caveat', cursive, sans-serif" font-weight="700" font-size="30" fill="#FFF" stroke="#0F172A" stroke-width="0.75" filter="drop-shadow(0 2px 5px rgba(0,0,0,0.8))">${this.state.customName.toUpperCase()}</text>
+        ` : ''}
+
+        ${renderHardwareAssembly(anchor.x, 185)}
+      `;
+    }
+
+    // ==========================================
+    // 2. BUILD BACK SVG (REVERSO)
+    // ==========================================
+    if (isPhoto) {
+      const clipId = `clip-${shape}`;
+      let shapePathOutline = '';
+      if (shape === 'rectangle') shapePathOutline = `<rect x="55" y="120" width="230" height="260" rx="26" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+      else if (shape === 'circle') shapePathOutline = `<circle cx="170" cy="250" r="125" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+      else if (shape === 'heart') shapePathOutline = `<path d="M 170,165 C 130,100 55,115 55,195 C 55,265 130,325 170,375 C 210,325 285,265 285,195 C 285,115 210,100 170,165 Z" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+      else if (shape === 'hexagon') shapePathOutline = `<polygon points="170,125 285,190 285,315 170,380 55,315 55,190" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+      else if (shape === 'dogtag') shapePathOutline = `<rect x="75" y="120" width="190" height="260" rx="38" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+
+      let backContentHtml = '';
+
+      if (this.state.photoBackType === 'photo') {
+        if (this.state.photoBackUrl) {
+          backContentHtml = `
+            <image href="${this.state.photoBackUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
+          `;
+        } else {
+          backContentHtml = `
+            <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)" />
+            <g transform="translate(170, 240)">
+              <circle cx="0" cy="0" r="32" fill="rgba(255,255,255,0.15)" stroke="#A78BFA" stroke-width="1.5" />
+              <text x="0" y="8" text-anchor="middle" font-size="24">🖼️</text>
+              <text x="0" y="45" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="12" fill="#FFF">Segunda Foto</text>
+              <text x="0" y="60" text-anchor="middle" font-size="10" fill="#C7D2FE">Sube otra foto para el reverso</text>
+            </g>
+          `;
+        }
+      } else if (this.state.photoBackType === 'spotify') {
+        const song = this.state.photoBackSpotifySong || 'Tu Canción Favorita';
+        const artist = this.state.photoBackSpotifyArtist || 'Artista Especial';
+        backContentHtml = `
+          <rect x="0" y="100" width="340" height="300" fill="#0C101A" />
+          <g transform="translate(170, 235)">
+            <circle cx="0" cy="-35" r="22" fill="#1DB954" filter="drop-shadow(0 4px 10px rgba(29,185,84,0.4))" />
+            <path d="M -11,-42 Q 0,-47 11,-42 M -9,-36 Q 0,-40 9,-36 M -7,-30 Q 0,-33 7,-30" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" />
+            
+            <!-- Sound wave bars -->
+            <g transform="translate(-60, 5)">
+              <line x1="0" y1="0" x2="0" y2="24" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
+              <line x1="12" y1="-8" x2="12" y2="30" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
+              <line x1="24" y1="-14" x2="24" y2="36" stroke="#1DB954" stroke-width="3" stroke-linecap="round" />
+              <line x1="36" y1="-5" x2="36" y2="28" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
+              <line x1="48" y1="-18" x2="48" y2="40" stroke="#1DB954" stroke-width="3.5" stroke-linecap="round" />
+              <line x1="60" y1="-10" x2="60" y2="32" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
+              <line x1="72" y1="-16" x2="72" y2="38" stroke="#1DB954" stroke-width="3" stroke-linecap="round" />
+              <line x1="84" y1="-6" x2="84" y2="28" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
+              <line x1="96" y1="-12" x2="96" y2="34" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
+              <line x1="108" y1="-2" x2="108" y2="24" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
+              <line x1="120" y1="4" x2="120" y2="20" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
+            </g>
+
+            <text x="0" y="65" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="13" fill="#FFF">${song}</text>
+            <text x="0" y="82" text-anchor="middle" font-family="'Inter', sans-serif" font-size="11" fill="#94A3B8">${artist}</text>
+          </g>
+        `;
+      } else if (this.state.photoBackType === 'phrase') {
+        const phrase = this.state.photoBackPhrase || 'Siempre Juntos ❤️';
+        backContentHtml = `
+          <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #1A1E2E 0%, #2A1F3D 100%)" />
+          <rect x="0" y="100" width="340" height="300" fill="url(#chunkyGlitterPattern)" opacity="0.3" />
+          <g transform="translate(170, 245)">
+            <text x="0" y="0" text-anchor="middle" font-family="'Caveat', 'Brush Script MT', cursive" font-weight="700" font-size="28" fill="#FDE047" stroke="#854D0E" stroke-width="0.75" filter="drop-shadow(0 2px 8px rgba(0,0,0,0.8))">
+              ${phrase}
+            </text>
+            <circle cx="0" cy="25" r="4" fill="#FDE047" />
+          </g>
+        `;
+      } else { // glitter
+        backContentHtml = `
+          <rect x="0" y="100" width="340" height="300" fill="#CA8A04" />
+          <rect x="0" y="100" width="340" height="300" fill="url(#goldGlitterPattern)" />
+          <rect x="0" y="100" width="340" height="300" fill="url(#chunkyGlitterPattern)" opacity="0.6" />
+        `;
+      }
+
+      svgBack.innerHTML = `
+        ${commonDefs}
+        <g clip-path="url(#${clipId})">
+          ${backContentHtml}
+          <!-- Liquid Specular Reflection on Back -->
+          <path d="M 50,140 Q 170,200 290,150 L 290,210 Q 170,260 50,200 Z" fill="url(#liquidGlossGrad)" opacity="0.5" pointer-events="none" />
+        </g>
+        ${shapePathOutline}
+        ${renderHardwareAssembly(170, 122)}
+      `;
+    } else {
+      // Letter Mode back side (mirrored letter)
+      svgBack.innerHTML = svgFront.innerHTML;
+    }
+  },
+
+  // Helper for connecting chain links
+  renderChain(anchorX, anchorY, isSilver) {
+    const metalGrad = isSilver ? 'url(#silverHardwareGrad)' : 'url(#goldHardwareGrad)';
+    const highlightColor = isSilver ? '#FFFFFF' : '#FFF9D2';
+    const shadowColor = isSilver ? 'rgba(0,0,0,0.45)' : 'rgba(120,53,15,0.45)';
+
+    const p0 = { x: 170, y: 72 };
+    const p2 = { x: anchorX, y: anchorY };
+    const dx = p2.x - p0.x;
+    const dy = p2.y - p0.y;
+    const p1 = { x: p0.x + dx * 0.25, y: p0.y + dy * 0.65 };
+
+    const numLinks = 6;
+    let linksHtml = '';
+
+    for (let i = 0; i < numLinks; i++) {
+      const t = i / (numLinks - 1);
+      const invT = 1 - t;
+      const cx = invT * invT * p0.x + 2 * invT * t * p1.x + t * t * p2.x;
+      const cy = invT * invT * p0.y + 2 * invT * t * p1.y + t * t * p2.y;
+
+      const tx = 2 * invT * (p1.x - p0.x) + 2 * t * (p2.x - p1.x);
+      const ty = 2 * invT * (p1.y - p0.y) + 2 * t * (p2.y - p1.y);
+      const angle = (Math.atan2(tx, ty) * 180) / Math.PI;
+
+      if (i % 2 === 0) {
+        linksHtml += `
+          <g transform="rotate(${angle.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})">
+            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="5" ry="8.5" fill="none" stroke="${metalGrad}" stroke-width="3" />
+          </g>
+        `;
+      } else {
+        const sideAngle = angle + (i % 4 === 1 ? 16 : -16);
+        linksHtml += `
+          <g transform="rotate(${sideAngle.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})">
+            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="3" ry="8" fill="none" stroke="${metalGrad}" stroke-width="2.5" />
+          </g>
+        `;
+      }
+    }
+
+    const eyeletHtml = `
+      <g>
+        <circle cx="${anchorX}" cy="${anchorY}" r="5.5" fill="none" stroke="${metalGrad}" stroke-width="3" />
+        <line x1="${anchorX}" y1="${anchorY}" x2="${anchorX}" y2="${anchorY + 14}" stroke="${metalGrad}" stroke-width="2.8" stroke-linecap="round" />
+      </g>
+    `;
+
+    return linksHtml + eyeletHtml;
+  },
+
+  getLetterAnchor(letter) {
+    const l = (letter || 'M').toUpperCase();
+    switch (l) {
+      case 'A': return { x: 170, y: 185 };
+      case 'B': return { x: 130, y: 185 };
+      case 'C': return { x: 160, y: 185 };
+      case 'M': return { x: 105, y: 185 };
+      case 'W': return { x: 95, y: 185 };
+      default:  return { x: 140, y: 185 };
+    }
   },
 
   adjustColor(hex, lum) {
@@ -628,117 +1375,37 @@ const ResinServiceApp = {
     return rgb;
   },
 
-  getLetterAnchor(letter) {
-    const l = (letter || 'M').toUpperCase();
-    switch (l) {
-      case 'A': return { x: 170, y: 185 };
-      case 'B': return { x: 130, y: 185 };
-      case 'C': return { x: 160, y: 185 };
-      case 'D': return { x: 130, y: 185 };
-      case 'E': return { x: 130, y: 185 };
-      case 'F': return { x: 130, y: 185 };
-      case 'G': return { x: 160, y: 185 };
-      case 'H': return { x: 120, y: 185 };
-      case 'I': return { x: 170, y: 185 };
-      case 'J': return { x: 185, y: 185 };
-      case 'K': return { x: 120, y: 185 };
-      case 'L': return { x: 125, y: 185 };
-      case 'M': return { x: 105, y: 185 };
-      case 'N': return { x: 115, y: 185 };
-      case 'O': return { x: 170, y: 185 };
-      case 'P': return { x: 130, y: 185 };
-      case 'Q': return { x: 170, y: 185 };
-      case 'R': return { x: 130, y: 185 };
-      case 'S': return { x: 165, y: 185 };
-      case 'T': return { x: 170, y: 185 };
-      case 'U': return { x: 110, y: 185 };
-      case 'V': return { x: 100, y: 185 };
-      case 'W': return { x: 95, y: 185 };
-      case 'X': return { x: 110, y: 185 };
-      case 'Y': return { x: 105, y: 185 };
-      case 'Z': return { x: 125, y: 185 };
-      default:  return { x: 160, y: 185 };
-    }
-  },
+  // =========================================================================
+  // Delivery Drawer Management (Completely Separate / Zero Defaults)
+  // =========================================================================
+  openDeliveryDrawer() {
+    const drawer = document.getElementById('resin-delivery-drawer');
+    if (!drawer) return;
 
-  renderChain(anchorX, isSilver) {
-    const metalGrad = isSilver ? 'url(#silverHardwareGrad)' : 'url(#goldHardwareGrad)';
-    const highlightColor = isSilver ? '#FFFFFF' : '#FFF9D2';
-    const shadowColor = isSilver ? 'rgba(0,0,0,0.45)' : 'rgba(120,53,15,0.45)';
+    const pricing = this.calculatePricing();
+    const isPhoto = this.state.productType === 'photo';
 
-    // Key ring bottom contact: (170, 72)
-    // Letter top anchor: (anchorX, 185)
-    const p0 = { x: 170, y: 72 };
-    const p2 = { x: anchorX, y: 185 };
-    const dx = p2.x - p0.x;
-    const dy = p2.y - p0.y;
-    // Control point for a natural hanging curve
-    const p1 = { x: p0.x + dx * 0.25, y: p0.y + dy * 0.65 };
+    const summaryBox = document.getElementById('resin-delivery-summary-box');
+    if (summaryBox) {
+      let desc = isPhoto
+        ? `📸 <strong>Llavero Fotográfico en Resina (${this.state.photoShapeName})</strong>`
+        : `🔤 <strong>Llavero de Inicial "${this.state.letter}" (${this.state.baseColorName})</strong>`;
 
-    const numLinks = 7;
-    let linksHtml = '';
-
-    for (let i = 0; i < numLinks; i++) {
-      const t = i / (numLinks - 1);
-      const invT = 1 - t;
-      const cx = invT * invT * p0.x + 2 * invT * t * p1.x + t * t * p2.x;
-      const cy = invT * invT * p0.y + 2 * invT * t * p1.y + t * t * p2.y;
-
-      const tx = 2 * invT * (p1.x - p0.x) + 2 * t * (p2.x - p1.x);
-      const ty = 2 * invT * (p1.y - p0.y) + 2 * t * (p2.y - p1.y);
-      const angle = (Math.atan2(tx, ty) * 180) / Math.PI;
-
-      if (i % 2 === 0) {
-        // Facing link (wider oval)
-        linksHtml += `
-          <g transform="rotate(${angle.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})">
-            <ellipse cx="${cx.toFixed(1)}" cy="${(cy + 1).toFixed(1)}" rx="5.8" ry="9.8" fill="none" stroke="${shadowColor}" stroke-width="3.5" opacity="0.6" />
-            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="5.5" ry="9.5" fill="none" stroke="${metalGrad}" stroke-width="3.2" class="svg-metal-element" />
-            <ellipse cx="${(cx - 1).toFixed(1)}" cy="${cy.toFixed(1)}" rx="3.5" ry="7.2" fill="none" stroke="${highlightColor}" stroke-width="0.75" opacity="0.7" />
-          </g>
-        `;
-      } else {
-        // Side/turned link (interlocking angle)
-        const sideAngle = angle + (i % 4 === 1 ? 16 : -16);
-        linksHtml += `
-          <g transform="rotate(${sideAngle.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})">
-            <ellipse cx="${cx.toFixed(1)}" cy="${(cy + 1).toFixed(1)}" rx="3.5" ry="9.2" fill="none" stroke="${shadowColor}" stroke-width="3.2" opacity="0.6" />
-            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="3.2" ry="8.8" fill="none" stroke="${metalGrad}" stroke-width="2.8" class="svg-metal-element" />
-            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="1.8" ry="6.5" fill="none" stroke="${highlightColor}" stroke-width="0.65" opacity="0.6" />
-          </g>
-        `;
+      if (isPhoto && this.state.hasNfc) {
+        desc += `<br>📶 <em>Chip NFC Inteligente incluido (${this.state.nfcType})</em>`;
       }
+      desc += `<br>✨ Herraje: ${this.state.hardware === 'gold' ? 'Dorado' : 'Plateado'} • Borla: ${this.state.tasselName}`;
+      desc += `<br>💰 <strong>Total a Pagar: $${pricing.totalUsd.toFixed(2)} USD (~$${pricing.totalCop.toLocaleString('es-CO')} COP / ${pricing.totalBs.toLocaleString('es-VE')} Bs)</strong>`;
+
+      summaryBox.innerHTML = desc;
     }
 
-    // Screw Eye Pin Assembly (Cáncamo atornillado firmemente en la resina de la letra)
-    const eyeletHtml = `
-      <g id="svg-screw-eye-assembly">
-        <!-- Screw eye shadow -->
-        <circle cx="${anchorX}" cy="186.5" r="6.8" fill="none" stroke="${shadowColor}" stroke-width="3.8" opacity="0.6" />
-        <!-- Screw eyelet outer loop -->
-        <circle cx="${anchorX}" cy="185.5" r="6.5" fill="none" stroke="${metalGrad}" stroke-width="3.4" class="svg-metal-element" />
-        <!-- Eyelet inner opening highlight -->
-        <circle cx="${anchorX}" cy="185.5" r="4.2" fill="none" stroke="${highlightColor}" stroke-width="0.75" opacity="0.65" />
-
-        <!-- Threaded screw shaft embedded into resin (y: 191 to 208) -->
-        <line x1="${anchorX}" y1="191" x2="${anchorX}" y2="208" stroke="${shadowColor}" stroke-width="3.8" stroke-linecap="round" opacity="0.5" />
-        <line x1="${anchorX}" y1="190.5" x2="${anchorX}" y2="207.5" stroke="${metalGrad}" stroke-width="3.2" stroke-linecap="round" class="svg-metal-element" />
-        <!-- Screw threads visible through translucent resin -->
-        <line x1="${anchorX - 3}" y1="195" x2="${anchorX + 3}" y2="195" stroke="${highlightColor}" stroke-width="1.2" opacity="0.75" />
-        <line x1="${anchorX - 3}" y1="199" x2="${anchorX + 3}" y2="199" stroke="${highlightColor}" stroke-width="1.2" opacity="0.75" />
-        <line x1="${anchorX - 3}" y1="203" x2="${anchorX + 3}" y2="203" stroke="${highlightColor}" stroke-width="1.2" opacity="0.75" />
-      </g>
-    `;
-
-    return linksHtml + eyeletHtml;
+    drawer.classList.add('open');
   },
 
-  handleDeliveryFieldChange(field, val) {
-    this.state[field] = val;
-    if (field === 'customerName') localStorage.setItem('customer_name', val);
-    if (field === 'customerPhone') localStorage.setItem('customer_phone', val);
-    if (field === 'deliveryAddress') localStorage.setItem('customer_address', val);
-    this.updateVisualPreview();
+  closeDeliveryDrawer() {
+    const drawer = document.getElementById('resin-delivery-drawer');
+    if (drawer) drawer.classList.remove('open');
   },
 
   detectLiveGps() {
@@ -748,330 +1415,59 @@ const ResinServiceApp = {
     const statusBox = document.getElementById('resin-gps-status-box');
 
     if (!navigator.geolocation) {
-      if (statusBox) {
-        statusBox.style.display = 'block';
-        statusBox.innerHTML = '<span style="color: #F87171;">⚠️ Tu navegador no soporta geolocalización GPS. Por favor escribe tu dirección detallada.</span>';
-      }
+      alert('Tu navegador no soporta geolocalización satelital.');
       return;
     }
 
     if (btn) btn.disabled = true;
     if (icon) icon.textContent = '⏳';
-    if (btnText) btnText.textContent = 'Obteniendo satélites GPS...';
-    if (statusBox) {
-      statusBox.style.display = 'block';
-      statusBox.innerHTML = '<span style="color: #38BDF8;">🛰️ Conectando con sensor GPS y satélites... por favor acepta el permiso de ubicación si el navegador lo solicita.</span>';
-    }
-
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 12000,
-      maximumAge: 0
-    };
+    if (btnText) btnText.textContent = 'Detectando satélites GPS...';
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = pos.coords.latitude.toFixed(6);
-        const lng = pos.coords.longitude.toFixed(6);
-        const acc = Math.round(pos.coords.accuracy || 15);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const acc = Math.round(pos.coords.accuracy);
         const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
 
-        this.state.gps = {
-          lat,
-          lng,
-          accuracy: acc,
-          mapUrl
-        };
+        this.state.gps = { lat, lng, accuracy: acc, mapUrl };
 
-        if (btn) {
-          btn.disabled = false;
-          btn.style.borderColor = '#10B981';
-          btn.style.color = '#10B981';
-          btn.style.background = 'rgba(16, 185, 129, 0.15)';
-        }
+        if (btn) btn.disabled = false;
         if (icon) icon.textContent = '✅';
-        if (btnText) btnText.textContent = 'Ubicación GPS Fijada con Éxito';
+        if (btnText) btnText.textContent = 'GPS Capturado con Éxito';
 
         if (statusBox) {
           statusBox.style.display = 'block';
           statusBox.innerHTML = `
-            <div style="color: #10B981; font-weight: 700; margin-bottom: 2px;">
-              📍 Ubicación GPS Confirmada (Precisión: ±${acc}m)
+            <div style="color: #34D399; font-weight: 800; margin-bottom: 2px;">
+              📍 Ubicación satelital detectada (±${acc}m)
             </div>
             <div style="font-size: 11px; color: #CBD5E1;">
-              Coords: <code>${lat}, ${lng}</code> &nbsp;•&nbsp;
+              Coords: <code>${lat.toFixed(5)}, ${lng.toFixed(5)}</code> &nbsp;•&nbsp;
               <a href="${mapUrl}" target="_blank" rel="noopener noreferrer" style="color: #38BDF8; text-decoration: underline; font-weight: 700;">
-                Abrir en Google Maps ↗
+                Ver en Google Maps ↗
               </a>
             </div>
           `;
         }
-
-        this.updateVisualPreview();
       },
       (err) => {
         console.warn('Geolocation error:', err);
         if (btn) btn.disabled = false;
         if (icon) icon.textContent = '📡';
-        if (btnText) btnText.textContent = 'Reintentar Detección GPS';
+        if (btnText) btnText.textContent = 'Reintentar Captura GPS';
         if (statusBox) {
           statusBox.style.display = 'block';
-          let msg = 'No pudimos acceder a tu GPS. Por favor revisa los permisos o escribe tu dirección y punto de referencia.';
-          if (err.code === 1) msg = 'Permiso de ubicación denegado. Escribe tu dirección en el campo de texto abajo.';
-          statusBox.innerHTML = `<span style="color: #F87171;">⚠️ ${msg}</span>`;
+          statusBox.innerHTML = `<span style="color: #F87171;">⚠️ No se pudo obtener la señal GPS. Escribe tu dirección en el campo de texto.</span>`;
         }
       },
-      options
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
   },
 
-  updateVisualPreview() {
-    const letter = this.state.letter || 'M';
-    const c = this.state.baseColorHex || '#F472B6';
-    const isSilver = this.state.hardware === 'silver';
-    const metalGrad = isSilver ? 'url(#silverHardwareGrad)' : 'url(#goldHardwareGrad)';
-
-    // 1. Update text for all layers of the 3D letter
-    const clipChar = document.getElementById('svg-clip-char');
-    const shadowChar = document.getElementById('svg-shadow-char');
-    const meniscusChar = document.getElementById('svg-meniscus-char');
-    if (clipChar) clipChar.textContent = letter;
-    if (shadowChar) shadowChar.textContent = letter;
-    if (meniscusChar) meniscusChar.textContent = letter;
-
-    // 2. Update 3D depth layers
-    const cDark = this.adjustColor(c, -0.55);
-    const cMid = this.adjustColor(c, -0.38);
-    const cLight = this.adjustColor(c, -0.22);
-    const cShine = this.adjustColor(c, -0.08);
-
-    const d4 = document.getElementById('svg-depth-4');
-    const d3 = document.getElementById('svg-depth-3');
-    const d2 = document.getElementById('svg-depth-2');
-    const d1 = document.getElementById('svg-depth-1');
-
-    if (d4) { d4.textContent = letter; d4.setAttribute('fill', cDark); }
-    if (d3) { d3.textContent = letter; d3.setAttribute('fill', cMid); }
-    if (d2) { d2.textContent = letter; d2.setAttribute('fill', cLight); }
-    if (d1) { d1.textContent = letter; d1.setAttribute('fill', cShine); }
-
-    // 3. Base resin color & glitter
-    const baseRect = document.getElementById('svg-resin-base-fill');
-    const baseGlitter = document.getElementById('svg-resin-base-glitter');
-    if (baseRect) baseRect.setAttribute('fill', c);
-
-    // 4. Inclusions according to style
-    const styleInclusions = document.getElementById('svg-style-inclusions');
-    if (styleInclusions) {
-      let inclHtml = '';
-      if (this.state.styleId === 'bicolor') {
-        // Diagonal gold glitter wave like user's photo
-        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.85');
-        inclHtml = `
-          <path d="M 0,210 Q 170,270 340,220 L 340,295 Q 170,345 0,285 Z" fill="url(#goldGlitterPattern)" />
-          <path d="M 0,206 Q 170,266 340,216 L 340,222 Q 170,272 0,212 Z" fill="#FDE047" opacity="0.6" />
-          <path d="M 0,283 Q 170,343 340,293 L 340,299 Q 170,349 0,289 Z" fill="#FDE047" opacity="0.6" />
-        `;
-      } else if (this.state.styleId === 'gold_flakes') {
-        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.35');
-        inclHtml = `
-          <rect x="0" y="120" width="340" height="250" fill="url(#goldGlitterPattern)" opacity="0.85" />
-          <polygon points="90,210 115,225 105,245 80,230" fill="#FEF08A" opacity="0.95" />
-          <polygon points="190,195 210,205 200,225 180,215" fill="#FDE047" opacity="0.9" />
-          <polygon points="230,280 255,295 240,320 215,300" fill="#FEF08A" opacity="0.95" />
-          <polygon points="120,300 145,310 135,330 110,320" fill="#F59E0B" opacity="0.9" />
-          <polygon points="150,230 170,240 160,260 140,250" fill="#FEF08A" opacity="0.9" />
-        `;
-      } else if (this.state.styleId === 'silver_flakes') {
-        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.2');
-        inclHtml = `
-          <rect x="0" y="120" width="340" height="250" fill="url(#silverGlitterPattern)" opacity="0.85" />
-          <polygon points="85,210 110,225 100,245 75,230" fill="#FFFFFF" opacity="0.95" />
-          <polygon points="190,200 210,210 200,230 180,220" fill="#E2E8F0" opacity="0.9" />
-          <polygon points="225,275 250,290 235,315 210,295" fill="#FFFFFF" opacity="0.95" />
-          <polygon points="125,295 150,305 140,325 115,315" fill="#CBD5E1" opacity="0.9" />
-        `;
-      } else if (this.state.styleId === 'glitter_full') {
-        if (baseGlitter) baseGlitter.setAttribute('opacity', '1');
-        inclHtml = `
-          <rect x="0" y="120" width="340" height="250" fill="url(#chunkyGlitterPattern)" opacity="0.9" />
-        `;
-      } else if (this.state.styleId === 'flowers') {
-        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.2');
-        inclHtml = `
-          <g transform="translate(100, 240)">
-            <circle cx="0" cy="0" r="14" fill="#FEF08A" opacity="0.95" />
-            <circle cx="0" cy="0" r="6" fill="#F59E0B" />
-            <ellipse cx="0" cy="-18" rx="6" ry="10" fill="#FFF" opacity="0.95" />
-            <ellipse cx="14" cy="-12" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(45 14 -12)" />
-            <ellipse cx="18" cy="0" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(90 18 0)" />
-            <ellipse cx="14" cy="12" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(135 14 12)" />
-            <ellipse cx="0" cy="18" rx="6" ry="10" fill="#FFF" opacity="0.95" />
-            <ellipse cx="-14" cy="12" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(-135 -14 12)" />
-            <ellipse cx="-18" cy="0" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(-90 -18 0)" />
-            <ellipse cx="-14" cy="-12" rx="6" ry="10" fill="#FFF" opacity="0.95" transform="rotate(-45 -14 -12)" />
-          </g>
-          <g transform="translate(210, 260) scale(0.75)">
-            <circle cx="0" cy="0" r="14" fill="#FDA4AF" opacity="0.95" />
-            <circle cx="0" cy="0" r="6" fill="#FB7185" />
-            <ellipse cx="0" cy="-18" rx="6" ry="10" fill="#FFF" opacity="0.9" />
-            <ellipse cx="18" cy="0" rx="6" ry="10" fill="#FFF" opacity="0.9" transform="rotate(90 18 0)" />
-            <ellipse cx="0" cy="18" rx="6" ry="10" fill="#FFF" opacity="0.9" />
-            <ellipse cx="-18" cy="0" rx="6" ry="10" fill="#FFF" opacity="0.9" transform="rotate(-90 -18 0)" />
-          </g>
-          <path d="M 140,290 Q 155,270 170,275 Q 160,295 140,290 Z" fill="#34D399" opacity="0.85" />
-          <path d="M 180,210 Q 195,195 210,200 Q 200,215 180,210 Z" fill="#34D399" opacity="0.85" />
-        `;
-      } else { // crystal
-        if (baseGlitter) baseGlitter.setAttribute('opacity', '0.15');
-        inclHtml = `
-          <ellipse cx="140" cy="240" rx="40" ry="15" fill="rgba(255,255,255,0.25)" transform="rotate(-25 140 240)" />
-          <ellipse cx="200" cy="270" rx="50" ry="20" fill="rgba(255,255,255,0.2)" transform="rotate(15 200 270)" />
-        `;
-      }
-      styleInclusions.innerHTML = inclHtml;
-    }
-
-    // 5. Hardware Position Anchors & Colors (Continuous Real Interlocking Chain)
-    const anchor = this.getLetterAnchor(letter);
-    const chainContainer = document.getElementById('svg-chain-container');
-    if (chainContainer) {
-      chainContainer.innerHTML = this.renderChain(anchor.x, isSilver);
-    }
-
-    // All hardware strokes
-    document.querySelectorAll('.svg-metal-element').forEach(el => {
-      if (el.tagName === 'circle' || el.tagName === 'ellipse' || el.tagName === 'line') {
-        el.setAttribute('stroke', metalGrad);
-      } else {
-        el.setAttribute('fill', metalGrad);
-      }
-    });
-
-    // 6. Tassel position & color
-    const tasselGroup = document.getElementById('svg-tassel-group');
-    if (tasselGroup) {
-      const tx = Math.max(20, Math.min(anchor.x - 45, 125));
-      tasselGroup.setAttribute('transform', `translate(${tx}, 82)`);
-    }
-    const tasselBody = document.getElementById('svg-tassel-body');
-    if (tasselBody) {
-      tasselBody.setAttribute('fill', this.state.tasselHex || '#F472B6');
-    }
-
-    // 7. Extra Charm
-    const charmGroup = document.getElementById('svg-charm-group');
-    const charmGraphic = document.getElementById('svg-charm-graphic');
-    const charmObj = this.charms.find(ch => ch.id === this.state.extraCharmId);
-    if (charmGroup) {
-      if (charmObj && charmObj.id !== 'none') {
-        charmGroup.classList.remove('hidden');
-        if (charmGraphic) {
-          if (charmObj.id === 'corazon') {
-            charmGraphic.innerHTML = `
-              <path d="M 15,10 C 15,10 10,2 3,6 C -4,10 0,22 15,32 C 30,22 34,10 27,6 C 20,2 15,10 15,10 Z" fill="${metalGrad}" />
-              <path d="M 15,12 C 15,12 11,5 5,8 C -1,11 2,21 15,29 C 28,21 31,11 25,8 C 19,5 15,12 15,12 Z" fill="#F43F5E" />
-            `;
-          } else if (charmObj.id === 'huesito') {
-            charmGraphic.innerHTML = `
-              <path d="M 5,12 C 2,9 2,5 5,2 C 8,-1 12,-1 15,2 C 18,-1 22,-1 25,2 C 28,5 28,9 25,12 L 25,18 C 28,21 28,25 25,28 C 22,31 18,31 15,28 C 12,31 8,31 5,28 C 2,25 2,21 5,18 Z" fill="${metalGrad}" />
-            `;
-          } else { // estrella
-            charmGraphic.innerHTML = `
-              <polygon points="15,2 19,11 29,12 21,19 24,29 15,23 6,29 9,19 1,12 11,11" fill="${metalGrad}" />
-              <circle cx="15" cy="16" r="3" fill="#FFF" opacity="0.8" />
-            `;
-          }
-        }
-      } else {
-        charmGroup.classList.add('hidden');
-      }
-    }
-
-    // 8. Custom Name overlay
-    const nameEl = document.getElementById('svg-custom-name');
-    if (nameEl) {
-      if (this.state.customName) {
-        nameEl.textContent = this.state.customName.toUpperCase();
-        nameEl.classList.remove('hidden');
-      } else {
-        nameEl.classList.add('hidden');
-      }
-    }
-
-    // 9. Pricing
-    const pricing = this.calculatePricing();
-    const usdEl = document.getElementById('resin-total-usd');
-    const copEl = document.getElementById('resin-total-cop');
-    if (usdEl) usdEl.textContent = `$${pricing.totalUsd.toFixed(2)} USD`;
-    if (copEl) copEl.textContent = `~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs`;
-
-    // 10. WhatsApp Link Pre-generation
-    const waLink = document.getElementById('btn-resin-wa-link');
-    if (waLink) {
-      const waText = this.buildWhatsAppMessage();
-      waLink.href = `https://wa.me/${this.resinWhatsAppNumber}?text=${waText}`;
-    }
-  },
-
-  buildWhatsAppMessage() {
-    const pricing = this.calculatePricing();
-    const charmObj = this.charms.find(ch => ch.id === this.state.extraCharmId);
-    const styleObj = this.styles.find(s => s.id === this.state.styleId) || { name: 'Personalizado' };
-
-    const nameText = this.state.customName ? `"${this.state.customName.toUpperCase()}" (sellado permanente en vinil)` : 'Sin nombre adicional';
-    const charmText = (charmObj && charmObj.id !== 'none') ? `${charmObj.icon} ${charmObj.name} (+$${charmObj.extraUsd.toFixed(2)} USD)` : 'Ninguno';
-    const hardwareText = this.state.hardware === 'gold' ? 'Dorado de Lujo ✨' : 'Plateado Cromado 🔘';
-
-    const clientName = this.state.customerName || localStorage.getItem('customer_name') || '';
-    const clientPhone = this.state.customerPhone || localStorage.getItem('customer_phone') || '';
-    const city = this.state.deliveryCity || 'San Antonio del Táchira';
-    const address = this.state.deliveryAddress || localStorage.getItem('customer_address') || '';
-    const reference = this.state.deliveryReference || '';
-    const payment = this.state.paymentMethod || 'Efectivo en Pesos COP (Contra Entrega / Acordar)';
-    const gps = this.state.gps;
-
-    let deliveryBlock = `📦 *DATOS DE ENTREGA & CONTACTO:*
-👤 *Cliente:* ${clientName || 'Cliente PediGochos'}${clientPhone ? `\n📱 *Teléfono / WhatsApp:* ${clientPhone}` : ''}
-🏙️ *Ciudad / Municipio:* ${city}
-🏠 *Dirección de Entrega:* ${address || 'Por coordinar con el taller'}
-${reference ? `📌 *Punto de Referencia:* ${reference}\n` : ''}💳 *Forma de Pago:* ${payment}`;
-
-    if (gps && gps.mapUrl) {
-      deliveryBlock += `\n📍 *Ubicación GPS Satelital:*
-${gps.mapUrl} (Precisión: ±${gps.accuracy}m)`;
-    }
-
-    const text =
-`✨ *¡NUEVO PEDIDO DE LLAVERO EN RESINA - SHELLIART!* ✨
-━━━━━━━━━━━━━━━━━━━━
-🔤 *Letra / Inicial:* "${this.state.letter}"
-🎨 *Estilo de Resina:* ${styleObj.name}
-🌸 *Color Base:* ${this.state.baseColorName}
-✨ *Inclusiones / Relleno:* ${this.state.inclusions || styleObj.desc || 'Hojas de Oro / Destellos'}
-🪢 *Borla de Gamuza (Tassel):* ${this.state.tasselName}
-🔘 *Herraje & Cadena:* ${hardwareText}
-✍️ *Nombre en Vinil:* ${nameText}
-🧸 *Dije Extra (Charm):* ${charmText}
-🔢 *Cantidad:* ${this.state.quantity} unidad(es)
-━━━━━━━━━━━━━━━━━━━━
-💰 *TOTAL ESTIMADO:* $${pricing.totalUsd.toFixed(2)} USD
-💵 *Equivalente:* ~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs
-━━━━━━━━━━━━━━━━━━━━
-${deliveryBlock}
-━━━━━━━━━━━━━━━━━━━━
-📍 *Enviado desde PediGochos App*
-💬 *Taller ShelliArt WhatsApp: +57 322 794 9751*
-
-¿Para cuándo tendrían disponible este pedido para entrega? ¡Muchas gracias!`;
-
-    return encodeURIComponent(text);
-  },
-
-  handleWhatsAppClick(e) {
+  handleConfirmOrderClick(e) {
     if (e) e.preventDefault();
 
-    // 1. Sync fields from DOM
     const nameInput = document.getElementById('input-resin-customer-name');
     const phoneInput = document.getElementById('input-resin-customer-phone');
     const citySelect = document.getElementById('select-resin-city');
@@ -1079,97 +1475,161 @@ ${deliveryBlock}
     const refInput = document.getElementById('input-resin-reference');
     const paymentSelect = document.getElementById('select-resin-payment');
 
-    const customerName = (nameInput?.value || this.state.customerName || localStorage.getItem('customer_name') || '').trim();
-    const customerPhone = (phoneInput?.value || this.state.customerPhone || localStorage.getItem('customer_phone') || '').trim();
-    const deliveryCity = (citySelect?.value || this.state.deliveryCity || 'San Antonio del Táchira').trim();
-    const deliveryAddress = (addressInput?.value || this.state.deliveryAddress || localStorage.getItem('customer_address') || '').trim();
-    const deliveryReference = (refInput?.value || this.state.deliveryReference || '').trim();
-    const paymentMethod = (paymentSelect?.value || this.state.paymentMethod || 'Efectivo en Pesos COP').trim();
+    const customerName = (nameInput?.value || '').trim();
+    const customerPhone = (phoneInput?.value || '').trim();
+    const deliveryCity = (citySelect?.value || '').trim();
+    const deliveryAddress = (addressInput?.value || '').trim();
+    const deliveryReference = (refInput?.value || '').trim();
+    const paymentMethod = (paymentSelect?.value || '').trim();
+
+    if (!customerName) {
+      alert('⚠️ Por favor ingresa tu Nombre y Apellido.');
+      if (nameInput) nameInput.focus();
+      return;
+    }
+    if (!customerPhone || customerPhone.length < 7) {
+      alert('⚠️ Por favor ingresa tu número de Teléfono / WhatsApp.');
+      if (phoneInput) phoneInput.focus();
+      return;
+    }
+    if (!deliveryCity) {
+      alert('⚠️ Por favor selecciona tu Ciudad o Municipio de entrega.');
+      if (citySelect) citySelect.focus();
+      return;
+    }
+    if (!deliveryAddress) {
+      alert('⚠️ Por favor indica la dirección exacta de entrega.');
+      if (addressInput) addressInput.focus();
+      return;
+    }
 
     this.state.customerName = customerName;
     this.state.customerPhone = customerPhone;
     this.state.deliveryCity = deliveryCity;
     this.state.deliveryAddress = deliveryAddress;
     this.state.deliveryReference = deliveryReference;
-    this.state.paymentMethod = paymentMethod;
+    this.state.paymentMethod = paymentMethod || 'Efectivo en Pesos COP';
 
-    // 2. Validate required delivery fields
-    let firstErrorEl = null;
-
-    if (!customerName) {
-      if (nameInput) {
-        nameInput.classList.add('field-error-highlight');
-        if (!firstErrorEl) firstErrorEl = nameInput;
-      }
-    } else if (nameInput) {
-      nameInput.classList.remove('field-error-highlight');
-    }
-
-    if (!deliveryAddress) {
-      if (addressInput) {
-        addressInput.classList.add('field-error-highlight');
-        if (!firstErrorEl) firstErrorEl = addressInput;
-      }
-    } else if (addressInput) {
-      addressInput.classList.remove('field-error-highlight');
-    }
-
-    if (firstErrorEl) {
-      firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      firstErrorEl.focus();
-      alert('⚠️ Por favor completa tu Nombre y Dirección de Entrega para que el taller ShelliArt y PediGochos puedan coordinar la entrega de tu pedido.');
-      return;
-    }
-
-    // Save to localStorage
-    if (customerName) localStorage.setItem('customer_name', customerName);
-    if (customerPhone) localStorage.setItem('customer_phone', customerPhone);
-    if (deliveryAddress) localStorage.setItem('customer_address', deliveryAddress);
-
-    // 3. Register quote and order silently to backend
+    // Register quote to backend
     this.registerQuoteSilently();
 
-    // 4. Open WhatsApp
+    // Construct and open WhatsApp
     const waText = this.buildWhatsAppMessage();
-    const waUrl = `https://wa.me/${this.resinWhatsAppNumber}?text=${waText}`;
+    const targetWa = this.resinWhatsAppNumber || '573227949751';
+    const waUrl = `https://wa.me/${targetWa}?text=${waText}`;
 
     try {
       const win = window.open(waUrl, '_blank');
-      if (!win) {
-        window.location.href = waUrl;
-      }
-    } catch (err) {
+      if (!win) window.location.href = waUrl;
+    } catch(err) {
       window.location.href = waUrl;
     }
+  },
+
+  buildWhatsAppMessage() {
+    const pricing = this.calculatePricing();
+    const isPhoto = this.state.productType === 'photo';
+
+    let itemBlock = '';
+    if (isPhoto) {
+      itemBlock += `📸 *PRODUCTO:* Llavero Fotográfico Personalizado en Resina\n`;
+      itemBlock += `🔲 *Forma del Molde:* ${this.state.photoShapeName}\n`;
+      itemBlock += `🖼️ *Cara Delantera:* ${this.state.photoFrontUrl ? 'Foto personalizada cargada (Te la adjunto en este chat 📷)' : 'Sin foto previa'}\n`;
+      itemBlock += `✨ *Acabado de Bordes:* ${this.borderEffects.find(b => b.id === this.state.photoBorderEffect)?.name || 'Pan de Oro'}\n`;
+      
+      let backDesc = 'Fondo artesanal de resina con glitter';
+      if (this.state.photoBackType === 'photo') {
+        backDesc = 'Segunda foto personalizada (Te la adjunto en este chat 📷)';
+      } else if (this.state.photoBackType === 'spotify') {
+        backDesc = `Código Spotify: "${this.state.photoBackSpotifySong || 'Canción'}" de ${this.state.photoBackSpotifyArtist || 'Artista'}`;
+      } else if (this.state.photoBackType === 'phrase') {
+        backDesc = `Dedicatoria en Vinil: "${this.state.photoBackPhrase || 'Sin frase'}"`;
+      }
+      itemBlock += `🔄 *Cara Trasera:* ${backDesc}\n`;
+
+      if (this.state.hasNfc) {
+        itemBlock += `📶 *Chip NFC Inteligente:* ACTIVADO ((📶))\n`;
+        itemBlock += `🔗 *Enlace para programar chip:* ${this.state.nfcUrl || 'Por definir con el taller'}\n`;
+      } else {
+        itemBlock += `📶 *Chip NFC:* No solicitado\n`;
+      }
+    } else {
+      itemBlock += `🔤 *PRODUCTO:* Llavero de Letra / Inicial en Resina\n`;
+      itemBlock += `🔤 *Letra:* "${this.state.letter}"\n`;
+      itemBlock += `🎨 *Color Base:* ${this.state.baseColorName}\n`;
+      itemBlock += `✨ *Estilo:* ${this.state.inclusions}\n`;
+      if (this.state.customName) {
+        itemBlock += `✍️ *Nombre en Vinil:* "${this.state.customName.toUpperCase()}"\n`;
+      }
+    }
+
+    itemBlock += `🔘 *Herraje Metálico:* ${this.state.hardware === 'gold' ? 'Dorado de Lujo ✨' : 'Plateado Cromado 🔘'}\n`;
+    itemBlock += `🪢 *Borla de Gamuza (Tassel):* ${this.state.tasselName}\n`;
+    if (this.state.extraCharmId !== 'none') {
+      const charmObj = this.charms.find(c => c.id === this.state.extraCharmId);
+      itemBlock += `🧸 *Dije Extra:* ${charmObj ? charmObj.name : 'Ninguno'}\n`;
+    }
+    itemBlock += `🔢 *Cantidad:* ${this.state.quantity} unidad(es)\n`;
+
+    let deliveryBlock = `📦 *DATOS DE ENTREGA & CONTACTO:*\n`;
+    deliveryBlock += `👤 *Cliente:* ${this.state.customerName}\n`;
+    deliveryBlock += `📱 *Teléfono / WhatsApp:* ${this.state.customerPhone}\n`;
+    deliveryBlock += `🏙️ *Ciudad / Municipio:* ${this.state.deliveryCity}\n`;
+    deliveryBlock += `🏠 *Dirección:* ${this.state.deliveryAddress}\n`;
+    if (this.state.deliveryReference) {
+      deliveryBlock += `📌 *Punto de Referencia:* ${this.state.deliveryReference}\n`;
+    }
+    deliveryBlock += `💳 *Método de Pago:* ${this.state.paymentMethod}\n`;
+
+    if (this.state.gps && this.state.gps.mapUrl) {
+      deliveryBlock += `📍 *Ubicación GPS Satelital:* ${this.state.gps.mapUrl}\n`;
+    }
+
+    const text =
+`✨ *¡NUEVO PEDIDO SHELLIART RESINA - PEDIGOCHOS!* ✨
+━━━━━━━━━━━━━━━━━━━━
+${itemBlock}
+━━━━━━━━━━━━━━━━━━━━
+💰 *TOTAL ESTIMADO:* $${pricing.totalUsd.toFixed(2)} USD
+💵 *Equivalente:* ~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs
+━━━━━━━━━━━━━━━━━━━━
+${deliveryBlock}
+━━━━━━━━━━━━━━━━━━━━
+📍 *Enviado desde PediGochos App*
+💬 *Taller ShelliArt WhatsApp Oficial: ${this.resinWhatsAppDisplay}*
+
+_Hola ShelliArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme la recepción del pedido y fecha estimada de entrega? ¡Gracias!_`;
+
+    return encodeURIComponent(text);
   },
 
   async registerQuoteSilently() {
     try {
       const pricing = this.calculatePricing();
-      const charmObj = this.charms.find(ch => ch.id === this.state.extraCharmId);
-      const styleObj = this.styles.find(s => s.id === this.state.styleId);
-      const clientName = this.state.customerName || localStorage.getItem('customer_name') || 'Cliente WhatsApp';
-      const clientPhone = this.state.customerPhone || localStorage.getItem('customer_phone') || '3227949751';
+      const isPhoto = this.state.productType === 'photo';
 
       const payload = {
-        clientName,
-        clientPhone,
-        productType: 'keychain_letter',
-        productTitle: `Llavero de Inicial "${this.state.letter}" en Resina`,
+        clientName: this.state.customerName || 'Cliente WhatsApp',
+        clientPhone: this.state.customerPhone || '',
+        productType: isPhoto ? 'photo' : 'keychain_letter',
+        productTitle: isPhoto ? `Llavero con Foto & NFC (${this.state.photoShapeName})` : `Llavero de Inicial "${this.state.letter}"`,
+        photoShape: this.state.photoShape,
+        photoShapeName: this.state.photoShapeName,
+        photoFrontUrl: this.state.photoFrontUrl,
+        photoBackType: this.state.photoBackType,
+        photoBackUrl: this.state.photoBackUrl,
+        photoBackSpotify: `${this.state.photoBackSpotifySong} - ${this.state.photoBackSpotifyArtist}`,
+        photoBackPhrase: this.state.photoBackPhrase,
+        hasNfc: this.state.hasNfc,
+        nfcType: this.state.nfcType,
+        nfcUrl: this.state.nfcUrl,
         letter: this.state.letter,
-        resinStyle: this.state.styleId,
-        styleName: styleObj?.name || 'Personalizado',
         baseColor: this.state.baseColorHex,
         baseColorName: this.state.baseColorName,
-        inclusions: styleObj?.name || 'Hojas de Oro + Glitter',
         tasselColor: this.state.tasselName,
-        tasselHex: this.state.tasselHex,
-        hardwareColor: this.state.hardware === 'gold' ? 'Dorado Clásico ✨' : 'Plateado Cromado 🔘',
-        customName: this.state.customName,
-        extraCharm: charmObj ? charmObj.name : 'Ninguno',
+        hardwareColor: this.state.hardware === 'gold' ? 'Dorado' : 'Plateado',
         quantity: this.state.quantity,
         basePriceUsd: pricing.basePrice,
-        extrasPriceUsd: pricing.extraCharmPrice,
         estimatedPriceUsd: pricing.totalUsd,
         deliveryCity: this.state.deliveryCity,
         deliveryAddress: this.state.deliveryAddress,
@@ -1184,44 +1644,59 @@ ${deliveryBlock}
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-    } catch (e) {
-      console.warn('Silent resin quote save err:', e);
+    } catch(e) {
+      console.warn('Silent resin quote save error:', e);
     }
   },
 
   async submitInAppOrder() {
+    const nameInput = document.getElementById('input-resin-customer-name');
+    const phoneInput = document.getElementById('input-resin-customer-phone');
+    const citySelect = document.getElementById('select-resin-city');
+    const addressInput = document.getElementById('input-resin-address');
+
+    const customerName = (nameInput?.value || '').trim();
+    const customerPhone = (phoneInput?.value || '').trim();
+    const deliveryCity = (citySelect?.value || '').trim();
+    const deliveryAddress = (addressInput?.value || '').trim();
+
+    if (!customerName || !customerPhone || !deliveryAddress) {
+      alert('⚠️ Por favor completa tu nombre, teléfono y dirección antes de enviar.');
+      return;
+    }
+
     const pricing = this.calculatePricing();
-    const charmObj = this.charms.find(ch => ch.id === this.state.extraCharmId);
-    const styleObj = this.styles.find(s => s.id === this.state.styleId);
-
-    const clientName = localStorage.getItem('customer_name') || prompt('Por favor ingresa tu Nombre:') || 'Cliente PediGochos';
-    const clientPhone = localStorage.getItem('customer_phone') || prompt('Ingresa tu Teléfono / WhatsApp:') || '';
-
-    if (!clientName.trim()) return;
-
-    localStorage.setItem('customer_name', clientName);
-    if (clientPhone) localStorage.setItem('customer_phone', clientPhone);
+    const isPhoto = this.state.productType === 'photo';
 
     const payload = {
-      clientName,
-      clientPhone,
-      productType: 'keychain_letter',
-      productTitle: `Llavero de Inicial "${this.state.letter}" en Resina`,
+      clientName: customerName,
+      clientPhone: customerPhone,
+      productType: isPhoto ? 'photo' : 'keychain_letter',
+      productTitle: isPhoto ? `Llavero con Foto & NFC (${this.state.photoShapeName})` : `Llavero de Inicial "${this.state.letter}"`,
+      photoShape: this.state.photoShape,
+      photoShapeName: this.state.photoShapeName,
+      photoFrontUrl: this.state.photoFrontUrl,
+      photoBackType: this.state.photoBackType,
+      photoBackUrl: this.state.photoBackUrl,
+      photoBackSpotify: `${this.state.photoBackSpotifySong} - ${this.state.photoBackSpotifyArtist}`,
+      photoBackPhrase: this.state.photoBackPhrase,
+      hasNfc: this.state.hasNfc,
+      nfcType: this.state.nfcType,
+      nfcUrl: this.state.nfcUrl,
       letter: this.state.letter,
-      resinStyle: this.state.styleId,
-      styleName: styleObj?.name || 'Personalizado',
       baseColor: this.state.baseColorHex,
       baseColorName: this.state.baseColorName,
-      inclusions: styleObj?.name || 'Hojas de Oro + Glitter',
       tasselColor: this.state.tasselName,
-      tasselHex: this.state.tasselHex,
-      hardwareColor: this.state.hardware === 'gold' ? 'Dorado Clásico ✨' : 'Plateado Cromado 🔘',
-      customName: this.state.customName,
-      extraCharm: charmObj ? charmObj.name : 'Ninguno',
+      hardwareColor: this.state.hardware === 'gold' ? 'Dorado' : 'Plateado',
       quantity: this.state.quantity,
       basePriceUsd: pricing.basePrice,
-      extrasPriceUsd: pricing.extraCharmPrice,
-      estimatedPriceUsd: pricing.totalUsd
+      estimatedPriceUsd: pricing.totalUsd,
+      deliveryCity: deliveryCity,
+      deliveryAddress: deliveryAddress,
+      deliveryReference: document.getElementById('input-resin-reference')?.value || '',
+      paymentMethod: document.getElementById('select-resin-payment')?.value || '',
+      gps: this.state.gps,
+      gpsMapUrl: this.state.gps?.mapUrl || ''
     };
 
     try {
@@ -1233,6 +1708,7 @@ ${deliveryBlock}
       const data = await res.json();
       if (data.quote) {
         this.activeQuote = data.quote;
+        this.closeDeliveryDrawer();
         this.openChatModal(data.quote);
       }
     } catch(e) {
@@ -1265,12 +1741,10 @@ ${deliveryBlock}
     div.innerHTML = `
       <header class="resin-chat-header">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <button type="button" class="resin-close-btn" onclick="ResinServiceApp.closeChatModal()" style="font-size: 14px;">←</button>
+          <button type="button" class="resin-back-btn" onclick="ResinServiceApp.closeChatModal()">←</button>
           <div>
-            <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #FFF; display: flex; align-items: center; gap: 6px;">
-              <span>💬</span> Chat con ShelliArt Resina
-            </h3>
-            <span style="font-size: 11px; color: #34D399; font-weight: 700;">🟢 En Taller • Cúcuta / Ureña</span>
+            <h3><span>✨</span> Chat con ShelliArt Resina</h3>
+            <span style="font-size: 11px; color: #F472B6; font-weight: 700;">Taller Artesanal • San Antonio & Cúcuta</span>
           </div>
         </div>
         <button type="button" onclick="ResinServiceApp.closeChatModal()" style="background: none; border: none; color: #94A3B8; font-size: 18px; cursor: pointer;">✕</button>
@@ -1279,9 +1753,8 @@ ${deliveryBlock}
       <main class="resin-chat-body">
         <div class="resin-quote-sheet" id="resin-ficha-tecnica"></div>
         <div class="resin-messages-area" id="resin-chat-messages"></div>
-
         <form class="resin-chat-input-bar" onsubmit="event.preventDefault(); ResinServiceApp.sendMessage();">
-          <input type="text" id="resin-chat-input" placeholder="Pregunta sobre combinación de colores, tiempo de secado o entrega...">
+          <input type="text" id="resin-chat-input" placeholder="Escribe al taller de ShelliArt...">
           <button type="submit" class="btn-send-resin-msg" title="Enviar">➤</button>
         </form>
       </main>
@@ -1295,16 +1768,15 @@ ${deliveryBlock}
 
     el.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-        <strong style="color: #FFF; font-size: 13.5px;">Orden #${quote.id}: Llavero Letra "${quote.letter}"</strong>
-        <span style="background: rgba(244, 114, 182, 0.2); color: #F472B6; padding: 2px 8px; border-radius: 8px; font-weight: 800; font-size: 10.5px;">${quote.status}</span>
+        <strong style="color: #FFF; font-size: 14px;">Pedido #${quote.id.slice(-6)}: ${quote.productTitle}</strong>
+        <span style="background: rgba(244, 114, 182, 0.2); color: #FBCFE8; padding: 2px 8px; border-radius: 10px; font-size: 10.5px; font-weight: 800;">${quote.status || 'Solicitado'}</span>
       </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; color: #CBD5E1;">
-        <div>Color: <strong style="color: #FFF;">${quote.baseColorName}</strong></div>
-        <div>Borla: <strong style="color: #FFF;">${quote.tasselColor}</strong></div>
-        <div>Herraje: <strong style="color: #FFF;">${quote.hardwareColor}</strong></div>
-        <div>Total: <strong style="color: #F472B6;">$${quote.agreedPriceUsd || quote.estimatedPriceUsd} USD</strong></div>
+      <div style="font-size: 11.5px; color: #CBD5E1; line-height: 1.45;">
+        <span>Cliente: <strong>${quote.clientName}</strong> (${quote.clientPhone || 'Sin teléfono'})</span><br>
+        ${quote.photoShape ? `<span>Molde: <strong>${quote.photoShapeName || quote.photoShape}</strong></span><br>` : ''}
+        ${quote.hasNfc ? `<span>Chip NFC: <strong>${quote.nfcType} (${quote.nfcUrl || 'Enlace pendiente'})</strong></span><br>` : ''}
+        <span>Total: <strong style="color: #38BDF8;">$${quote.agreedPriceUsd || quote.estimatedPriceUsd || 5.0} USD</strong></span>
       </div>
-      ${quote.customName ? `<div style="font-size: 11px; color: #FBCFE8; margin-top: 4px;">Nombre sellado: <strong>"${quote.customName}"</strong></div>` : ''}
     `;
   },
 
@@ -1321,7 +1793,7 @@ ${deliveryBlock}
       });
       area.scrollTop = area.scrollHeight;
     } catch(e) {
-      console.warn('Could not load chat messages:', e);
+      console.warn('Could not load resin chat messages:', e);
     }
   },
 
@@ -1334,9 +1806,8 @@ ${deliveryBlock}
     div.className = `resin-msg-bubble ${isIncoming ? 'resin-msg-incoming' : 'resin-msg-outgoing'}`;
     div.innerHTML = `
       <div>${msg.text}</div>
-      <div style="font-size: 9.5px; opacity: 0.6; margin-top: 4px; text-align: right;">
-        <span>${isIncoming ? '✨ ShelliArt' : '👤 Tú'}</span> •
-        <span>${new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;">
+        ${new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
       </div>
     `;
     area.appendChild(div);
@@ -1369,7 +1840,6 @@ ${deliveryBlock}
       }
     } catch(e) {
       console.error('Error sending message:', e);
-      alert('Error enviando mensaje.');
     }
   }
 };

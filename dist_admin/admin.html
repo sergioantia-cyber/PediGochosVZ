@@ -3166,29 +3166,109 @@
         <button type="button" onclick="AdminApp.closeResinAdminModal()" style="background: rgba(255,255,255,0.1); border: none; color: #94A3B8; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer;">✕</button>
       </div>
 
-      <!-- KPI Summary Cards -->
-      <div style="padding: 16px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: rgba(15, 19, 31, 0.95); border-bottom: 1px solid rgba(255,255,255,0.08);">
-        <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
-          <span style="font-size: 10px; color: #94A3B8; font-weight: 800; text-transform: uppercase;">TOTAL ORDENES</span>
-          <div id="admin-resin-kpi-total" style="font-size: 18px; font-weight: 900; color: #FFF; margin-top: 2px;">0</div>
+      <!-- Navigation Tabs (Pedidos vs Configuración de Precios & Fotos) -->
+      <div style="display: flex; gap: 4px; padding: 8px 16px; background: #131A2B; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" id="tab-btn-resin-orders" onclick="AdminApp.switchResinAdminTab('orders')" style="background: rgba(244, 114, 182, 0.2); border: 1px solid #F472B6; color: #FFF; padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span>📋</span> Pedidos & Solicitudes
+        </button>
+        <button type="button" id="tab-btn-resin-settings" onclick="AdminApp.switchResinAdminTab('settings')" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #94A3B8; padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span>⚙️</span> Parámetros, Precios & Fotos
+        </button>
+      </div>
+
+      <!-- TAB 1: Pedidos & Solicitudes -->
+      <div id="admin-resin-tab-orders" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+        <!-- KPI Summary Cards -->
+        <div style="padding: 14px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: rgba(15, 19, 31, 0.95); border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
+            <span style="font-size: 10px; color: #94A3B8; font-weight: 800; text-transform: uppercase;">TOTAL ORDENES</span>
+            <div id="admin-resin-kpi-total" style="font-size: 18px; font-weight: 900; color: #FFF; margin-top: 2px;">0</div>
+          </div>
+          <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
+            <span style="font-size: 10px; color: #FCD34D; font-weight: 800; text-transform: uppercase;">EN CONVERSACIÓN</span>
+            <div id="admin-resin-kpi-chat" style="font-size: 18px; font-weight: 900; color: #F59E0B; margin-top: 2px;">0</div>
+          </div>
+          <div style="background: rgba(244, 114, 182, 0.15); border: 1px solid rgba(244, 114, 182, 0.4); border-radius: 12px; padding: 10px; text-align: center;">
+            <span style="font-size: 10px; color: #FBCFE8; font-weight: 800; text-transform: uppercase;">EN CURADO UV</span>
+            <div id="admin-resin-kpi-curing" style="font-size: 18px; font-weight: 900; color: #F472B6; margin-top: 2px;">0</div>
+          </div>
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
+            <span style="font-size: 10px; color: #6EE7B7; font-weight: 800; text-transform: uppercase;">ENTREGADOS</span>
+            <div id="admin-resin-kpi-done" style="font-size: 18px; font-weight: 900; color: #10B981; margin-top: 2px;">0</div>
+          </div>
         </div>
-        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
-          <span style="font-size: 10px; color: #FCD34D; font-weight: 800; text-transform: uppercase;">EN CONVERSACIÓN</span>
-          <div id="admin-resin-kpi-chat" style="font-size: 18px; font-weight: 900; color: #F59E0B; margin-top: 2px;">0</div>
-        </div>
-        <div style="background: rgba(244, 114, 182, 0.15); border: 1px solid rgba(244, 114, 182, 0.4); border-radius: 12px; padding: 10px; text-align: center;">
-          <span style="font-size: 10px; color: #FBCFE8; font-weight: 800; text-transform: uppercase;">EN CURADO UV</span>
-          <div id="admin-resin-kpi-curing" style="font-size: 18px; font-weight: 900; color: #F472B6; margin-top: 2px;">0</div>
-        </div>
-        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px; text-align: center;">
-          <span style="font-size: 10px; color: #6EE7B7; font-weight: 800; text-transform: uppercase;">ENTREGADOS</span>
-          <div id="admin-resin-kpi-done" style="font-size: 18px; font-weight: 900; color: #10B981; margin-top: 2px;">0</div>
+
+        <!-- Feed / List -->
+        <div id="admin-resin-quotes-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;">
+          <div style="text-align: center; color: #94A3B8; padding: 30px;">⏳ Cargando pedidos de resina...</div>
         </div>
       </div>
 
-      <!-- Feed / List -->
-      <div id="admin-resin-quotes-list" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;">
-        <div style="text-align: center; color: #94A3B8; padding: 30px;">⏳ Cargando pedidos de resina...</div>
+      <!-- TAB 2: Parámetros, Precios & Fotos de Muestra -->
+      <div id="admin-resin-tab-settings" style="display: none; flex-direction: column; flex: 1; overflow-y: auto; padding: 18px 20px; gap: 16px;">
+        <!-- Configuración de Tarifas -->
+        <div style="background: #182032; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <strong style="color: #F472B6; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+              <span>💎</span> Tarifas Base & Recargos de ShelliArt Resina
+            </strong>
+            <button type="button" onclick="AdminApp.saveResinSettings()" style="background: #10B981; color: #FFF; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span>💾</span> Guardar Parámetros ShelliArt
+            </button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px; font-weight: 700;">🔤 Precio Base Llavero de Letra ($ USD)</label>
+              <input type="number" step="0.25" id="admin-resin-setting-letter" placeholder="4.50" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px; font-weight: 700;">📸 Precio Base Llavero con Foto ($ USD)</label>
+              <input type="number" step="0.25" id="admin-resin-setting-photo" placeholder="5.00" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px; font-weight: 700;">📶 Recargo Chip NFC Inteligente ($ USD)</label>
+              <input type="number" step="0.25" id="admin-resin-setting-nfc" placeholder="2.00" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px; font-weight: 700;">🧸 Recargo Dije / Segunda Foto ($ USD)</label>
+              <input type="number" step="0.25" id="admin-resin-setting-charm" placeholder="1.00" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px; font-weight: 700;">📱 WhatsApp Oficial de ShelliArt</label>
+              <input type="text" id="admin-resin-setting-phone" placeholder="573227949751" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Galería de Fotos de Muestra -->
+        <div style="background: #182032; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px;">
+          <strong style="color: #F472B6; font-size: 14px; display: block; margin-bottom: 4px;">
+            🖼️ Galería de Fotos de Muestra para Clientes
+          </strong>
+          <p style="font-size: 11.5px; color: #94A3B8; margin: 0 0 12px 0;">
+            Estas fotos se muestran en la app principal para que los clientes puedan probar rápidamente cómo queda el llavero.
+          </p>
+
+          <div id="admin-resin-sample-photos-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 12px;">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- Add Sample Photo Form -->
+          <div style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(244, 114, 182, 0.35); border-radius: 12px; padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1; min-width: 140px;">
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 3px;">Título de Muestra</label>
+              <input type="text" id="admin-resin-new-sample-title" placeholder="Ej. Pareja Romántica" style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 6px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
+            </div>
+            <div style="flex: 2; min-width: 200px;">
+              <label style="font-size: 11px; color: #94A3B8; display: block; margin-bottom: 3px;">URL de la Imagen</label>
+              <input type="url" id="admin-resin-new-sample-url" placeholder="https://... o /images/..." style="width: 100%; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 6px 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
+            </div>
+            <button type="button" onclick="AdminApp.addResinSamplePhoto()" style="background: #3B82F6; color: #FFF; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer;">
+              ➕ Agregar Muestra
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -3612,12 +3692,12 @@
 
   <script src="/js/sound.js?v=226"></script>
   <script src="/js/qrcode.min.js?v=226"></script>
-  <script src="/js/admin.js?v=229"></script>
+  <script src="/js/admin.js?v=244"></script>
   <script src="/js/menu-builder.js?v=226"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=226').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=244').then((reg) => {
           reg.update();
         }).catch(() => {});
       });

@@ -3797,6 +3797,62 @@ if (!fs.existsSync(RESIN_CATALOG_FILE)) {
   writeResinCatalog(readResinCatalog());
 }
 
+// ShelliArt Global Settings (Prices, NFC surcharge, WhatsApp, Samples)
+const RESIN_SETTINGS_FILE = path.join(__dirname, 'resin_settings.json');
+
+function readResinSettings() {
+  try {
+    if (fs.existsSync(RESIN_SETTINGS_FILE)) {
+      return JSON.parse(fs.readFileSync(RESIN_SETTINGS_FILE, 'utf8'));
+    }
+  } catch(e) {
+    console.warn('Error reading resin_settings.json:', e.message);
+  }
+  return {
+    letterBasePriceUsd: 4.5,
+    photoBasePriceUsd: 5.0,
+    nfcExtraUsd: 2.0,
+    charmExtraUsd: 1.0,
+    resinWhatsApp: '573227949751',
+    resinWhatsAppDisplay: '+57 322 794 9751',
+    samplePhotos: [
+      { id: 'sample-1', title: 'Pareja Romántica', url: '/images/services/shelliart_banner.jpg' },
+      { id: 'sample-2', title: 'Mascota Querida', url: '/images/services/llavero_3d_pedigochos.jpg' }
+    ]
+  };
+}
+
+function writeResinSettings(data) {
+  try {
+    fs.writeFileSync(RESIN_SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing resin_settings.json:', e);
+  }
+}
+
+if (!fs.existsSync(RESIN_SETTINGS_FILE)) {
+  writeResinSettings(readResinSettings());
+}
+
+// GET resin settings
+app.get('/api/resin-services/settings', (req, res) => {
+  res.json(readResinSettings());
+});
+
+// PUT / UPDATE resin settings
+app.put('/api/resin-services/settings', (req, res) => {
+  const current = readResinSettings();
+  const updated = { ...current, ...(req.body || {}) };
+  writeResinSettings(updated);
+
+  const payload = JSON.stringify({ type: 'RESIN_SETTINGS_UPDATE', settings: updated });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(payload);
+  });
+
+  res.json({ success: true, settings: updated });
+});
+
 // GET resin catalog
 app.get('/api/resin-services/catalog', (req, res) => {
   res.json(readResinCatalog());
@@ -3835,14 +3891,15 @@ app.get('/api/resin-services/quotes/:id', (req, res) => {
 // POST new resin quote / order
 app.post('/api/resin-services/quotes', (req, res) => {
   const body = req.body || {};
-  if (!body.letter || !body.clientName) {
-    return res.status(400).json({ error: 'Datos incompletos de letra o cliente' });
+  if (!body.clientName) {
+    return res.status(400).json({ error: 'Por favor ingresa tu nombre' });
   }
 
   const quotes = readResinQuotes();
   const newId = 'RES-' + Math.floor(8000 + Math.random() * 2000);
   const chatId = 'chat-' + newId.toLowerCase();
 
+  const isPhoto = body.productType === 'photo';
   const newQuote = {
     id: newId,
     chatId: chatId,
@@ -3857,10 +3914,20 @@ app.post('/api/resin-services/quotes', (req, res) => {
     gps: body.gps || null,
     gpsMapUrl: body.gpsMapUrl || (body.gps?.mapUrl || ''),
     productType: body.productType || 'keychain_letter',
-    productTitle: body.productTitle || `Llavero de Inicial "${body.letter}"`,
-    letter: (body.letter || 'A').toUpperCase(),
+    productTitle: body.productTitle || (isPhoto ? `Llavero con Foto & NFC (${body.photoShapeName || body.photoShape || 'Personalizado'})` : `Llavero de Inicial "${body.letter || 'A'}"`),
+    photoShape: body.photoShape || '',
+    photoShapeName: body.photoShapeName || '',
+    photoFrontUrl: body.photoFrontUrl || '',
+    photoBackType: body.photoBackType || '',
+    photoBackUrl: body.photoBackUrl || '',
+    photoBackSpotify: body.photoBackSpotify || '',
+    photoBackPhrase: body.photoBackPhrase || '',
+    hasNfc: !!body.hasNfc,
+    nfcType: body.nfcType || '',
+    nfcUrl: body.nfcUrl || '',
+    letter: (body.letter || (isPhoto ? 'FOTO' : 'A')).toUpperCase(),
     resinStyle: body.resinStyle || 'bicolor',
-    styleName: body.styleName || 'Bicolor con Glitter y Hoja de Oro',
+    styleName: body.styleName || (isPhoto ? 'Encapsulado Fotográfico en Resina' : 'Bicolor con Glitter y Hoja de Oro'),
     baseColor: body.baseColor || '#F472B6',
     baseColorName: body.baseColorName || 'Rosa Pastel',
     secondaryColor: body.secondaryColor || 'transparente',

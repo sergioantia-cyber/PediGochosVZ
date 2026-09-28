@@ -60,18 +60,18 @@ const SPECIALIZED_SERVICES = [
     badgeBg: 'rgba(236, 72, 153, 0.15)',
     badgeBorder: 'rgba(236, 72, 153, 0.4)',
     location: 'San Antonio / Estudio ShelliArt',
-    description: 'Artesanías en resina epóxica, recuerdos de eventos, llaveros A-Z con pan de oro 24K y borlas',
+    description: 'Artesanías en resina epóxica, llaveros personalizados con fotos y chip NFC, iniciales A-Z con pan de oro 24K y borlas',
     inventorySummary: '✨ Fichas de Diseño & Modelos',
-    inventoryBtnText: 'Gestionar Fichas & Catálogo',
-    inventoryAction: 'AdminApp.openResinAdminModal()',
+    inventoryBtnText: 'Gestionar Parámetros & Fotos',
+    inventoryAction: "AdminApp.openResinAdminModal('settings')",
     infoSummary: '📱 WhatsApp: +57 322 794 9751',
     infoBtnText: 'Modificar Info',
-    infoAction: 'AdminApp.openResinAdminModal()',
+    infoAction: "AdminApp.openResinAdminModal('settings')",
     statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
     ordersSummary: '📋 Fichas de Clientes',
     actionButtons: [
-      { text: '✨ Fichas', action: 'AdminApp.openResinAdminModal()', bg: '#06B6D4', color: '#FFF', title: 'Ver fichas de resina' },
-      { text: '🖼️ Catálogo', action: 'AdminApp.openResinAdminModal()', bg: '#10B981', color: '#FFF', title: 'Ver catálogo de ShelliArt' }
+      { text: '📋 Pedidos', action: "AdminApp.openResinAdminModal('orders')", bg: '#06B6D4', color: '#FFF', title: 'Ver pedidos de resina' },
+      { text: '⚙️ Precios & Fotos', action: "AdminApp.openResinAdminModal('settings')", bg: '#10B981', color: '#FFF', title: 'Modificar tarifas, precios y fotos' }
     ]
   },
   {
@@ -8361,7 +8361,7 @@ class AdminController {
   // ==========================================
   // ShelliArt Resina Admin Control
   // ==========================================
-  async openResinAdminModal() {
+  async openResinAdminModal(initialTab = 'orders') {
     const modal = document.getElementById('admin-resin-modal');
     if (modal) {
       modal.style.display = 'flex';
@@ -8371,7 +8371,9 @@ class AdminController {
     }
     const badge = document.getElementById('admin-resin-badge');
     if (badge) badge.style.display = 'none';
+    this.switchResinAdminTab(initialTab);
     await this.loadResinQuotes();
+    await this.loadResinSettings();
   }
 
   closeResinAdminModal() {
@@ -8381,6 +8383,42 @@ class AdminController {
       modal.classList.add('hidden');
       modal.classList.remove('active');
       this.checkModalOpenState();
+    }
+  }
+
+  switchResinAdminTab(tab = 'orders') {
+    const btnOrders = document.getElementById('tab-btn-resin-orders');
+    const btnSettings = document.getElementById('tab-btn-resin-settings');
+    const tabOrders = document.getElementById('admin-resin-tab-orders');
+    const tabSettings = document.getElementById('admin-resin-tab-settings');
+
+    if (tab === 'settings') {
+      if (btnOrders) {
+        btnOrders.style.background = 'transparent';
+        btnOrders.style.borderColor = 'rgba(255,255,255,0.15)';
+        btnOrders.style.color = '#94A3B8';
+      }
+      if (btnSettings) {
+        btnSettings.style.background = 'rgba(244, 114, 182, 0.2)';
+        btnSettings.style.borderColor = '#F472B6';
+        btnSettings.style.color = '#FFF';
+      }
+      if (tabOrders) tabOrders.style.display = 'none';
+      if (tabSettings) tabSettings.style.display = 'flex';
+      this.loadResinSettings();
+    } else {
+      if (btnOrders) {
+        btnOrders.style.background = 'rgba(244, 114, 182, 0.2)';
+        btnOrders.style.borderColor = '#F472B6';
+        btnOrders.style.color = '#FFF';
+      }
+      if (btnSettings) {
+        btnSettings.style.background = 'transparent';
+        btnSettings.style.borderColor = 'rgba(255,255,255,0.15)';
+        btnSettings.style.color = '#94A3B8';
+      }
+      if (tabOrders) tabOrders.style.display = 'flex';
+      if (tabSettings) tabSettings.style.display = 'none';
     }
   }
 
@@ -8398,6 +8436,136 @@ class AdminController {
     if (modal && modal.style.display === 'flex') {
       this.loadResinQuotes();
     }
+  }
+
+  async loadResinSettings() {
+    try {
+      const res = await fetch('/api/resin-services/settings');
+      if (res.ok) {
+        const settings = await res.json();
+        this.resinSettings = settings;
+
+        const letterInp = document.getElementById('admin-resin-setting-letter');
+        const photoInp = document.getElementById('admin-resin-setting-photo');
+        const nfcInp = document.getElementById('admin-resin-setting-nfc');
+        const charmInp = document.getElementById('admin-resin-setting-charm');
+        const phoneInp = document.getElementById('admin-resin-setting-phone');
+
+        if (letterInp) letterInp.value = settings.letterBasePriceUsd ?? 4.5;
+        if (photoInp) photoInp.value = settings.photoBasePriceUsd ?? 5.0;
+        if (nfcInp) nfcInp.value = settings.nfcExtraUsd ?? 2.0;
+        if (charmInp) charmInp.value = settings.charmExtraUsd ?? 1.0;
+        if (phoneInp) phoneInp.value = settings.resinWhatsApp || '573227949751';
+
+        this.renderResinSamplePhotos(settings.samplePhotos || []);
+      }
+    } catch (e) {
+      console.warn('Could not load resin settings:', e);
+    }
+  }
+
+  renderResinSamplePhotos(samples = []) {
+    const listEl = document.getElementById('admin-resin-sample-photos-list');
+    if (!listEl) return;
+
+    if (!samples.length) {
+      listEl.innerHTML = `
+        <div style="grid-column: 1 / -1; color: #94A3B8; font-size: 12px; text-align: center; padding: 14px;">
+          No hay fotos de muestra registradas aún.
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = samples.map(sp => `
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 10px; display: flex; align-items: center; gap: 10px;">
+        <img src="${sp.url}" alt="${sp.title}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);" onerror="this.src='/images/services/shelliart_logo.svg'">
+        <div style="flex: 1; min-width: 0;">
+          <strong style="color: #FFF; font-size: 12px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${sp.title}</strong>
+          <span style="color: #94A3B8; font-size: 10px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${sp.url}</span>
+        </div>
+        <button type="button" onclick="AdminApp.deleteResinSamplePhoto('${sp.id}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #EF4444; color: #FCA5A5; width: 28px; height: 28px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Eliminar foto">✕</button>
+      </div>
+    `).join('');
+  }
+
+  async saveResinSettings() {
+    try {
+      const letterVal = parseFloat(document.getElementById('admin-resin-setting-letter')?.value) || 4.5;
+      const photoVal = parseFloat(document.getElementById('admin-resin-setting-photo')?.value) || 5.0;
+      const nfcVal = parseFloat(document.getElementById('admin-resin-setting-nfc')?.value) || 2.0;
+      const charmVal = parseFloat(document.getElementById('admin-resin-setting-charm')?.value) || 1.0;
+      const phoneVal = (document.getElementById('admin-resin-setting-phone')?.value || '573227949751').trim();
+
+      const payload = {
+        ...(this.resinSettings || {}),
+        letterBasePriceUsd: letterVal,
+        photoBasePriceUsd: photoVal,
+        nfcExtraUsd: nfcVal,
+        charmExtraUsd: charmVal,
+        resinWhatsApp: phoneVal,
+        resinWhatsAppDisplay: phoneVal.startsWith('57') ? `+57 ${phoneVal.slice(2, 5)} ${phoneVal.slice(5, 8)} ${phoneVal.slice(8)}` : phoneVal,
+        samplePhotos: this.resinSettings?.samplePhotos || []
+      };
+
+      const res = await fetch('/api/resin-services/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        this.resinSettings = data.settings;
+        alert('✅ ¡Configuración de ShelliArt guardada exitosamente!');
+      } else {
+        alert('⚠️ No se pudo guardar la configuración.');
+      }
+    } catch(e) {
+      console.error('Error saving resin settings:', e);
+      alert('Error de conexión al guardar configuración.');
+    }
+  }
+
+  async addResinSamplePhoto() {
+    const titleInp = document.getElementById('admin-resin-new-sample-title');
+    const urlInp = document.getElementById('admin-resin-new-sample-url');
+    const title = (titleInp?.value || '').trim();
+    const url = (urlInp?.value || '').trim();
+
+    if (!title || !url) {
+      alert('⚠️ Por favor ingresa el título y la URL de la imagen.');
+      return;
+    }
+
+    if (!this.resinSettings) {
+      this.resinSettings = { samplePhotos: [] };
+    }
+    if (!this.resinSettings.samplePhotos) {
+      this.resinSettings.samplePhotos = [];
+    }
+
+    const newSample = {
+      id: 'sample-' + Date.now(),
+      title,
+      url
+    };
+
+    this.resinSettings.samplePhotos.push(newSample);
+    await this.saveResinSettings();
+    this.renderResinSamplePhotos(this.resinSettings.samplePhotos);
+
+    if (titleInp) titleInp.value = '';
+    if (urlInp) urlInp.value = '';
+  }
+
+  async deleteResinSamplePhoto(sampleId) {
+    if (!confirm('¿Deseas eliminar esta foto de muestra del catálogo de ShelliArt?')) return;
+    if (!this.resinSettings || !this.resinSettings.samplePhotos) return;
+
+    this.resinSettings.samplePhotos = this.resinSettings.samplePhotos.filter(s => s.id !== sampleId);
+    await this.saveResinSettings();
+    this.renderResinSamplePhotos(this.resinSettings.samplePhotos);
   }
 
   async loadResinQuotes() {
@@ -8439,7 +8607,10 @@ class AdminController {
       return;
     }
 
+    const targetPhone = this.resinSettings?.resinWhatsApp || '573227949751';
+
     listEl.innerHTML = quotes.map(q => {
+      const isPhoto = q.productType === 'photo';
       const statusColors = {
         'Solicitado': '#F59E0B',
         'En Conversación': '#3B82F6',
@@ -8450,17 +8621,46 @@ class AdminController {
         'Entregado': '#059669'
       };
       const color = statusColors[q.status] || '#94A3B8';
-      const price = q.agreedPriceUsd || q.estimatedPriceUsd || 4.5;
+      const price = q.agreedPriceUsd || q.estimatedPriceUsd || (isPhoto ? 5.0 : 4.5);
+
+      const avatarMarkup = isPhoto
+        ? (q.photoFrontUrl
+            ? `<div style="width: 48px; height: 48px; border-radius: 12px; overflow: hidden; border: 2px solid #F472B6; box-shadow: 0 4px 10px rgba(0,0,0,0.4);"><img src="${q.photoFrontUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Foto"></div>`
+            : `<div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #EC4899, #8B5CF6); border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.4);">📸</div>`)
+        : `<div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, ${q.baseColor || '#F472B6'} 0%, rgba(255,255,255,0.2) 100%); border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.4);">${q.letter || 'A'}</div>`;
+
+      const titleMarkup = isPhoto
+        ? `Orden #${q.id.slice(-6)}: Llavero Foto & NFC (${q.photoShapeName || q.photoShape || 'Molde'}) - ${q.clientName || 'Cliente'}`
+        : `Orden #${q.id.slice(-6)}: Inicial "${q.letter || 'A'}" - ${q.clientName || 'Cliente'}`;
+
+      const detailsMarkup = isPhoto ? `
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">MOLDE & FORMA:</span><strong style="color: #FFF;">${q.photoShapeName || q.photoShape || 'Polaroid'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">CARA TRASERA:</span><strong style="color: #F472B6;">${q.photoBackType === 'photo' ? 'Segunda Foto' : q.photoBackType === 'spotify' ? `Spotify: ${q.photoBackSpotify || 'Canción'}` : q.photoBackType === 'phrase' ? `Frase: "${q.photoBackPhrase || ''}"` : 'Glitter / Oro'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">CHIP NFC INTELIGENTE:</span>${q.hasNfc ? `<strong style="color: #10B981;">✅ Activo (${q.nfcType || 'NFC'})</strong> ${q.nfcUrl ? `<a href="${q.nfcUrl}" target="_blank" style="color: #38BDF8; font-size: 10.5px; text-decoration: underline; margin-left: 4px;">Enlace</a>` : ''}` : '<span style="color: #94A3B8;">Sin Chip</span>'}</div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">HERRAJE & BORLA:</span><strong style="color: #38BDF8;">${q.hardwareColor || 'Dorado'} • ${q.tasselColor || 'Borla'}</strong></div>
+      ` : `
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">COLOR & ESTILO:</span><strong style="color: #FFF;">${q.baseColorName || 'Rosa'} • ${q.styleName || 'Bicolor'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">BORLA & HERRAJE:</span><strong style="color: #F472B6;">${q.tasselColor || 'Borla'} • ${q.hardwareColor || 'Dorado'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">NOMBRE SELLADO:</span><strong style="color: #FFF;">${q.customName ? `"${q.customName}"` : 'Sin nombre'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">DIJE EXTRA:</span><strong style="color: #38BDF8;">${q.extraCharm || 'Ninguno'}</strong></div>
+      `;
+
+      let waDetails = isPhoto
+        ? `📸 Molde: ${q.photoShapeName || q.photoShape}\n🔄 Reverso: ${q.photoBackType || 'Normal'}\n📶 NFC: ${q.hasNfc ? (q.nfcUrl || 'Sí') : 'No'}\n🪢 Borla: ${q.tasselColor || 'Borla'} - Herraje: ${q.hardwareColor || 'Dorado'}`
+        : `🔤 Inicial: "${q.letter}"\n🎨 Estilo: ${q.styleName} - Color: ${q.baseColorName}\n🪢 Borla: ${q.tasselColor} - Herraje: ${q.hardwareColor}\n✍️ Nombre: ${q.customName || 'Sin nombre'}`;
+
+      const waMsg = `✨ *PEDIDO #${q.id} SHELLIART RESINA*\n👤 Cliente: ${q.clientName} (${q.clientPhone || 'Sin tel'})\n${waDetails}\n💰 Total: $${price} USD`;
+      const chatInspectorTitle = isPhoto
+        ? `Llavero Foto (${q.photoShapeName || 'Personalizado'}) - ${q.clientName}`
+        : `Llavero Inicial ${q.letter} - ${q.clientName}`;
 
       return `
         <div style="background: #181F30; border: 1.5px solid rgba(244, 114, 182, 0.25); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, ${q.baseColor || '#F472B6'} 0%, rgba(255,255,255,0.2) 100%); border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.4);">
-                ${q.letter || 'A'}
-              </div>
+              ${avatarMarkup}
               <div>
-                <strong style="color: #FFF; font-size: 14px;">Orden #${q.id.slice(-6)}: Inicial "${q.letter || 'A'}" - ${q.clientName || 'Cliente'}</strong>
+                <strong style="color: #FFF; font-size: 14px;">${titleMarkup}</strong>
                 <div style="font-size: 11.5px; color: #94A3B8;">📞 ${q.clientPhone || 'Sin teléfono'} • <span style="color: #F472B6; font-weight: 700;">$${price} USD</span></div>
               </div>
             </div>
@@ -8470,17 +8670,14 @@ class AdminController {
           </div>
 
           <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-size: 11.5px;">
-            <div><span style="color: #94A3B8; font-size: 10px; display: block;">COLOR & ESTILO:</span><strong style="color: #FFF;">${q.baseColorName || 'Rosa'} • ${q.styleName || 'Bicolor'}</strong></div>
-            <div><span style="color: #94A3B8; font-size: 10px; display: block;">BORLA & HERRAJE:</span><strong style="color: #F472B6;">${q.tasselColor || 'Borla'} • ${q.hardwareColor || 'Dorado'}</strong></div>
-            <div><span style="color: #94A3B8; font-size: 10px; display: block;">NOMBRE SELLADO:</span><strong style="color: #FFF;">${q.customName ? `"${q.customName}"` : 'Sin nombre'}</strong></div>
-            <div><span style="color: #94A3B8; font-size: 10px; display: block;">DIJE EXTRA:</span><strong style="color: #38BDF8;">${q.extraCharm || 'Ninguno'}</strong></div>
+            ${detailsMarkup}
           </div>
 
           <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; margin-top: 4px;">
-            <a href="https://wa.me/573227949751?text=${encodeURIComponent(`✨ *PEDIDO #${q.id} SHELLIART RESINA*\n👤 Cliente: ${q.clientName} (${q.clientPhone})\n🔤 Inicial: "${q.letter}"\n🎨 Estilo: ${q.styleName} - Color: ${q.baseColorName}\n🪢 Borla: ${q.tasselColor} - Herraje: ${q.hardwareColor}\n✍️ Nombre: ${q.customName || 'Sin nombre'}\n💰 Total: $${q.agreedPriceUsd || q.estimatedPriceUsd || 4.5} USD`)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 4px;">
-              <span>🟢</span> WhatsApp (322 794 9751)
+            <a href="https://wa.me/${targetPhone}?text=${encodeURIComponent(waMsg)}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+              <span>🟢</span> WhatsApp (${targetPhone})
             </a>
-            <button type="button" onclick="AdminApp.openQuoteChatInspector('resin', '${q.id}', 'Llavero Inicial ${q.letter} - ${q.clientName}')" style="background: rgba(244, 114, 182, 0.15); border: 1px solid #F472B6; color: #FBCFE8; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+            <button type="button" onclick="AdminApp.openQuoteChatInspector('resin', '${q.id}', '${chatInspectorTitle}')" style="background: rgba(244, 114, 182, 0.15); border: 1px solid #F472B6; color: #FBCFE8; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
               💬 Chatear
             </button>
             <button type="button" onclick="AdminApp.promptResinPrice('${q.id}')" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #A855F7; color: #E9D5FF; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">
