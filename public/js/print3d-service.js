@@ -313,11 +313,11 @@ const Print3DServiceApp = {
             </div>
             <div class="print3d-card-footer">
               <div class="print3d-card-price">
-                <span class="print3d-price-label">Precio base</span>
-                <span class="print3d-price-val">$${p.basePriceUsd.toFixed(2)} USD</span>
+                <span class="print3d-price-label">Modalidad</span>
+                <span class="print3d-price-val" style="color: #F59E0B; font-size: 12.5px; font-weight: 800;">Bajo Cotización</span>
               </div>
               <button type="button" class="btn-open-3d-detail" onclick="event.stopPropagation(); Print3DServiceApp.openDetail('${p.id}')">
-                Personalizar ➔
+                Cotizar en 3D ➔
               </button>
             </div>
           </div>
@@ -399,24 +399,16 @@ const Print3DServiceApp = {
     const curDimY = (p.baseDimensions.y * scaleRatio).toFixed(1);
     const curDimZ = (p.baseDimensions.z * scaleRatio).toFixed(1);
 
-    // Dynamic price calculation
-    const pricing = this.calculatePricing();
-    const copRate = (window.systemSettings && window.systemSettings.cop_rate) ? window.systemSettings.cop_rate : 4100;
-    const vesRate = (window.systemSettings && window.systemSettings.ves_rate) ? window.systemSettings.ves_rate : 135;
-
-    const totalCop = Math.round(pricing.totalUsd * copRate);
-    const totalVes = Math.round(pricing.totalUsd * vesRate);
-
-    // WhatsApp prefilled message
+    // Dynamic price / quote WhatsApp prefilled message
     const waText = encodeURIComponent(
-      `Hola PediGochos 3D Lab! 👋 Me interesa fabricar el diseño: *${p.title}*\n` +
+      `Hola PediGochos 3D Lab! 👋 Solicito cotización para fabricar el diseño: *${p.title}*\n` +
       `• Escala: ${this.configState.scale}%\n` +
       `• Dimensiones: ${curDimX} x ${curDimY} x ${curDimZ} cm\n` +
       `• Material: ${this.materials[this.configState.materialKey].name}\n` +
       `• Color filamento: ${this.configState.colorName}\n` +
-      `• Cantidad: ${this.configState.quantity} unid.\n` +
-      `• Total estimado: $${pricing.totalUsd.toFixed(2)} USD (~$${totalCop.toLocaleString('es-CO')} COP / ${totalVes.toLocaleString('es-VE')} Bs)\n` +
-      `¿Podemos confirmar disponibilidad y tiempo de entrega?`
+      `• Cantidad: ${this.configState.quantity} unidad(es)\n` +
+      `• Modalidad: Solicitud de Cotización (Servicio por encargo - no inmediato)\n\n` +
+      `¿Podrían confirmarme el presupuesto estimado según gramos/tiempo de máquina y tiempo de entrega? ¡Gracias!`
     );
 
     container.innerHTML = `
@@ -536,17 +528,14 @@ const Print3DServiceApp = {
           </div>
         </div>
 
-        <!-- Quantity & Volume Discount -->
+        <!-- Quantity Selector -->
         <div class="print3d-qty-box">
           <div class="print3d-qty-row">
             <div>
               <strong style="color: #FFF; font-size: 13px; display: block;">Cantidad a Fabricar:</strong>
-              <span style="font-size: 11px; color: #94A3B8;">5+ (10% OFF) • 10+ (20% OFF)</span>
+              <span style="font-size: 11px; color: #94A3B8;">Unidades deseadas para cotizar</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              ${pricing.discountPercent > 0 ? `
-                <span class="print3d-discount-tag">-${pricing.discountPercent}% OFF</span>
-              ` : ''}
               <div class="print3d-qty-stepper">
                 <button type="button" class="print3d-stepper-btn" onclick="Print3DServiceApp.changeQty(-1)">-</button>
                 <span class="print3d-qty-value">${this.configState.quantity}</span>
@@ -556,36 +545,32 @@ const Print3DServiceApp = {
           </div>
         </div>
 
-        <!-- Pricing Breakdown Card -->
-        <div class="print3d-pricing-card">
-          <div class="print3d-pricing-row">
-            <span>Precio Unitario:</span>
-            <strong style="color: #FFF;">$${pricing.unitPriceUsd.toFixed(2)} USD</strong>
-          </div>
-          ${pricing.discountAmountUsd > 0 ? `
-            <div class="print3d-pricing-row" style="color: #34D399;">
-              <span>Descuento Volumen (${pricing.discountPercent}%):</span>
-              <strong>-$${pricing.discountAmountUsd.toFixed(2)} USD</strong>
-            </div>
-          ` : ''}
-          <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 8px 0; padding-top: 8px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <!-- Cotización Notice Card -->
+        <div class="print3d-pricing-card" style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: 14px; padding: 12px 14px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <span style="font-size: 20px;">📋</span>
             <div>
-              <span style="font-size: 11px; color: #94A3B8; font-weight: 700;">TOTAL ESTIMADO:</span>
-              <div style="font-size: 11.5px; color: #CBD5E1;">
-                ~$${totalCop.toLocaleString('es-CO')} COP • ${totalVes.toLocaleString('es-VE')} Bs
-              </div>
+              <strong style="color: #FCD34D; font-size: 13px; display: block;">Fabricación Bajo Cotización</strong>
+              <span style="font-size: 10.5px; color: #94A3B8;">No es un producto inmediato de entrega en minutos</span>
             </div>
-            <span class="print3d-total-usd">$${pricing.totalUsd.toFixed(2)} USD</span>
+          </div>
+          <p style="font-size: 11px; color: #CBD5E1; margin: 0 0 8px 0; line-height: 1.45;">
+            El costo de impresión 3D depende del peso exacto en gramos de filamento, horas de máquina y resolución seleccionada. Te contactaremos con el presupuesto antes de iniciar la fabricación.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 10.5px;">
+            <span style="background: rgba(245, 158, 11, 0.2); color: #FDE68A; padding: 2px 7px; border-radius: 6px; font-weight: 700;">⚖️ Gramaje por cotizar</span>
+            <span style="background: rgba(99, 102, 241, 0.2); color: #C7D2FE; padding: 2px 7px; border-radius: 6px; font-weight: 700;">⏱️ Horas de máquina a medida</span>
+            <span style="background: rgba(16, 185, 129, 0.2); color: #6EE7B7; padding: 2px 7px; border-radius: 6px; font-weight: 700;">📞 Contacto previo</span>
           </div>
         </div>
 
         <!-- Double Contact CTAs -->
         <div class="print3d-cta-row">
           <button type="button" class="btn-print3d-chat" onclick="Print3DServiceApp.openInAppChat()">
-            <span>💬</span> Chatear con Fabricante
+            <span>💬</span> Cotizar en Chat Directo
           </button>
           <a href="https://wa.me/573227949751?text=${waText}" target="_blank" rel="noopener noreferrer" class="btn-print3d-wa">
-            <span>🟢</span> Pedir por WhatsApp
+            <span>🟢</span> Cotizar por WhatsApp
           </a>
         </div>
 
@@ -741,14 +726,21 @@ const Print3DServiceApp = {
     const payload = {
       customerName,
       customerPhone,
+      clientName: customerName,
+      clientPhone: customerPhone,
       productId: p.id,
+      modelId: p.id,
       productTitle: p.title,
-      scale: this.configState.scale,
+      modelName: p.title,
+      scale: `${this.configState.scale}%`,
       dimensions: curDim,
       material: this.configState.materialKey,
+      materialName: this.materials[this.configState.materialKey]?.name || 'PLA',
       filamentColor: this.configState.colorName,
+      colorName: this.configState.colorName,
+      color: this.configState.colorHex,
       quantity: this.configState.quantity,
-      estimatedPriceUsd: pricing.totalUsd.toFixed(2)
+      estimatedPriceUsd: 'Bajo Cotización'
     };
 
     try {
@@ -851,8 +843,8 @@ const Print3DServiceApp = {
           <strong style="color: #FFF;">${quote.quantity || 1} unidad(es)</strong>
         </div>
         <div>
-          <span style="color: #94A3B8; font-size: 10px; display: block;">PRECIO ESTIMADO / TOTAL</span>
-          <strong style="color: #38BDF8; font-size: 13px;">${quote.finalPrice ? `$${quote.finalPrice} USD` : `$${quote.estimatedPriceUsd} USD`}</strong>
+          <span style="color: #94A3B8; font-size: 10px; display: block;">PRECIO / COTIZACIÓN</span>
+          <strong style="color: #FCD34D; font-size: 13px;">${quote.finalPrice ? `$${quote.finalPrice} USD` : (quote.agreedPriceUsd ? `$${quote.agreedPriceUsd} USD` : 'Bajo Cotización')}</strong>
         </div>
       </div>
     `;
@@ -931,12 +923,15 @@ const Print3DServiceApp = {
     const payload = {
       customerName: name,
       customerPhone: phone,
+      clientName: name,
+      clientPhone: phone,
       productTitle: `Diseño Propio: ${filename}`,
-      scale: 100,
+      modelName: `Diseño Propio: ${filename}`,
+      scale: '100%',
       material: 'pla',
       filamentColor: 'A convenir',
       quantity: 1,
-      estimatedPriceUsd: 'A calcular (por gramo)',
+      estimatedPriceUsd: 'Bajo Cotización',
       notes: `Archivo 3D provisto por el usuario: ${filename}`
     };
 

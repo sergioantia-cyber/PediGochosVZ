@@ -10320,9 +10320,9 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
       banner.innerHTML = `
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">🌙</span>
-          <span>Tarifa Nocturna Activa (8:00 PM - 6:00 AM)</span>
+          <span>Horario Nocturno 24H (Servicio Disponible)</span>
         </div>
-        <span style="background: #9333EA; color: #FFF; padding: 2px 8px; border-radius: 8px; font-size: 10.5px; font-weight: 900;">+$5.000 COP</span>
+        <span style="background: #9333EA; color: #FFF; padding: 2px 8px; border-radius: 8px; font-size: 10.5px; font-weight: 900;">Bajo Cotización</span>
       `;
     } else {
       banner.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)';
@@ -10331,9 +10331,9 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
       banner.innerHTML = `
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">☀️</span>
-          <span>Tarifa Diurna Regular (Sin recargos adicionales)</span>
+          <span>Horario Diurno Regular (Servicio Disponible)</span>
         </div>
-        <span style="background: rgba(16, 185, 129, 0.3); color: #10B981; padding: 2px 8px; border-radius: 8px; font-size: 10.5px; font-weight: 900;">Tarifa Estándar</span>
+        <span style="background: rgba(16, 185, 129, 0.3); color: #10B981; padding: 2px 8px; border-radius: 8px; font-size: 10.5px; font-weight: 900;">Bajo Cotización</span>
       `;
     }
   }
@@ -10363,44 +10363,10 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
   }
 
   updateCaucheraPricing() {
-    const vType = this.caucheraVehicle || 'moto';
-    const sKey = this.caucheraService || 'frio';
-
-    const basePrices = {
-      moto: 10000,
-      carro: 15000,
-      camioneta: 20000,
-      camion: 30000
-    };
-
-    const serviceExtras = {
-      frio: 0,
-      caliente: 5000,
-      aire: 2000,
-      camara: 3000
-    };
-
-    const isNight = this.isNightRateActive();
-    const nightSurcharge = isNight ? 5000 : 0;
-
-    const base = basePrices[vType] || 10000;
-    const serviceExtra = serviceExtras[sKey] || 0;
-    const total = base + serviceExtra + nightSurcharge;
-
-    this.caucheraTotal = total;
-    this.caucheraNightSurcharge = nightSurcharge;
-
-    const baseEl = document.getElementById('cauchera-calc-base');
-    const servEl = document.getElementById('cauchera-calc-service');
-    const nightEl = document.getElementById('cauchera-calc-night');
-    const totalEl = document.getElementById('cauchera-calc-total');
     const btnText = document.getElementById('btn-submit-cauchera-text');
-
-    if (baseEl) baseEl.innerText = `$${base.toLocaleString('es-CO')} COP`;
-    if (servEl) servEl.innerText = `+$${serviceExtra.toLocaleString('es-CO')} COP`;
-    if (nightEl) nightEl.innerText = isNight ? `+$${nightSurcharge.toLocaleString('es-CO')} COP` : '$0 COP';
-    if (totalEl) totalEl.innerText = `$${total.toLocaleString('es-CO')} COP`;
-    if (btnText) btnText.innerText = `Solicitar Auxilio por WhatsApp ($${total.toLocaleString('es-CO')} COP)`;
+    if (btnText) {
+      btnText.innerText = 'Solicitar Cotización por WhatsApp';
+    }
   }
 
   initCaucheraMap() {
@@ -10800,35 +10766,28 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
     const vLabel = vNames[vType] || vType;
     const sLabel = sNames[sKey] || sKey;
     const isNight = this.isNightRateActive();
-    const total = this.caucheraTotal || 10000;
-    const totalFormatted = `$${Math.round(total).toLocaleString('es-CO')} COP`;
 
     const gpsLat = this.caucheraGps?.lat || (this.caucheraLeafMap ? this.caucheraLeafMap.getCenter().lat : 7.8145);
     const gpsLng = this.caucheraGps?.lng || (this.caucheraLeafMap ? this.caucheraLeafMap.getCenter().lng : -72.4455);
     const mapLink = `https://www.google.com/maps?q=${gpsLat},${gpsLng}`;
 
-    // Construct WhatsApp message
-    let waMessage = `🛞 *¡SOLICITUD DE CAUCHERA MÓVIL 24H - PEDIGOCHOS!* 🛞\n`;
-    waMessage += `🏪 *Montallantas El Cachu*\n\n`;
-    waMessage += `👤 *Conductor / Cliente:* ${customerName}\n`;
+    // Construct WhatsApp message (Cotización model)
+    let waMessage = `🛞 *¡SOLICITUD DE COTIZACIÓN - CAUCHERA MÓVIL 24H!* 🛞\n`;
+    waMessage += `🏪 *Montallantas El Cachu - PediGochos*\n\n`;
+    waMessage += `👤 *Conductor / Solicitante:* ${customerName}\n`;
     waMessage += `📱 *WhatsApp:* ${customerPhone}\n\n`;
     waMessage += `🚗 *Vehículo:* ${vLabel}\n`;
-    waMessage += `🔧 *Trabajo Solicitado:* ${sLabel}\n`;
-    if (isNight) {
-      waMessage += `🌙 *Tarifa:* Horario Nocturno 24H (+$5.000 COP incluido)\n`;
-    } else {
-      waMessage += `☀️ *Tarifa:* Diurna Regular\n`;
-    }
-    waMessage += `\n📍 *Lugar donde estoy varado:* ${location}\n`;
+    waMessage += `🔧 *Trabajo Requerido:* ${sLabel}\n`;
+    waMessage += `⏰ *Jornada:* ${isNight ? 'Horario Nocturno 24H' : 'Horario Diurno Regular'}\n`;
+    waMessage += `📋 *Modalidad:* Cotización Previa (Servicio por encargo - no inmediato)\n\n`;
+    waMessage += `📍 *Ubicación del vehículo:* ${location}\n`;
     if (reference) {
       waMessage += `📝 *Punto de Referencia:* ${reference}\n`;
     }
     if (mapLink) {
       waMessage += `🗺️ *Ubicación GPS en vivo:* ${mapLink}\n`;
     }
-    waMessage += `\n💰 *VALOR TOTAL ESTIMADO:* ${totalFormatted}\n`;
-    waMessage += `💳 *Métodos de pago:* Efectivo COP / Bolívares / Pago Móvil / Nequi / Bancolombia\n\n`;
-    waMessage += `_Por favor confírmenme si un mecánico móvil viene en camino hacia mi ubicación. ¡Gracias!_`;
+    waMessage += `\n💬 _Hola PediGochos, solicito la cotización y disponibilidad del auxilio vial para mi ubicación. Por favor indíquenme el presupuesto estimado y tiempo para coordinar. ¡Gracias!_`;
 
     // Persist order on backend
     try {
@@ -10839,21 +10798,21 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
         establishmentName: 'Montallantas El Cachu 24H',
         customerName: customerName,
         customerPhone: customerPhone,
-        total: total,
-        nightSurcharge: isNight ? 5000 : 0,
+        total: 0,
+        isQuote: true,
         vehicleType: vType,
         items: [{
           id: `cauchera-${vType}-${sKey}`,
-          name: `${vLabel} - ${sLabel}`,
-          price: total,
+          name: `${vLabel} - ${sLabel} (Cotización)`,
+          price: 0,
           quantity: 1
         }],
         serviceDetails: {
           vehicleType: vType,
           serviceKey: sKey,
           serviceTitle: `${vLabel} (${sLabel})`,
-          hasNightSurcharge: isNight,
-          nightSurchargeAmount: isNight ? 5000 : 0
+          isQuote: true,
+          hasNightSurcharge: isNight
         },
         deliveryDetails: {
           name: customerName,

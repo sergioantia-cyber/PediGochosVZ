@@ -1861,25 +1861,25 @@
             <div class="cauchera-v-card active" id="cauchera-v-moto" onclick="MarketplaceApp.selectCaucheraVehicle('moto')">
               <span class="v-emoji" style="font-size: 24px;">🛵</span>
               <span class="v-title" style="font-size: 11.5px; font-weight: 800; display: block;">Moto</span>
-              <span class="v-rate" style="font-size: 10px; color: #34D399; font-weight: 800;">$10.000</span>
+              <span class="v-rate" style="font-size: 9.5px; color: #94A3B8; font-weight: 700;">A Cotizar</span>
             </div>
 
             <div class="cauchera-v-card" id="cauchera-v-carro" onclick="MarketplaceApp.selectCaucheraVehicle('carro')">
               <span class="v-emoji" style="font-size: 24px;">🚗</span>
               <span class="v-title" style="font-size: 11.5px; font-weight: 800; display: block;">Carro</span>
-              <span class="v-rate" style="font-size: 10px; color: #34D399; font-weight: 800;">$15.000</span>
+              <span class="v-rate" style="font-size: 9.5px; color: #94A3B8; font-weight: 700;">A Cotizar</span>
             </div>
 
             <div class="cauchera-v-card" id="cauchera-v-camioneta" onclick="MarketplaceApp.selectCaucheraVehicle('camioneta')">
               <span class="v-emoji" style="font-size: 24px;">🚙</span>
               <span class="v-title" style="font-size: 11.5px; font-weight: 800; display: block;">4x4</span>
-              <span class="v-rate" style="font-size: 10px; color: #34D399; font-weight: 800;">$20.000</span>
+              <span class="v-rate" style="font-size: 9.5px; color: #94A3B8; font-weight: 700;">A Cotizar</span>
             </div>
 
             <div class="cauchera-v-card" id="cauchera-v-camion" onclick="MarketplaceApp.selectCaucheraVehicle('camion')">
               <span class="v-emoji" style="font-size: 24px;">🚚</span>
               <span class="v-title" style="font-size: 11.5px; font-weight: 800; display: block;">Camión</span>
-              <span class="v-rate" style="font-size: 10px; color: #34D399; font-weight: 800;">$30.000</span>
+              <span class="v-rate" style="font-size: 9.5px; color: #94A3B8; font-weight: 700;">A Cotizar</span>
             </div>
 
           </div>
@@ -1895,25 +1895,25 @@
             <div class="cauchera-s-card active" id="cauchera-s-frio" onclick="MarketplaceApp.selectCaucheraService('frio')">
               <div style="font-weight: 800; font-size: 12.5px; color: #FFF;">❄️ Parche Frío</div>
               <div style="font-size: 10.5px; color: #94A3B8;">Reparación estándar rápida</div>
-              <div style="font-size: 11px; font-weight: 800; color: #34D399; margin-top: 2px;">Incluido base</div>
+              <div style="font-size: 10.5px; font-weight: 700; color: #F59E0B; margin-top: 2px;">Bajo Cotización</div>
             </div>
 
             <div class="cauchera-s-card" id="cauchera-s-caliente" onclick="MarketplaceApp.selectCaucheraService('caliente')">
               <div style="font-weight: 800; font-size: 12.5px; color: #FFF;">🔥 Vulcanizado</div>
               <div style="font-size: 10.5px; color: #94A3B8;">Parche caliente térmico</div>
-              <div style="font-size: 11px; font-weight: 800; color: #FCD34D; margin-top: 2px;">+ $5.000 COP</div>
+              <div style="font-size: 10.5px; font-weight: 700; color: #F59E0B; margin-top: 2px;">Bajo Cotización</div>
             </div>
 
             <div class="cauchera-s-card" id="cauchera-s-aire" onclick="MarketplaceApp.selectCaucheraService('aire')">
               <div style="font-weight: 800; font-size: 12.5px; color: #FFF;">💨 Carga de Aire</div>
               <div style="font-size: 10.5px; color: #94A3B8;">Calibración y revisión</div>
-              <div style="font-size: 11px; font-weight: 800; color: #FCD34D; margin-top: 2px;">+ $2.000 COP</div>
+              <div style="font-size: 10.5px; font-weight: 700; color: #F59E0B; margin-top: 2px;">Bajo Cotización</div>
             </div>
 
             <div class="cauchera-s-card" id="cauchera-s-camara" onclick="MarketplaceApp.selectCaucheraService('camara')">
               <div style="font-weight: 800; font-size: 12.5px; color: #FFF;">🔩 Con Neumático</div>
               <div style="font-size: 10.5px; color: #94A3B8;">Reparación de cámara</div>
-              <div style="font-size: 11px; font-weight: 800; color: #FCD34D; margin-top: 2px;">+ $3.000 COP</div>
+              <div style="font-size: 10.5px; font-weight: 700; color: #F59E0B; margin-top: 2px;">Bajo Cotización</div>
             </div>
 
           </div>
@@ -1974,29 +1974,28 @@
           </div>
         </div>
 
-        <!-- Price Summary Breakdown -->
-        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 12px; margin-bottom: 16px;">
-          <div style="display: flex; justify-content: space-between; font-size: 12px; color: #CBD5E1; margin-bottom: 4px;">
-            <span>Tarifa Base Reparación:</span>
-            <span id="cauchera-calc-base" style="font-weight: 800; color: #FFF;">$10.000 COP</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; font-size: 12px; color: #CBD5E1; margin-bottom: 4px;">
-            <span>Tipo de Parche / Trabajo:</span>
-            <span id="cauchera-calc-service" style="font-weight: 800; color: #FFF;">$0 COP</span>
-          </div>
-          <div id="cauchera-night-row" style="display: flex; justify-content: space-between; font-size: 12px; color: #C084FC; margin-bottom: 4px;">
-            <span>Recargo Nocturno 24H:</span>
-            <span id="cauchera-calc-night" style="font-weight: 800;">$0 COP</span>
-          </div>
-          <div style="border-top: 1px solid rgba(255,255,255,0.12); padding-top: 6px; margin-top: 4px; display: flex; justify-content: space-between; font-size: 14px; font-weight: 900;">
-            <span style="color: #FFF;">TOTAL ESTIMADO:</span>
-            <span id="cauchera-calc-total" style="color: #10B981; font-size: 16px;">$10.000 COP</span>
+        <!-- Service Notice: Bajo Cotización Previa -->
+        <div style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: 14px; padding: 12px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span style="font-size: 22px; line-height: 1;">📋</span>
+            <div style="flex: 1;">
+              <div style="font-size: 12.5px; font-weight: 800; color: #FCD34D; margin-bottom: 3px;">
+                Servicio Bajo Cotización Previa
+              </div>
+              <p style="font-size: 11px; color: #CBD5E1; margin: 0 0 6px 0; line-height: 1.4;">
+                Este <strong>no es un servicio inmediato con valor fijo</strong>. Al enviar tu solicitud, el mecánico evaluará tu ubicación GPS satelital y el tipo de avería para contactarte y coordinar el valor del auxilio.
+              </p>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 10.5px;">
+                <span style="background: rgba(245, 158, 11, 0.2); color: #FDE68A; padding: 2px 7px; border-radius: 6px; font-weight: 700;">📍 Valor según distancia</span>
+                <span style="background: rgba(16, 185, 129, 0.2); color: #6EE7B7; padding: 2px 7px; border-radius: 6px; font-weight: 700;">📞 Contacto directo</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Submit to WhatsApp Button -->
         <button type="submit" id="btn-submit-cauchera-wa" style="width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: #FFF; border: none; padding: 14px; border-radius: 14px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 18px rgba(37, 211, 102, 0.4); touch-action: manipulation; transition: transform 0.2s;">
-          <span>💬</span> <span id="btn-submit-cauchera-text">Solicitar Auxilio por WhatsApp ($10.000 COP)</span>
+          <span>💬</span> <span id="btn-submit-cauchera-text">Solicitar Cotización por WhatsApp</span>
         </button>
 
         <!-- Direct Phone Call Backup -->
@@ -2025,15 +2024,15 @@
   <script src="/js/qrcode.min.js?v=231"></script>
   <script src="/js/sound.js?v=231"></script>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-  <script src="/js/paint-service.js?v=242"></script>
-  <script src="/js/print3d-service.js?v=242"></script>
-  <script src="/js/resin-service.js?v=242"></script>
-  <script src="/js/pinata-service.js?v=242"></script>
-  <script src="/js/marketplace.js?v=242"></script>
+  <script src="/js/paint-service.js?v=243"></script>
+  <script src="/js/print3d-service.js?v=243"></script>
+  <script src="/js/resin-service.js?v=243"></script>
+  <script src="/js/pinata-service.js?v=243"></script>
+  <script src="/js/marketplace.js?v=243"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=242').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=243').then((reg) => {
           reg.update();
         }).catch(() => {});
       });

@@ -3415,7 +3415,7 @@ app.post('/api/print3d-services/quotes', (req, res) => {
     scale: body.scale || '100%',
     dimensions: body.dimensions || { x: 10, y: 10, z: 10 },
     quantity: parseInt(body.quantity) || 1,
-    estimatedPriceUsd: parseFloat(body.estimatedPriceUsd) || 15.0,
+    estimatedPriceUsd: (!isNaN(parseFloat(body.estimatedPriceUsd)) && parseFloat(body.estimatedPriceUsd) > 0) ? parseFloat(body.estimatedPriceUsd) : 'Bajo Cotización',
     agreedPriceUsd: null,
     status: 'Solicitado',
     notes: body.notes || '',
