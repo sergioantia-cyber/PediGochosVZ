@@ -881,8 +881,12 @@
 
 .establishments-list-delivercity {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Establecimientos compactos (menos grandes que las categorías superiores) */
@@ -1008,18 +1012,25 @@
    CUADROS DONDE APARECEN LOS SERVICIOS (GRANDES Y DESTACADOS)
    ======================================================== */
 .est-row-card.service-row-card {
-  display: block !important;
+  display: flex !important;
+  flex-direction: column !important;
   width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
   padding: 18px 20px !important;
   border-radius: 20px !important;
   margin-bottom: 14px !important;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35) !important;
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease !important;
   min-height: auto !important;
+  overflow: hidden !important;
 }
 
 .est-row-card.service-row-card > div {
   width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .est-row-card.service-row-card:hover {
@@ -2323,13 +2334,21 @@ body {
   }
 
   .establishments-grid {
-    grid-template-columns: 1fr !important; /* Single column card list */
+    grid-template-columns: minmax(0, 1fr) !important; /* Single column card list */
     gap: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .establishments-list-delivercity {
-    grid-template-columns: 1fr !important; /* Single column on mobile */
+    grid-template-columns: minmax(0, 1fr) !important; /* Single column on mobile */
     gap: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .est-row-card {
@@ -2376,10 +2395,16 @@ body {
 
   /* Los cuadros de servicios en mobile deben ser grandes y legibles */
   .est-row-card.service-row-card {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
     padding: 16px !important;
     border-radius: 18px !important;
     min-height: auto !important;
+    overflow: hidden !important;
   }
 
   .est-row-card.service-row-card .service-card-icon-box {

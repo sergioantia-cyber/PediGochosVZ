@@ -88,14 +88,14 @@ const SPECIALIZED_SERVICES = [
     inventorySummary: '🎉 Catálogo de Creaciones Lola',
     inventoryBtnText: 'Gestionar Catálogo Piñatas',
     inventoryAction: "AdminApp.openPinatasAdminModal('inventory')",
-    infoSummary: '📲 Cotizaciones: +57 322 784 9751',
+    infoSummary: '📲 Cotizaciones: +57 322 794 9751',
     infoBtnText: 'Modificar Info',
     infoAction: "AdminApp.openPinatasAdminModal('orders')",
     statusBadge: '<span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">🟢 Activo 24/7</span>',
-    ordersSummary: '🎉 Cotizaciones +573227849751',
+    ordersSummary: '🎉 Cotizaciones +573227949751',
     actionButtons: [
       { text: '🪅 Catálogo', action: "AdminApp.openPinatasAdminModal('inventory')", bg: '#F59E0B', color: '#1E293B', title: 'Ver catálogo de piñatas y tamaños' },
-      { text: '📱 WhatsApp', action: "window.open('https://wa.me/573227849751', '_blank')", bg: '#25D366', color: '#FFF', title: 'Contactar al WhatsApp de Piñatas (+573227849751)' }
+      { text: '📱 WhatsApp', action: "window.open('https://wa.me/573227949751', '_blank')", bg: '#25D366', color: '#FFF', title: 'Contactar al WhatsApp de Piñatas (+573227949751)' }
     ]
   },
   {

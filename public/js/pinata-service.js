@@ -11,8 +11,8 @@ const PinataServiceApp = {
   currentWizardStep: 1,
 
   // WhatsApp fallback dispatch number (San Antonio / Cúcuta workshop)
-  whatsAppNumber: '573227849751',
-  whatsAppDisplay: '+57 322 784 9751',
+  whatsAppNumber: '573227949751',
+  whatsAppDisplay: '+57 322 794 9751',
 
   currentMode: 'catalog', // 'catalog' | 'custom'
 
@@ -372,12 +372,12 @@ const PinataServiceApp = {
             <!-- BOTÓN DISPATCH WHATSAPP -->
             <button type="button" class="btn-pinata-wa-dispatch" onclick="PinataServiceApp.sendCustomQuoteToWhatsApp()">
               <span>📲</span>
-              <span>Enviar Cotización a WhatsApp (+57 322 784 9751)</span>
+              <span>Enviar Cotización a WhatsApp (+57 322 794 9751)</span>
               <span>➔</span>
             </button>
 
             <p style="text-align: center; font-size: 11px; color: #94A3B8; margin: 10px 0 0 0;">
-              Se abrirá WhatsApp directamente con la creadora artesanal de PediGochos (+57 322 784 9751) para responderte de inmediato y coordinar los detalles.
+              Se abrirá WhatsApp directamente con la creadora artesanal de PediGochos (+57 322 794 9751) para responderte de inmediato y coordinar los detalles.
             </p>
           </div>
         </section>
@@ -559,7 +559,7 @@ ${customName ? `🏷️ *Nombre / Número a incluir:* "${customName}"\n` : ''}�
 👤 *Cliente:* ${clientName}
 ${clientPhone ? `📱 *Contacto:* ${clientPhone}\n` : ''}━━━━━━━━━━━━━━━━━━━━
 📍 *Enviado desde PediGochos App* (San Antonio / Cúcuta / Frontera)
-💬 *Taller Artesanal WhatsApp: +57 322 784 9751*
+💬 *Taller Artesanal WhatsApp: +57 322 794 9751*
 
 Hola, adjunto mi foto y los detalles de cómo deseo mi piñata personalizada. ¿Podrían confirmarme la cotización y disponibilidad de fecha? ¡Muchas gracias!`;
 
@@ -585,11 +585,11 @@ Hola, adjunto mi foto y los detalles de cómo deseo mi piñata personalizada. ¿
       console.warn('Backend quote logging notice:', e);
     }
 
-    // Abrir WhatsApp con el número oficial +573227849751
+    // Abrir WhatsApp con el número oficial +573227949751
     const waUrl = `https://wa.me/${this.whatsAppNumber}?text=${encodeURIComponent(message)}`;
     window.open(waUrl, '_blank');
 
-    alert(`¡Listo! Se ha preparado tu cotización. Se abrirá WhatsApp con el taller artesanal (+57 322 784 9751).\n\n📌 Recuerda adjuntar en el chat la foto de referencia que seleccionaste.`);
+    alert(`¡Listo! Se ha preparado tu cotización. Se abrirá WhatsApp con el taller artesanal (+57 322 794 9751).\n\n📌 Recuerda adjuntar en el chat la foto de referencia que seleccionaste.`);
   },
 
   /* ==========================================================================
@@ -712,7 +712,7 @@ Hola, adjunto mi foto y los detalles de cómo deseo mi piñata personalizada. ¿
           <!-- Botón de Envío -->
           <button type="button" class="btn-pinata-wa-dispatch" onclick="PinataServiceApp.sendCatalogOrderWhatsApp()">
             <span>📲</span>
-            <span>Solicitar Cotización por WhatsApp (+57 322 784 9751)</span>
+            <span>Solicitar Cotización por WhatsApp (+57 322 794 9751)</span>
           </button>
         </main>
       </div>
@@ -781,7 +781,7 @@ ${customName ? `✍️ *Personalizado con:* "${customName}"\n` : ''}🎀 *Apertu
 👤 *Cliente:* ${clientName}
 ${clientPhone ? `📱 *Contacto:* ${clientPhone}\n` : ''}━━━━━━━━━━━━━━━━━━━━
 📍 *Enviado desde PediGochos App* (San Antonio / Cúcuta / Frontera)
-💬 *Taller Artesanal WhatsApp: +57 322 784 9751*
+💬 *Taller Artesanal WhatsApp: +57 322 794 9751*
 
 Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${item.name}). ¿Tienen cupo de elaboración disponible para mi fecha? ¡Muchas gracias!`;
 
@@ -1446,7 +1446,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
         </button>
         <button type="button" onclick="PinataServiceApp.sendViaWhatsApp()" style="background: rgba(37, 211, 102, 0.15); border: 1.5px solid #25D366; color: #25D366; padding: 10px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
           <span>📲</span>
-          <span>Enviar también por WhatsApp (+57 322 784 9751)</span>
+          <span>Enviar también por WhatsApp (+57 322 794 9751)</span>
         </button>
       </div>
     `;
@@ -1540,7 +1540,7 @@ Hola, deseo solicitar cotización para elaborar este modelo del catálogo (${ite
     const sizeObj = this.getSizeObject(this.wizardState.sizeId);
 
     const clientName = localStorage.getItem('customer_name') || prompt('Por favor ingresa tu Nombre:') || 'Cliente PediGochos';
-    const clientPhone = localStorage.getItem('customer_phone') || prompt('Ingresa tu Teléfono / WhatsApp:') || '3227849751';
+    const clientPhone = localStorage.getItem('customer_phone') || prompt('Ingresa tu Teléfono / WhatsApp:') || '3227949751';
 
     if (!clientName.trim()) return;
 
@@ -1607,7 +1607,7 @@ ${this.wizardState.customName ? `✍️ *Nombre/Número:* "${this.wizardState.cu
 💵 *Equivalente:* ~${pricing.rangeCop} • ${pricing.rangeBs}
 ${clientName ? `👤 *Cliente:* ${clientName}\n` : ''}━━━━━━━━━━━━━━━━━━━━
 📍 *Enviado desde PediGochos App* (San Antonio / Cúcuta / Frontera)
-💬 *Taller Artesanal WhatsApp: +57 322 784 9751*
+💬 *Taller Artesanal WhatsApp: +57 322 794 9751*
 
 Hola, ¿podrían confirmarme la disponibilidad y precio final para esta piñata? ¡Muchas gracias!`;
 

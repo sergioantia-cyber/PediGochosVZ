@@ -522,7 +522,7 @@ class MarketplaceController {
         actionType: 'pinatas',
         ctaText: 'Cotizar en Creaciones Lola ➔',
         themeColor: '#F43F5E',
-        phone: '+57 322 784 9751',
+        phone: '+57 322 794 9751',
         location: 'San Antonio / Taller Creaciones Lola'
       },
       {
@@ -1166,6 +1166,10 @@ class MarketplaceController {
 
     // Special dedicated rendering for Servicios category with 2-stage flow (Categories Hub & Company-Protagonist Establishments)
     if (this.currentCategory === 'servicios' && !filtered) {
+      grid.style.width = '100%';
+      grid.style.maxWidth = '100%';
+      grid.style.minWidth = '0';
+      grid.style.boxSizing = 'border-box';
       const allRestHeader = document.getElementById('all-restaurants-header');
       const allRestTitle = document.getElementById('all-restaurants-title-text');
       if (allRestHeader) allRestHeader.style.display = 'block';
@@ -1287,7 +1291,7 @@ class MarketplaceController {
         ];
 
         let html = `
-          <div style="grid-column: 1 / -1; margin-bottom: 6px; padding: 16px 20px; background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1.5px solid rgba(255, 107, 0, 0.3); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-bottom: 6px; padding: 16px 20px; background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1.5px solid rgba(255, 107, 0, 0.3); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
             <div>
               <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">Explora Servicios Especializados</h3>
               <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Selecciona una categoría para ver los productos, servicios y cotizaciones disponibles</p>
@@ -1307,7 +1311,7 @@ class MarketplaceController {
           `).join('');
 
           html += `
-            <div class="est-row-card service-row-card" onclick="MarketplaceApp.selectServiceCategory('${cat.key}')" style="background: ${cat.gradient}; border: 1.5px solid ${cat.border}; cursor: pointer; padding: 18px; border-radius: 20px; transition: all 0.25s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+            <div class="est-row-card service-row-card" onclick="MarketplaceApp.selectServiceCategory('${cat.key}')" style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; background: ${cat.gradient}; border: 1.5px solid ${cat.border}; cursor: pointer; padding: 18px; border-radius: 20px; transition: all 0.25s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
               <div class="service-card-main-flex" style="display: flex; gap: 14px; align-items: flex-start;">
                 <div class="service-card-icon-box" style="background: rgba(15, 23, 42, 0.75); border: 2px solid ${cat.color}; box-shadow: 0 0 20px ${cat.glow}; width: 68px; height: 68px; min-width: 68px; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 10px;">
                   <img src="${cat.iconImg}" alt="${cat.name}" style="width: 100%; height: 100%; object-fit: contain;">
@@ -1387,8 +1391,8 @@ class MarketplaceController {
       ];
 
       let html = `
-        <div style="grid-column: 1 / -1; margin-bottom: 10px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+        <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; width: 100%; box-sizing: border-box;">
             <button type="button" onclick="MarketplaceApp.resetServiceCategory()" style="background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.22); color: #FFF; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;">
               <span>⬅️</span> Volver a Categorías
             </button>
@@ -1397,7 +1401,7 @@ class MarketplaceController {
             </span>
           </div>
 
-          <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch;" class="no-scrollbar">
+          <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;" class="no-scrollbar">
             ${catPills.map(p => `
               <button type="button" onclick="MarketplaceApp.selectServiceCategory('${p.key}')" style="background: ${(this.currentServiceCategory || 'all') === p.key ? 'linear-gradient(135deg, #FF6B00 0%, #EA580C 100%)' : 'rgba(30, 41, 59, 0.7)'}; color: ${(this.currentServiceCategory || 'all') === p.key ? '#FFF' : '#CBD5E1'}; border: 1.5px solid ${(this.currentServiceCategory || 'all') === p.key ? '#FF6B00' : 'rgba(255,255,255,0.1)'}; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: all 0.2s ease;">
                 ${p.label}
@@ -1409,7 +1413,7 @@ class MarketplaceController {
 
       if (targetEstablishments.length === 0) {
         html += `
-          <div style="grid-column: 1 / -1; padding: 36px 20px; text-align: center; background: rgba(30, 41, 59, 0.6); border: 1.5px solid rgba(255,255,255,0.08); border-radius: 18px;">
+          <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; padding: 36px 20px; text-align: center; background: rgba(30, 41, 59, 0.6); border: 1.5px solid rgba(255,255,255,0.08); border-radius: 18px;">
             <span style="font-size: 40px; display: block; margin-bottom: 8px;">🔍</span>
             <h4 style="font-size: 16px; font-weight: 800; color: #FFF; margin: 0 0 6px 0;">No hay empresas en esta categoría aún</h4>
             <p style="font-size: 13px; color: #94A3B8; margin: 0 0 14px 0;">¿Conoces o tienes un negocio en este rubro?</p>
@@ -1430,13 +1434,13 @@ class MarketplaceController {
           const cleanPhone = (est.phone || '+573227949751').replace(/[^0-9]/g, '');
 
           html += `
-            <div class="est-row-card service-row-card" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1.5px solid ${color}60; border-radius: 20px; padding: 18px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden;">
+            <div class="est-row-card service-row-card" style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1.5px solid ${color}60; border-radius: 20px; padding: 16px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden;">
               
               <!-- Subtle Accent Glow Line at Top -->
               <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, ${color}, transparent);"></div>
 
               <!-- Top: Business Identity Header (PROTAGONIST BUSINESS NAME) -->
-              <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box;">
                 <div style="width: 58px; height: 58px; border-radius: 16px; overflow: hidden; background: #0B0F19; border: 2px solid ${color}; box-shadow: 0 0 16px ${color}50; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 4px;">
                   <img src="${est.logo}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src='/images/services/shelliart_logo.svg'">
                 </div>
@@ -1449,19 +1453,19 @@ class MarketplaceController {
                       🟢 OFICIAL
                     </span>
                   </div>
-                  <div style="font-size: 12.5px; color: ${color}; font-weight: 800; margin-top: 2px;">
+                  <div style="font-size: 12.5px; color: ${color}; font-weight: 800; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                     ${est.categoryIcon || '✨'} ${est.categoryLabel} • <span style="color: #94A3B8; font-weight: 600;">${est.serviceName}</span>
                   </div>
                 </div>
               </div>
 
               <!-- Middle: Real Photo / Fallback Banner - 100% Visible & Aesthetic Frame -->
-              <div style="width: 100%; border-radius: 14px; overflow: hidden; background: #070B14; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 16px rgba(0,0,0,0.35); display: flex; flex-direction: column;">
-                <div style="width: 100%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.45) 0%, #070B14 100%);">
-                  <img src="${est.image}" alt="${est.name}" style="width: 100%; height: auto; max-height: 240px; object-fit: contain; display: block;" onerror="this.src='/images/servicios.jpg'">
+              <div style="width: 100%; max-width: 100%; border-radius: 14px; overflow: hidden; background: #070B14; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 16px rgba(0,0,0,0.35); display: flex; flex-direction: column; box-sizing: border-box;">
+                <div style="width: 100%; max-width: 100%; height: 180px; overflow: hidden; position: relative; background: #0B0F19;">
+                  <img src="${est.image}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='/images/servicios.jpg'">
                 </div>
                 <!-- Clean Meta Sub-Bar (100% Unobstructed Artwork) -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(15, 23, 42, 0.92); border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 8px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(15, 23, 42, 0.92); border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 8px; flex-wrap: wrap; box-sizing: border-box;">
                   <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; display: inline-flex; align-items: center; gap: 4px;">
                     ⭐ ${Number(est.rating || 5.0).toFixed(1)} <span style="color: #94A3B8; font-weight: 600; font-size: 10.5px;">(${est.reviewCount || 45}+ opiniones)</span>
                   </span>
@@ -1472,19 +1476,19 @@ class MarketplaceController {
               </div>
 
               <!-- Slogan / Personality -->
-              <p style="font-size: 13px; color: #CBD5E1; margin: 0; line-height: 1.45; font-weight: 500;">
+              <p style="font-size: 13px; color: #CBD5E1; margin: 0; line-height: 1.45; font-weight: 500; word-break: break-word; overflow-wrap: break-word;">
                 ${est.slogan}
               </p>
 
               <!-- Specialty Badges -->
-              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; width: 100%; box-sizing: border-box;">
                 ${badgesHtml}
               </div>
 
               <!-- Footer CTA Buttons -->
-              <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
-                <button type="button" onclick="MarketplaceApp.executeServiceAction('${est.actionType}')" style="flex: 1; background: linear-gradient(135deg, ${color} 0%, rgba(15, 23, 42, 0.95) 160%); border: 1.5px solid ${color}; color: #FFF; padding: 11px 16px; border-radius: 12px; font-size: 13.5px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px ${color}40; letter-spacing: -0.2px;">
-                  <span>${est.ctaText}</span>
+              <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; width: 100%; box-sizing: border-box;">
+                <button type="button" onclick="MarketplaceApp.executeServiceAction('${est.actionType}')" style="flex: 1; min-width: 0; background: linear-gradient(135deg, ${color} 0%, rgba(15, 23, 42, 0.95) 160%); border: 1.5px solid ${color}; color: #FFF; padding: 11px 14px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px ${color}40; letter-spacing: -0.2px; overflow: hidden;">
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${est.ctaText}</span>
                 </button>
                 <button type="button" onclick="window.open('https://wa.me/${cleanPhone}?text=Hola,%20quisiera%20consultar%20sobre%20${encodeURIComponent(est.name)}', '_blank')" style="background: rgba(37, 211, 102, 0.15); border: 1.5px solid #25D366; color: #25D366; padding: 10px 14px; border-radius: 12px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Consultar por WhatsApp">
                   💬
@@ -1498,7 +1502,7 @@ class MarketplaceController {
 
       // Add Merchant Registration Invite
       html += `
-        <div style="grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
+        <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
           <p style="font-size: 12.5px; color: #94A3B8; margin: 0 0 10px 0;">
             ¿Ofreces un servicio técnico, grúa, cerrajería o profesional en San Antonio?
           </p>
@@ -10767,12 +10771,12 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
       console.warn('Error constructing cauchera payload:', e);
     }
 
-    // Open WhatsApp to Montallantas El Cachu (+58 424 5516340)
-    const targetWa = '584245516340';
+    // Open WhatsApp to Central Oficial PediGochos (+57 322 794 9751)
+    const targetWa = '573227949751';
     const waUrl = `https://wa.me/${targetWa}?text=${encodeURIComponent(waMessage)}`;
     window.open(waUrl, '_blank');
 
-    this.showToast('🚀 Solicitud de auxilio enviada a Montallantas El Cachu');
+    this.showToast('🚀 Solicitud de auxilio enviada a PediGochos');
     this.closeCaucheraModal();
   }
 }

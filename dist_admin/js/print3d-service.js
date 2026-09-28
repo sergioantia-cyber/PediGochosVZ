@@ -584,7 +584,7 @@ const Print3DServiceApp = {
           <button type="button" class="btn-print3d-chat" onclick="Print3DServiceApp.openInAppChat()">
             <span>💬</span> Chatear con Fabricante
           </button>
-          <a href="https://wa.me/584245516340?text=${waText}" target="_blank" rel="noopener noreferrer" class="btn-print3d-wa">
+          <a href="https://wa.me/573227949751?text=${waText}" target="_blank" rel="noopener noreferrer" class="btn-print3d-wa">
             <span>🟢</span> Pedir por WhatsApp
           </a>
         </div>
