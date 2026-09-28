@@ -2800,10 +2800,35 @@ class MarketplaceController {
 
         if (targetProduct && targetProduct.modifiers && Array.isArray(targetProduct.modifiers)) {
           targetProduct.modifiers.forEach(group => {
-            if (group && Array.isArray(group.options)) {
+            if (group && Array.isArray(group.options) && group.options.length > 0) {
+              const isSingle = group.selection_type === 'single';
+              const isSizeGroup = (group.group_name || '').toLowerCase().includes('tama') || (group.group_name || '').toLowerCase().includes('size');
+              
+              // Find the smallest / base size (lowest extra_price, or index 0) to preselect
+              let defaultOptId = null;
+              if (isSingle && isSizeGroup) {
+                let bestOpt = group.options[0];
+                let minPrice = Infinity;
+                group.options.forEach(opt => {
+                  const p = Number(opt.extra_price ?? opt.price ?? 0);
+                  if (p < minPrice) {
+                    minPrice = p;
+                    bestOpt = opt;
+                  }
+                });
+                if (bestOpt) {
+                  defaultOptId = bestOpt.option_id || bestOpt.id;
+                }
+              }
+
               group.options.forEach(opt => {
-                if (opt && opt.option_id) {
-                  this.customizerState.quantities[sideKey]['opt_' + opt.option_id] = 0;
+                const optId = opt ? (opt.option_id || opt.id) : null;
+                if (optId) {
+                  if (isSingle && isSizeGroup && defaultOptId && optId === defaultOptId) {
+                    this.customizerState.quantities[sideKey]['opt_' + optId] = 1;
+                  } else {
+                    this.customizerState.quantities[sideKey]['opt_' + optId] = 0;
+                  }
                 }
               });
             }
@@ -3196,7 +3221,7 @@ class MarketplaceController {
       // Determine first uncompleted group index
       let firstPendingIndex = -1;
       singleGroups.forEach((group, gIdx) => {
-        const hasSelection = Array.isArray(group.options) && group.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + opt.option_id] === 1);
+        const hasSelection = Array.isArray(group.options) && group.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + (opt.option_id || opt.id)] === 1);
         if (!hasSelection && firstPendingIndex === -1) {
           firstPendingIndex = gIdx;
         }
@@ -3204,13 +3229,19 @@ class MarketplaceController {
 
       singleGroups.forEach((group, gIdx) => {
         const colId = `collapsible-${group.group_id}-${sideKey}`;
-        const selectedOpt = Array.isArray(group.options) ? group.options.find(opt => this.customizerState.quantities[sideKey]['opt_' + opt.option_id] === 1) : null;
+        const selectedOpt = Array.isArray(group.options) ? group.options.find(opt => this.customizerState.quantities[sideKey]['opt_' + (opt.option_id || opt.id)] === 1) : null;
         const isCompleted = !!selectedOpt;
         const isCurrentStep = (gIdx === firstPendingIndex) || (firstPendingIndex === -1 && gIdx === 0 && !isCompleted);
 
+        const gNameLower = (group.group_name || '').toLowerCase();
+        const isSizeGroup = gNameLower.includes('tama') || gNameLower.includes('size');
+
         // Determine if group is collapsed:
         let isCollapsed = false;
-        if (this.customizerState.collapsedGroups && this.customizerState.collapsedGroups[colId] !== undefined) {
+        if (isSizeGroup || singleGroups.length === 1) {
+          // Size groups and single-group products must NEVER be collapsed by default!
+          isCollapsed = (this.customizerState.collapsedGroups && this.customizerState.collapsedGroups[colId] === true);
+        } else if (this.customizerState.collapsedGroups && this.customizerState.collapsedGroups[colId] !== undefined) {
           isCollapsed = this.customizerState.collapsedGroups[colId] === true;
         } else {
           // Default sequential accordion state:
@@ -3230,7 +3261,9 @@ class MarketplaceController {
         const chevronTransform = isCollapsed ? 'transform: rotate(-90deg);' : 'transform: rotate(0deg);';
         
         let badgeHTML = '';
-        if (isCompleted) {
+        if (singleGroups.length === 1) {
+          badgeHTML = selectedOpt ? `<span class="step-completed-badge" title="${selectedOpt.name}">✅ ${selectedOpt.name}</span>` : '';
+        } else if (isCompleted) {
           badgeHTML = `<span class="step-completed-badge" title="${selectedOpt.name}">✅ ${selectedOpt.name}</span>`;
         } else if (isCurrentStep) {
           badgeHTML = `<span class="step-active-badge">👉 Paso ${gIdx + 1}: Elige aquí</span>`;
@@ -3255,8 +3288,10 @@ class MarketplaceController {
         if (group.options && Array.isArray(group.options)) {
           group.options.forEach(opt => {
             if (!opt) return;
-            const qty = this.customizerState.quantities[sideKey]['opt_' + opt.option_id] || 0;
-            const extraPriceText = (opt.extra_price || opt.price || 0) > 0 ? `+ ${this.formatPesos(opt.extra_price || opt.price)}` : '';
+            const optId = opt.option_id || opt.id;
+            const qty = this.customizerState.quantities[sideKey]['opt_' + optId] || 0;
+            const extraPrice = Number(opt.extra_price ?? opt.price ?? 0);
+            const extraPriceText = extraPrice > 0 ? `+ ${this.formatPesos(extraPrice)}` : '';
             
             const optionDiv = document.createElement('div');
             optionDiv.className = `modifier-option ${qty === 1 ? 'option-single-active' : ''}`;
@@ -3264,16 +3299,28 @@ class MarketplaceController {
             
             optionDiv.onclick = (e) => {
               e.preventDefault();
-              MarketplaceApp.setSingleSelection(group.group_id, opt.option_id, sideKey);
+              MarketplaceApp.setSingleSelection(group.group_id, optId, sideKey);
             };
+
+            let subtitleTag = '';
+            if (isSizeGroup) {
+              if (extraPrice === 0) {
+                subtitleTag = '<span style="font-size: 11px; color: #10B981; font-weight: 700; margin-left: 6px;">(Tamaño Base)</span>';
+              } else {
+                subtitleTag = '<span style="font-size: 11px; color: #F59E0B; font-weight: 700; margin-left: 6px;">(Agrandar)</span>';
+              }
+            }
 
             optionDiv.innerHTML = `
               <div class="option-label-container" style="display: flex; align-items: center; flex: 1; min-width: 0; pointer-events: none;">
                 <input type="radio" name="radio_${group.group_id}_${sideKey}" ${qty === 1 ? 'checked' : ''} style="margin: 0; accent-color: #EA580C; width: 18px; height: 18px; flex-shrink: 0;">
-                <span class="option-name" style="margin-left: 10px; font-weight: 700; font-size: 13.5px; color: ${qty === 1 ? '#EA580C' : '#1E293B'}; white-space: normal; line-height: 1.35;">${opt.name || ''}</span>
+                <span class="option-name" style="margin-left: 10px; font-weight: 700; font-size: 13.5px; color: ${qty === 1 ? '#EA580C' : '#1E293B'}; white-space: normal; line-height: 1.35;">
+                  ${opt.name || ''}
+                  ${subtitleTag}
+                </span>
               </div>
               <div style="display: flex; align-items: center; flex-shrink: 0; margin-left: 8px;">
-                <span class="option-extra-price" style="font-weight: 800; color: #EA580C; font-size: 12.5px;">${extraPriceText}</span>
+                <span class="option-extra-price" style="font-weight: 800; color: #EA580C; font-size: 12.5px;">${extraPriceText || '<span style="color: #64748B; font-size: 11.5px; font-weight: 600;">Incluido</span>'}</span>
               </div>
             `;
             if (list) list.appendChild(optionDiv);
@@ -3487,13 +3534,15 @@ class MarketplaceController {
     const group = product.modifiers ? product.modifiers.find(g => g.group_id === groupId) : null;
     if (group && group.options) {
       group.options.forEach(opt => {
-        this.customizerState.quantities[sideKey]['opt_' + opt.option_id] = (opt.option_id === optionId) ? 1 : 0;
+        const optId = opt ? (opt.option_id || opt.id) : null;
+        if (optId) {
+          this.customizerState.quantities[sideKey]['opt_' + optId] = (optId === optionId) ? 1 : 0;
+        }
       });
     }
 
-    // Collapse current group upon selection
-    const currentColId = `collapsible-${groupId}-${sideKey}`;
-    this.customizerState.collapsedGroups[currentColId] = true;
+    const gNameLower = (group?.group_name || '').toLowerCase();
+    const isSizeGroup = gNameLower.includes('tama') || gNameLower.includes('size');
 
     // Find next uncompleted single selection group in sequential order
     const singleGroups = (product.modifiers || []).filter(g => g.selection_type === 'single');
@@ -3502,7 +3551,7 @@ class MarketplaceController {
     let nextGroupToOpen = null;
     for (let i = currentGroupIdx + 1; i < singleGroups.length; i++) {
       const nextG = singleGroups[i];
-      const hasSel = Array.isArray(nextG.options) && nextG.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + opt.option_id] === 1);
+      const hasSel = Array.isArray(nextG.options) && nextG.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + (opt.option_id || opt.id)] === 1);
       if (!hasSel) {
         nextGroupToOpen = nextG;
         break;
@@ -3513,12 +3562,20 @@ class MarketplaceController {
     if (!nextGroupToOpen) {
       for (let i = 0; i < singleGroups.length; i++) {
         const checkG = singleGroups[i];
-        const hasSel = Array.isArray(checkG.options) && checkG.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + opt.option_id] === 1);
+        const hasSel = Array.isArray(checkG.options) && checkG.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + (opt.option_id || opt.id)] === 1);
         if (!hasSel) {
           nextGroupToOpen = checkG;
           break;
         }
       }
+    }
+
+    const currentColId = `collapsible-${groupId}-${sideKey}`;
+    // Never auto-collapse size group or when it's the only single selection group, or when no other group needs to open
+    if (!isSizeGroup && singleGroups.length > 1 && nextGroupToOpen) {
+      this.customizerState.collapsedGroups[currentColId] = true;
+    } else {
+      this.customizerState.collapsedGroups[currentColId] = false;
     }
 
     let nextColId = null;
@@ -3674,7 +3731,7 @@ class MarketplaceController {
         const isContorno = gNameLower.includes('contorno');
 
         if (group.selection_type === 'single') {
-          const hasOptionSelected = Array.isArray(group.options) && group.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + opt.option_id] === 1);
+          const hasOptionSelected = Array.isArray(group.options) && group.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + (opt.option_id || opt.id)] === 1);
           if (isContorno) {
             hasSingleContornoGroups = true;
             if (hasOptionSelected) singleContornosCount++;
@@ -3685,14 +3742,15 @@ class MarketplaceController {
         } else if (group.selection_type === 'multiple') {
           if (Array.isArray(group.options)) {
             group.options.forEach(opt => {
-              const qty = this.customizerState.quantities[sideKey]['opt_' + opt.option_id] || 0;
+              const optId = opt ? (opt.option_id || opt.id) : null;
+              const qty = optId ? (this.customizerState.quantities[sideKey]['opt_' + optId] || 0) : 0;
               if (qty > 0 && isContorno) {
                 multipleContornosCount += qty;
               }
             });
           }
           if (isRequired) {
-            const hasOptionSelected = Array.isArray(group.options) && group.options.some(opt => (this.customizerState.quantities[sideKey]['opt_' + opt.option_id] || 0) > 0);
+            const hasOptionSelected = Array.isArray(group.options) && group.options.some(opt => (this.customizerState.quantities[sideKey]['opt_' + (opt.option_id || opt.id)] || 0) > 0);
             if (!hasOptionSelected) allValid = false;
           }
         }
@@ -3714,7 +3772,7 @@ class MarketplaceController {
       if (product && product.modifiers) {
         const sizeGroup = product.modifiers.find(g => (g.group_name || '').toLowerCase() === 'tamaño');
         if (sizeGroup && sizeGroup.options) {
-          const active = sizeGroup.options.some(opt => this.customizerState.quantities.whole['opt_' + opt.option_id] === 1);
+          const active = sizeGroup.options.some(opt => this.customizerState.quantities.whole['opt_' + (opt.option_id || opt.id)] === 1);
           if (!active) allValid = false;
         }
       }
@@ -3757,8 +3815,9 @@ class MarketplaceController {
             if (ignoreSize && isSize) return;
 
             group.options.forEach(opt => {
-              if (opt && opt.option_id) {
-                const qty = this.customizerState.quantities[sideKey]['opt_' + opt.option_id] || 0;
+              const optId = opt ? (opt.option_id || opt.id) : null;
+              if (optId) {
+                const qty = this.customizerState.quantities[sideKey]['opt_' + optId] || 0;
                 const extraPrice = this.normalizeCopPrice(opt.extra_price || opt.price || 0);
                 if (qty > 0 && extraPrice > 0) {
                   if (group.selection_type === 'single') {
@@ -4014,7 +4073,7 @@ class MarketplaceController {
             const isSize = (group.group_name || '').toLowerCase() === 'tamaño';
             if (isHalves && isSize) continue;
 
-            const hasSelection = Array.isArray(group.options) && group.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + opt.option_id] === 1);
+            const hasSelection = Array.isArray(group.options) && group.options.some(opt => this.customizerState.quantities[sideKey]['opt_' + (opt.option_id || opt.id)] === 1);
             if (!hasSelection) {
               const colId = `collapsible-${group.group_id}-${sideKey}`;
               if (!this.customizerState.collapsedGroups) this.customizerState.collapsedGroups = {};
@@ -4082,7 +4141,8 @@ class MarketplaceController {
           if (isHalves && isSize) return;
 
           group.options.forEach(opt => {
-            const qty = this.customizerState.quantities[sideKey]['opt_' + opt.option_id] || 0;
+            const optId = opt ? (opt.option_id || opt.id) : null;
+            const qty = optId ? (this.customizerState.quantities[sideKey]['opt_' + optId] || 0) : 0;
             if (qty > 0) {
               const extraPrice = opt.extra_price || opt.price || 0;
               if (group.selection_type === 'single') {
@@ -4109,7 +4169,8 @@ class MarketplaceController {
         const sizeGroup = product.modifiers.find(g => (g.group_name || '').toLowerCase() === 'tamaño');
         if (sizeGroup && sizeGroup.options) {
           sizeGroup.options.forEach(opt => {
-            if (this.customizerState.quantities.whole['opt_' + opt.option_id] === 1) {
+            const optId = opt ? (opt.option_id || opt.id) : null;
+            if (optId && this.customizerState.quantities.whole['opt_' + optId] === 1) {
               const extraPrice = opt.extra_price || opt.price || 0;
               singleSelections.push({
                 group_name: 'Tamaño',
