@@ -540,23 +540,23 @@ class MarketplaceController {
     return [
       {
         id: 'serv-resin',
-        name: 'SHELLIART',
-        displayName: 'ShelliArt Resina',
+        name: 'SHEKKIART',
+        displayName: 'ShekkiArt',
         category: 'resina',
         categoryLabel: 'Arte & Resina',
         categoryIcon: '✨',
-        slogan: 'Diseño y arte exclusivo en resina epóxica, llaveros A-Z con hojilla de oro 24K, borlas y recuerdos',
-        serviceName: 'Llaveros en Resina Personalizados & Accesorios',
+        slogan: 'Diseño y arte exclusivo en resina epóxica, llaveros personalizados con fotos, chip NFC, hojilla de oro 24K y recuerdos',
+        serviceName: 'Llaveros Personalizados & Accesorios en Resina',
         logo: '/images/services/shelliart_logo.svg',
         image: '/images/services/shelliart_banner.jpg',
         rating: 5.0,
         reviewCount: 48,
-        badges: ['💎 Pan de Oro 24K', '✨ Letras A-Z', '🎁 Dijes & Borlas'],
+        badges: ['💎 Pan de Oro 24K', '📸 Fotos & NFC', '🎁 Llavero Personalizado'],
         actionType: 'resin',
-        ctaText: 'Personalizar en ShelliArt ➔',
+        ctaText: 'Personalizar en ShekkiArt ➔',
         themeColor: '#EC4899',
         phone: '+57 322 794 9751',
-        location: 'San Antonio / Estudio ShelliArt'
+        location: 'San Antonio / Estudio ShekkiArt'
       },
       {
         id: 'serv-pinatas',
@@ -793,7 +793,7 @@ class MarketplaceController {
         if (typeof ResinServiceApp !== 'undefined' && ResinServiceApp.open) {
           ResinServiceApp.open();
         } else {
-          alert('Cargando servicio ShelliArt Resina...');
+          alert('Cargando servicio ShekkiArt...');
         }
         break;
       case 'pinatas':

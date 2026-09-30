@@ -52,14 +52,14 @@ function normalizeStoreName(name) {
 const SPECIALIZED_SERVICES = [
   {
     id: 'serv-resin',
-    name: 'SHELLIART (Arte & Recuerdos en Resina)',
+    name: 'SHEKKIART (Llaveros Personalizados & Arte en Resina)',
     logo: '/images/services/shelliart_logo.svg',
     category: 'servicios',
-    badge: 'ShelliArt Resina',
+    badge: 'ShekkiArt',
     badgeColor: '#EC4899',
     badgeBg: 'rgba(236, 72, 153, 0.15)',
     badgeBorder: 'rgba(236, 72, 153, 0.4)',
-    location: 'San Antonio / Estudio ShelliArt',
+    location: 'San Antonio / Estudio ShekkiArt',
     description: 'Artesanías en resina epóxica, llaveros personalizados con fotos y chip NFC, iniciales A-Z con pan de oro 24K y borlas',
     inventorySummary: '✨ Fichas de Diseño & Modelos',
     inventoryBtnText: 'Gestionar Parámetros & Fotos',
@@ -6592,6 +6592,32 @@ class AdminController {
     }
   }
 
+  shareStoreQRWhatsApp() {
+    if (!this.currentQREst) return;
+    const est = this.currentQREst;
+    const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
+    const directUrl = `${origin}/?store=${encodeURIComponent(est.id)}`;
+    
+    const msg = `👑 *PEDIGOCHOS CENTRAL - CÓDIGO QR OFICIAL DE TU COMERCIO*\n\n` +
+      `¡Hola *${est.name}*! Desde la administración central de PediGochos hemos generado tu Tarjeta de Difusión y Código QR Oficial:\n\n` +
+      `🔗 *Enlace Directo de tu Carta:* ${directUrl}\n\n` +
+      `📲 Tus clientes pueden escanear tu QR o hacer clic en este enlace para ver tu menú, precios actualizados y pedir a domicilio o directo a su mesa.\n\n` +
+      `¡Muchos éxitos y buenas ventas con PediGochos! 🚀`;
+
+    let cleanPhone = (est.phone || '').replace(/\D/g, '');
+    let waUrl = '';
+    if (cleanPhone) {
+      if (!cleanPhone.startsWith('58') && !cleanPhone.startsWith('57') && cleanPhone.length === 10) {
+        cleanPhone = '58' + cleanPhone;
+      }
+      waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
+    } else {
+      waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    }
+
+    window.open(waUrl, '_blank');
+  }
+
   downloadStoreQRImage() {
     if (!this.currentQREst) return;
     const est = this.currentQREst;
@@ -8555,7 +8581,7 @@ class AdminController {
   }
 
   // ==========================================
-  // ShelliArt Resina Admin Control
+  // ShekkiArt Admin Control
   // ==========================================
   async openResinAdminModal(initialTab = 'orders') {
     const modal = document.getElementById('admin-resin-modal');
@@ -8713,7 +8739,7 @@ class AdminController {
       if (res.ok) {
         const data = await res.json();
         this.resinSettings = data.settings;
-        alert('✅ ¡Configuración de ShelliArt guardada exitosamente!');
+        alert('✅ ¡Configuración de ShekkiArt guardada exitosamente!');
       } else {
         alert('⚠️ No se pudo guardar la configuración.');
       }
@@ -8756,7 +8782,7 @@ class AdminController {
   }
 
   async deleteResinSamplePhoto(sampleId) {
-    if (!confirm('¿Deseas eliminar esta foto de muestra del catálogo de ShelliArt?')) return;
+    if (!confirm('¿Deseas eliminar esta foto de muestra del catálogo de ShekkiArt?')) return;
     if (!this.resinSettings || !this.resinSettings.samplePhotos) return;
 
     this.resinSettings.samplePhotos = this.resinSettings.samplePhotos.filter(s => s.id !== sampleId);
@@ -8845,7 +8871,7 @@ class AdminController {
         ? `📸 Molde: ${q.photoShapeName || q.photoShape}\n🔄 Reverso: ${q.photoBackType || 'Normal'}\n📶 NFC: ${q.hasNfc ? (q.nfcUrl || 'Sí') : 'No'}\n🪢 Borla: ${q.tasselColor || 'Borla'} - Herraje: ${q.hardwareColor || 'Dorado'}`
         : `🔤 Inicial: "${q.letter}"\n🎨 Estilo: ${q.styleName} - Color: ${q.baseColorName}\n🪢 Borla: ${q.tasselColor} - Herraje: ${q.hardwareColor}\n✍️ Nombre: ${q.customName || 'Sin nombre'}`;
 
-      const waMsg = `✨ *PEDIDO #${q.id} SHELLIART RESINA*\n👤 Cliente: ${q.clientName} (${q.clientPhone || 'Sin tel'})\n${waDetails}\n💰 Total: $${price} USD`;
+      const waMsg = `✨ *PEDIDO #${q.id} SHEKKIART*\n👤 Cliente: ${q.clientName} (${q.clientPhone || 'Sin tel'})\n${waDetails}\n💰 Total: $${price} USD`;
       const chatInspectorTitle = isPhoto
         ? `Llavero Foto (${q.photoShapeName || 'Personalizado'}) - ${q.clientName}`
         : `Llavero Inicial ${q.letter} - ${q.clientName}`;
@@ -9625,7 +9651,7 @@ class AdminController {
     const subEl = document.getElementById('admin-quote-chat-sub');
 
     if (titleEl) titleEl.textContent = `Chat con Cliente: ${title || quoteId}`;
-    if (subEl) subEl.textContent = type === 'paint' ? 'Latonería y Pintura' : (type === 'resin' ? 'ShelliArt Resina' : (type === 'pinatas' ? 'Taller de Piñatas Artesanales' : 'Laboratorio 3D Maker'));
+    if (subEl) subEl.textContent = type === 'paint' ? 'Latonería y Pintura' : (type === 'resin' ? 'ShekkiArt' : (type === 'pinatas' ? 'Taller de Piñatas Artesanales' : 'Laboratorio 3D Maker'));
 
     if (modal) {
       modal.style.display = 'flex';
@@ -9688,7 +9714,7 @@ class AdminController {
     const payload = {
       senderRole: 'admin',
       sender: type === 'paint' ? 'workshop' : (type === 'resin' ? 'workshop' : (type === 'pinatas' ? 'workshop' : 'lab')),
-      senderName: type === 'paint' ? 'Taller Aliado' : (type === 'resin' ? 'ShelliArt Resina' : (type === 'pinatas' ? 'Taller de Piñatas' : 'Fabricante 3D')),
+      senderName: type === 'paint' ? 'Taller Aliado' : (type === 'resin' ? 'ShekkiArt' : (type === 'pinatas' ? 'Taller de Piñatas' : 'Fabricante 3D')),
       text
     };
 

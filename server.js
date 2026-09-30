@@ -3667,7 +3667,7 @@ if (!fs.existsSync(RESIN_QUOTES_FILE) || readResinQuotes().length === 0) {
         {
           id: 'msg-1',
           senderRole: 'system',
-          senderName: 'ShelliArt Resina',
+          senderName: 'ShekkiArt',
           type: 'quotation_card',
           timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
           text: 'Ficha de Llavero Personalizado generada para letra "S" (Rosa Pastel con Pan de Oro)'
@@ -3675,7 +3675,7 @@ if (!fs.existsSync(RESIN_QUOTES_FILE) || readResinQuotes().length === 0) {
         {
           id: 'msg-2',
           senderRole: 'workshop',
-          senderName: 'ShelliArt Resina',
+          senderName: 'ShekkiArt',
           type: 'text',
           timestamp: new Date(Date.now() - 3600000 * 5.8).toISOString(),
           text: '¡Hola Valentina! Tu pedido de la letra "S" con borla rosa y mini corazón quedó anotado. Mezcla epóxica vaciada sin burbujas.'
@@ -3683,7 +3683,7 @@ if (!fs.existsSync(RESIN_QUOTES_FILE) || readResinQuotes().length === 0) {
         {
           id: 'msg-3',
           senderRole: 'workshop',
-          senderName: 'ShelliArt Resina',
+          senderName: 'ShekkiArt',
           type: 'action_notice',
           timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
           text: '⏳ Llavero en lámpara de curado UV. Listo mañana a primera hora con acabado cristal espejo.'
@@ -3722,7 +3722,7 @@ if (!fs.existsSync(RESIN_QUOTES_FILE) || readResinQuotes().length === 0) {
         {
           id: 'msg-1',
           senderRole: 'system',
-          senderName: 'ShelliArt Resina',
+          senderName: 'ShekkiArt',
           type: 'quotation_card',
           timestamp: new Date(Date.now() - 3600000 * 1.5).toISOString(),
           text: 'Ficha de Llavero Personalizado generada para letra "A" (Azul Rey & Oro)'
@@ -3964,12 +3964,12 @@ app.post('/api/resin-services/quotes', (req, res) => {
     agreedPriceUsd: null,
     status: 'Solicitado',
     notes: body.notes || '',
-    workshopName: 'ShelliArt Resina Cúcuta-Ureña',
+    workshopName: 'ShekkiArt Cúcuta-Ureña',
     messages: [
       {
         id: 'msg-' + Date.now(),
         senderRole: 'system',
-        senderName: 'ShelliArt Resina',
+        senderName: 'ShekkiArt',
         type: 'quotation_card',
         timestamp: new Date().toISOString(),
         text: `Ficha Técnica de Llavero generada para inicial "${body.letter}" (${body.baseColorName || 'Color'})`,
@@ -4020,7 +4020,7 @@ app.post('/api/resin-services/quotes/:id/messages', (req, res) => {
   if (!quote) return res.status(404).json({ error: 'Pedido de resina no encontrado' });
 
   const role = senderRole || 'client';
-  const name = senderName || (role === 'workshop' ? 'ShelliArt Resina' : role === 'admin' ? '👑 Dueño / Central' : 'Cliente');
+  const name = senderName || (role === 'workshop' ? 'ShekkiArt' : role === 'admin' ? '👑 Dueño / Central' : 'Cliente');
 
   if ((role === 'workshop' || role === 'admin') && quote.status === 'Solicitado') {
     quote.status = 'En Conversación';
@@ -4088,7 +4088,7 @@ app.put('/api/resin-services/quotes/:id/action', (req, res) => {
     const sysMsg = {
       id: 'msg-' + Date.now(),
       senderRole: 'system',
-      senderName: 'ShelliArt Resina',
+      senderName: 'ShekkiArt',
       type: 'action_notice',
       text: actionText,
       timestamp: new Date().toISOString()

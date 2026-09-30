@@ -7,9 +7,15 @@ const rootDir = path.join(__dirname, '..');
 const SERVICES_CONFIG = {
   shelliart: {
     key: 'resin',
-    name: 'ShelliArt Resina',
-    appId: 'com.pedigochos.service.shelliart',
-    apkName: 'PediGochos-ShelliArt.apk'
+    name: 'ShekkiArt',
+    appId: 'com.pedigochos.service.shekkiart',
+    apkName: 'PediGochos-ShekkiArt.apk'
+  },
+  shekkiart: {
+    key: 'resin',
+    name: 'ShekkiArt',
+    appId: 'com.pedigochos.service.shekkiart',
+    apkName: 'PediGochos-ShekkiArt.apk'
   },
   pinatas: {
     key: 'pinatas',

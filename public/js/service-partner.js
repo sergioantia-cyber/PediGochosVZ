@@ -49,7 +49,7 @@ const ServicePartnerApp = {
       case 'resin':
         return {
           id: 'resin',
-          title: 'ShelliArt Resina • Llaveros',
+          title: 'ShekkiArt • Llaveros Personalizados',
           icon: '✨',
           catalogEndpoint: '/api/resin-services/catalog',
           quotesEndpoint: '/api/resin-services/quotes',
@@ -58,7 +58,7 @@ const ServicePartnerApp = {
           wsQuoteMsg: 'RESIN_QUOTE_MESSAGE',
           wsQuoteUpdate: 'RESIN_QUOTE_UPDATE',
           wsCatalogUpdate: 'RESIN_CATALOG_UPDATE',
-          roleName: 'ShelliArt Resina',
+          roleName: 'ShekkiArt',
           presets: [
             "👋 ¡Hola! Tu pedido de inicial en resina está anotado.",
             "🎨 Mezclando resina epóxica y pigmentos con pan de oro 24K.",

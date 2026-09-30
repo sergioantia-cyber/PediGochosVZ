@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Llaveros y Arte en Resina ("ShelliArt Resina") - Logic & Customizer Studio
+   Llaveros y Arte en Resina ("ShekkiArt") - Logic & Customizer Studio
    PediGochos Specialized Services Module
    ========================================================================== */
 
@@ -98,6 +98,12 @@ const ResinServiceApp = {
     productType: 'photo', // 'photo' | 'letter'
     activeTab: 'shape', // 'shape' | 'photo' | 'nfc' | 'finishes'
     isFlipped: false, // false: front, true: back
+
+    // Photo Transform & Framing Shape for each side:
+    photoFrontTransform: { x: 0, y: 0, scale: 1.0, isSelected: false },
+    photoBackTransform: { x: 0, y: 0, scale: 1.0, isSelected: false },
+    photoFrontShape: 'full', // 'full' | 'polaroid' | 'circle' | 'heart' | 'square'
+    photoBackShape: 'full',  // 'full' | 'polaroid' | 'circle' | 'heart' | 'square'
 
     // Photo Keychain properties:
     photoShape: 'rectangle',
@@ -214,6 +220,7 @@ const ResinServiceApp = {
       modal.classList.remove('hidden');
       window.history.pushState({ modal: 'resin-service' }, '', '#servicios/resina');
       this.updateVisualPreview();
+      this.initTransformEvents();
     }
   },
 
@@ -464,7 +471,7 @@ const ResinServiceApp = {
         <div class="resin-header-brand">
           <span class="resin-brand-icon">✨</span>
           <div>
-            <h2>ShelliArt <span>Resina Studio</span></h2>
+            <h2>ShekkiArt <span>Studio</span></h2>
             <p>Llaveros Fotográficos & Letras • Acabado Vidrio Epóxico</p>
           </div>
         </div>
@@ -504,10 +511,30 @@ const ResinServiceApp = {
                 </div>
               </div>
 
-              <!-- Flip Button -->
-              <button type="button" class="btn-flip-keychain" onclick="ResinServiceApp.toggleFlip()">
-                <span>🔄 Girar:</span> <span id="lbl-flip-side">Cara Delantera (Frente)</span>
-              </button>
+              <!-- Interactive Action Controls right beside/under preview -->
+              <div class="resin-stage-action-bar">
+                <button type="button" class="btn-stage-upload-photo" onclick="ResinServiceApp.triggerPhotoUpload()">
+                  <span>📸</span> <span id="lbl-stage-upload-photo">Subir / Cambiar Foto</span>
+                </button>
+                <button type="button" class="btn-flip-keychain" onclick="ResinServiceApp.toggleFlip()">
+                  <span>🔄 Girar:</span> <span id="lbl-flip-side">Frente</span>
+                </button>
+                <button type="button" class="btn-stage-done-edit" id="btn-stage-done-edit" style="display: none;" onclick="ResinServiceApp.deselectPhoto()">
+                  <span>✓</span> Fijar Foto
+                </button>
+              </div>
+
+              <!-- Quick Photo Shape Selector on Preview Stage -->
+              <div class="resin-stage-shape-chips" id="resin-stage-shape-chips">
+                <span class="chips-title">Forma Foto:</span>
+                <button type="button" class="chip-shape-btn active" data-shape="full" onclick="ResinServiceApp.setPhotoFramingShape('full')">🔲 Molde</button>
+                <button type="button" class="chip-shape-btn" data-shape="polaroid" onclick="ResinServiceApp.setPhotoFramingShape('polaroid')">📸 Polaroid</button>
+                <button type="button" class="chip-shape-btn" data-shape="circle" onclick="ResinServiceApp.setPhotoFramingShape('circle')">⭕ Círculo</button>
+                <button type="button" class="chip-shape-btn" data-shape="heart" onclick="ResinServiceApp.setPhotoFramingShape('heart')">💖 Corazón</button>
+                <button type="button" class="chip-shape-btn" data-shape="square" onclick="ResinServiceApp.setPhotoFramingShape('square')">⏹️ Cuadrado</button>
+              </div>
+
+              <input type="file" id="resin-direct-photo-input" accept="image/*" style="display: none;" onchange="ResinServiceApp.handleDirectPhotoUpload(event)">
             </div>
           </div>
 
@@ -517,7 +544,7 @@ const ResinServiceApp = {
             <!-- Mode Switcher: Photo & NFC vs Initial Letter -->
             <div class="resin-mode-switcher">
               <button type="button" class="resin-mode-btn active" id="btn-mode-photo" onclick="ResinServiceApp.setProductType('photo')">
-                <span>📸</span> Llavero con Foto & NFC
+                <span>📸</span> Llavero Personalizado
               </button>
               <button type="button" class="resin-mode-btn" id="btn-mode-letter" onclick="ResinServiceApp.setProductType('letter')">
                 <span>🔤</span> Llavero de Inicial (Letra)
@@ -643,7 +670,7 @@ const ResinServiceApp = {
             </button>
 
             <button type="button" onclick="ResinServiceApp.submitInAppOrder()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; text-align: center;">
-              💬 Enviar y Chatear con ShelliArt en la App
+              💬 Enviar y Chatear con ShekkiArt en la App
             </button>
           </div>
         </div>
@@ -755,7 +782,19 @@ const ResinServiceApp = {
 
             <!-- Border Effect -->
             <div style="margin-top: 14px;">
-              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">ACABADO DEL BORDE / ENCAPSULADO</label>
+            <!-- Forma de la Foto Delantera -->
+            <div style="margin-top: 10px; margin-bottom: 12px;">
+              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">FORMA DEL RECORTE / MARCO (FRENTE)</label>
+              <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
+                <button type="button" class="btn-framing-shape ${this.state.photoFrontShape === 'full' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('full', false)">🔲 Molde</button>
+                <button type="button" class="btn-framing-shape ${this.state.photoFrontShape === 'polaroid' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('polaroid', false)">📸 Polaroid</button>
+                <button type="button" class="btn-framing-shape ${this.state.photoFrontShape === 'circle' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('circle', false)">⭕ Círculo</button>
+                <button type="button" class="btn-framing-shape ${this.state.photoFrontShape === 'heart' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('heart', false)">💖 Corazón</button>
+                <button type="button" class="btn-framing-shape ${this.state.photoFrontShape === 'square' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('square', false)">⏹️ Cuadrado</button>
+              </div>
+            </div>
+
+            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">ACABADO DEL BORDE / ENCAPSULADO</label>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                 ${this.borderEffects.map(be => `
                   <div class="border-effect-card color-swatch-pill ${be.id === this.state.photoBorderEffect ? 'active' : ''}" data-effect="${be.id}" onclick="ResinServiceApp.setBorderEffect('${be.id}')" style="justify-content: center; padding: 8px 6px;">
@@ -793,6 +832,17 @@ const ResinServiceApp = {
                     <strong style="font-size: 12.5px; color: #FFF; display: block;">Subir Segunda Foto para el Reverso (+${this.settings.charmExtraUsd || 1.0}$ USD)</strong>
                     <span style="font-size: 10.5px; color: #94A3B8;">Foto doble cara en resina cristalina</span>
                   `}
+                </div>
+                <!-- Forma de la Foto Trasera -->
+                <div style="margin-top: 10px;">
+                  <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">FORMA DEL RECORTE / MARCO (REVERSO)</label>
+                  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
+                    <button type="button" class="btn-framing-shape ${this.state.photoBackShape === 'full' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('full', true)">🔲 Molde</button>
+                    <button type="button" class="btn-framing-shape ${this.state.photoBackShape === 'polaroid' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('polaroid', true)">📸 Polaroid</button>
+                    <button type="button" class="btn-framing-shape ${this.state.photoBackShape === 'circle' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('circle', true)">⭕ Círculo</button>
+                    <button type="button" class="btn-framing-shape ${this.state.photoBackShape === 'heart' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('heart', true)">💖 Corazón</button>
+                    <button type="button" class="btn-framing-shape ${this.state.photoBackShape === 'square' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('square', true)">⏹️ Cuadrado</button>
+                  </div>
                 </div>
               ` : ''}
 
@@ -948,6 +998,190 @@ const ResinServiceApp = {
   // =========================================================================
   // Update Live Visual Preview (SVG Shapes, Photos, Back Side, NFC, Reflections)
   // =========================================================================
+  
+  // =========================================================================
+  // Photo Direct Upload, Framing Shapes & Interactive Transform Handlers
+  // =========================================================================
+  triggerPhotoUpload() {
+    const inp = document.getElementById('resin-direct-photo-input');
+    if (inp) {
+      inp.value = '';
+      inp.click();
+    }
+  },
+
+  handleDirectPhotoUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const dataUrl = evt.target.result;
+      if (this.state.isFlipped) {
+        this.state.photoBackUrl = dataUrl;
+        this.state.photoBackType = 'photo';
+        this.state.photoBackTransform = { x: 0, y: 0, scale: 1.0, isSelected: true };
+      } else {
+        this.state.photoFrontUrl = dataUrl;
+        this.state.photoFrontTransform = { x: 0, y: 0, scale: 1.0, isSelected: true };
+      }
+      this.updateVisualPreview();
+      this.renderActiveTabContent();
+    };
+    reader.readAsDataURL(file);
+  },
+
+  setPhotoFramingShape(shape, isBack = false) {
+    if (isBack || this.state.isFlipped) {
+      this.state.photoBackShape = shape;
+    } else {
+      this.state.photoFrontShape = shape;
+    }
+    this.updateVisualPreview();
+    this.renderActiveTabContent();
+  },
+
+  deselectPhoto() {
+    this.state.photoFrontTransform.isSelected = false;
+    this.state.photoBackTransform.isSelected = false;
+    this.updateVisualPreview();
+  },
+
+  selectPhoto(isBack = false) {
+    if (isBack || this.state.isFlipped) {
+      this.state.photoBackTransform.isSelected = true;
+    } else {
+      this.state.photoFrontTransform.isSelected = true;
+    }
+    this.updateVisualPreview();
+  },
+
+  getShapeAnchor(shape) {
+    switch (shape) {
+      case 'rectangle': return { x: 170, y: 114, rimY: 120, type: 'screw' };
+      case 'circle':    return { x: 170, y: 119, rimY: 125, type: 'screw' };
+      case 'heart':     return { x: 170, y: 159, rimY: 165, type: 'screw' };
+      case 'hexagon':   return { x: 170, y: 119, rimY: 125, type: 'screw' };
+      case 'dogtag':    return { x: 170, y: 118, rimY: 120, holeY: 134, type: 'ring' };
+      default:          return { x: 170, y: 114, rimY: 120, type: 'screw' };
+    }
+  },
+
+  getSvgPoint(svg, evt) {
+    const clientX = evt.touches && evt.touches.length ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches && evt.touches.length ? evt.touches[0].clientY : evt.clientY;
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const screenCTM = svg.getScreenCTM();
+    if (screenCTM) {
+      return pt.matrixTransform(screenCTM.inverse());
+    }
+    const rect = svg.getBoundingClientRect();
+    return {
+      x: ((clientX - rect.left) / rect.width) * 340,
+      y: ((clientY - rect.top) / rect.height) * 430
+    };
+  },
+
+  initTransformEvents() {
+    if (this._eventsInitialized) return;
+    this._eventsInitialized = true;
+
+    const self = this;
+    let isDragging = false;
+    let isResizing = false;
+    let activeHandle = null;
+    let dragStartPt = { x: 0, y: 0 };
+    let initialX = 0;
+    let initialY = 0;
+    let initialScale = 1.0;
+    let activeSvg = null;
+
+    const onStart = (e) => {
+      const target = e.target;
+      const svg = target.closest('svg');
+      if (!svg) return;
+      activeSvg = svg;
+
+      const isBack = self.state.isFlipped;
+      const tf = isBack ? self.state.photoBackTransform : self.state.photoFrontTransform;
+      const photoUrl = isBack ? self.state.photoBackUrl : self.state.photoFrontUrl;
+
+      // 1. Check if clicked a corner handle
+      if (target.classList && target.classList.contains('resin-corner-handle')) {
+        e.preventDefault();
+        e.stopPropagation();
+        isResizing = true;
+        activeHandle = target.dataset.handle;
+        dragStartPt = self.getSvgPoint(svg, e);
+        initialScale = tf.scale;
+        return;
+      }
+
+      // 2. Check if clicked the photo drag body or photo image
+      if (target.classList && (target.classList.contains('resin-drag-area') || target.tagName === 'image')) {
+        e.preventDefault();
+        e.stopPropagation();
+        isDragging = true;
+        tf.isSelected = true;
+        dragStartPt = self.getSvgPoint(svg, e);
+        initialX = tf.x;
+        initialY = tf.y;
+        self.updateVisualPreview();
+        return;
+      }
+
+      // 3. If clicked outside photo area on SVG background, deselect
+      if (tf.isSelected) {
+        tf.isSelected = false;
+        self.updateVisualPreview();
+      }
+    };
+
+    const onMove = (e) => {
+      if (!isDragging && !isResizing) return;
+      if (!activeSvg) return;
+      e.preventDefault();
+
+      const isBack = self.state.isFlipped;
+      const tf = isBack ? self.state.photoBackTransform : self.state.photoFrontTransform;
+      const pt = self.getSvgPoint(activeSvg, e);
+
+      if (isDragging) {
+        const dx = pt.x - dragStartPt.x;
+        const dy = pt.y - dragStartPt.y;
+        tf.x = initialX + dx;
+        tf.y = initialY + dy;
+        self.updateVisualPreview();
+      } else if (isResizing) {
+        const centerX = 170 + tf.x;
+        const centerY = 250 + tf.y;
+        const currentDist = Math.hypot(pt.x - centerX, pt.y - centerY);
+        const baseDist = Math.hypot(120, 135);
+        const newScale = Math.min(3.5, Math.max(0.35, currentDist / baseDist));
+        tf.scale = parseFloat(newScale.toFixed(3));
+        self.updateVisualPreview();
+      }
+    };
+
+    const onEnd = () => {
+      isDragging = false;
+      isResizing = false;
+      activeHandle = null;
+    };
+
+    // Attach listeners to flip container
+    const stage = document.querySelector('.resin-preview-stage');
+    if (stage) {
+      stage.addEventListener('mousedown', onStart);
+      stage.addEventListener('touchstart', onStart, { passive: false });
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchend', onEnd);
+  },
+
   updateVisualPreview() {
     const isSilver = this.state.hardware === 'silver';
     const metalGrad = isSilver ? 'url(#silverHardwareGrad)' : 'url(#goldHardwareGrad)';
@@ -961,11 +1195,29 @@ const ResinServiceApp = {
     if (usdEl) usdEl.textContent = `$${pricing.totalUsd.toFixed(2)} USD`;
     if (copEl) copEl.textContent = `~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs`;
 
+    // Toggle Done Editing button on stage
+    const activeTf = this.state.isFlipped ? this.state.photoBackTransform : this.state.photoFrontTransform;
+    const btnDone = document.getElementById('btn-stage-done-edit');
+    if (btnDone) {
+      btnDone.style.display = (activeTf && activeTf.isSelected) ? 'inline-flex' : 'none';
+    }
+
+    // Toggle chip active state on stage
+    const currentFraming = this.state.isFlipped ? (this.state.photoBackShape || 'full') : (this.state.photoFrontShape || 'full');
+    document.querySelectorAll('.chip-shape-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.shape === currentFraming);
+    });
+
+    const uploadLbl = document.getElementById('lbl-stage-upload-photo');
+    if (uploadLbl) {
+      uploadLbl.textContent = this.state.isFlipped ? 'Foto al Reverso' : 'Foto al Frente';
+    }
+
     const svgFront = document.getElementById('resin-keychain-svg');
     const svgBack = document.getElementById('resin-keychain-svg-back');
     if (!svgFront || !svgBack) return;
 
-    // Common SVG Defs (Gradients, Hardware, Glitter Patterns)
+    // Common SVG Defs (Gradients, Hardware, Glitter Patterns, Framing ClipPaths)
     const commonDefs = `
       <defs>
         <linearGradient id="goldHardwareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1018,7 +1270,7 @@ const ResinServiceApp = {
           <polygon points="24,22 31,25 28,31 21,28" fill="#CBD5E1" opacity="0.95" />
         </pattern>
 
-        <!-- Shape ClipPaths for Photo Resin Keychains -->
+        <!-- Mold Shape ClipPaths -->
         <clipPath id="clip-rectangle">
           <rect x="55" y="120" width="230" height="260" rx="26" />
         </clipPath>
@@ -1039,6 +1291,23 @@ const ResinServiceApp = {
           <rect x="75" y="120" width="190" height="260" rx="38" />
         </clipPath>
 
+        <!-- Internal Photo Framing Shapes -->
+        <clipPath id="photo-frame-polaroid">
+          <rect x="78" y="140" width="184" height="175" rx="4" />
+        </clipPath>
+
+        <clipPath id="photo-frame-circle">
+          <circle cx="170" cy="250" r="105" />
+        </clipPath>
+
+        <clipPath id="photo-frame-heart">
+          <path d="M 170,180 C 135,120 75,135 75,205 C 75,265 135,320 170,365 C 205,320 265,265 265,205 C 265,135 205,120 170,180 Z" />
+        </clipPath>
+
+        <clipPath id="photo-frame-square">
+          <rect x="75" y="155" width="190" height="190" rx="20" />
+        </clipPath>
+
         <!-- Master Letter ClipPath -->
         <clipPath id="resin-letter-clip">
           <text x="170" y="340" text-anchor="middle" font-family="'Arial Black', 'Montserrat', Impact, sans-serif" font-weight="900" font-size="205">${this.state.letter}</text>
@@ -1051,18 +1320,19 @@ const ResinServiceApp = {
       </defs>
     `;
 
-    // Hardware Assembly (Top Ring + Chains + Tassel)
-    const renderHardwareAssembly = (anchorX = 170, anchorY = 120) => {
+    // Hardware Assembly (Key Ring + Unbroken Chains + Tassel + Charm)
+    const renderHardwareAssembly = (anchorX = 170, anchorY = 114, shapeName = 'rectangle') => {
       return `
         <!-- Hardware Assembly -->
         <g id="svg-hardware-group">
           <!-- Split Key Ring -->
           <circle cx="170" cy="45" r="26" fill="none" stroke="${metalGrad}" stroke-width="7" />
-          <circle cx="170" cy="45" r="23" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="1" />
-          <line x1="168" y1="19" x2="172" y2="71" stroke="rgba(0,0,0,0.25)" stroke-width="1.5" />
+          <circle cx="170" cy="45" r="23" fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="1" />
+          <circle cx="170" cy="45" r="27" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.75" />
+          <line x1="168" y1="19" x2="172" y2="71" stroke="rgba(0,0,0,0.3)" stroke-width="1.8" />
 
-          <!-- Chain Links to Anchor -->
-          ${this.renderChain(anchorX, anchorY, isSilver)}
+          <!-- Continuous Unbroken Chain Links & Bottom Anchor -->
+          ${this.renderChain(anchorX, anchorY, isSilver, shapeName)}
 
           <!-- Suede Tassel -->
           <g transform="translate(60, 82)">
@@ -1100,7 +1370,7 @@ const ResinServiceApp = {
       return '';
     };
 
-    // NFC Encapsulated Badge (Visible on the bottom right inside the resin)
+    // NFC Encapsulated Badge
     const nfcBadgeHtml = this.state.hasNfc ? `
       <g transform="translate(220, 320)">
         <rect x="0" y="0" width="56" height="24" rx="12" fill="rgba(2, 132, 199, 0.85)" stroke="rgba(255,255,255,0.7)" stroke-width="1.2" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.6))" />
@@ -1112,13 +1382,90 @@ const ResinServiceApp = {
     // 1. BUILD FRONT SVG
     // ==========================================
     if (isPhoto) {
-      const clipId = `clip-${shape}`;
+      const moldClipId = `clip-${shape}`;
+      const anchor = this.getShapeAnchor(shape);
+
       let shapePathOutline = '';
       if (shape === 'rectangle') shapePathOutline = `<rect x="55" y="120" width="230" height="260" rx="26" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
       else if (shape === 'circle') shapePathOutline = `<circle cx="170" cy="250" r="125" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
       else if (shape === 'heart') shapePathOutline = `<path d="M 170,165 C 130,100 55,115 55,195 C 55,265 130,325 170,375 C 210,325 285,265 285,195 C 285,115 210,100 170,165 Z" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
       else if (shape === 'hexagon') shapePathOutline = `<polygon points="170,125 285,190 285,315 170,380 55,315 55,190" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
       else if (shape === 'dogtag') shapePathOutline = `<rect x="75" y="120" width="190" height="260" rx="38" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
+
+      // Front Framing Shape
+      const frontFraming = this.state.photoFrontShape || 'full';
+      let activeFrontClip = moldClipId;
+      let photoBackingDecor = '';
+
+      if (frontFraming === 'polaroid') {
+        activeFrontClip = 'photo-frame-polaroid';
+        photoBackingDecor = `
+          <rect x="68" y="130" width="204" height="240" rx="8" fill="#F8FAFC" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.5))" />
+          <rect x="76" y="138" width="188" height="179" rx="4" fill="#0F172A" />
+        `;
+      } else if (frontFraming === 'circle') {
+        activeFrontClip = 'photo-frame-circle';
+        photoBackingDecor = `
+          <circle cx="170" cy="250" r="108" fill="#0F172A" stroke="rgba(255,255,255,0.7)" stroke-width="3" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.5))" />
+        `;
+      } else if (frontFraming === 'heart') {
+        activeFrontClip = 'photo-frame-heart';
+        photoBackingDecor = `
+          <path d="M 170,180 C 135,120 75,135 75,205 C 75,265 135,320 170,365 C 205,320 265,265 265,205 C 265,135 205,120 170,180 Z" fill="#0F172A" stroke="rgba(255,255,255,0.7)" stroke-width="3" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.5))" />
+        `;
+      } else if (frontFraming === 'square') {
+        activeFrontClip = 'photo-frame-square';
+        photoBackingDecor = `
+          <rect x="73" y="153" width="194" height="194" rx="22" fill="#0F172A" stroke="rgba(255,255,255,0.7)" stroke-width="3" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.5))" />
+        `;
+      }
+
+      const frontTf = this.state.photoFrontTransform;
+      const frontPhotoHtml = this.state.photoFrontUrl ? `
+        ${photoBackingDecor}
+        <g clip-path="url(#${activeFrontClip})">
+          <g transform="translate(${(170 + frontTf.x).toFixed(1)}, ${(250 + frontTf.y).toFixed(1)}) scale(${frontTf.scale}) translate(-170, -250)">
+            <image href="${this.state.photoFrontUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
+          </g>
+        </g>
+      ` : `
+        <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #831843 0%, #1E1B4B 100%)" />
+        <g transform="translate(170, 240)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload()">
+          <circle cx="0" cy="0" r="36" fill="rgba(244, 114, 182, 0.25)" stroke="#F472B6" stroke-width="2" />
+          <text x="0" y="8" text-anchor="middle" font-size="28">📸</text>
+          <text x="0" y="48" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="13" fill="#FFF">Toca para Subir Foto</text>
+          <text x="0" y="65" text-anchor="middle" font-size="10.5" fill="#FDA4AF">Tu recuerdo aquí en resina</text>
+        </g>
+      `;
+
+      // Front transform handles (ONLY visible when isSelected === true!)
+      let frontTransformOverlay = '';
+      if (this.state.photoFrontUrl && frontTf.isSelected) {
+        const boxW = 240 * frontTf.scale;
+        const boxH = 270 * frontTf.scale;
+        const boxX = (170 + frontTf.x) - boxW / 2;
+        const boxY = (250 + frontTf.y) - boxH / 2;
+
+        frontTransformOverlay = `
+          <!-- Interactive Photo Selection Box & Corner Resizing Handles -->
+          <g id="resin-front-transform-overlay" class="resin-photo-overlay">
+            <rect x="${boxX.toFixed(1)}" y="${boxY.toFixed(1)}" width="${boxW.toFixed(1)}" height="${boxH.toFixed(1)}" fill="rgba(56, 189, 248, 0.08)" stroke="#38BDF8" stroke-width="2" stroke-dasharray="6,4" class="resin-drag-area" style="cursor: move;" />
+            
+            <line x1="${boxX.toFixed(1)}" y1="${(boxY + boxH/2).toFixed(1)}" x2="${(boxX + boxW).toFixed(1)}" y2="${(boxY + boxH/2).toFixed(1)}" stroke="#38BDF8" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6" />
+            <line x1="${(boxX + boxW/2).toFixed(1)}" y1="${boxY.toFixed(1)}" x2="${(boxX + boxW/2).toFixed(1)}" y2="${(boxY + boxH).toFixed(1)}" stroke="#38BDF8" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6" />
+
+            <circle cx="${boxX.toFixed(1)}" cy="${boxY.toFixed(1)}" r="8.5" fill="#0284C7" stroke="#FFF" stroke-width="2.5" class="resin-corner-handle" data-handle="tl" style="cursor: nwse-resize;" />
+            <circle cx="${(boxX + boxW).toFixed(1)}" cy="${boxY.toFixed(1)}" r="8.5" fill="#0284C7" stroke="#FFF" stroke-width="2.5" class="resin-corner-handle" data-handle="tr" style="cursor: nesw-resize;" />
+            <circle cx="${boxX.toFixed(1)}" cy="${(boxY + boxH).toFixed(1)}" r="8.5" fill="#0284C7" stroke="#FFF" stroke-width="2.5" class="resin-corner-handle" data-handle="bl" style="cursor: nesw-resize;" />
+            <circle cx="${(boxX + boxW).toFixed(1)}" cy="${(boxY + boxH).toFixed(1)}" r="8.5" fill="#0284C7" stroke="#FFF" stroke-width="2.5" class="resin-corner-handle" data-handle="br" style="cursor: nwse-resize;" />
+
+            <g transform="translate(${(boxX + boxW/2).toFixed(1)}, ${(boxY - 14).toFixed(1)})">
+              <rect x="-85" y="-12" width="170" height="24" rx="12" fill="#0F172A" stroke="#38BDF8" stroke-width="1.2" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.6))" />
+              <text x="0" y="4" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="9.5" fill="#38BDF8">✂️ Arrastra • Esquinas para Escalar</text>
+            </g>
+          </g>
+        `;
+      }
 
       svgFront.innerHTML = `
         ${commonDefs}
@@ -1134,26 +1481,10 @@ const ResinServiceApp = {
         </g>
 
         <!-- Main Cast Front Content -->
-        <g clip-path="url(#${clipId})">
-          <!-- Background Base Layer -->
+        <g clip-path="url(#${moldClipId})">
           <rect x="0" y="100" width="340" height="300" fill="#1E293B" />
-
-          ${this.state.photoFrontUrl ? `
-            <image href="${this.state.photoFrontUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
-          ` : `
-            <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #831843 0%, #1E1B4B 100%)" />
-            <g transform="translate(170, 240)">
-              <circle cx="0" cy="0" r="36" fill="rgba(244, 114, 182, 0.25)" stroke="#F472B6" stroke-width="2" />
-              <text x="0" y="8" text-anchor="middle" font-size="28">📸</text>
-              <text x="0" y="48" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="13" fill="#FFF">Toca "Subir Foto"</text>
-              <text x="0" y="65" text-anchor="middle" font-size="10.5" fill="#FDA4AF">Tu recuerdo aquí en resina</text>
-            </g>
-          `}
-
-          <!-- Border Inclusions (Gold / Silver / Glitter) -->
-          ${getBorderFlakesHtml(clipId)}
-
-          <!-- Specular Liquid Gloss Highlight (Realistic Curved Glass Reflection) -->
+          ${frontPhotoHtml}
+          ${getBorderFlakesHtml(moldClipId)}
           <path d="M 50,140 Q 170,200 290,150 L 290,210 Q 170,260 50,200 Z" fill="url(#liquidGlossGrad)" opacity="0.65" pointer-events="none" />
           <ellipse cx="120" cy="320" rx="35" ry="12" fill="rgba(255,255,255,0.2)" transform="rotate(-18 120 320)" pointer-events="none" />
         </g>
@@ -1164,8 +1495,11 @@ const ResinServiceApp = {
         <!-- Encapsulated Smart NFC Chip Badge -->
         ${nfcBadgeHtml}
 
-        <!-- Hardware & Chains -->
-        ${renderHardwareAssembly(170, 122)}
+        <!-- Unbroken Hardware & Chains -->
+        ${renderHardwareAssembly(anchor.x, anchor.y, shape)}
+
+        <!-- Interactive Transformation Overlay -->
+        ${frontTransformOverlay}
       `;
     } else {
       // Classic Letter Mode
@@ -1201,7 +1535,7 @@ const ResinServiceApp = {
           <text x="170" y="278" text-anchor="middle" font-family="'Caveat', cursive, sans-serif" font-weight="700" font-size="30" fill="#FFF" stroke="#0F172A" stroke-width="0.75" filter="drop-shadow(0 2px 5px rgba(0,0,0,0.8))">${this.state.customName.toUpperCase()}</text>
         ` : ''}
 
-        ${renderHardwareAssembly(anchor.x, 185)}
+        ${renderHardwareAssembly(anchor.x, anchor.y, 'letter')}
       `;
     }
 
@@ -1209,7 +1543,9 @@ const ResinServiceApp = {
     // 2. BUILD BACK SVG (REVERSO)
     // ==========================================
     if (isPhoto) {
-      const clipId = `clip-${shape}`;
+      const moldClipId = `clip-${shape}`;
+      const anchor = this.getShapeAnchor(shape);
+
       let shapePathOutline = '';
       if (shape === 'rectangle') shapePathOutline = `<rect x="55" y="120" width="230" height="260" rx="26" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
       else if (shape === 'circle') shapePathOutline = `<circle cx="170" cy="250" r="125" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
@@ -1218,16 +1554,75 @@ const ResinServiceApp = {
       else if (shape === 'dogtag') shapePathOutline = `<rect x="75" y="120" width="190" height="260" rx="38" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="4" />`;
 
       let backContentHtml = '';
+      let backTransformOverlay = '';
 
       if (this.state.photoBackType === 'photo') {
+        const backFraming = this.state.photoBackShape || 'full';
+        let activeBackClip = moldClipId;
+        let backBackingDecor = '';
+
+        if (backFraming === 'polaroid') {
+          activeBackClip = 'photo-frame-polaroid';
+          backBackingDecor = `
+            <rect x="68" y="130" width="204" height="240" rx="8" fill="#F8FAFC" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.5))" />
+            <rect x="76" y="138" width="188" height="179" rx="4" fill="#0F172A" />
+          `;
+        } else if (backFraming === 'circle') {
+          activeBackClip = 'photo-frame-circle';
+          backBackingDecor = `
+            <circle cx="170" cy="250" r="108" fill="#0F172A" stroke="rgba(255,255,255,0.7)" stroke-width="3" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.5))" />
+          `;
+        } else if (backFraming === 'heart') {
+          activeBackClip = 'photo-frame-heart';
+          backBackingDecor = `
+            <path d="M 170,180 C 135,120 75,135 75,205 C 75,265 135,320 170,365 C 205,320 265,265 265,205 C 265,135 205,120 170,180 Z" fill="#0F172A" stroke="rgba(255,255,255,0.7)" stroke-width="3" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.5))" />
+          `;
+        } else if (backFraming === 'square') {
+          activeBackClip = 'photo-frame-square';
+          backBackingDecor = `
+            <rect x="73" y="153" width="194" height="194" rx="22" fill="#0F172A" stroke="rgba(255,255,255,0.7)" stroke-width="3" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.5))" />
+          `;
+        }
+
+        const backTf = this.state.photoBackTransform;
         if (this.state.photoBackUrl) {
           backContentHtml = `
-            <image href="${this.state.photoBackUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
+            ${backBackingDecor}
+            <g clip-path="url(#${activeBackClip})">
+              <g transform="translate(${(170 + backTf.x).toFixed(1)}, ${(250 + backTf.y).toFixed(1)}) scale(${backTf.scale}) translate(-170, -250)">
+                <image href="${this.state.photoBackUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
+              </g>
+            </g>
           `;
+
+          if (backTf.isSelected) {
+            const boxW = 240 * backTf.scale;
+            const boxH = 270 * backTf.scale;
+            const boxX = (170 + backTf.x) - boxW / 2;
+            const boxY = (250 + backTf.y) - boxH / 2;
+
+            backTransformOverlay = `
+              <g id="resin-back-transform-overlay" class="resin-photo-overlay">
+                <rect x="${boxX.toFixed(1)}" y="${boxY.toFixed(1)}" width="${boxW.toFixed(1)}" height="${boxH.toFixed(1)}" fill="rgba(56, 189, 248, 0.08)" stroke="#38BDF8" stroke-width="2" stroke-dasharray="6,4" class="resin-drag-area" style="cursor: move;" />
+                <line x1="${boxX.toFixed(1)}" y1="${(boxY + boxH/2).toFixed(1)}" x2="${(boxX + boxW).toFixed(1)}" y2="${(boxY + boxH/2).toFixed(1)}" stroke="#38BDF8" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6" />
+                <line x1="${(boxX + boxW/2).toFixed(1)}" y1="${boxY.toFixed(1)}" x2="${(boxX + boxW/2).toFixed(1)}" y2="${(boxY + boxH).toFixed(1)}" stroke="#38BDF8" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6" />
+
+                <circle cx="${boxX.toFixed(1)}" cy="${boxY.toFixed(1)}" r="8.5" fill="#0284C7" stroke="#FFF" stroke-width="2.5" class="resin-corner-handle" data-handle="tl" style="cursor: nwse-resize;" />
+                <circle cx="${(boxX + boxW).toFixed(1)}" cy="${boxY.toFixed(1)}" r="8.5" fill="#0284C7" stroke="#FFF" stroke-width="2.5" class="resin-corner-handle" data-handle="tr" style="cursor: nesw-resize;" />
+                <circle cx="${boxX.toFixed(1)}" cy="${(boxY + boxH).toFixed(1)}" r="8.5" fill="#0284C7" stroke="#FFF" stroke-width="2.5" class="resin-corner-handle" data-handle="bl" style="cursor: nesw-resize;" />
+                <circle cx="${(boxX + boxW).toFixed(1)}" cy="${(boxY + boxH).toFixed(1)}" r="8.5" fill="#0284C7" stroke="#FFF" stroke-width="2.5" class="resin-corner-handle" data-handle="br" style="cursor: nwse-resize;" />
+
+                <g transform="translate(${(boxX + boxW/2).toFixed(1)}, ${(boxY - 14).toFixed(1)})">
+                  <rect x="-85" y="-12" width="170" height="24" rx="12" fill="#0F172A" stroke="#38BDF8" stroke-width="1.2" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.6))" />
+                  <text x="0" y="4" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="9.5" fill="#38BDF8">✂️ Arrastra • Esquinas para Escalar</text>
+                </g>
+              </g>
+            `;
+          }
         } else {
           backContentHtml = `
             <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)" />
-            <g transform="translate(170, 240)">
+            <g transform="translate(170, 240)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload()">
               <circle cx="0" cy="0" r="32" fill="rgba(255,255,255,0.15)" stroke="#A78BFA" stroke-width="1.5" />
               <text x="0" y="8" text-anchor="middle" font-size="24">🖼️</text>
               <text x="0" y="45" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="12" fill="#FFF">Segunda Foto</text>
@@ -1244,7 +1639,6 @@ const ResinServiceApp = {
             <circle cx="0" cy="-35" r="22" fill="#1DB954" filter="drop-shadow(0 4px 10px rgba(29,185,84,0.4))" />
             <path d="M -11,-42 Q 0,-47 11,-42 M -9,-36 Q 0,-40 9,-36 M -7,-30 Q 0,-33 7,-30" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" />
             
-            <!-- Sound wave bars -->
             <g transform="translate(-60, 5)">
               <line x1="0" y1="0" x2="0" y2="24" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
               <line x1="12" y1="-8" x2="12" y2="30" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
@@ -1285,13 +1679,13 @@ const ResinServiceApp = {
 
       svgBack.innerHTML = `
         ${commonDefs}
-        <g clip-path="url(#${clipId})">
+        <g clip-path="url(#${moldClipId})">
           ${backContentHtml}
-          <!-- Liquid Specular Reflection on Back -->
           <path d="M 50,140 Q 170,200 290,150 L 290,210 Q 170,260 50,200 Z" fill="url(#liquidGlossGrad)" opacity="0.5" pointer-events="none" />
         </g>
         ${shapePathOutline}
-        ${renderHardwareAssembly(170, 122)}
+        ${renderHardwareAssembly(anchor.x, anchor.y, shape)}
+        ${backTransformOverlay}
       `;
     } else {
       // Letter Mode back side (mirrored letter)
@@ -1299,23 +1693,32 @@ const ResinServiceApp = {
     }
   },
 
-  // Helper for connecting chain links
-  renderChain(anchorX, anchorY, isSilver) {
+    // Helper for connecting chain links without breakage
+  renderChain(anchorX, anchorY, isSilver, shape = 'rectangle') {
     const metalGrad = isSilver ? 'url(#silverHardwareGrad)' : 'url(#goldHardwareGrad)';
-    const highlightColor = isSilver ? '#FFFFFF' : '#FFF9D2';
-    const shadowColor = isSilver ? 'rgba(0,0,0,0.45)' : 'rgba(120,53,15,0.45)';
+    const shadowColor = isSilver ? 'rgba(0,0,0,0.5)' : 'rgba(120,53,15,0.45)';
+    const p0 = { x: 170, y: 71 }; // Bottom of split keyring
+    const p2 = { x: anchorX, y: anchorY }; // Connection point into resin
 
-    const p0 = { x: 170, y: 72 };
-    const p2 = { x: anchorX, y: anchorY };
+    // Top Jump Ring (connecting through the split ring)
+    let outputHtml = `
+      <g filter="drop-shadow(0 2px 3px rgba(0,0,0,0.4))">
+        <ellipse cx="170" cy="73" rx="4.5" ry="6.5" fill="none" stroke="${metalGrad}" stroke-width="2.8" />
+        <ellipse cx="170" cy="73" rx="2.5" ry="4.5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.8" />
+      </g>
+    `;
+
+    // Dynamic link calculation so every link overlaps smoothly without gaps
+    const dist = Math.hypot(p2.x - p0.x, p2.y - p0.y);
+    const linkPitch = 9.2; // Spacing between link centers
+    const numLinks = Math.max(5, Math.ceil(dist / linkPitch));
+
     const dx = p2.x - p0.x;
     const dy = p2.y - p0.y;
-    const p1 = { x: p0.x + dx * 0.25, y: p0.y + dy * 0.65 };
-
-    const numLinks = 6;
-    let linksHtml = '';
+    const p1 = { x: p0.x + dx * 0.15, y: p0.y + dy * 0.65 };
 
     for (let i = 0; i < numLinks; i++) {
-      const t = i / (numLinks - 1);
+      const t = (i + 0.6) / (numLinks + 0.2);
       const invT = 1 - t;
       const cx = invT * invT * p0.x + 2 * invT * t * p1.x + t * t * p2.x;
       const cy = invT * invT * p0.y + 2 * invT * t * p1.y + t * t * p2.y;
@@ -1325,29 +1728,47 @@ const ResinServiceApp = {
       const angle = (Math.atan2(tx, ty) * 180) / Math.PI;
 
       if (i % 2 === 0) {
-        linksHtml += `
-          <g transform="rotate(${angle.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})">
-            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="5" ry="8.5" fill="none" stroke="${metalGrad}" stroke-width="3" />
+        // Front-facing link
+        outputHtml += `
+          <g transform="rotate(${angle.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})" filter="drop-shadow(0 2px 3px ${shadowColor})">
+            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="4.8" ry="8.2" fill="none" stroke="${metalGrad}" stroke-width="3" />
+            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="2.4" ry="5.8" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.8" />
           </g>
         `;
       } else {
-        const sideAngle = angle + (i % 4 === 1 ? 16 : -16);
-        linksHtml += `
-          <g transform="rotate(${sideAngle.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})">
-            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="3" ry="8" fill="none" stroke="${metalGrad}" stroke-width="2.5" />
+        // Interlaced side-facing link (tilted to thread through adjacent links)
+        const sideTilt = angle + (i % 4 === 1 ? 14 : -14);
+        outputHtml += `
+          <g transform="rotate(${sideTilt.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})" filter="drop-shadow(0 2px 3px ${shadowColor})">
+            <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="2.6" ry="8.0" fill="none" stroke="${metalGrad}" stroke-width="3.2" />
+            <line x1="${cx.toFixed(1)}" y1="${(cy - 6).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy + 6).toFixed(1)}" stroke="rgba(255,255,255,0.5)" stroke-width="1" />
           </g>
         `;
       }
     }
 
-    const eyeletHtml = `
-      <g>
-        <circle cx="${anchorX}" cy="${anchorY}" r="5.5" fill="none" stroke="${metalGrad}" stroke-width="3" />
-        <line x1="${anchorX}" y1="${anchorY}" x2="${anchorX}" y2="${anchorY + 14}" stroke="${metalGrad}" stroke-width="2.8" stroke-linecap="round" />
-      </g>
-    `;
+    // Bottom Anchor: Eyelet Screw (Cáncamo) or Dogtag Jump Ring
+    if (shape === 'dogtag') {
+      outputHtml += `
+        <g filter="drop-shadow(0 3px 5px rgba(0,0,0,0.5))">
+          <circle cx="${anchorX}" cy="${anchorY + 16}" r="6" fill="#0F172A" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+          <ellipse cx="${anchorX}" cy="${anchorY + 8}" rx="6" ry="11" fill="none" stroke="${metalGrad}" stroke-width="3.4" />
+          <ellipse cx="${anchorX}" cy="${anchorY + 8}" rx="3.2" ry="8" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="0.8" />
+        </g>
+      `;
+    } else {
+      outputHtml += `
+        <g filter="drop-shadow(0 3px 5px rgba(0,0,0,0.5))">
+          <circle cx="${anchorX}" cy="${anchorY}" r="5.5" fill="none" stroke="${metalGrad}" stroke-width="3.2" />
+          <circle cx="${anchorX}" cy="${anchorY}" r="3" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.8" />
+          <ellipse cx="${anchorX}" cy="${anchorY + 6}" rx="3.5" ry="1.5" fill="${metalGrad}" />
+          <line x1="${anchorX}" y1="${anchorY + 6}" x2="${anchorX}" y2="${anchorY + 18}" stroke="${metalGrad}" stroke-width="2.8" stroke-linecap="round" />
+          <line x1="${anchorX - 0.7}" y1="${anchorY + 7}" x2="${anchorX - 0.7}" y2="${anchorY + 16}" stroke="rgba(255,255,255,0.6)" stroke-width="1" stroke-linecap="round" />
+        </g>
+      `;
+    }
 
-    return linksHtml + eyeletHtml;
+    return outputHtml;
   },
 
   getLetterAnchor(letter) {
@@ -1586,7 +2007,7 @@ const ResinServiceApp = {
     }
 
     const text =
-`✨ *¡NUEVO PEDIDO SHELLIART RESINA - PEDIGOCHOS!* ✨
+`✨ *¡NUEVO PEDIDO SHEKKIART - PEDIGOCHOS!* ✨
 ━━━━━━━━━━━━━━━━━━━━
 ${itemBlock}
 ━━━━━━━━━━━━━━━━━━━━
@@ -1596,9 +2017,9 @@ ${itemBlock}
 ${deliveryBlock}
 ━━━━━━━━━━━━━━━━━━━━
 📍 *Enviado desde PediGochos App*
-💬 *Taller ShelliArt WhatsApp Oficial: ${this.resinWhatsAppDisplay}*
+💬 *Taller ShekkiArt WhatsApp Oficial: ${this.resinWhatsAppDisplay}*
 
-_Hola ShelliArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme la recepción del pedido y fecha estimada de entrega? ¡Gracias!_`;
+_Hola ShekkiArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme la recepción del pedido y fecha estimada de entrega? ¡Gracias!_`;
 
     return encodeURIComponent(text);
   },
@@ -1612,7 +2033,7 @@ _Hola ShelliArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme 
         clientName: this.state.customerName || 'Cliente WhatsApp',
         clientPhone: this.state.customerPhone || '',
         productType: isPhoto ? 'photo' : 'keychain_letter',
-        productTitle: isPhoto ? `Llavero con Foto & NFC (${this.state.photoShapeName})` : `Llavero de Inicial "${this.state.letter}"`,
+        productTitle: isPhoto ? `Llavero Personalizado (${this.state.photoShapeName})` : `Llavero de Inicial "${this.state.letter}"`,
         photoShape: this.state.photoShape,
         photoShapeName: this.state.photoShapeName,
         photoFrontUrl: this.state.photoFrontUrl,
@@ -1672,7 +2093,7 @@ _Hola ShelliArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme 
       clientName: customerName,
       clientPhone: customerPhone,
       productType: isPhoto ? 'photo' : 'keychain_letter',
-      productTitle: isPhoto ? `Llavero con Foto & NFC (${this.state.photoShapeName})` : `Llavero de Inicial "${this.state.letter}"`,
+      productTitle: isPhoto ? `Llavero Personalizado (${this.state.photoShapeName})` : `Llavero de Inicial "${this.state.letter}"`,
       photoShape: this.state.photoShape,
       photoShapeName: this.state.photoShapeName,
       photoFrontUrl: this.state.photoFrontUrl,
@@ -1743,7 +2164,7 @@ _Hola ShelliArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme 
         <div style="display: flex; align-items: center; gap: 10px;">
           <button type="button" class="resin-back-btn" onclick="ResinServiceApp.closeChatModal()">←</button>
           <div>
-            <h3><span>✨</span> Chat con ShelliArt Resina</h3>
+            <h3><span>✨</span> Chat con ShekkiArt</h3>
             <span style="font-size: 11px; color: #F472B6; font-weight: 700;">Taller Artesanal • San Antonio & Cúcuta</span>
           </div>
         </div>
@@ -1754,7 +2175,7 @@ _Hola ShelliArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme 
         <div class="resin-quote-sheet" id="resin-ficha-tecnica"></div>
         <div class="resin-messages-area" id="resin-chat-messages"></div>
         <form class="resin-chat-input-bar" onsubmit="event.preventDefault(); ResinServiceApp.sendMessage();">
-          <input type="text" id="resin-chat-input" placeholder="Escribe al taller de ShelliArt...">
+          <input type="text" id="resin-chat-input" placeholder="Escribe al taller de ShekkiArt...">
           <button type="submit" class="btn-send-resin-msg" title="Enviar">➤</button>
         </form>
       </main>
