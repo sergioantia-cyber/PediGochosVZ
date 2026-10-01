@@ -52,14 +52,14 @@ function normalizeStoreName(name) {
 const SPECIALIZED_SERVICES = [
   {
     id: 'serv-resin',
-    name: 'SHEKKIART (Llaveros Personalizados & Arte en Resina)',
+    name: 'SHELLI ART (Llaveros Personalizados & Recuerdos)',
     logo: '/images/services/shelliart_logo.svg',
     category: 'servicios',
-    badge: 'ShekkiArt',
+    badge: 'Shelli Art',
     badgeColor: '#EC4899',
     badgeBg: 'rgba(236, 72, 153, 0.15)',
     badgeBorder: 'rgba(236, 72, 153, 0.4)',
-    location: 'San Antonio / Estudio ShekkiArt',
+    location: 'San Antonio / Taller Shelli Art',
     description: 'Artesanías en resina epóxica, llaveros personalizados con fotos y chip NFC, iniciales A-Z con pan de oro 24K y borlas',
     inventorySummary: '✨ Fichas de Diseño & Modelos',
     inventoryBtnText: 'Gestionar Parámetros & Fotos',
@@ -8581,7 +8581,7 @@ class AdminController {
   }
 
   // ==========================================
-  // ShekkiArt Admin Control
+  // Shelli Art Admin Control
   // ==========================================
   async openResinAdminModal(initialTab = 'orders') {
     const modal = document.getElementById('admin-resin-modal');
@@ -8739,7 +8739,7 @@ class AdminController {
       if (res.ok) {
         const data = await res.json();
         this.resinSettings = data.settings;
-        alert('✅ ¡Configuración de ShekkiArt guardada exitosamente!');
+        alert('✅ ¡Configuración de Shelli Art guardada exitosamente!');
       } else {
         alert('⚠️ No se pudo guardar la configuración.');
       }
@@ -8782,7 +8782,7 @@ class AdminController {
   }
 
   async deleteResinSamplePhoto(sampleId) {
-    if (!confirm('¿Deseas eliminar esta foto de muestra del catálogo de ShekkiArt?')) return;
+    if (!confirm('¿Deseas eliminar esta foto de muestra del catálogo de Shelli Art?')) return;
     if (!this.resinSettings || !this.resinSettings.samplePhotos) return;
 
     this.resinSettings.samplePhotos = this.resinSettings.samplePhotos.filter(s => s.id !== sampleId);
@@ -8871,7 +8871,7 @@ class AdminController {
         ? `📸 Molde: ${q.photoShapeName || q.photoShape}\n🔄 Reverso: ${q.photoBackType || 'Normal'}\n📶 NFC: ${q.hasNfc ? (q.nfcUrl || 'Sí') : 'No'}\n🪢 Borla: ${q.tasselColor || 'Borla'} - Herraje: ${q.hardwareColor || 'Dorado'}`
         : `🔤 Inicial: "${q.letter}"\n🎨 Estilo: ${q.styleName} - Color: ${q.baseColorName}\n🪢 Borla: ${q.tasselColor} - Herraje: ${q.hardwareColor}\n✍️ Nombre: ${q.customName || 'Sin nombre'}`;
 
-      const waMsg = `✨ *PEDIDO #${q.id} SHEKKIART*\n👤 Cliente: ${q.clientName} (${q.clientPhone || 'Sin tel'})\n${waDetails}\n💰 Total: $${price} USD`;
+      const waMsg = `✨ *PEDIDO #${q.id} SHELLI ART*\n👤 Cliente: ${q.clientName} (${q.clientPhone || 'Sin tel'})\n${waDetails}\n💰 Presupuesto: ${price ? `$${price} USD` : 'Bajo Cotización Previa'}`;
       const chatInspectorTitle = isPhoto
         ? `Llavero Foto (${q.photoShapeName || 'Personalizado'}) - ${q.clientName}`
         : `Llavero Inicial ${q.letter} - ${q.clientName}`;
@@ -9651,7 +9651,7 @@ class AdminController {
     const subEl = document.getElementById('admin-quote-chat-sub');
 
     if (titleEl) titleEl.textContent = `Chat con Cliente: ${title || quoteId}`;
-    if (subEl) subEl.textContent = type === 'paint' ? 'Latonería y Pintura' : (type === 'resin' ? 'ShekkiArt' : (type === 'pinatas' ? 'Taller de Piñatas Artesanales' : 'Laboratorio 3D Maker'));
+    if (subEl) subEl.textContent = type === 'paint' ? 'Latonería y Pintura' : (type === 'resin' ? 'Shelli Art' : (type === 'pinatas' ? 'Taller de Piñatas Artesanales' : 'Laboratorio 3D Maker'));
 
     if (modal) {
       modal.style.display = 'flex';
@@ -9714,7 +9714,7 @@ class AdminController {
     const payload = {
       senderRole: 'admin',
       sender: type === 'paint' ? 'workshop' : (type === 'resin' ? 'workshop' : (type === 'pinatas' ? 'workshop' : 'lab')),
-      senderName: type === 'paint' ? 'Taller Aliado' : (type === 'resin' ? 'ShekkiArt' : (type === 'pinatas' ? 'Taller de Piñatas' : 'Fabricante 3D')),
+      senderName: type === 'paint' ? 'Taller Aliado' : (type === 'resin' ? 'Shelli Art' : (type === 'pinatas' ? 'Taller de Piñatas' : 'Fabricante 3D')),
       text
     };
 

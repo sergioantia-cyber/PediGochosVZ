@@ -16,7 +16,7 @@
     "driver:build": "node scripts/build-driver-app.js && npx cap sync android",
     "service:apk": "node scripts/build-service-apk.js",
     "service:apk:shekkiart": "node scripts/build-service-apk.js shekkiart",
-    "service:apk:shelliart": "node scripts/build-service-apk.js shekkiart",
+    "service:apk:shelliart": "node scripts/build-service-apk.js shelliart",
     "service:apk:pinatas": "node scripts/build-service-apk.js pinatas",
     "service:apk:cauchera": "node scripts/build-service-apk.js cauchera",
     "service:apk:latoneria": "node scripts/build-service-apk.js latoneria",

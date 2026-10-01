@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Llaveros y Arte en Resina ("ShekkiArt") - Logic & Customizer Studio
+   Llaveros y Arte en Resina ("Shelli Art") - Logic & Customizer Studio
    PediGochos Specialized Services Module
    ========================================================================== */
 
@@ -430,32 +430,17 @@ const ResinServiceApp = {
   },
 
   calculatePricing() {
-    const isPhoto = this.state.productType === 'photo';
-    const basePrice = isPhoto
-      ? (parseFloat(this.settings.photoBasePriceUsd) || 5.0)
-      : (parseFloat(this.settings.letterBasePriceUsd) || 4.5);
-
-    const nfcPrice = (isPhoto && this.state.hasNfc)
-      ? (parseFloat(this.settings.nfcExtraUsd) || 2.0)
-      : 0.0;
-
-    const charmObj = this.charms.find(c => c.id === this.state.extraCharmId);
-    const charmPrice = charmObj ? charmObj.extraUsd : 0.0;
-
-    const secondPhotoPrice = (isPhoto && this.state.photoBackType === 'photo' && this.state.photoBackUrl)
-      ? (parseFloat(this.settings.charmExtraUsd) || 1.0)
-      : 0.0;
-
-    const totalUsd = (basePrice + nfcPrice + charmPrice + secondPhotoPrice) * this.state.quantity;
-
-    // Currency conversions
-    const copRate = (window.systemSettings && window.systemSettings.cop_rate) ? window.systemSettings.cop_rate : 4000;
-    const vesRate = (window.systemSettings && window.systemSettings.ves_rate) ? window.systemSettings.ves_rate : 45;
-
-    const totalCop = Math.round(totalUsd * copRate);
-    const totalBs = Math.round(totalUsd * vesRate);
-
-    return { basePrice, nfcPrice, charmPrice, secondPhotoPrice, totalUsd, totalCop, totalBs };
+    return {
+      isQuote: true,
+      statusText: 'Bajo Cotización Previa',
+      basePrice: 0,
+      nfcPrice: 0,
+      charmPrice: 0,
+      secondPhotoPrice: 0,
+      totalUsd: 0,
+      totalCop: 0,
+      totalBs: 0
+    };
   },
 
   // =========================================================================
@@ -471,8 +456,8 @@ const ResinServiceApp = {
         <div class="resin-header-brand">
           <span class="resin-brand-icon">✨</span>
           <div>
-            <h2>ShekkiArt <span>Studio</span></h2>
-            <p>Llaveros Fotográficos & Letras • Acabado Vidrio Epóxico</p>
+            <h2>Shelli Art</h2>
+            <p>Llaveros Fotográficos & Letras Personalizadas</p>
           </div>
         </div>
         <button type="button" class="resin-close-btn" onclick="ResinServiceApp.close()" title="Cerrar">✕</button>
@@ -514,11 +499,16 @@ const ResinServiceApp = {
               <!-- Interactive Action Controls right beside/under preview -->
               <div class="resin-stage-action-bar">
                 <button type="button" class="btn-stage-upload-photo" onclick="ResinServiceApp.triggerPhotoUpload()">
-                  <span>📸</span> <span id="lbl-stage-upload-photo">Subir / Cambiar Foto</span>
+                  <span>📸</span> <span id="lbl-stage-upload-photo">Foto Frente</span>
                 </button>
                 <button type="button" class="btn-flip-keychain" onclick="ResinServiceApp.toggleFlip()">
                   <span>🔄 Girar:</span> <span id="lbl-flip-side">Frente</span>
                 </button>
+                <div class="resin-stage-zoom-group" id="resin-stage-zoom-group">
+                  <button type="button" class="btn-stage-zoom" onclick="ResinServiceApp.adjustPhotoScale(-0.15)" title="Reducir">➖</button>
+                  <button type="button" class="btn-stage-zoom" onclick="ResinServiceApp.adjustPhotoScale(0.15)" title="Aumentar">➕</button>
+                  <button type="button" class="btn-stage-zoom" onclick="ResinServiceApp.resetPhotoTransform()" title="Centrar">↺</button>
+                </div>
                 <button type="button" class="btn-stage-done-edit" id="btn-stage-done-edit" style="display: none;" onclick="ResinServiceApp.deselectPhoto()">
                   <span>✓</span> Fijar Foto
                 </button>
@@ -526,7 +516,7 @@ const ResinServiceApp = {
 
               <!-- Quick Photo Shape Selector on Preview Stage -->
               <div class="resin-stage-shape-chips" id="resin-stage-shape-chips">
-                <span class="chips-title">Forma Foto:</span>
+                <span class="chips-title" id="stage-shape-title">Forma Foto (Frente):</span>
                 <button type="button" class="chip-shape-btn active" data-shape="full" onclick="ResinServiceApp.setPhotoFramingShape('full')">🔲 Molde</button>
                 <button type="button" class="chip-shape-btn" data-shape="polaroid" onclick="ResinServiceApp.setPhotoFramingShape('polaroid')">📸 Polaroid</button>
                 <button type="button" class="chip-shape-btn" data-shape="circle" onclick="ResinServiceApp.setPhotoFramingShape('circle')">⭕ Círculo</button>
@@ -580,13 +570,13 @@ const ResinServiceApp = {
       <!-- Fixed Bottom Price & Delivery Drawer Trigger Bar -->
       <footer class="resin-bottom-bar">
         <div class="resin-bottom-pricing">
-          <span class="resin-price-total" id="resin-total-usd">$5.00 USD</span>
-          <span class="resin-price-cop" id="resin-total-cop">~$20.000 COP • 225 Bs</span>
+          <span class="resin-price-total" id="resin-total-usd">🎨 Bajo Cotización Previa</span>
+          <span class="resin-price-cop" id="resin-total-cop">Presupuesto personalizado según diseño, acabados y fotos</span>
         </div>
 
         <div class="resin-bottom-actions">
           <button type="button" class="btn-resin-order-wa-full" onclick="ResinServiceApp.openDeliveryDrawer()">
-            <span>Continuar con la Entrega</span> <span>➔</span>
+            <span>Solicitar Cotización</span> <span>➔</span>
           </button>
         </div>
       </footer>
@@ -666,11 +656,11 @@ const ResinServiceApp = {
 
             <!-- Submit Buttons -->
             <button type="button" class="btn-resin-order-wa-full" onclick="ResinServiceApp.handleConfirmOrderClick()" style="margin-top: 6px;">
-              <span>🟢 Confirmar y Enviar Pedido por WhatsApp</span>
+              <span>🟢 Solicitar Cotización por WhatsApp</span>
             </button>
 
             <button type="button" onclick="ResinServiceApp.submitInAppOrder()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; text-align: center;">
-              💬 Enviar y Chatear con ShekkiArt en la App
+              💬 Solicitar y Chatear con Shelli Art en la App
             </button>
           </div>
         </div>
@@ -829,7 +819,7 @@ const ResinServiceApp = {
                     <span style="font-size: 12px; font-weight: 800; color: #FFF; display: block;">🔄 Toca para cambiar 2da foto</span>
                   ` : `
                     <span style="font-size: 26px; display: block; margin-bottom: 2px;">🖼️</span>
-                    <strong style="font-size: 12.5px; color: #FFF; display: block;">Subir Segunda Foto para el Reverso (+${this.settings.charmExtraUsd || 1.0}$ USD)</strong>
+                    <strong style="font-size: 12.5px; color: #FFF; display: block;">Subir Segunda Foto para el Reverso</strong>
                     <span style="font-size: 10.5px; color: #94A3B8;">Foto doble cara en resina cristalina</span>
                   `}
                 </div>
@@ -907,7 +897,7 @@ const ResinServiceApp = {
             </div>
             <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
               <input type="checkbox" id="check-enable-nfc" ${this.state.hasNfc ? 'checked' : ''} onchange="ResinServiceApp.toggleNfc(this.checked)" style="width: 18px; height: 18px; accent-color: #38BDF8; cursor: pointer;">
-              <span style="font-size: 12px; font-weight: 800; color: #38BDF8;">Incluir (+$${this.settings.nfcExtraUsd || 2.0} USD)</span>
+              <span style="font-size: 12px; font-weight: 800; color: #38BDF8;">Incluir Chip NFC</span>
             </label>
           </div>
 
@@ -985,7 +975,7 @@ const ResinServiceApp = {
               ${this.charms.map(ch => `
                 <div class="color-swatch-pill ${ch.id === this.state.extraCharmId ? 'active' : ''}" id="charm-pill-${ch.id}" onclick="ResinServiceApp.setCharm('${ch.id}')">
                   <span>${ch.icon}</span>
-                  <span>${ch.name} ${ch.extraUsd > 0 ? `(+$${ch.extraUsd} USD)` : ''}</span>
+                  <span>${ch.name}</span>
                 </div>
               `).join('')}
             </div>
@@ -1002,7 +992,13 @@ const ResinServiceApp = {
   // =========================================================================
   // Photo Direct Upload, Framing Shapes & Interactive Transform Handlers
   // =========================================================================
-  triggerPhotoUpload() {
+  triggerPhotoUpload(side) {
+    if (side === 'front') {
+      if (this.state.isFlipped) this.toggleFlip();
+    } else if (side === 'back') {
+      if (!this.state.isFlipped) this.toggleFlip();
+      this.state.photoBackType = 'photo';
+    }
     const inp = document.getElementById('resin-direct-photo-input');
     if (inp) {
       inp.value = '';
@@ -1028,6 +1024,29 @@ const ResinServiceApp = {
       this.renderActiveTabContent();
     };
     reader.readAsDataURL(file);
+  },
+
+  adjustPhotoScale(delta) {
+    const isBack = this.state.isFlipped;
+    const tf = isBack ? this.state.photoBackTransform : this.state.photoFrontTransform;
+    const photoUrl = isBack ? this.state.photoBackUrl : this.state.photoFrontUrl;
+    if (!photoUrl) {
+      this.triggerPhotoUpload(isBack ? 'back' : 'front');
+      return;
+    }
+    tf.scale = Math.min(3.5, Math.max(0.35, parseFloat((tf.scale + delta).toFixed(2))));
+    tf.isSelected = true;
+    this.updateVisualPreview();
+  },
+
+  resetPhotoTransform() {
+    const isBack = this.state.isFlipped;
+    const tf = isBack ? this.state.photoBackTransform : this.state.photoFrontTransform;
+    tf.x = 0;
+    tf.y = 0;
+    tf.scale = 1.0;
+    tf.isSelected = true;
+    this.updateVisualPreview();
   },
 
   setPhotoFramingShape(shape, isBack = false) {
@@ -1188,29 +1207,33 @@ const ResinServiceApp = {
     const isPhoto = this.state.productType === 'photo';
     const shape = this.state.photoShape || 'rectangle';
 
-    // Update Bottom Bar Pricing
-    const pricing = this.calculatePricing();
+    // Update Bottom Bar Pricing (100% Quotation model)
     const usdEl = document.getElementById('resin-total-usd');
     const copEl = document.getElementById('resin-total-cop');
-    if (usdEl) usdEl.textContent = `$${pricing.totalUsd.toFixed(2)} USD`;
-    if (copEl) copEl.textContent = `~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs`;
+    if (usdEl) usdEl.textContent = '🎨 Bajo Cotización Previa';
+    if (copEl) copEl.textContent = 'Presupuesto personalizado según diseño, acabados y fotos';
 
     // Toggle Done Editing button on stage
-    const activeTf = this.state.isFlipped ? this.state.photoBackTransform : this.state.photoFrontTransform;
+    const isBack = this.state.isFlipped;
+    const activeTf = isBack ? this.state.photoBackTransform : this.state.photoFrontTransform;
     const btnDone = document.getElementById('btn-stage-done-edit');
     if (btnDone) {
       btnDone.style.display = (activeTf && activeTf.isSelected) ? 'inline-flex' : 'none';
     }
 
-    // Toggle chip active state on stage
-    const currentFraming = this.state.isFlipped ? (this.state.photoBackShape || 'full') : (this.state.photoFrontShape || 'full');
+    // Toggle chip active state on stage & update title per face
+    const currentFraming = isBack ? (this.state.photoBackShape || 'full') : (this.state.photoFrontShape || 'full');
     document.querySelectorAll('.chip-shape-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.shape === currentFraming);
     });
+    const stageTitle = document.getElementById('stage-shape-title');
+    if (stageTitle) {
+      stageTitle.textContent = isBack ? 'Forma Foto (Reverso):' : 'Forma Foto (Frente):';
+    }
 
     const uploadLbl = document.getElementById('lbl-stage-upload-photo');
     if (uploadLbl) {
-      uploadLbl.textContent = this.state.isFlipped ? 'Foto al Reverso' : 'Foto al Frente';
+      uploadLbl.textContent = isBack ? 'Foto Reverso' : 'Foto Frente';
     }
 
     const svgFront = document.getElementById('resin-keychain-svg');
@@ -1334,9 +1357,19 @@ const ResinServiceApp = {
           <!-- Continuous Unbroken Chain Links & Bottom Anchor -->
           ${this.renderChain(anchorX, anchorY, isSilver, shapeName)}
 
+          <!-- Tassel Connecting Jump Rings (Bridge from split ring to tassel) -->
+          <g id="tassel-connector-chain" filter="drop-shadow(0 2px 3px rgba(0,0,0,0.45))">
+            <!-- Ring 1 looped through split ring at (150, 63) -->
+            <ellipse cx="145" cy="67" rx="4.0" ry="6.2" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(-30 145 67)" />
+            <!-- Ring 2 interlocking -->
+            <ellipse cx="124" cy="74" rx="3.8" ry="6.0" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(-18 124 74)" />
+            <!-- Ring 3 interlocking into tassel top loop -->
+            <ellipse cx="103" cy="80" rx="3.8" ry="6.0" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(-10 103 80)" />
+          </g>
+
           <!-- Suede Tassel -->
           <g transform="translate(60, 82)">
-            <ellipse cx="25" cy="5" rx="4" ry="5.5" fill="none" stroke="${metalGrad}" stroke-width="2.5" transform="rotate(15 25 5)" />
+            <ellipse cx="25" cy="5" rx="4" ry="5.5" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(15 25 5)" />
             <path d="M 16,10 Q 25,6 34,10 L 37,24 Q 25,28 13,24 Z" fill="${metalGrad}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))" />
             <ellipse cx="25" cy="11" rx="9" ry="2.5" fill="#FFF5BA" opacity="0.6" />
             <path d="M 14,24 Q 25,28 36,24 L 42,78 Q 25,84 8,78 Z" fill="${this.state.tasselHex || '#F472B6'}" filter="drop-shadow(0 4px 8px rgba(0,0,0,0.35))" />
@@ -1348,6 +1381,11 @@ const ResinServiceApp = {
 
           <!-- Extra Charm -->
           ${this.state.extraCharmId !== 'none' ? `
+            <!-- Charm Connecting Jump Rings (Bridge from split ring to charm) -->
+            <g id="charm-connector-chain" filter="drop-shadow(0 2px 3px rgba(0,0,0,0.45))">
+              <ellipse cx="192" cy="71" rx="3.8" ry="5.8" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(32 192 71)" />
+              <ellipse cx="207" cy="83" rx="3.8" ry="5.8" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(45 207 83)" />
+            </g>
             <g transform="translate(205, 95)">
               <ellipse cx="15" cy="5" rx="3.5" ry="5" fill="none" stroke="${metalGrad}" stroke-width="2.5" />
               <circle cx="15" cy="18" r="10" fill="${metalGrad}" />
@@ -1428,13 +1466,17 @@ const ResinServiceApp = {
             <image href="${this.state.photoFrontUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
           </g>
         </g>
+        <g transform="translate(170, 362)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('front')">
+          <rect x="-65" y="-12" width="130" height="24" rx="12" fill="rgba(15,23,42,0.85)" stroke="#F472B6" stroke-width="1.2" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.6))" />
+          <text x="0" y="4" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="10" fill="#FFF">📸 Cambiar Foto Frente</text>
+        </g>
       ` : `
         <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #831843 0%, #1E1B4B 100%)" />
-        <g transform="translate(170, 240)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload()">
-          <circle cx="0" cy="0" r="36" fill="rgba(244, 114, 182, 0.25)" stroke="#F472B6" stroke-width="2" />
-          <text x="0" y="8" text-anchor="middle" font-size="28">📸</text>
-          <text x="0" y="48" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="13" fill="#FFF">Toca para Subir Foto</text>
-          <text x="0" y="65" text-anchor="middle" font-size="10.5" fill="#FDA4AF">Tu recuerdo aquí en resina</text>
+        <g transform="translate(170, 240)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('front')">
+          <circle cx="0" cy="0" r="38" fill="rgba(244, 114, 182, 0.25)" stroke="#F472B6" stroke-width="2" />
+          <text x="0" y="8" text-anchor="middle" font-size="30">📸</text>
+          <text x="0" y="50" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="13" fill="#FFF">Toca para Subir Foto Frente</text>
+          <text x="0" y="68" text-anchor="middle" font-size="10.5" fill="#FDA4AF">Toca aquí para elegir tu imagen</text>
         </g>
       `;
 
@@ -1593,6 +1635,10 @@ const ResinServiceApp = {
                 <image href="${this.state.photoBackUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
               </g>
             </g>
+            <g transform="translate(170, 362)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('back')">
+              <rect x="-68" y="-12" width="136" height="24" rx="12" fill="rgba(15,23,42,0.85)" stroke="#A78BFA" stroke-width="1.2" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.6))" />
+              <text x="0" y="4" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="10" fill="#FFF">📸 Cambiar Foto Reverso</text>
+            </g>
           `;
 
           if (backTf.isSelected) {
@@ -1622,11 +1668,11 @@ const ResinServiceApp = {
         } else {
           backContentHtml = `
             <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)" />
-            <g transform="translate(170, 240)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload()">
-              <circle cx="0" cy="0" r="32" fill="rgba(255,255,255,0.15)" stroke="#A78BFA" stroke-width="1.5" />
-              <text x="0" y="8" text-anchor="middle" font-size="24">🖼️</text>
-              <text x="0" y="45" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="12" fill="#FFF">Segunda Foto</text>
-              <text x="0" y="60" text-anchor="middle" font-size="10" fill="#C7D2FE">Sube otra foto para el reverso</text>
+            <g transform="translate(170, 240)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('back')">
+              <circle cx="0" cy="0" r="38" fill="rgba(167, 139, 250, 0.25)" stroke="#A78BFA" stroke-width="2" />
+              <text x="0" y="8" text-anchor="middle" font-size="28">🖼️</text>
+              <text x="0" y="50" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="13" fill="#FFF">Toca para Subir Foto Reverso</text>
+              <text x="0" y="68" text-anchor="middle" font-size="10.5" fill="#C7D2FE">Foto para la segunda cara</text>
             </g>
           `;
         }
@@ -1773,13 +1819,35 @@ const ResinServiceApp = {
 
   getLetterAnchor(letter) {
     const l = (letter || 'M').toUpperCase();
+    const yAnchor = 186; // Screw eyelet hole placed right at top of letter so screw embeds into resin
     switch (l) {
-      case 'A': return { x: 170, y: 185 };
-      case 'B': return { x: 130, y: 185 };
-      case 'C': return { x: 160, y: 185 };
-      case 'M': return { x: 105, y: 185 };
-      case 'W': return { x: 95, y: 185 };
-      default:  return { x: 140, y: 185 };
+      case 'A': return { x: 170, y: yAnchor };
+      case 'B': return { x: 135, y: yAnchor };
+      case 'C': return { x: 170, y: yAnchor };
+      case 'D': return { x: 145, y: yAnchor };
+      case 'E': return { x: 165, y: yAnchor };
+      case 'F': return { x: 165, y: yAnchor };
+      case 'G': return { x: 170, y: yAnchor };
+      case 'H': return { x: 114, y: yAnchor };
+      case 'I': return { x: 170, y: yAnchor };
+      case 'J': return { x: 194, y: yAnchor };
+      case 'K': return { x: 114, y: yAnchor };
+      case 'L': return { x: 116, y: yAnchor };
+      case 'M': return { x: 106, y: yAnchor };
+      case 'N': return { x: 114, y: yAnchor };
+      case 'O': return { x: 170, y: yAnchor };
+      case 'P': return { x: 145, y: yAnchor };
+      case 'Q': return { x: 170, y: yAnchor };
+      case 'R': return { x: 145, y: yAnchor };
+      case 'S': return { x: 170, y: yAnchor };
+      case 'T': return { x: 170, y: yAnchor };
+      case 'U': return { x: 116, y: yAnchor };
+      case 'V': return { x: 116, y: yAnchor };
+      case 'W': return { x: 170, y: yAnchor };
+      case 'X': return { x: 116, y: yAnchor };
+      case 'Y': return { x: 116, y: yAnchor };
+      case 'Z': return { x: 170, y: yAnchor };
+      default:  return { x: 140, y: yAnchor };
     }
   },
 
@@ -1816,7 +1884,7 @@ const ResinServiceApp = {
         desc += `<br>📶 <em>Chip NFC Inteligente incluido (${this.state.nfcType})</em>`;
       }
       desc += `<br>✨ Herraje: ${this.state.hardware === 'gold' ? 'Dorado' : 'Plateado'} • Borla: ${this.state.tasselName}`;
-      desc += `<br>💰 <strong>Total a Pagar: $${pricing.totalUsd.toFixed(2)} USD (~$${pricing.totalCop.toLocaleString('es-CO')} COP / ${pricing.totalBs.toLocaleString('es-VE')} Bs)</strong>`;
+      desc += `<br>🎨 <strong>Presupuesto: Bajo Cotización Previa (Presupuesto sin costo)</strong>`;
 
       summaryBox.innerHTML = desc;
     }
@@ -2007,19 +2075,19 @@ const ResinServiceApp = {
     }
 
     const text =
-`✨ *¡NUEVO PEDIDO SHEKKIART - PEDIGOCHOS!* ✨
+`✨ *¡SOLICITUD DE COTIZACIÓN - SHELLI ART!* ✨
 ━━━━━━━━━━━━━━━━━━━━
 ${itemBlock}
 ━━━━━━━━━━━━━━━━━━━━
-💰 *TOTAL ESTIMADO:* $${pricing.totalUsd.toFixed(2)} USD
-💵 *Equivalente:* ~$${pricing.totalCop.toLocaleString('es-CO')} COP • ${pricing.totalBs.toLocaleString('es-VE')} Bs
+🎨 *PRESUPUESTO:* Bajo Cotización Previa
+💡 *Acordar precio con el taller según diseño y fotos*
 ━━━━━━━━━━━━━━━━━━━━
 ${deliveryBlock}
 ━━━━━━━━━━━━━━━━━━━━
 📍 *Enviado desde PediGochos App*
-💬 *Taller ShekkiArt WhatsApp Oficial: ${this.resinWhatsAppDisplay}*
+💬 *Taller Shelli Art WhatsApp Oficial: ${this.resinWhatsAppDisplay}*
 
-_Hola ShekkiArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme la recepción del pedido y fecha estimada de entrega? ¡Gracias!_`;
+_Hola Shelli Art, acabo de diseñar mi llavero personalizado en la app. ¿Podrían confirmarme el presupuesto y tiempo de elaboración para este diseño? ¡Gracias!_`;
 
     return encodeURIComponent(text);
   },
@@ -2164,7 +2232,7 @@ _Hola ShekkiArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme 
         <div style="display: flex; align-items: center; gap: 10px;">
           <button type="button" class="resin-back-btn" onclick="ResinServiceApp.closeChatModal()">←</button>
           <div>
-            <h3><span>✨</span> Chat con ShekkiArt</h3>
+            <h3><span>✨</span> Chat con Shelli Art</h3>
             <span style="font-size: 11px; color: #F472B6; font-weight: 700;">Taller Artesanal • San Antonio & Cúcuta</span>
           </div>
         </div>
@@ -2175,7 +2243,7 @@ _Hola ShekkiArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme 
         <div class="resin-quote-sheet" id="resin-ficha-tecnica"></div>
         <div class="resin-messages-area" id="resin-chat-messages"></div>
         <form class="resin-chat-input-bar" onsubmit="event.preventDefault(); ResinServiceApp.sendMessage();">
-          <input type="text" id="resin-chat-input" placeholder="Escribe al taller de ShekkiArt...">
+          <input type="text" id="resin-chat-input" placeholder="Escribe al taller de Shelli Art...">
           <button type="submit" class="btn-send-resin-msg" title="Enviar">➤</button>
         </form>
       </main>
@@ -2196,7 +2264,7 @@ _Hola ShekkiArt, acabo de diseñar mi llavero en la app. ¿Podrían confirmarme 
         <span>Cliente: <strong>${quote.clientName}</strong> (${quote.clientPhone || 'Sin teléfono'})</span><br>
         ${quote.photoShape ? `<span>Molde: <strong>${quote.photoShapeName || quote.photoShape}</strong></span><br>` : ''}
         ${quote.hasNfc ? `<span>Chip NFC: <strong>${quote.nfcType} (${quote.nfcUrl || 'Enlace pendiente'})</strong></span><br>` : ''}
-        <span>Total: <strong style="color: #38BDF8;">$${quote.agreedPriceUsd || quote.estimatedPriceUsd || 5.0} USD</strong></span>
+        <span>Presupuesto: <strong style="color: #38BDF8;">${quote.agreedPriceUsd ? `$${quote.agreedPriceUsd} USD` : 'Bajo Cotización Previa'}</strong></span>
       </div>
     `;
   },

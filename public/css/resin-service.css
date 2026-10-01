@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Llaveros y Arte en Resina ("ShekkiArt") - Stylesheet
+   Llaveros y Arte en Resina ("Shelli Art") - Stylesheet
    PediGochos Specialized Services Module
    ========================================================================== */
 
@@ -928,7 +928,7 @@
 
 
 /* ==========================================================================
-   Interactive Photo Transform & Stage Action Bar (ShekkiArt)
+   Interactive Photo Transform & Stage Action Bar (Shelli Art)
    ========================================================================== */
 .resin-stage-action-bar {
   display: flex;
@@ -979,6 +979,42 @@
 @keyframes pulseDoneBtn {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.04); }
+}
+
+/* On-Stage Photo Zoom & Centering Controls */
+.resin-stage-zoom-group {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 2px 4px;
+  gap: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.btn-stage-zoom {
+  background: transparent;
+  border: none;
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 8px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.btn-stage-zoom:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #38BDF8;
+}
+
+.btn-stage-zoom:active {
+  transform: scale(0.95);
 }
 
 /* Quick Framing Shape Chips on Stage */
