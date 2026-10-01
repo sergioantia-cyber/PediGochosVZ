@@ -220,7 +220,9 @@ const ResinServiceApp = {
       modal.classList.remove('hidden');
       window.history.pushState({ modal: 'resin-service' }, '', '#servicios/resina');
       this.updateVisualPreview();
+      this.updateGuideBubble();
       this.initTransformEvents();
+      this.init3dPhysicsTilt();
     }
   },
 
@@ -247,6 +249,7 @@ const ResinServiceApp = {
     // Switch view content
     this.renderActiveTabContent();
     this.updateVisualPreview();
+    this.updateGuideBubble();
   },
 
   // Switch active control tab (Shape, Photos, NFC, Finishes)
@@ -266,11 +269,120 @@ const ResinServiceApp = {
     const sideBadge = document.getElementById('resin-side-badge');
 
     if (inner) {
+      inner.style.transition = 'transform 0.7s cubic-bezier(0.34, 1.25, 0.64, 1)';
       inner.classList.toggle('is-flipped', this.state.isFlipped);
+      inner.style.transform = this.state.isFlipped ? 'rotateY(180deg) rotateX(0deg)' : 'rotateY(0deg) rotateX(0deg)';
     }
     const sideText = this.state.isFlipped ? 'Cara Trasera (Reverso)' : 'Cara Delantera (Frente)';
     if (sideLbl) sideLbl.textContent = sideText;
     if (sideBadge) sideBadge.textContent = this.state.isFlipped ? '🔄 Reverso' : '✨ Frente';
+
+    this.updateVisualPreview();
+    this.updateGuideBubble();
+  },
+
+  updateGuideBubble() {
+    const bubble = document.getElementById('resin-guide-bubble');
+    if (!bubble) return;
+
+    const isBack = this.state.isFlipped;
+    const hasFront = !!this.state.photoFrontUrl;
+    const hasBack = !!this.state.photoBackUrl;
+
+    const stepBadge = document.getElementById('guide-bubble-step-badge');
+    const title = document.getElementById('guide-bubble-title');
+    const desc = document.getElementById('guide-bubble-desc');
+    const flipBtnText = document.getElementById('btn-guide-flip-text');
+    const statusFront = document.getElementById('status-front-photo');
+    const statusBack = document.getElementById('status-back-photo');
+
+    if (statusFront) {
+      statusFront.className = `badge-photo-saved ${hasFront ? 'saved' : ''}`;
+      statusFront.textContent = hasFront ? '✅ Frente: Guardada' : '📷 Frente: Pendiente';
+    }
+    if (statusBack) {
+      const isPhotoBack = this.state.photoBackType === 'photo';
+      statusBack.className = `badge-photo-saved ${hasBack ? 'saved' : ''}`;
+      statusBack.textContent = hasBack ? '✅ Reverso: Guardada' : (isPhotoBack ? '📷 Reverso: Pendiente' : '✨ Reverso: Arte');
+    }
+
+    if (!isBack) {
+      if (stepBadge) stepBadge.textContent = 'Paso 1 de 2: Foto Frontal';
+      if (title) title.textContent = hasFront ? '¡Foto frontal lista! Ahora gira el llavero ➔' : '1º Elige la foto de este lado (Frente)';
+      if (desc) {
+        desc.innerHTML = hasFront 
+          ? 'Tu foto frontal ya está colocada. Haz clic en <strong>"Girar para Foto Trasera"</strong> para personalizar el reverso. <em>(¡Esta foto se mantendrá siempre guardada!)</em>.'
+          : 'Toca la vista previa para agregar y acomodar tu primera foto. Luego gira el llavero 🔄 para agregar la foto trasera. <em>(¡Ambas fotos se mantienen guardadas!)</em>';
+      }
+      if (flipBtnText) flipBtnText.textContent = '🔄 Girar para Foto Trasera';
+    } else {
+      if (stepBadge) stepBadge.textContent = 'Paso 2 de 2: Foto Trasera (Reverso)';
+      if (title) title.textContent = hasBack ? '¡Ambas fotos están listas y guardadas!' : '2º Ahora personaliza la cara trasera (Reverso)';
+      if (desc) {
+        desc.innerHTML = hasBack
+          ? '¡Excelente! Tienes ambas fotos configuradas en resina 3D. Puedes girar cuantas veces desees para revisarlas.'
+          : '¡Tu foto del frente sigue 100% guardada! Ahora toca aquí para subir la foto trasera, dedicatoria o Spotify.';
+      }
+      if (flipBtnText) flipBtnText.textContent = '🔄 Volver al Frente';
+    }
+  },
+
+  init3dPhysicsTilt() {
+    if (this._tiltInitialized) return;
+    this._tiltInitialized = true;
+
+    const container = document.getElementById('keychain-flip-container');
+    const inner = document.getElementById('keychain-flip-inner');
+    const shadow = document.getElementById('keychain-3d-shadow');
+    if (!container || !inner) return;
+
+    let rafId = null;
+
+    const onPointerMove = (e) => {
+      if (this._isDraggingPhoto || this._isResizingPhoto) return;
+
+      const rect = container.getBoundingClientRect();
+      const clientX = e.touches && e.touches.length ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches && e.touches.length ? e.touches[0].clientY : e.clientY;
+
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const normX = Math.max(-1, Math.min(1, (x - centerX) / centerX));
+      const normY = Math.max(-1, Math.min(1, (y - centerY) / centerY));
+
+      const rotX = -normY * 13;
+      const rotY = normX * 16;
+
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const baseFlip = this.state.isFlipped ? 180 : 0;
+        inner.style.transition = 'transform 0.08s ease-out';
+        inner.style.transform = `rotateY(${baseFlip + rotY}deg) rotateX(${rotX}deg)`;
+        if (shadow) {
+          shadow.style.transition = 'transform 0.08s ease-out';
+          shadow.style.transform = `translateX(${rotY * 1.5}px) translateY(${rotX * 0.7}px) scale(${1 - Math.abs(rotX)/90})`;
+        }
+      });
+    };
+
+    const onPointerLeave = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      const baseFlip = this.state.isFlipped ? 180 : 0;
+      inner.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.25, 0.64, 1)';
+      inner.style.transform = `rotateY(${baseFlip}deg) rotateX(0deg)`;
+      if (shadow) {
+        shadow.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.25, 0.64, 1)';
+        shadow.style.transform = `scale(${this.state.isFlipped ? 0.92 : 1})`;
+      }
+    };
+
+    container.addEventListener('mousemove', onPointerMove);
+    container.addEventListener('mouseleave', onPointerLeave);
+    container.addEventListener('touchmove', onPointerMove, { passive: true });
+    container.addEventListener('touchend', onPointerLeave);
   },
 
   setShape(shapeId) {
@@ -290,6 +402,7 @@ const ResinServiceApp = {
     reader.onload = (evt) => {
       this.state.photoFrontUrl = evt.target.result;
       this.updateVisualPreview();
+      this.updateGuideBubble();
       this.renderActiveTabContent();
     };
     reader.readAsDataURL(file);
@@ -298,6 +411,7 @@ const ResinServiceApp = {
   setSampleFrontPhoto(url) {
     this.state.photoFrontUrl = url;
     this.updateVisualPreview();
+    this.updateGuideBubble();
     this.renderActiveTabContent();
   },
 
@@ -317,9 +431,11 @@ const ResinServiceApp = {
     // Auto flip to back so user sees what they're configuring!
     if (!this.state.isFlipped) {
       this.toggleFlip();
+    } else {
+      this.renderActiveTabContent();
+      this.updateVisualPreview();
+      this.updateGuideBubble();
     }
-    this.renderActiveTabContent();
-    this.updateVisualPreview();
   },
 
   handleBackPhotoUpload(e) {
@@ -329,6 +445,7 @@ const ResinServiceApp = {
     reader.onload = (evt) => {
       this.state.photoBackUrl = evt.target.result;
       this.updateVisualPreview();
+      this.updateGuideBubble();
       this.renderActiveTabContent();
     };
     reader.readAsDataURL(file);
@@ -471,12 +588,40 @@ const ResinServiceApp = {
           <div class="resin-studio-stage-col">
             <div class="resin-preview-stage">
               <div class="resin-stage-top-bar">
-                <span class="resin-live-tag">🟢 Vista Previa en Vivo</span>
+                <span class="resin-live-tag">🟢 Vista Previa 3D en Vivo</span>
                 <span class="resin-side-badge" id="resin-side-badge">✨ Frente</span>
               </div>
 
-              <!-- 3D Flip Card Assembly Wrapper -->
-              <div class="keychain-flip-container">
+              <!-- Interactive Step Guide Bubble -->
+              <div class="resin-guide-bubble" id="resin-guide-bubble">
+                <div class="guide-bubble-content">
+                  <div class="guide-bubble-badge-row">
+                    <span class="guide-bubble-step-badge" id="guide-bubble-step-badge">Paso 1 de 2: Foto Frontal</span>
+                    <span class="guide-bubble-preserve-pill" id="guide-bubble-preserve-pill">🔒 Tus fotos se mantienen al girar</span>
+                  </div>
+                  <div class="guide-bubble-text-row">
+                    <span class="guide-bubble-avatar">💡</span>
+                    <div class="guide-bubble-copy">
+                      <strong id="guide-bubble-title">Primero sube la foto de este lado (Frente)</strong>
+                      <p id="guide-bubble-desc">
+                        Toca la vista previa para colocar y mover tu foto. Cuando estés listo, gira el llavero 🔄 para agregar la foto trasera. <em>(¡Ambas fotos se mantienen guardadas!)</em>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="guide-bubble-footer">
+                  <button type="button" class="btn-guide-flip" id="btn-guide-flip" onclick="ResinServiceApp.toggleFlip()">
+                    <span id="btn-guide-flip-text">🔄 Girar para Foto Trasera</span>
+                  </button>
+                  <div class="guide-bubble-photos-status" id="guide-bubble-photos-status">
+                    <span id="status-front-photo" class="badge-photo-saved">📷 Frente: Pendiente</span>
+                    <span id="status-back-photo" class="badge-photo-saved">📷 Reverso: Pendiente</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3D Flip Card Assembly Wrapper with Physics / Realism -->
+              <div class="keychain-flip-container" id="keychain-flip-container">
                 <div class="keychain-flip-inner" id="keychain-flip-inner">
                   
                   <!-- Front Face -->
@@ -495,6 +640,9 @@ const ResinServiceApp = {
 
                 </div>
               </div>
+
+              <!-- Realistic 3D Floor Shadow -->
+              <div class="keychain-3d-shadow" id="keychain-3d-shadow"></div>
 
               <!-- Interactive Action Controls right beside/under preview -->
               <div class="resin-stage-action-bar">
@@ -998,6 +1146,10 @@ const ResinServiceApp = {
     } else if (side === 'back') {
       if (!this.state.isFlipped) this.toggleFlip();
       this.state.photoBackType = 'photo';
+    } else {
+      if (this.state.isFlipped) {
+        this.state.photoBackType = 'photo';
+      }
     }
     const inp = document.getElementById('resin-direct-photo-input');
     if (inp) {
@@ -1021,6 +1173,7 @@ const ResinServiceApp = {
         this.state.photoFrontTransform = { x: 0, y: 0, scale: 1.0, isSelected: true };
       }
       this.updateVisualPreview();
+      this.updateGuideBubble();
       this.renderActiveTabContent();
     };
     reader.readAsDataURL(file);
@@ -1118,11 +1271,15 @@ const ResinServiceApp = {
 
     const onStart = (e) => {
       const target = e.target;
-      const svg = target.closest('svg');
-      if (!svg) return;
-      activeSvg = svg;
+      // Allow buttons inside SVG to fire their clicks naturally!
+      if (target.closest && target.closest('.btn-svg-upload')) {
+        return;
+      }
 
       const isBack = self.state.isFlipped;
+      activeSvg = isBack ? document.getElementById('resin-keychain-svg-back') : document.getElementById('resin-keychain-svg');
+      if (!activeSvg) return;
+
       const tf = isBack ? self.state.photoBackTransform : self.state.photoFrontTransform;
       const photoUrl = isBack ? self.state.photoBackUrl : self.state.photoFrontUrl;
 
@@ -1131,8 +1288,9 @@ const ResinServiceApp = {
         e.preventDefault();
         e.stopPropagation();
         isResizing = true;
+        self._isResizingPhoto = true;
         activeHandle = target.dataset.handle;
-        dragStartPt = self.getSvgPoint(svg, e);
+        dragStartPt = self.getSvgPoint(activeSvg, e);
         initialScale = tf.scale;
         return;
       }
@@ -1142,8 +1300,9 @@ const ResinServiceApp = {
         e.preventDefault();
         e.stopPropagation();
         isDragging = true;
+        self._isDraggingPhoto = true;
         tf.isSelected = true;
-        dragStartPt = self.getSvgPoint(svg, e);
+        dragStartPt = self.getSvgPoint(activeSvg, e);
         initialX = tf.x;
         initialY = tf.y;
         self.updateVisualPreview();
@@ -1186,6 +1345,8 @@ const ResinServiceApp = {
     const onEnd = () => {
       isDragging = false;
       isResizing = false;
+      self._isDraggingPhoto = false;
+      self._isResizingPhoto = false;
       activeHandle = null;
     };
 
@@ -1243,26 +1404,45 @@ const ResinServiceApp = {
     // Common SVG Defs (Gradients, Hardware, Glitter Patterns, Framing ClipPaths)
     const commonDefs = `
       <defs>
-        <linearGradient id="goldHardwareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#FFF5BA" />
-          <stop offset="25%" stop-color="#FACC15" />
-          <stop offset="55%" stop-color="#CA8A04" />
-          <stop offset="85%" stop-color="#EAB308" />
-          <stop offset="100%" stop-color="#854D0E" />
+        <linearGradient id="goldHardwareGrad" x1="15%" y1="0%" x2="85%" y2="100%">
+          <stop offset="0%" stop-color="#FFFDF2" />
+          <stop offset="12%" stop-color="#FEF08A" />
+          <stop offset="28%" stop-color="#EAB308" />
+          <stop offset="48%" stop-color="#A16207" />
+          <stop offset="68%" stop-color="#CA8A04" />
+          <stop offset="85%" stop-color="#FACC15" />
+          <stop offset="100%" stop-color="#713F12" />
         </linearGradient>
 
-        <linearGradient id="silverHardwareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="silverHardwareGrad" x1="15%" y1="0%" x2="85%" y2="100%">
           <stop offset="0%" stop-color="#FFFFFF" />
-          <stop offset="30%" stop-color="#E2E8F0" />
-          <stop offset="60%" stop-color="#94A3B8" />
-          <stop offset="90%" stop-color="#CBD5E1" />
-          <stop offset="100%" stop-color="#475569" />
+          <stop offset="15%" stop-color="#F1F5F9" />
+          <stop offset="35%" stop-color="#94A3B8" />
+          <stop offset="55%" stop-color="#475569" />
+          <stop offset="75%" stop-color="#CBD5E1" />
+          <stop offset="90%" stop-color="#FFFFFF" />
+          <stop offset="100%" stop-color="#334155" />
         </linearGradient>
 
-        <linearGradient id="liquidGlossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.75)" />
-          <stop offset="45%" stop-color="rgba(255, 255, 255, 0.22)" />
+        <linearGradient id="liquidGlossGrad" x1="0%" y1="0%" x2="35%" y2="100%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.90)" />
+          <stop offset="30%" stop-color="rgba(255, 255, 255, 0.40)" />
+          <stop offset="65%" stop-color="rgba(255, 255, 255, 0.08)" />
           <stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)" />
+        </linearGradient>
+
+        <linearGradient id="resinMeniscusBevel" x1="20%" y1="0%" x2="80%" y2="100%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.95)" />
+          <stop offset="35%" stop-color="rgba(255, 255, 255, 0.65)" />
+          <stop offset="65%" stop-color="rgba(255, 255, 255, 0.2)" />
+          <stop offset="100%" stop-color="rgba(0, 0, 0, 0.55)" />
+        </linearGradient>
+
+        <linearGradient id="resin3dWallGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.45)" />
+          <stop offset="40%" stop-color="rgba(244, 114, 182, 0.35)" />
+          <stop offset="70%" stop-color="rgba(168, 85, 247, 0.25)" />
+          <stop offset="100%" stop-color="rgba(15, 23, 42, 0.85)" />
         </linearGradient>
 
         <pattern id="goldGlitterPattern" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -1466,17 +1646,17 @@ const ResinServiceApp = {
             <image href="${this.state.photoFrontUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
           </g>
         </g>
-        <g transform="translate(170, 362)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('front')">
-          <rect x="-65" y="-12" width="130" height="24" rx="12" fill="rgba(15,23,42,0.85)" stroke="#F472B6" stroke-width="1.2" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.6))" />
-          <text x="0" y="4" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="10" fill="#FFF">📸 Cambiar Foto Frente</text>
+        <g transform="translate(170, 362)" class="btn-svg-upload" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('front')">
+          <rect x="-68" y="-13" width="136" height="26" rx="13" fill="rgba(15,23,42,0.92)" stroke="#F472B6" stroke-width="1.4" filter="drop-shadow(0 3px 8px rgba(0,0,0,0.7))" />
+          <text x="0" y="4" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="10.5" fill="#FFF">📸 Cambiar Foto Frente</text>
         </g>
       ` : `
         <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #831843 0%, #1E1B4B 100%)" />
-        <g transform="translate(170, 240)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('front')">
-          <circle cx="0" cy="0" r="38" fill="rgba(244, 114, 182, 0.25)" stroke="#F472B6" stroke-width="2" />
-          <text x="0" y="8" text-anchor="middle" font-size="30">📸</text>
-          <text x="0" y="50" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="13" fill="#FFF">Toca para Subir Foto Frente</text>
-          <text x="0" y="68" text-anchor="middle" font-size="10.5" fill="#FDA4AF">Toca aquí para elegir tu imagen</text>
+        <g transform="translate(170, 240)" class="btn-svg-upload" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('front')">
+          <circle cx="0" cy="0" r="42" fill="rgba(244, 114, 182, 0.28)" stroke="#F472B6" stroke-width="2.2" filter="drop-shadow(0 4px 12px rgba(244,114,182,0.4))" />
+          <text x="0" y="9" text-anchor="middle" font-size="32">📸</text>
+          <text x="0" y="52" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="13.5" fill="#FFF">Toca para Subir Foto Frente</text>
+          <text x="0" y="70" text-anchor="middle" font-size="10.5" fill="#FDA4AF">Paso 1: Sube la foto delantera</text>
         </g>
       `;
 
@@ -1513,13 +1693,16 @@ const ResinServiceApp = {
         ${commonDefs}
         
         <!-- Drop Shadow -->
-        <g opacity="0.6" filter="url(#softContactShadow)">
+        <g opacity="0.65" filter="url(#softContactShadow)">
           ${shapePathOutline.replace(/fill="none"/g, 'fill="#000"').replace(/stroke="[^"]*"/g, 'stroke="#000"')}
         </g>
 
-        <!-- 3D Resin Side Wall / Mold Rim -->
-        <g transform="translate(0, 4)" opacity="0.4">
-          ${shapePathOutline.replace(/fill="none"/g, 'fill="#BE185D"')}
+        <!-- 3D Resin Side Wall / Mold Rim (Depth Extrusion) -->
+        <g transform="translate(0, 6)" opacity="0.5">
+          ${shapePathOutline.replace(/fill="none"/g, 'fill="#831843"').replace(/stroke="[^"]*"/g, 'stroke="url(#resin3dWallGrad)" stroke-width="7"')}
+        </g>
+        <g transform="translate(0, 3)" opacity="0.7">
+          ${shapePathOutline.replace(/fill="none"/g, 'fill="#BE185D"').replace(/stroke="[^"]*"/g, 'stroke="url(#resin3dWallGrad)" stroke-width="5"')}
         </g>
 
         <!-- Main Cast Front Content -->
@@ -1527,12 +1710,16 @@ const ResinServiceApp = {
           <rect x="0" y="100" width="340" height="300" fill="#1E293B" />
           ${frontPhotoHtml}
           ${getBorderFlakesHtml(moldClipId)}
-          <path d="M 50,140 Q 170,200 290,150 L 290,210 Q 170,260 50,200 Z" fill="url(#liquidGlossGrad)" opacity="0.65" pointer-events="none" />
-          <ellipse cx="120" cy="320" rx="35" ry="12" fill="rgba(255,255,255,0.2)" transform="rotate(-18 120 320)" pointer-events="none" />
+          <path d="M 50,140 Q 170,200 290,150 L 290,210 Q 170,260 50,200 Z" fill="url(#liquidGlossGrad)" opacity="0.75" pointer-events="none" />
+          <ellipse cx="120" cy="320" rx="35" ry="12" fill="rgba(255,255,255,0.25)" transform="rotate(-18 120 320)" pointer-events="none" />
+          <text x="75" y="150" font-size="14" fill="#FFF" opacity="0.9" filter="drop-shadow(0 0 6px #FFF)" pointer-events="none">✦</text>
+          <text x="255" y="345" font-size="11" fill="#FFF" opacity="0.75" filter="drop-shadow(0 0 4px #FFF)" pointer-events="none">✦</text>
         </g>
 
         <!-- Meniscus Border Bevel Line -->
-        ${shapePathOutline}
+        <g stroke="url(#resinMeniscusBevel)">
+          ${shapePathOutline}
+        </g>
 
         <!-- Encapsulated Smart NFC Chip Badge -->
         ${nfcBadgeHtml}
@@ -1635,9 +1822,9 @@ const ResinServiceApp = {
                 <image href="${this.state.photoBackUrl}" x="50" y="115" width="240" height="270" preserveAspectRatio="xMidYMid slice" />
               </g>
             </g>
-            <g transform="translate(170, 362)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('back')">
-              <rect x="-68" y="-12" width="136" height="24" rx="12" fill="rgba(15,23,42,0.85)" stroke="#A78BFA" stroke-width="1.2" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.6))" />
-              <text x="0" y="4" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="10" fill="#FFF">📸 Cambiar Foto Reverso</text>
+            <g transform="translate(170, 362)" class="btn-svg-upload" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('back')">
+              <rect x="-70" y="-13" width="140" height="26" rx="13" fill="rgba(15,23,42,0.92)" stroke="#A78BFA" stroke-width="1.4" filter="drop-shadow(0 3px 8px rgba(0,0,0,0.7))" />
+              <text x="0" y="4" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="10.5" fill="#FFF">📸 Cambiar Foto Reverso</text>
             </g>
           `;
 
@@ -1668,11 +1855,11 @@ const ResinServiceApp = {
         } else {
           backContentHtml = `
             <rect x="0" y="100" width="340" height="300" fill="linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)" />
-            <g transform="translate(170, 240)" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('back')">
-              <circle cx="0" cy="0" r="38" fill="rgba(167, 139, 250, 0.25)" stroke="#A78BFA" stroke-width="2" />
-              <text x="0" y="8" text-anchor="middle" font-size="28">🖼️</text>
-              <text x="0" y="50" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="13" fill="#FFF">Toca para Subir Foto Reverso</text>
-              <text x="0" y="68" text-anchor="middle" font-size="10.5" fill="#C7D2FE">Foto para la segunda cara</text>
+            <g transform="translate(170, 240)" class="btn-svg-upload" style="cursor: pointer;" onclick="ResinServiceApp.triggerPhotoUpload('back')">
+              <circle cx="0" cy="0" r="42" fill="rgba(167, 139, 250, 0.28)" stroke="#A78BFA" stroke-width="2.2" filter="drop-shadow(0 4px 12px rgba(167,139,250,0.4))" />
+              <text x="0" y="9" text-anchor="middle" font-size="30">🖼️</text>
+              <text x="0" y="52" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="13.5" fill="#FFF">Toca para Subir Foto Reverso</text>
+              <text x="0" y="70" text-anchor="middle" font-size="10.5" fill="#C7D2FE">Paso 2: Sube la segunda foto</text>
             </g>
           `;
         }
@@ -1725,12 +1912,40 @@ const ResinServiceApp = {
 
       svgBack.innerHTML = `
         ${commonDefs}
-        <g clip-path="url(#${moldClipId})">
-          ${backContentHtml}
-          <path d="M 50,140 Q 170,200 290,150 L 290,210 Q 170,260 50,200 Z" fill="url(#liquidGlossGrad)" opacity="0.5" pointer-events="none" />
+        
+        <!-- Drop Shadow -->
+        <g opacity="0.65" filter="url(#softContactShadow)">
+          ${shapePathOutline.replace(/fill="none"/g, 'fill="#000"').replace(/stroke="[^"]*"/g, 'stroke="#000"')}
         </g>
-        ${shapePathOutline}
+
+        <!-- 3D Resin Side Wall / Mold Rim (Depth Extrusion) -->
+        <g transform="translate(0, 6)" opacity="0.5">
+          ${shapePathOutline.replace(/fill="none"/g, 'fill="#831843"').replace(/stroke="[^"]*"/g, 'stroke="url(#resin3dWallGrad)" stroke-width="7"')}
+        </g>
+        <g transform="translate(0, 3)" opacity="0.7">
+          ${shapePathOutline.replace(/fill="none"/g, 'fill="#BE185D"').replace(/stroke="[^"]*"/g, 'stroke="url(#resin3dWallGrad)" stroke-width="5"')}
+        </g>
+
+        <!-- Main Cast Back Content -->
+        <g clip-path="url(#${moldClipId})">
+          <rect x="0" y="100" width="340" height="300" fill="#1E293B" />
+          ${backContentHtml}
+          ${getBorderFlakesHtml(moldClipId)}
+          <path d="M 50,140 Q 170,200 290,150 L 290,210 Q 170,260 50,200 Z" fill="url(#liquidGlossGrad)" opacity="0.75" pointer-events="none" />
+          <ellipse cx="120" cy="320" rx="35" ry="12" fill="rgba(255,255,255,0.25)" transform="rotate(-18 120 320)" pointer-events="none" />
+          <text x="75" y="150" font-size="14" fill="#FFF" opacity="0.9" filter="drop-shadow(0 0 6px #FFF)" pointer-events="none">✦</text>
+          <text x="255" y="345" font-size="11" fill="#FFF" opacity="0.75" filter="drop-shadow(0 0 4px #FFF)" pointer-events="none">✦</text>
+        </g>
+
+        <!-- Meniscus Border Bevel Line -->
+        <g stroke="url(#resinMeniscusBevel)">
+          ${shapePathOutline}
+        </g>
+
+        <!-- Unbroken Hardware & Chains -->
         ${renderHardwareAssembly(anchor.x, anchor.y, shape)}
+
+        <!-- Interactive Transformation Overlay -->
         ${backTransformOverlay}
       `;
     } else {
@@ -1807,9 +2022,13 @@ const ResinServiceApp = {
         <g filter="drop-shadow(0 3px 5px rgba(0,0,0,0.5))">
           <circle cx="${anchorX}" cy="${anchorY}" r="5.5" fill="none" stroke="${metalGrad}" stroke-width="3.2" />
           <circle cx="${anchorX}" cy="${anchorY}" r="3" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.8" />
-          <ellipse cx="${anchorX}" cy="${anchorY + 6}" rx="3.5" ry="1.5" fill="${metalGrad}" />
-          <line x1="${anchorX}" y1="${anchorY + 6}" x2="${anchorX}" y2="${anchorY + 18}" stroke="${metalGrad}" stroke-width="2.8" stroke-linecap="round" />
-          <line x1="${anchorX - 0.7}" y1="${anchorY + 7}" x2="${anchorX - 0.7}" y2="${anchorY + 16}" stroke="rgba(255,255,255,0.6)" stroke-width="1" stroke-linecap="round" />
+          <ellipse cx="${anchorX}" cy="${anchorY + 6}" rx="3.8" ry="1.6" fill="${metalGrad}" />
+          <!-- Screw stem entering into resin with thread ridges -->
+          <line x1="${anchorX}" y1="${anchorY + 6}" x2="${anchorX}" y2="${anchorY + 20}" stroke="${metalGrad}" stroke-width="2.8" stroke-linecap="round" />
+          <line x1="${anchorX - 0.7}" y1="${anchorY + 7}" x2="${anchorX - 0.7}" y2="${anchorY + 18}" stroke="rgba(255,255,255,0.6)" stroke-width="1" stroke-linecap="round" />
+          <line x1="${anchorX - 2.5}" y1="${anchorY + 9}" x2="${anchorX + 2.5}" y2="${anchorY + 10.5}" stroke="${metalGrad}" stroke-width="1.2" stroke-linecap="round" />
+          <line x1="${anchorX - 2.5}" y1="${anchorY + 13}" x2="${anchorX + 2.5}" y2="${anchorY + 14.5}" stroke="${metalGrad}" stroke-width="1.2" stroke-linecap="round" />
+          <line x1="${anchorX - 2.5}" y1="${anchorY + 17}" x2="${anchorX + 2.5}" y2="${anchorY + 18.5}" stroke="${metalGrad}" stroke-width="1.2" stroke-linecap="round" />
         </g>
       `;
     }
