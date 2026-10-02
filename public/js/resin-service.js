@@ -76,6 +76,7 @@ const ResinServiceApp = {
   ],
 
   tassels: [
+    { name: 'Sin Borla', hex: 'none' },
     { name: 'Rosa Pastel', hex: '#F472B6' },
     { name: 'Celeste Suave', hex: '#38BDF8' },
     { name: 'Menta Fresco', hex: '#34D399' },
@@ -88,9 +89,11 @@ const ResinServiceApp = {
 
   charms: [
     { id: 'none', name: 'Ninguno', icon: '❌', extraUsd: 0.0 },
-    { id: 'corazon', name: 'Mini Corazón con Glitter', icon: '💖', extraUsd: 0.8 },
-    { id: 'huesito', name: 'Mini Huesito de Mascota', icon: '🦴', extraUsd: 0.8 },
-    { id: 'estrella', name: 'Mini Estrella Holográfica', icon: '⭐', extraUsd: 0.8 }
+    { id: 'corazon', name: 'Mini Corazón Esmaltado', icon: '💖', extraUsd: 0.8 },
+    { id: 'huesito', name: 'Mini Huesito Mascota', icon: '🦴', extraUsd: 0.8 },
+    { id: 'estrella', name: 'Mini Estrella Dorada', icon: '⭐', extraUsd: 0.8 },
+    { id: 'patita', name: 'Mini Patita Pet', icon: '🐾', extraUsd: 0.8 },
+    { id: 'inicial', name: 'Medallón con Inicial', icon: '🔤', extraUsd: 0.8 }
   ],
 
   // Current customization state
@@ -1571,39 +1574,55 @@ const ResinServiceApp = {
           <!-- Continuous Unbroken Chain Links & Bottom Anchor -->
           ${this.renderChain(anchorX, anchorY, isSilver, shapeName)}
 
-          <!-- Tassel Connecting Jump Rings (Bridge from split ring to tassel) -->
-          <g id="tassel-connector-chain" filter="drop-shadow(0 2px 3px rgba(0,0,0,0.45))">
-            <!-- Ring 1 looped through split ring at (150, 63) -->
-            <ellipse cx="145" cy="67" rx="4.0" ry="6.2" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(-30 145 67)" />
-            <!-- Ring 2 interlocking -->
-            <ellipse cx="124" cy="74" rx="3.8" ry="6.0" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(-18 124 74)" />
-            <!-- Ring 3 interlocking into tassel top loop -->
-            <ellipse cx="103" cy="80" rx="3.8" ry="6.0" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(-10 103 80)" />
-          </g>
+          <!-- Suede Tassel (Optional) -->
+          ${this.state.tasselHex && this.state.tasselHex !== 'none' ? `
+            <g id="tassel-connector-chain" filter="drop-shadow(0 2px 3px rgba(0,0,0,0.45))">
+              <ellipse cx="145" cy="67" rx="4.0" ry="6.2" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(-30 145 67)" />
+              <ellipse cx="124" cy="74" rx="3.8" ry="6.0" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(-18 124 74)" />
+              <ellipse cx="103" cy="80" rx="3.8" ry="6.0" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(-10 103 80)" />
+            </g>
+            <g transform="translate(60, 82)">
+              <ellipse cx="25" cy="5" rx="4" ry="5.5" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(15 25 5)" />
+              <path d="M 16,10 Q 25,6 34,10 L 37,24 Q 25,28 13,24 Z" fill="${metalGrad}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))" />
+              <ellipse cx="25" cy="11" rx="9" ry="2.5" fill="#FFF5BA" opacity="0.6" />
+              <path d="M 14,24 Q 25,28 36,24 L 42,78 Q 25,84 8,78 Z" fill="${this.state.tasselHex}" filter="drop-shadow(0 4px 8px rgba(0,0,0,0.35))" />
+              <line x1="16" y1="28" x2="14" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+              <line x1="22" y1="28" x2="21" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+              <line x1="28" y1="28" x2="29" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+              <line x1="34" y1="28" x2="36" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
+            </g>
+          ` : ''}
 
-          <!-- Suede Tassel -->
-          <g transform="translate(60, 82)">
-            <ellipse cx="25" cy="5" rx="4" ry="5.5" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(15 25 5)" />
-            <path d="M 16,10 Q 25,6 34,10 L 37,24 Q 25,28 13,24 Z" fill="${metalGrad}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))" />
-            <ellipse cx="25" cy="11" rx="9" ry="2.5" fill="#FFF5BA" opacity="0.6" />
-            <path d="M 14,24 Q 25,28 36,24 L 42,78 Q 25,84 8,78 Z" fill="${this.state.tasselHex || '#F472B6'}" filter="drop-shadow(0 4px 8px rgba(0,0,0,0.35))" />
-            <line x1="16" y1="28" x2="14" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
-            <line x1="22" y1="28" x2="21" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
-            <line x1="28" y1="28" x2="29" y2="78" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
-            <line x1="34" y1="28" x2="36" y2="76" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" />
-          </g>
-
-          <!-- Extra Charm -->
+          <!-- Extra Charm (Authentic SVG Detail) -->
           ${this.state.extraCharmId !== 'none' ? `
-            <!-- Charm Connecting Jump Rings (Bridge from split ring to charm) -->
             <g id="charm-connector-chain" filter="drop-shadow(0 2px 3px rgba(0,0,0,0.45))">
               <ellipse cx="192" cy="71" rx="3.8" ry="5.8" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(32 192 71)" />
               <ellipse cx="207" cy="83" rx="3.8" ry="5.8" fill="none" stroke="${metalGrad}" stroke-width="2.8" transform="rotate(45 207 83)" />
             </g>
-            <g transform="translate(205, 95)">
+            <g transform="translate(205, 95)" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.35))">
               <ellipse cx="15" cy="5" rx="3.5" ry="5" fill="none" stroke="${metalGrad}" stroke-width="2.5" />
-              <circle cx="15" cy="18" r="10" fill="${metalGrad}" />
-              <text x="15" y="22" text-anchor="middle" font-size="12" fill="#FFF">✨</text>
+              ${this.state.extraCharmId === 'corazon' ? `
+                <path d="M 15,14 C 11,9 5,12 5,18 C 5,25 15,31 15,31 C 15,31 25,25 25,18 C 25,12 19,9 15,14 Z" fill="#FB7185" stroke="${metalGrad}" stroke-width="1.8" />
+                <path d="M 10,13 C 8,11 6,14 6,17" stroke="#FFF" stroke-width="1" stroke-linecap="round" opacity="0.6" fill="none" />
+              ` : this.state.extraCharmId === 'huesito' ? `
+                <path d="M 8,15 C 6,13 4,16 6,18 C 4,20 6,23 8,21 L 22,21 C 24,23 26,20 24,18 C 26,16 24,13 22,15 Z" fill="#F8FAFC" stroke="${metalGrad}" stroke-width="1.5" />
+              ` : this.state.extraCharmId === 'patita' ? `
+                <ellipse cx="15" cy="22" rx="5" ry="4" fill="#F472B6" stroke="${metalGrad}" stroke-width="1.2" />
+                <ellipse cx="9" cy="15" rx="2" ry="2.8" fill="#F472B6" stroke="${metalGrad}" stroke-width="1" transform="rotate(-15 9 15)" />
+                <ellipse cx="13" cy="13" rx="2" ry="3" fill="#F472B6" stroke="${metalGrad}" stroke-width="1" />
+                <ellipse cx="17" cy="13" rx="2" ry="3" fill="#F472B6" stroke="${metalGrad}" stroke-width="1" />
+                <ellipse cx="21" cy="15" rx="2" ry="2.8" fill="#F472B6" stroke="${metalGrad}" stroke-width="1" transform="rotate(15 21 15)" />
+              ` : this.state.extraCharmId === 'estrella' ? `
+                <polygon points="15,9 17.5,15 24,15.5 19,19.5 20.8,26 15,22 9.2,26 11,19.5 6,15.5 12.5,15" fill="${metalGrad}" stroke="${metalGrad}" stroke-width="1" />
+                <polygon points="15,11 16.5,15.5 21,16 17.5,19 19,23.5 15,20.5 11,23.5 12.5,19 9,16 13.5,15.5" fill="#FFF5BA" opacity="0.6" />
+              ` : this.state.extraCharmId === 'inicial' ? `
+                <circle cx="15" cy="20" r="11" fill="${metalGrad}" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" />
+                <circle cx="15" cy="20" r="9" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8" />
+                <text x="15" y="24" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="11" fill="#1E293B">${(this.state.customerName || this.state.letter || 'P')[0].toUpperCase()}</text>
+              ` : `
+                <circle cx="15" cy="18" r="10" fill="${metalGrad}" />
+                <text x="15" y="22" text-anchor="middle" font-size="12" fill="#FFF">✨</text>
+              `}
             </g>
           ` : ''}
         </g>

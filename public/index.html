@@ -596,16 +596,6 @@
           </div>
         </div>
 
-        <!-- Coupon Input Area -->
-        <div class="form-group" style="margin-top: 14px; margin-bottom: 12px; background: rgba(245, 158, 11, 0.08); padding: 10px 12px; border-radius: 12px; border: 1px dashed rgba(245, 158, 11, 0.3);">
-          <label for="checkout-coupon-input" style="font-size: 12px; font-weight: 800; color: #F59E0B; display: flex; align-items: center; gap: 4px;">🎟️ Código de Cupón de Descuento</label>
-          <div style="display: flex; gap: 6px; margin-top: 6px;">
-            <input type="text" id="checkout-coupon-input" placeholder="Ej. GOCHO10, ENVIOGRATIS" style="flex: 1; padding: 8px 10px; font-size: 12.5px; border-radius: 8px; text-transform: uppercase; font-weight: 700;">
-            <button type="button" class="btn-secondary" onclick="MarketplaceApp.applyCouponCode()" style="padding: 8px 14px; font-size: 12px; margin: 0; width: auto; font-weight: 800; background: #F59E0B; color: #1e293b; border: none; border-radius: 8px; cursor: pointer;">Aplicar</button>
-          </div>
-          <div id="checkout-coupon-msg" style="font-size: 11px; margin-top: 4px; font-weight: 700;"></div>
-        </div>
-
         <div class="cart-summary-totals">
           <div class="total-row">
             <span>Subtotal</span>
@@ -614,10 +604,6 @@
           <div class="total-row delivery-cost-row">
             <span>Costo de Envío</span>
             <span id="cart-delivery-cost">$2.00</span>
-          </div>
-          <div class="total-row discount-cost-row hidden" id="cart-discount-row" style="color: #10B981; font-weight: 800;">
-            <span>Descuento Cupón</span>
-            <span id="cart-discount-val">-$0.00</span>
           </div>
           <hr>
           <div class="total-row grand-total">
@@ -805,26 +791,26 @@
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #fff;">🚲 Cupón de Envío Gratis</h5>
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #fff;">🚲 Envío Gratis en Próxima Orden</h5>
               <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Costo de Delivery $0 en tu próxima orden</p>
             </div>
-            <button type="button" onclick="MarketplaceApp.redeemReward('ENVIOGRATIS', 100)" style="background: #F59E0B; color: #1e293b; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;">Canjear (100 Pts)</button>
+            <button type="button" onclick="MarketplaceApp.redeemReward('envio_gratis', 100)" style="background: #F59E0B; color: #1e293b; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;">Canjear (100 Pts)</button>
           </div>
 
           <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #fff;">🎟️ $2.00 USD de Descuento</h5>
-              <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Aplica el código `GOCHO10` en tu pedido</p>
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #fff;">⭐ Saldo de $2.00 USD para Pedidos</h5>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Abono automático a tu cuenta en PediGochos</p>
             </div>
-            <button type="button" onclick="MarketplaceApp.redeemReward('GOCHO10', 150)" style="background: #F59E0B; color: #1e293b; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;">Canjear (150 Pts)</button>
+            <button type="button" onclick="MarketplaceApp.redeemReward('saldo_2usd', 150)" style="background: #F59E0B; color: #1e293b; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;">Canjear (150 Pts)</button>
           </div>
 
           <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #fff;">👑 15% Descuento VIP</h5>
-              <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Aplica `GOCHOVIP` en cualquier comercio</p>
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #fff;">👑 Membresía Gocho VIP</h5>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Acceso exclusivo a promociones flash y prioridad</p>
             </div>
-            <button type="button" onclick="MarketplaceApp.redeemReward('GOCHOVIP', 250)" style="background: #F59E0B; color: #1e293b; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;">Canjear (250 Pts)</button>
+            <button type="button" onclick="MarketplaceApp.redeemReward('gocho_vip', 250)" style="background: #F59E0B; color: #1e293b; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;">Canjear (250 Pts)</button>
           </div>
         </div>
       </div>
@@ -2042,6 +2028,7 @@
               <span id="offer-order-price" style="font-size: 16px; font-weight: 900; color: #34D399;">$0</span>
               <span id="offer-order-orig-price" style="font-size: 11px; color: #64748B; text-decoration: line-through;"></span>
             </div>
+            <div id="offer-order-stock-bar" style="margin-top: 6px;"></div>
           </div>
         </div>
       </div>
@@ -2130,6 +2117,40 @@
 
   <!-- Toast notification -->
   <div id="toast" class="toast hidden">Mensaje de notificación</div>
+
+  <!-- Modal: Comprobante Digital de Cotización / Pedido -->
+  <div id="modal-digital-quote-voucher" class="digital-voucher-modal hidden">
+    <div class="digital-voucher-card">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 26px;">🧾</span>
+          <div>
+            <h4 style="margin: 0; font-size: 15px; font-weight: 900; color: #FFF;">Comprobante de Cotización</h4>
+            <span style="font-size: 11px; color: #94A3B8;">PediGochos VZ • Servicio Oficial</span>
+          </div>
+        </div>
+        <button type="button" onclick="MarketplaceApp.closeDigitalQuoteVoucher()" style="background: rgba(255,255,255,0.08); border: none; color: #FFF; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer;">✕</button>
+      </div>
+
+      <div class="voucher-header">
+        <span class="voucher-code-badge" id="voucher-display-code">#COT-3D-0000</span>
+        <span id="voucher-display-date" style="display: block; font-size: 10.5px; color: #64748B; margin-top: 4px;">01/10/2026 • 22:50</span>
+      </div>
+
+      <div id="voucher-display-content" style="margin-bottom: 16px;">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button type="button" id="btn-voucher-whatsapp" class="btn-print3d-wa" style="width: 100%; justify-content: center; padding: 12px; font-size: 13px; font-weight: 800; border-radius: 12px; border: none; background: #22C55E; color: #FFF; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <span>🟢</span> Enviar Comprobante por WhatsApp
+        </button>
+        <button type="button" onclick="MarketplaceApp.copyVoucherSummary()" style="width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">
+          📋 Copiar Resumen al Portapapeles
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/supabase-helper.js?v=217"></script>

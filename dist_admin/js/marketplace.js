@@ -701,13 +701,16 @@ class MarketplaceController {
         const discountBadge = discountPct > 0 ? `<span style="background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 8px; position: absolute; top: 8px; left: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">- ${discountPct}% OFF</span>` : '';
         const currency = p.currency || 'COP';
         const symbol = (currency === 'VES') ? 'Bs.' : '$';
+        const stockRem = p.stockRemaining !== undefined ? p.stockRemaining : (p.stockTotal || 8);
+        const stockBadge = `<span style="position: absolute; top: 8px; right: 8px; background: rgba(245, 158, 11, 0.92); color: #0F172A; font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.4);">⚡ Quedan ${stockRem}</span>`;
 
         return `
           <div onclick="MarketplaceApp.openDailyOfferOrderModal('${p.id}')" style="min-width: 220px; max-width: 220px; background: rgba(30, 41, 59, 0.95); border: 1.5px solid rgba(239, 68, 68, 0.45); border-radius: 14px; overflow: hidden; cursor: pointer; flex-shrink: 0; position: relative; scroll-snap-align: start; box-shadow: 0 4px 14px rgba(0,0,0,0.35); transition: transform 0.2s ease;">
             <div style="width: 100%; height: 110px; position: relative; background: #000;">
               <img src="${p.image || '/images/burger_royale.jpg'}" alt="${p.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
               ${discountBadge}
-              <span style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.88); color: #FCA5A5; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45);">
+              ${stockBadge}
+              <span class="offer-countdown-timer" data-expires="${expiresMs}" style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.92); color: #FCA5A5; font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
                 ⏱️ ${hoursLeft}h ${minsLeft}m
               </span>
             </div>
@@ -731,10 +734,165 @@ class MarketplaceController {
 
       promoSection.style.display = 'block';
       promoSection.classList.remove('hidden');
+      this.startDailyOffersCountdown();
     } catch(e) {
       console.warn('Error loading daily promos:', e);
     }
   }
+
+  // ==================== DIGITAL QUOTE & ORDER VOUCHER ====================
+  currentVoucherData = null;
+
+  openDigitalQuoteVoucher(data) {
+    this.currentVoucherData = data;
+    const modal = document.getElementById('modal-digital-quote-voucher');
+    if (!modal) return;
+
+    const codeEl = document.getElementById('voucher-display-code');
+    const dateEl = document.getElementById('voucher-display-date');
+    const contentEl = document.getElementById('voucher-display-content');
+    const waBtn = document.getElementById('btn-voucher-whatsapp');
+
+    const code = data.code || `COT-${Math.floor(1000 + Math.random() * 9000)}`;
+    if (codeEl) codeEl.textContent = `#${code}`;
+    if (dateEl) {
+      const now = new Date();
+      dateEl.textContent = `${now.toLocaleDateString()} • ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    if (contentEl) {
+      contentEl.innerHTML = `
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center;">
+          ${data.image ? `<img src="${data.image}" style="width: 54px; height: 54px; border-radius: 10px; object-fit: cover; background: #000; flex-shrink: 0;" alt="Item">` : '<span style="font-size: 32px;">📦</span>'}
+          <div style="min-width: 0; flex: 1;">
+            <strong style="color: #FFF; font-size: 13.5px; display: block; line-height: 1.25; margin-bottom: 3px;">${data.title || 'Cotización'}</strong>
+            <span style="font-size: 11px; color: #94A3B8;">${data.category || 'Servicio Personalizado'}</span>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          ${(data.details || []).map(d => `
+            <div class="voucher-detail-row">
+              <span class="voucher-detail-label">${d.label}</span>
+              <span class="voucher-detail-value">${d.value}</span>
+            </div>
+          `).join('')}
+
+          ${data.gpsLocation ? `
+            <div class="voucher-detail-row">
+              <span class="voucher-detail-label">📍 Ubicación GPS:</span>
+              <span class="voucher-detail-value" style="color: #38BDF8;">
+                <a href="${data.gpsLocation.mapsUrl}" target="_blank" style="color: #38BDF8; text-decoration: underline;">Ver en Google Maps</a>
+              </span>
+            </div>
+          ` : ''}
+
+          <div class="voucher-detail-row" style="border-top: 1px dashed rgba(255,255,255,0.15); margin-top: 6px; padding-top: 8px;">
+            <span class="voucher-detail-label" style="font-weight: 800; color: #FFF;">Total / Modalidad:</span>
+            <span class="voucher-detail-value" style="color: #34D399; font-size: 14px; font-weight: 900;">${data.total || 'Bajo Cotización'}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (waBtn) {
+      waBtn.onclick = () => {
+        if (data.whatsappUrl) {
+          window.open(data.whatsappUrl, '_blank');
+        }
+      };
+    }
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+
+  closeDigitalQuoteVoucher() {
+    const modal = document.getElementById('modal-digital-quote-voucher');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+  }
+
+  copyVoucherSummary() {
+    if (!this.currentVoucherData) return;
+    const d = this.currentVoucherData;
+    let text = `🧾 COMPROBANTE PEDIGOCHOS VZ\n`;
+    text += `Código: #${d.code || 'COT-001'}\n`;
+    text += `Item: ${d.title || ''}\n`;
+    (d.details || []).forEach(item => {
+      text += `• ${item.label}: ${item.value}\n`;
+    });
+    if (d.gpsLocation) text += `📍 GPS: ${d.gpsLocation.mapsUrl}\n`;
+    text += `Total: ${d.total || 'Bajo Cotización'}\n`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      this.showToast('📋 ¡Comprobante copiado al portapapeles!');
+    }).catch(() => {
+      alert('Resumen copiado.');
+    });
+  }
+
+  startDailyOffersCountdown() {
+
+    if (this._dailyOffersInterval) clearInterval(this._dailyOffersInterval);
+
+    this._dailyOffersInterval = setInterval(() => {
+
+      const now = Date.now();
+
+      document.querySelectorAll('.offer-countdown-timer').forEach(el => {
+
+        const exp = parseInt(el.dataset.expires, 10);
+
+        if (!exp) return;
+
+        const diff = Math.max(0, exp - now);
+
+        if (diff <= 0) {
+
+          el.textContent = '⌛ Expirada';
+
+          el.style.background = '#475569';
+
+        } else {
+
+          const h = Math.floor(diff / 3600000);
+
+          const m = Math.floor((diff % 3600000) / 60000);
+
+          const s = Math.floor((diff % 60000) / 1000);
+
+          el.textContent = `⏱️ ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+        }
+
+      });
+
+      const modalTimer = document.getElementById('offer-order-timer-badge');
+
+      if (modalTimer && this.currentDailyOffer) {
+
+        const exp = new Date(this.currentDailyOffer.expiresAt || (new Date(this.currentDailyOffer.createdAt).getTime() + 24 * 3600000)).getTime();
+
+        const diff = Math.max(0, exp - now);
+
+        const h = Math.floor(diff / 3600000);
+
+        const m = Math.floor((diff % 3600000) / 60000);
+
+        const s = Math.floor((diff % 60000) / 1000);
+
+        modalTimer.textContent = `⏱️ Quedan ${h}h ${m}m ${s}s de oferta`;
+
+      }
+
+    }, 1000);
+
+  }
+
+
 
   // ==================== OFERTAS DEL DÍA: EXPRESS ORDER & MANDATORY FIXED GPS ====================
   openDailyOfferOrderModal(promoId) {
@@ -786,6 +944,25 @@ class MarketplaceController {
 
     if (qtyEl) qtyEl.textContent = '1';
     if (notesInput) notesInput.value = '';
+
+    // Render stock urgency progress bar
+    const stockEl = document.getElementById('offer-order-stock-bar');
+    if (stockEl) {
+      const total = promo.stockTotal || 10;
+      const remaining = promo.stockRemaining !== undefined ? promo.stockRemaining : total;
+      const soldPct = Math.min(100, Math.max(18, Math.round(((total - remaining) / total) * 100)));
+      stockEl.innerHTML = `
+        <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 6px 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #FCA5A5; margin-bottom: 4px;">
+            <span>🔥 ¡Solo quedan ${remaining} disponibles!</span>
+            <span>${soldPct}% reservado</span>
+          </div>
+          <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.12); border-radius: 4px; overflow: hidden;">
+            <div style="width: ${soldPct}%; height: 100%; background: linear-gradient(90deg, #F59E0B 0%, #EF4444 100%); border-radius: 4px;"></div>
+          </div>
+        </div>
+      `;
+    }
 
     // Auto-fill saved client whatsapp & address
     try {
@@ -7485,44 +7662,33 @@ ${mapsLink}
     this.updateGochoPointsDisplay();
   }
 
-  redeemReward(couponCode, pointsCost) {
+  redeemReward(rewardType, pointsCost) {
+
     if (this.gochoPoints < pointsCost) {
-      alert(`⚠️ Necesitas ${pointsCost} Pts para canjear esta recompensa. Tu saldo actual es de ${this.gochoPoints} Pts.`);
+
+      alert("⚠️ Necesitas " + pointsCost + " Pts para canjear esta recompensa. Tu saldo actual es de " + this.gochoPoints + " Pts.");
+
       return;
+
     }
+
     this.gochoPoints -= pointsCost;
+
     localStorage.setItem('gocho_points', this.gochoPoints.toString());
+
     this.updateGochoPointsDisplay();
+
     this.closeGochoPointsModal();
-    
-    // Apply coupon
-    const couponInput = document.getElementById('checkout-coupon-input');
-    if (couponInput) couponInput.value = couponCode;
-    this.applyCouponCode();
-    this.showToast(`🎉 ¡Canjeaste tu recompensa con éxito! Se aplicó el código ${couponCode}.`);
+
+    this.showToast('🎉 ¡Recompensa canjeada con éxito!');
+
   }
 
   applyCouponCode() {
-    const input = document.getElementById('checkout-coupon-input');
-    const msg = document.getElementById('checkout-coupon-msg');
-    if (!input || !input.value.trim()) return;
-
-    const code = input.value.trim().toUpperCase();
-    if (code === 'GOCHO10') {
-      this.activeCoupon = { code: 'GOCHO10', type: 'fixed', amount: 2.00 };
-      if (msg) { msg.style.color = '#10B981'; msg.innerText = '✅ ¡Cupón GOCHO10 aplicado! ($2.00 USD de descuento)'; }
-    } else if (code === 'ENVIOGRATIS') {
-      this.activeCoupon = { code: 'ENVIOGRATIS', type: 'delivery', amount: 0 };
-      if (msg) { msg.style.color = '#10B981'; msg.innerText = '✅ ¡Cupón ENVIOGRATIS aplicado! (Costo de envío $0.00)'; }
-    } else if (code === 'GOCHOVIP') {
-      this.activeCoupon = { code: 'GOCHOVIP', type: 'percent', amount: 15 };
-      if (msg) { msg.style.color = '#10B981'; msg.innerText = '✅ ¡Cupón GOCHOVIP aplicado! (15% de descuento en tu orden)'; }
-    } else {
-      this.activeCoupon = null;
-      if (msg) { msg.style.color = '#EF4444'; msg.innerText = '❌ Código de cupón inválido o expirado.'; }
-    }
-    this.renderCartItems();
+    // Cupones desactivados
   }
+
+
 
   isEstablishmentOpen(est) {
     if (!est) return true;

@@ -10306,6 +10306,8 @@ class AdminController {
     document.getElementById('admin-offer-image-url').value = '';
     document.getElementById('admin-offer-img-preview').src = '/images/burger_royale.jpg';
     document.getElementById('admin-offer-active').checked = true;
+    const stockInput = document.getElementById('admin-offer-stock');
+    if (stockInput) stockInput.value = 10;
 
     this.populateOfferRestaurantSelect();
     modal.style.display = 'flex';
@@ -10391,6 +10393,8 @@ class AdminController {
     document.getElementById('admin-offer-image-url').value = promo.image || '';
     document.getElementById('admin-offer-img-preview').src = promo.image || '/images/burger_royale.jpg';
     document.getElementById('admin-offer-active').checked = promo.active !== false;
+    const stockEl = document.getElementById('admin-offer-stock');
+    if (stockEl) stockEl.value = promo.stockTotal || promo.stockRemaining || 10;
 
     modal.style.display = 'flex';
     modal.classList.remove('hidden');
@@ -10418,6 +10422,7 @@ class AdminController {
       return;
     }
 
+    const stockVal = parseInt(document.getElementById('admin-offer-stock')?.value, 10) || 10;
     const payload = {
       id: id || undefined,
       establishmentId: restId || 'custom_vendor',
@@ -10429,7 +10434,9 @@ class AdminController {
       originalPrice: origPrice,
       currency: currency,
       image: image,
-      active: active
+      active: active,
+      stockTotal: stockVal,
+      stockRemaining: stockVal
     };
 
     try {

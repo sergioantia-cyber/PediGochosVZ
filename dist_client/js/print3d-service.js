@@ -509,11 +509,17 @@ const Print3DServiceApp = {
               alt="${p.title}"
               auto-rotate
               camera-controls
+              ar
+              ar-modes="webxr scene-viewer quick-look"
+              ar-scale="auto"
               shadow-intensity="1.5"
               exposure="1.1"
               environment-image="neutral"
               style="width: 100%; height: 100%;"
             >
+              <button slot="ar-button" class="print3d-ar-btn" title="Ver en Realidad Aumentada">
+                📱 Ver en mi Espacio (AR)
+              </button>
               <!-- Interactive Fallback Canvas if WebGL or Model Viewer is loading -->
               <canvas id="print3d-fallback-canvas" class="print3d-canvas-fallback" slot="poster"></canvas>
             </model-viewer>
@@ -678,20 +684,37 @@ const Print3DServiceApp = {
 
   applyModelColor(hex) {
     const viewer = document.getElementById('main-3d-model-viewer');
-    if (viewer && viewer.model) {
+    if (!viewer) return;
+
+    const applyToMaterials = () => {
+      if (!viewer.model || !viewer.model.materials) return;
       try {
-        const materials = viewer.model.materials;
-        if (materials && materials.length > 0) {
-          // Convert hex to rgb normalized [0, 1]
-          const c = parseInt(hex.replace('#', ''), 16);
-          const r = ((c >> 16) & 255) / 255;
-          const g = ((c >> 8) & 255) / 255;
-          const b = (c & 255) / 255;
-          materials[0].pbrMetallicRoughness.setBaseColorFactor([r, g, b, 1.0]);
-        }
+        const c = parseInt(hex.replace('#', ''), 16);
+        const r = ((c >> 16) & 255) / 255;
+        const g = ((c >> 8) & 255) / 255;
+        const b = (c & 255) / 255;
+        const rgba = [r, g, b, 1.0];
+
+        const isPetg = this.configState.materialKey === 'petg';
+        const roughness = isPetg ? 0.25 : 0.55;
+        const metallic = isPetg ? 0.35 : 0.08;
+
+        viewer.model.materials.forEach(mat => {
+          if (mat.pbrMetallicRoughness) {
+            mat.pbrMetallicRoughness.setBaseColorFactor(rgba);
+            mat.pbrMetallicRoughness.setRoughnessFactor(roughness);
+            mat.pbrMetallicRoughness.setMetallicFactor(metallic);
+          }
+        });
       } catch (e) {
         console.warn('Could not set model color factor:', e);
       }
+    };
+
+    if (viewer.model) {
+      applyToMaterials();
+    } else {
+      viewer.addEventListener('load', () => applyToMaterials(), { once: true });
     }
   },
 
@@ -983,39 +1006,421 @@ const Print3DServiceApp = {
     }
   },
 
+  // =========================================================================
+  // Interactive Custom STL/OBJ Upload Modal with Real-Time 3D Rotating Preview
+  // =========================================================================
+  uploadedStlData: null,
+  stlAnimationId: null,
+  stlRotation: { x: 0.3, y: 0.5 },
+  stlIsDragging: false,
+  stlLastMouse: { x: 0, y: 0 },
+
   openCustomUploadModal() {
-    const filename = prompt('Ingresa el nombre o enlace de tu archivo 3D (.STL, .OBJ, .STEP):');
-    if (!filename) return;
-    const name = prompt('Tu Nombre:') || 'Cliente';
-    const phone = prompt('Tu WhatsApp:') || '';
+    let modal = document.getElementById('print3d-upload-modal');
+    if (!modal) {
+      this.renderCustomUploadModalMarkup();
+      modal = document.getElementById('print3d-upload-modal');
+    }
+    modal.classList.remove('hidden');
+    
+    // Auto-fill client data if available
+    const nameInput = document.getElementById('stl-client-name');
+    const phoneInput = document.getElementById('stl-client-phone');
+    if (nameInput && !nameInput.value) nameInput.value = localStorage.getItem('customer_name') || '';
+    if (phoneInput && !phoneInput.value) phoneInput.value = localStorage.getItem('customer_phone') || '';
+  },
+
+  closeCustomUploadModal() {
+    const modal = document.getElementById('print3d-upload-modal');
+    if (modal) modal.classList.add('hidden');
+    if (this.stlAnimationId) {
+      cancelAnimationFrame(this.stlAnimationId);
+      this.stlAnimationId = null;
+    }
+  },
+
+  renderCustomUploadModalMarkup() {
+    const div = document.createElement('div');
+    div.id = 'print3d-upload-modal';
+    div.className = 'print3d-upload-modal';
+    div.innerHTML = `
+      <div class="print3d-upload-card-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <div>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #FFF; display: flex; align-items: center; gap: 8px;">
+              <span>📂</span> Cotizar Archivo Propio 3D
+            </h3>
+            <span style="font-size: 11px; color: #94A3B8;">Visor en vivo de archivos .STL / .OBJ</span>
+          </div>
+          <button type="button" class="print3d-back-btn" onclick="Print3DServiceApp.closeCustomUploadModal()">✕</button>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="print3d-dropzone" id="stl-dropzone" onclick="document.getElementById('stl-file-input').click()">
+          <span style="font-size: 32px; display: block; margin-bottom: 6px;">📥</span>
+          <strong style="color: #FFF; font-size: 13px; display: block;">Arrastra tu archivo .STL aquí o haz clic</strong>
+          <span style="font-size: 11px; color: #94A3B8;">Formatos compatibles: STL Binario, STL ASCII, OBJ (hasta 50MB)</span>
+          <input type="file" id="stl-file-input" accept=".stl,.obj" style="display: none;" onchange="Print3DServiceApp.handleStlFileSelect(event)">
+        </div>
+
+        <!-- Real-Time 3D Rotating Canvas for Uploaded Mesh -->
+        <div id="stl-preview-container" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 11.5px; font-weight: 800; color: #38BDF8;">🔄 Previsualización 3D Interactiva:</span>
+            <span style="font-size: 10px; color: #64748B;">Arrastra con el dedo o ratón para rotar</span>
+          </div>
+          <canvas id="stl-canvas" class="stl-preview-canvas" width="480" height="240"></canvas>
+
+          <!-- Technical Metrics Extracted from Mesh -->
+          <div class="stl-metrics-bar">
+            <div class="stl-metric-item">
+              <span class="stl-metric-val" id="stl-metric-triangles">0</span>
+              <span class="stl-metric-lbl">Polígonos / Triángulos</span>
+            </div>
+            <div class="stl-metric-item">
+              <span class="stl-metric-val" id="stl-metric-dimensions">0 x 0 x 0 cm</span>
+              <span class="stl-metric-lbl">Medidas Bounding Box</span>
+            </div>
+            <div class="stl-metric-item">
+              <span class="stl-metric-val" id="stl-metric-weight">~0 g</span>
+              <span class="stl-metric-lbl">Peso Estimado (PLA)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Client Form Details -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; font-weight: 800; color: #94A3B8; display: block; margin-bottom: 4px;">Tu Nombre o Emprendimiento:</label>
+            <input type="text" id="stl-client-name" placeholder="Ej. Carlos Pérez" style="width: 100%; box-sizing: border-box; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; outline: none;">
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 800; color: #94A3B8; display: block; margin-bottom: 4px;">Tu WhatsApp (para enviar presupuesto):</label>
+            <input type="tel" id="stl-client-phone" placeholder="Ej. +57 322 7949751" style="width: 100%; box-sizing: border-box; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; outline: none;">
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 800; color: #94A3B8; display: block; margin-bottom: 4px;">Material sugerido:</label>
+            <select id="stl-material-select" style="width: 100%; box-sizing: border-box; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; outline: none;">
+              <option value="pla">PLA Pro (Figuras, Maquetas, Soportes de Hogar)</option>
+              <option value="petg">PETG Técnico (Resistente a calor, rayos UV y golpes)</option>
+              <option value="abs">ABS / ASA (Piezas de motor, alta temperatura)</option>
+              <option value="tpu">TPU Flexible (Goma flexible, amortiguadores)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 800; color: #94A3B8; display: block; margin-bottom: 4px;">Instrucciones / Notas especiales:</label>
+            <textarea id="stl-client-notes" placeholder="Ej. Porcentaje de relleno deseado, color preferido o fecha de entrega..." rows="2" style="width: 100%; box-sizing: border-box; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 12px; border-radius: 10px; font-size: 12px; outline: none; resize: none;"></textarea>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          <button type="button" class="btn-print3d-chat" style="flex: 1;" onclick="Print3DServiceApp.submitCustomStlQuote('chat')">
+            <span>💬</span> Iniciar Cotización en Chat
+          </button>
+          <button type="button" class="btn-print3d-wa" style="flex: 1;" onclick="Print3DServiceApp.submitCustomStlQuote('whatsapp')">
+            <span>🟢</span> Cotizar por WhatsApp
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(div);
+
+    // Setup drag and drop
+    const dropzone = document.getElementById('stl-dropzone');
+    if (dropzone) {
+      dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+      dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          Print3DServiceApp.processStlFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+  },
+
+  handleStlFileSelect(e) {
+    if (e.target.files && e.target.files[0]) {
+      this.processStlFile(e.target.files[0]);
+    }
+  },
+
+  processStlFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const buffer = ev.target.result;
+      const meshData = this.parseStlBuffer(buffer, file.name);
+      if (meshData && meshData.triangles.length > 0) {
+        this.uploadedStlData = meshData;
+        const previewWrap = document.getElementById('stl-preview-container');
+        if (previewWrap) previewWrap.style.display = 'block';
+
+        // Update technical labels
+        const triEl = document.getElementById('stl-metric-triangles');
+        const dimEl = document.getElementById('stl-metric-dimensions');
+        const wtEl = document.getElementById('stl-metric-weight');
+
+        if (triEl) triEl.textContent = meshData.triangles.length.toLocaleString('de-DE');
+        if (dimEl) dimEl.textContent = `${meshData.sizeCm.x} x ${meshData.sizeCm.y} x ${meshData.sizeCm.z} cm`;
+        if (wtEl) wtEl.textContent = `~${meshData.estimatedWeightGrams} g`;
+
+        // Start rotating 3D canvas
+        this.initStlCanvas(meshData);
+      } else {
+        alert('No se pudieron leer los polígonos del archivo STL.');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  },
+
+  parseStlBuffer(buffer, fileName) {
+    try {
+      const isBinary = buffer.byteLength > 84;
+      const reader = new DataView(buffer);
+      const triangles = [];
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+
+      if (isBinary) {
+        const triangleCount = reader.getUint32(80, true);
+        const maxTrianglesToRender = Math.min(triangleCount, 8000); // cap for smooth 60fps mobile preview
+        const step = Math.max(1, Math.floor(triangleCount / maxTrianglesToRender));
+
+        for (let i = 0; i < triangleCount; i += step) {
+          const offset = 84 + (i * 50);
+          if (offset + 48 > buffer.byteLength) break;
+          // Normal
+          const nx = reader.getFloat32(offset, true);
+          const ny = reader.getFloat32(offset + 4, true);
+          const nz = reader.getFloat32(offset + 8, true);
+          // Vertices v1, v2, v3
+          const v1 = { x: reader.getFloat32(offset + 12, true), y: reader.getFloat32(offset + 16, true), z: reader.getFloat32(offset + 20, true) };
+          const v2 = { x: reader.getFloat32(offset + 24, true), y: reader.getFloat32(offset + 28, true), z: reader.getFloat32(offset + 32, true) };
+          const v3 = { x: reader.getFloat32(offset + 36, true), y: reader.getFloat32(offset + 40, true), z: reader.getFloat32(offset + 44, true) };
+
+          [v1, v2, v3].forEach(v => {
+            if (v.x < minX) minX = v.x; if (v.x > maxX) maxX = v.x;
+            if (v.y < minY) minY = v.y; if (v.y > maxY) maxY = v.y;
+            if (v.z < minZ) minZ = v.z; if (v.z > maxZ) maxZ = v.z;
+          });
+
+          triangles.push({ normal: { x: nx, y: ny, z: nz }, v1, v2, v3 });
+        }
+      }
+
+      const sizeMm = {
+        x: Math.max(1, (maxX - minX)),
+        y: Math.max(1, (maxY - minY)),
+        z: Math.max(1, (maxZ - minZ))
+      };
+      const sizeCm = {
+        x: (sizeMm.x / 10).toFixed(1),
+        y: (sizeMm.y / 10).toFixed(1),
+        z: (sizeMm.z / 10).toFixed(1)
+      };
+
+      // Center mesh around origin (0, 0, 0)
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const centerZ = (minZ + maxZ) / 2;
+      const maxDim = Math.max(sizeMm.x, sizeMm.y, sizeMm.z) || 1;
+
+      const normalizedTriangles = triangles.map(t => ({
+        normal: t.normal,
+        v1: { x: (t.v1.x - centerX) / maxDim, y: (t.v1.y - centerY) / maxDim, z: (t.v1.z - centerZ) / maxDim },
+        v2: { x: (t.v2.x - centerX) / maxDim, y: (t.v2.y - centerY) / maxDim, z: (t.v2.z - centerZ) / maxDim },
+        v3: { x: (t.v3.x - centerX) / maxDim, y: (t.v3.y - centerY) / maxDim, z: (t.v3.z - centerZ) / maxDim }
+      }));
+
+      // Estimated volume in cm3 and grams at 20% infill
+      const volCm3 = (parseFloat(sizeCm.x) * parseFloat(sizeCm.y) * parseFloat(sizeCm.z)) * 0.28;
+      const estimatedWeightGrams = Math.max(5, Math.round(volCm3 * 1.24));
+
+      return {
+        fileName: fileName || 'modelo.stl',
+        triangles: normalizedTriangles,
+        sizeCm,
+        estimatedWeightGrams
+      };
+    } catch (e) {
+      console.warn('Error parsing STL:', e);
+      return null;
+    }
+  },
+
+  initStlCanvas(meshData) {
+    const canvas = document.getElementById('stl-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Drag / Touch rotation
+    const onStart = (clientX, clientY) => {
+      this.stlIsDragging = true;
+      this.stlLastMouse = { x: clientX, y: clientY };
+    };
+    const onMove = (clientX, clientY) => {
+      if (!this.stlIsDragging) return;
+      const dx = clientX - this.stlLastMouse.x;
+      const dy = clientY - this.stlLastMouse.y;
+      this.stlRotation.y += dx * 0.012;
+      this.stlRotation.x += dy * 0.012;
+      this.stlLastMouse = { x: clientX, y: clientY };
+    };
+    const onEnd = () => { this.stlIsDragging = false; };
+
+    canvas.onmousedown = (e) => onStart(e.clientX, e.clientY);
+    window.onmousemove = (e) => onMove(e.clientX, e.clientY);
+    window.onmouseup = () => onEnd();
+
+    canvas.ontouchstart = (e) => { if (e.touches[0]) onStart(e.touches[0].clientX, e.touches[0].clientY); };
+    window.ontouchmove = (e) => { if (e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY); };
+    window.ontouchend = () => onEnd();
+
+    if (this.stlAnimationId) cancelAnimationFrame(this.stlAnimationId);
+
+    const render = () => {
+      if (!this.stlIsDragging) {
+        this.stlRotation.y += 0.015; // smooth auto-rotation
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const scale = Math.min(w, h) * 0.42;
+
+      const cosY = Math.cos(this.stlRotation.y);
+      const sinY = Math.sin(this.stlRotation.y);
+      const cosX = Math.cos(this.stlRotation.x);
+      const sinX = Math.sin(this.stlRotation.x);
+
+      // Rotate and project triangles
+      const projected = meshData.triangles.map(t => {
+        const rot = (v) => {
+          // Y-axis rotation
+          let x1 = v.x * cosY + v.z * sinY;
+          let y1 = v.y;
+          let z1 = -v.x * sinY + v.z * cosY;
+          // X-axis rotation
+          let x2 = x1;
+          let y2 = y1 * cosX - z1 * sinX;
+          let z2 = y1 * sinX + z1 * cosX;
+          return {
+            x: cx + x2 * scale,
+            y: cy - y2 * scale,
+            z: z2
+          };
+        };
+        const p1 = rot(t.v1);
+        const p2 = rot(t.v2);
+        const p3 = rot(t.v3);
+        const depth = (p1.z + p2.z + p3.z) / 3;
+        return { p1, p2, p3, depth };
+      });
+
+      // Painter algorithm: sort by depth
+      projected.sort((a, b) => a.depth - b.depth);
+
+      // Draw triangles with cyan metallic shader
+      projected.forEach(item => {
+        const { p1, p2, p3, depth } = item;
+        const shade = Math.floor(Math.max(40, Math.min(240, 140 + depth * 100)));
+        ctx.fillStyle = `rgb(${Math.floor(shade * 0.3)}, ${shade}, ${Math.floor(shade * 0.95)})`;
+        ctx.strokeStyle = `rgba(15, 23, 42, 0.4)`;
+        ctx.lineWidth = 0.5;
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      this.stlAnimationId = requestAnimationFrame(render);
+    };
+
+    render();
+  },
+
+  submitCustomStlQuote(channel) {
+    const mesh = this.uploadedStlData;
+    const name = (document.getElementById('stl-client-name')?.value || '').trim() || 'Cliente';
+    const phone = (document.getElementById('stl-client-phone')?.value || '').trim();
+    const materialKey = document.getElementById('stl-material-select')?.value || 'pla';
+    const notes = (document.getElementById('stl-client-notes')?.value || '').trim();
+
+    if (!mesh) {
+      alert('Por favor selecciona primero un archivo 3D (.STL o .OBJ).');
+      return;
+    }
+
+    const matName = this.materials[materialKey]?.name || 'PLA';
+    const quoteCode = `COT-3D-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const payload = {
       customerName: name,
       customerPhone: phone,
       clientName: name,
       clientPhone: phone,
-      productTitle: `Diseño Propio: ${filename}`,
-      modelName: `Diseño Propio: ${filename}`,
+      productTitle: `Diseño Propio: ${mesh.fileName}`,
+      modelName: `Diseño Propio: ${mesh.fileName}`,
       scale: '100%',
-      material: 'pla',
+      dimensions: mesh.sizeCm,
+      material: materialKey,
+      materialName: matName,
       filamentColor: 'A convenir',
       quantity: 1,
       estimatedPriceUsd: 'Bajo Cotización',
-      notes: `Archivo 3D provisto por el usuario: ${filename}`
+      notes: `Dimensiones: ${mesh.sizeCm.x}x${mesh.sizeCm.y}x${mesh.sizeCm.z}cm (~${mesh.estimatedWeightGrams}g). Notas: ${notes}`
     };
 
-    fetch('/api/print3d-services/quotes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(res => res.json()).then(data => {
-      if (data.quote) {
-        this.activeQuote = data.quote;
-        this.openChatModal(data.quote);
-      }
-    }).catch(e => {
-      alert('Error enviando solicitud de archivo propio.');
-    });
+    if (channel === 'whatsapp') {
+      const waText = encodeURIComponent(
+        `Hola PediGochos 3D Lab! 👋 Solicito cotización para fabricar mi archivo 3D:
+
+` +
+        `📋 *Código:* ${quoteCode}
+` +
+        `👤 *Cliente:* ${name} (${phone || 'No indicado'})
+` +
+        `📂 *Archivo:* ${mesh.fileName}
+` +
+        `📐 *Medidas:* ${mesh.sizeCm.x} x ${mesh.sizeCm.y} x ${mesh.sizeCm.z} cm
+` +
+        `⚖️ *Peso Aprox:* ~${mesh.estimatedWeightGrams} gramos
+` +
+        `🧪 *Material:* ${matName}
+` +
+        (notes ? `📝 *Notas:* ${notes}
+
+` : `
+`) +
+        `¿Podrían confirmarme el presupuesto y tiempo de fabricación? ¡Muchas gracias!`
+      );
+      this.closeCustomUploadModal();
+      window.open(`https://wa.me/573227949751?text=${waText}`, '_blank');
+    } else {
+      fetch('/api/print3d-services/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(res => res.json()).then(data => {
+        if (data.quote) {
+          this.closeCustomUploadModal();
+          this.activeQuote = data.quote;
+          this.openChatModal(data.quote);
+        }
+      }).catch(e => {
+        alert('Error registrando cotización en chat.');
+      });
+    }
   }
 };
 
