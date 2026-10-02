@@ -62,7 +62,7 @@
     "estPrintHours": 5.2,
     "weightGrams": 85,
     "image": "/images/services/soporte_escritorio_3d.jpg",
-    "modelGlb": "/models/soporte_celular.glb",
+    "modelGlb": "/models/soporte_escritorio.glb",
     "desc": "Base de escritorio a 60° con canal oculto para cable de carga Lightning/Type-C y topes antideslizantes. Ideal para videollamadas, tablets o smartphones en oficina sin forzar los cables.",
     "tags": [
       "Canal Oculto",
@@ -86,7 +86,7 @@
     "estPrintHours": 6.0,
     "weightGrams": 110,
     "image": "/images/services/embudo_automotriz_3d.jpg",
-    "modelGlb": "/models/soporte_celular.glb",
+    "modelGlb": "/models/embudo_automotriz.glb",
     "desc": "Embudo técnico resistente a aceites de motor, gasolina, refrigerante y líquido de frenos. Con boquilla acodada antirreflujo y rosca compatible con bidones estándar para cambio limpio de fluidos.",
     "tags": [
       "Resistente Químicos",
@@ -110,7 +110,7 @@
     "estPrintHours": 2.1,
     "weightGrams": 35,
     "image": "/images/services/clip_dispensador_3d.jpg",
-    "modelGlb": "/models/llavero_pedigochos.glb",
+    "modelGlb": "/models/clip_dispensador.glb",
     "desc": "Boquilla dosificadora con clip hermético que sella empaques de café, cereales, granos o azúcar. Permite verter cómodamente el contenido y cerrarlo con su tapa roscada sin derrames.",
     "tags": [
       "Cierre Hermético",
@@ -134,7 +134,7 @@
     "estPrintHours": 3.8,
     "weightGrams": 55,
     "image": "/images/services/caja_magnetica_3d.jpg",
-    "modelGlb": "/models/soporte_celular.glb",
+    "modelGlb": "/models/caja_magnetica.glb",
     "desc": "Cápsula resistente al agua con junta tórica y dos potentes imanes de neodimio N52. Diseñada para ocultar llaves de emergencia, dinero o localizadores GPS/AirTag bajo el chasis o vigas metálicas.",
     "tags": [
       "Imán Neodimio N52",
