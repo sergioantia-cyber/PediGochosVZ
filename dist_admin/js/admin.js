@@ -2331,7 +2331,7 @@ class AdminController {
   }
 
   switchWorkspace(wsId) {
-    const validWorkspaces = ['orders', 'restaurants', 'menu-tables', 'services', 'fleet', 'finance'];
+    const validWorkspaces = ['orders', 'restaurants', 'menu-tables', 'offers', 'services', 'fleet', 'finance'];
     const targetId = validWorkspaces.includes(wsId) ? wsId : 'orders';
     this.activeWorkspace = targetId;
     try {
@@ -2372,6 +2372,8 @@ class AdminController {
       this.renderTable();
     } else if (targetId === 'menu-tables') {
       this.initStudioMenuTables();
+    } else if (targetId === 'offers') {
+      this.loadAdminOffers();
     } else if (targetId === 'services') {
       this.activeCategoryFilter = 'servicios';
       this.renderTable();
@@ -10148,6 +10150,342 @@ class AdminController {
       });
     } else {
       alert('Portapapeles no soportado.');
+    }
+  }
+
+  // ==================== OFERTAS DEL DÍA (FLASH 24H) ====================
+  async loadAdminOffers() {
+    const container = document.getElementById('admin-offers-container');
+    const activeCountEl = document.getElementById('offers-count-active');
+    const expiredCountEl = document.getElementById('offers-count-expired');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94A3B8;">
+        <div class="spinner" style="margin: 0 auto 12px auto;"></div>
+        <p style="margin: 0; font-size: 13px;">Cargando ofertas del día...</p>
+      </div>
+    `;
+
+    try {
+      const res = await fetch('/api/promotions?all=true');
+      const promos = await res.json();
+      this.adminOffersList = Array.isArray(promos) ? promos : [];
+
+      const now = Date.now();
+      let activeCount = 0;
+      let expiredCount = 0;
+
+      this.adminOffersList.forEach(p => {
+        const expiresMs = new Date(p.expiresAt || (new Date(p.createdAt).getTime() + 24 * 60 * 60 * 1000)).getTime();
+        const isExpired = now >= expiresMs;
+        const isActive = p.active !== false && !isExpired;
+        if (isActive) activeCount++;
+        else expiredCount++;
+      });
+
+      if (activeCountEl) activeCountEl.textContent = activeCount;
+      if (expiredCountEl) expiredCountEl.textContent = expiredCount;
+
+      if (this.adminOffersList.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: rgba(255,255,255,0.02); border: 2px dashed rgba(255,255,255,0.1); border-radius: 18px; color: #94A3B8;">
+            <span style="font-size: 40px; display: block; margin-bottom: 12px;">🔥</span>
+            <h4 style="margin: 0 0 6px 0; color: #FFF; font-size: 16px; font-weight: 800;">No hay ofertas del día creadas</h4>
+            <p style="margin: 0 0 16px 0; font-size: 12.5px;">Crea una oferta flash válida por 24 horas para destacar en la sección de comidas.</p>
+            <button type="button" class="btn-3d" onclick="AdminApp.openNewOfferModal()" style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: #FFF; border: none; padding: 9px 18px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer;">
+              + Crear Primera Oferta (24h)
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = this.adminOffersList.map(p => {
+        const expiresMs = new Date(p.expiresAt || (new Date(p.createdAt).getTime() + 24 * 60 * 60 * 1000)).getTime();
+        const diffMs = expiresMs - now;
+        const isExpired = diffMs <= 0;
+        const isActive = p.active !== false && !isExpired;
+
+        let timeRemainingLabel = '';
+        if (isExpired) {
+          timeRemainingLabel = `<span style="background: rgba(148, 163, 184, 0.2); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.4); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 10px;">⚠️ Expirada (Finalizada)</span>`;
+        } else {
+          const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+          const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          timeRemainingLabel = `<span style="background: rgba(239, 68, 68, 0.25); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.45); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 10px;">⏱️ Quedan ${hoursLeft}h ${minsLeft}m</span>`;
+        }
+
+        const origPrice = p.originalPrice || p.promoPrice;
+        const discountPct = origPrice > p.promoPrice ? Math.round(((origPrice - p.promoPrice) / origPrice) * 100) : 0;
+        const currency = p.currency || 'COP';
+
+        return `
+          <div style="background: #141828; border: 1.5px solid ${isActive ? 'rgba(239, 68, 68, 0.45)' : 'rgba(255,255,255,0.08)'}; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 16px rgba(0,0,0,0.4); position: relative;">
+            <div style="position: relative; height: 140px; background: #000;">
+              <img src="${p.image || '/images/burger_royale.jpg'}" alt="${p.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
+              ${discountPct > 0 ? `<span style="position: absolute; top: 10px; left: 10px; background: #EF4444; color: #FFF; font-size: 10.5px; font-weight: 900; padding: 3px 8px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">- ${discountPct}% OFF</span>` : ''}
+              <div style="position: absolute; top: 10px; right: 10px;">
+                ${timeRemainingLabel}
+              </div>
+            </div>
+
+            <div style="padding: 14px; flex: 1; display: flex; flex-direction: column;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-size: 11px; font-weight: 800; color: #94A3B8; display: flex; align-items: center; gap: 4px;">
+                  🏪 ${p.establishmentName || 'Restaurante'}
+                </span>
+                <span style="font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; ${isActive ? 'background: rgba(52, 211, 153, 0.15); color: #34D399; border: 1px solid rgba(52, 211, 153, 0.3);' : 'background: rgba(148, 163, 184, 0.15); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.2);'}">
+                  ${isActive ? '● En Vivo (24h)' : '● Inactiva'}
+                </span>
+              </div>
+
+              <h4 style="margin: 0 0 6px 0; font-size: 14.5px; font-weight: 900; color: #FFF; line-height: 1.25;">
+                ${p.title}
+              </h4>
+
+              ${p.description ? `<p style="margin: 0 0 10px 0; font-size: 11.5px; color: #94A3B8; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${p.description}</p>` : ''}
+
+              <!-- Pricing & WhatsApp -->
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 8px 10px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: baseline; gap: 8px;">
+                  <span style="font-size: 16px; font-weight: 900; color: #34D399;">
+                    ${currency === 'COP' ? '$' : currency === 'USD' ? '$' : 'Bs.'} ${Math.round(p.promoPrice).toLocaleString('de-DE')} ${currency}
+                  </span>
+                  ${origPrice > p.promoPrice ? `
+                    <span style="font-size: 11px; color: #64748B; text-decoration: line-through;">
+                      ${currency === 'COP' ? '$' : currency === 'USD' ? '$' : 'Bs.'} ${Math.round(origPrice).toLocaleString('de-DE')}
+                    </span>
+                  ` : ''}
+                </div>
+                ${p.vendorWhatsapp ? `
+                  <div style="margin-top: 4px; font-size: 11px; color: #38BDF8; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                    <span>💬 WhatsApp:</span> <span>${p.vendorWhatsapp}</span>
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="margin-top: auto; display: flex; gap: 6px;">
+                <button type="button" onclick="AdminApp.editOffer('${p.id}')" style="flex: 1; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); color: #93C5FD; padding: 7px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                  ✏️ Editar
+                </button>
+                <button type="button" onclick="AdminApp.renewOffer('${p.id}')" title="Reiniciar reloj a 24 horas a partir de ahora" style="flex: 1.2; background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.4); color: #FCA5A5; padding: 7px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                  🔄 Renovar 24h
+                </button>
+                <button type="button" onclick="AdminApp.deleteOffer('${p.id}')" title="Eliminar oferta" style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.25); color: #F87171; padding: 7px 10px; border-radius: 8px; font-size: 11.5px; cursor: pointer;">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch(err) {
+      console.error('Error in loadAdminOffers:', err);
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: #F87171;">
+          Error al cargar las ofertas del día.
+        </div>
+      `;
+    }
+  }
+
+  openNewOfferModal() {
+    const modal = document.getElementById('modal-admin-offer');
+    if (!modal) return;
+    document.getElementById('modal-admin-offer-header').textContent = 'Publicar Oferta del Día (24 Horas)';
+    document.getElementById('admin-offer-id').value = '';
+    document.getElementById('admin-offer-vendor-name').value = '';
+    document.getElementById('admin-offer-whatsapp').value = '';
+    document.getElementById('admin-offer-title').value = '';
+    document.getElementById('admin-offer-desc').value = '';
+    document.getElementById('admin-offer-promo-price').value = '';
+    document.getElementById('admin-offer-orig-price').value = '';
+    document.getElementById('admin-offer-currency').value = 'COP';
+    document.getElementById('admin-offer-image-url').value = '';
+    document.getElementById('admin-offer-img-preview').src = '/images/burger_royale.jpg';
+    document.getElementById('admin-offer-active').checked = true;
+
+    this.populateOfferRestaurantSelect();
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
+  }
+
+  closeAdminOfferModal() {
+    const modal = document.getElementById('modal-admin-offer');
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
+  }
+
+  populateOfferRestaurantSelect(selectedRestaurantId = '') {
+    const select = document.getElementById('admin-offer-restaurant');
+    if (!select) return;
+    const rests = this.restaurants || [];
+    select.innerHTML = `<option value="">-- Seleccionar Restaurante Registrado --</option>` +
+      rests.map(r => `<option value="${r.id}" ${r.id === selectedRestaurantId ? 'selected' : ''}>${r.name} (${r.category || 'comidas'})</option>`).join('');
+  }
+
+  onOfferRestaurantSelectChange(restId) {
+    if (!restId) return;
+    const rest = (this.restaurants || []).find(r => r.id === restId);
+    if (!rest) return;
+
+    const vendorNameInput = document.getElementById('admin-offer-vendor-name');
+    const whatsappInput = document.getElementById('admin-offer-whatsapp');
+    const imageInput = document.getElementById('admin-offer-image-url');
+    const previewImg = document.getElementById('admin-offer-img-preview');
+
+    if (vendorNameInput && !vendorNameInput.value.trim()) {
+      vendorNameInput.value = rest.name || '';
+    }
+    if (whatsappInput && (!whatsappInput.value.trim() || whatsappInput.value.length < 5)) {
+      whatsappInput.value = rest.phone || rest.whatsapp || rest.ownerPhone || '';
+    }
+    if (imageInput && (!imageInput.value.trim() || imageInput.value === '/images/burger_royale.jpg')) {
+      if (rest.banner) {
+        imageInput.value = rest.banner;
+        if (previewImg) previewImg.src = rest.banner;
+      } else if (rest.image) {
+        imageInput.value = rest.image;
+        if (previewImg) previewImg.src = rest.image;
+      }
+    }
+  }
+
+  handleOfferImageUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      const imgInput = document.getElementById('admin-offer-image-url');
+      const preview = document.getElementById('admin-offer-img-preview');
+      if (imgInput) imgInput.value = dataUrl;
+      if (preview) preview.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  editOffer(offerId) {
+    const promo = (this.adminOffersList || []).find(x => x.id === offerId);
+    if (!promo) {
+      alert('Oferta no encontrada');
+      return;
+    }
+
+    const modal = document.getElementById('modal-admin-offer');
+    if (!modal) return;
+
+    document.getElementById('modal-admin-offer-header').textContent = 'Editar Oferta del Día (24 Horas)';
+    document.getElementById('admin-offer-id').value = promo.id;
+    this.populateOfferRestaurantSelect(promo.establishmentId || '');
+    document.getElementById('admin-offer-vendor-name').value = promo.establishmentName || '';
+    document.getElementById('admin-offer-whatsapp').value = promo.vendorWhatsapp || '';
+    document.getElementById('admin-offer-title').value = promo.title || '';
+    document.getElementById('admin-offer-desc').value = promo.description || '';
+    document.getElementById('admin-offer-promo-price').value = promo.promoPrice || '';
+    document.getElementById('admin-offer-orig-price').value = promo.originalPrice || '';
+    document.getElementById('admin-offer-currency').value = promo.currency || 'COP';
+    document.getElementById('admin-offer-image-url').value = promo.image || '';
+    document.getElementById('admin-offer-img-preview').src = promo.image || '/images/burger_royale.jpg';
+    document.getElementById('admin-offer-active').checked = promo.active !== false;
+
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
+  }
+
+  async saveAdminOffer() {
+    const id = document.getElementById('admin-offer-id').value.trim();
+    const restId = document.getElementById('admin-offer-restaurant').value.trim();
+    const vendorName = document.getElementById('admin-offer-vendor-name').value.trim();
+    const vendorWhatsapp = document.getElementById('admin-offer-whatsapp').value.trim();
+    const title = document.getElementById('admin-offer-title').value.trim();
+    const description = document.getElementById('admin-offer-desc').value.trim();
+    const promoPrice = parseFloat(document.getElementById('admin-offer-promo-price').value) || 0;
+    const origPrice = parseFloat(document.getElementById('admin-offer-orig-price').value) || promoPrice;
+    const currency = document.getElementById('admin-offer-currency').value || 'COP';
+    const image = document.getElementById('admin-offer-image-url').value.trim() || '/images/burger_royale.jpg';
+    const active = document.getElementById('admin-offer-active').checked;
+
+    if (!vendorName || !title || promoPrice <= 0) {
+      alert('Por favor completa el nombre del negocio, el título y el precio de la oferta.');
+      return;
+    }
+    if (!vendorWhatsapp) {
+      alert('Por favor ingresa el número de WhatsApp donde el comercio recibirá los pedidos con GPS.');
+      return;
+    }
+
+    const payload = {
+      id: id || undefined,
+      establishmentId: restId || 'custom_vendor',
+      establishmentName: vendorName,
+      vendorWhatsapp: vendorWhatsapp,
+      title: title,
+      description: description,
+      promoPrice: promoPrice,
+      originalPrice: origPrice,
+      currency: currency,
+      image: image,
+      active: active
+    };
+
+    try {
+      const btn = document.getElementById('btn-save-admin-offer');
+      if (btn) btn.disabled = true;
+
+      const res = await fetch('/api/promotions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        alert(id ? '✅ Oferta actualizada correctamente.' : '🔥 ¡Oferta del día publicada con vigencia de 24 horas!');
+        this.closeAdminOfferModal();
+        this.loadAdminOffers();
+      } else {
+        alert('Error al guardar la oferta: ' + (data.error || 'Respuesta inválida'));
+      }
+    } catch(err) {
+      console.error('Error saving admin offer:', err);
+      alert('Error de conexión al guardar la oferta.');
+    } finally {
+      const btn = document.getElementById('btn-save-admin-offer');
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async deleteOffer(offerId) {
+    if (!confirm('¿Estás seguro de eliminar esta oferta del día?')) return;
+    try {
+      const res = await fetch(`/api/promotions/${offerId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data && data.success) {
+        this.loadAdminOffers();
+      } else {
+        alert('Error eliminando oferta.');
+      }
+    } catch(e) {
+      alert('Error de conexión.');
+    }
+  }
+
+  async renewOffer(offerId) {
+    if (!confirm('¿Deseas reiniciar el contador de 24 horas para esta oferta desde este momento?')) return;
+    try {
+      const res = await fetch(`/api/promotions/${offerId}/renew`, { method: 'POST' });
+      const data = await res.json();
+      if (data && data.success) {
+        alert('⏱️ ¡Oferta renovada exitosamente por 24 horas más!');
+        this.loadAdminOffers();
+      } else {
+        alert('Error renovando oferta: ' + (data.error || ''));
+      }
+    } catch(e) {
+      alert('Error de conexión.');
     }
   }
 }

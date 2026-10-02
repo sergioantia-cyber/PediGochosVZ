@@ -1279,6 +1279,122 @@ app.post('/api/establishments', (req, res) => {
   res.status(201).json(newEstablishment);
 });
 
+// =========================================================================
+// OFERTAS DEL DÍA (24 HORAS) - API ENDPOINTS
+// =========================================================================
+
+// Get promotions (default: active & not expired < 24h; ?all=true: all for admin)
+app.get('/api/promotions', (req, res) => {
+  try {
+    const db = readDB();
+    const showAll = req.query.all === 'true' || req.query.all === '1';
+    const nowMs = Date.now();
+    let promos = db.promotions || [];
+
+    if (!showAll) {
+      promos = promos.filter(p => {
+        if (p.active === false) return false;
+        const expiresMs = new Date(p.expiresAt || (new Date(p.createdAt).getTime() + 24 * 60 * 60 * 1000)).getTime();
+        return expiresMs > nowMs;
+      });
+    }
+
+    res.json(promos);
+  } catch(err) {
+    console.error('Error fetching promotions:', err);
+    res.status(500).json({ error: 'Error al obtener promociones' });
+  }
+});
+
+// Create or update promotion
+app.post('/api/promotions', (req, res) => {
+  try {
+    const db = readDB();
+    if (!db.promotions) db.promotions = [];
+
+    const p = req.body;
+    if (!p.title || p.promoPrice === undefined || p.promoPrice === null) {
+      return res.status(400).json({ error: 'El título y precio de la oferta son obligatorios.' });
+    }
+
+    const now = Date.now();
+    const id = p.id || `promo_${now}_${Math.random().toString(36).substr(2, 6)}`;
+    const createdAt = p.createdAt || new Date(now).toISOString();
+    // Strictly valid for 24 hours from creation/update
+    const expiresAt = p.expiresAt || new Date(now + 24 * 60 * 60 * 1000).toISOString();
+
+    const newPromo = {
+      id,
+      title: String(p.title).trim(),
+      description: String(p.description || '').trim(),
+      promoPrice: parseFloat(p.promoPrice) || 0,
+      originalPrice: parseFloat(p.originalPrice || p.promoPrice) || 0,
+      currency: p.currency || 'COP',
+      image: p.image || '/images/burger_royale.jpg',
+      whatsapp: String(p.whatsapp || '').trim(),
+      establishmentName: String(p.establishmentName || 'Restaurante Aliado').trim(),
+      establishmentId: p.establishmentId || '',
+      establishmentLogo: p.establishmentLogo || '🔥',
+      createdAt,
+      expiresAt,
+      active: p.active !== false
+    };
+
+    const existingIdx = db.promotions.findIndex(x => x.id === id);
+    if (existingIdx >= 0) {
+      db.promotions[existingIdx] = newPromo;
+    } else {
+      db.promotions.unshift(newPromo);
+    }
+
+    writeDB(db);
+    triggerAutoCloudSave();
+
+    res.status(201).json({ success: true, promotion: newPromo });
+  } catch(err) {
+    console.error('Error saving promotion:', err);
+    res.status(500).json({ error: 'Error al guardar oferta del día' });
+  }
+});
+
+// Delete promotion
+app.delete('/api/promotions/:id', (req, res) => {
+  try {
+    const db = readDB();
+    const id = req.params.id;
+    db.promotions = (db.promotions || []).filter(x => x.id !== id);
+    writeDB(db);
+    triggerAutoCloudSave();
+    res.json({ success: true, message: 'Oferta eliminada correctamente' });
+  } catch(err) {
+    console.error('Error deleting promotion:', err);
+    res.status(500).json({ error: 'Error al eliminar oferta' });
+  }
+});
+
+// Renew promotion for another 24 hours
+app.post('/api/promotions/:id/renew', (req, res) => {
+  try {
+    const db = readDB();
+    const id = req.params.id;
+    const promo = (db.promotions || []).find(x => x.id === id);
+    if (!promo) {
+      return res.status(404).json({ error: 'Oferta no encontrada' });
+    }
+    const now = Date.now();
+    promo.createdAt = new Date(now).toISOString();
+    promo.expiresAt = new Date(now + 24 * 60 * 60 * 1000).toISOString();
+    promo.active = true;
+
+    writeDB(db);
+    triggerAutoCloudSave();
+    res.json({ success: true, promotion: promo });
+  } catch(err) {
+    console.error('Error renewing promotion:', err);
+    res.status(500).json({ error: 'Error al renovar oferta' });
+  }
+});
+
 // Get all orders (or filter by email, userId, phone)
 app.get('/api/orders', (req, res) => {
   const db = readDB();

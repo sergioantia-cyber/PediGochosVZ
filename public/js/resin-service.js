@@ -264,21 +264,41 @@ const ResinServiceApp = {
   // Toggle 3D card flip between Front and Back
   toggleFlip() {
     this.state.isFlipped = !this.state.isFlipped;
+    const isBack = this.state.isFlipped;
     const inner = document.getElementById('keychain-flip-inner');
     const sideLbl = document.getElementById('lbl-flip-side');
     const sideBadge = document.getElementById('resin-side-badge');
+    const uploadLbl = document.getElementById('lbl-stage-upload-photo');
+    const stageTitle = document.getElementById('stage-shape-title');
 
     if (inner) {
       inner.style.transition = 'transform 0.7s cubic-bezier(0.34, 1.25, 0.64, 1)';
-      inner.classList.toggle('is-flipped', this.state.isFlipped);
-      inner.style.transform = this.state.isFlipped ? 'rotateY(180deg) rotateX(0deg)' : 'rotateY(0deg) rotateX(0deg)';
+      inner.classList.toggle('is-flipped', isBack);
+      inner.style.transform = isBack ? 'rotateY(180deg) rotateX(0deg)' : 'rotateY(0deg) rotateX(0deg)';
     }
-    const sideText = this.state.isFlipped ? 'Cara Trasera (Reverso)' : 'Cara Delantera (Frente)';
-    if (sideLbl) sideLbl.textContent = sideText;
-    if (sideBadge) sideBadge.textContent = this.state.isFlipped ? '🔄 Reverso' : '✨ Frente';
+
+    if (sideLbl) {
+      sideLbl.textContent = isBack ? 'Volver al Frente' : 'Girar al Reverso';
+    }
+    if (sideBadge) {
+      sideBadge.textContent = isBack ? '🔄 Reverso' : '✨ Frente';
+    }
+    if (uploadLbl) {
+      const hasPhoto = isBack ? !!this.state.photoBackUrl : !!this.state.photoFrontUrl;
+      uploadLbl.textContent = isBack
+        ? (hasPhoto ? 'Cambiar Foto Reverso' : 'Agregar Foto Reverso')
+        : (hasPhoto ? 'Cambiar Foto Frente' : 'Agregar Foto Frente');
+    }
+    if (stageTitle) {
+      stageTitle.textContent = isBack ? 'Forma Foto (Reverso):' : 'Forma Foto (Frente):';
+    }
 
     this.updateVisualPreview();
     this.updateGuideBubble();
+
+    if (this.state.activeTab === 'photo') {
+      this.renderActiveTabContent();
+    }
   },
 
   updateGuideBubble() {
@@ -646,11 +666,11 @@ const ResinServiceApp = {
 
               <!-- Interactive Action Controls right beside/under preview -->
               <div class="resin-stage-action-bar">
-                <button type="button" class="btn-stage-upload-photo" onclick="ResinServiceApp.triggerPhotoUpload()">
-                  <span>📸</span> <span id="lbl-stage-upload-photo">Foto Frente</span>
+                <button type="button" class="btn-stage-upload-photo" id="btn-stage-upload-photo" onclick="ResinServiceApp.triggerPhotoUpload()">
+                  <span id="icon-stage-upload-photo">📸</span> <span id="lbl-stage-upload-photo">Agregar Foto Frente</span>
                 </button>
-                <button type="button" class="btn-flip-keychain" onclick="ResinServiceApp.toggleFlip()">
-                  <span>🔄 Girar:</span> <span id="lbl-flip-side">Frente</span>
+                <button type="button" class="btn-flip-keychain" id="btn-flip-keychain" onclick="ResinServiceApp.toggleFlip()">
+                  <span>🔄</span> <span id="lbl-flip-side">Girar al Reverso</span>
                 </button>
                 <div class="resin-stage-zoom-group" id="resin-stage-zoom-group">
                   <button type="button" class="btn-stage-zoom" onclick="ResinServiceApp.adjustPhotoScale(-0.15)" title="Reducir">➖</button>
@@ -882,35 +902,39 @@ const ResinServiceApp = {
         `;
       }
     } else if (this.state.activeTab === 'photo') {
+      const isBack = this.state.isFlipped;
       if (isPhoto) {
         area.innerHTML = `
           <!-- Cara Delantera -->
-          <div class="resin-section-card">
+          <div class="resin-section-card ${!isBack ? 'active-face-card' : ''}">
             <div class="resin-section-title">
-              <span>1️⃣ Foto de la Cara Delantera (Frente)</span>
-              <span class="badge-opt">${this.state.photoFrontUrl ? '✅ Foto Lista' : '📷 Pendiente'}</span>
+              <span>1️⃣ Foto de la Cara Delantera (Frente) ${!isBack ? '<span class="resin-live-tag" style="font-size: 8.5px; padding: 1px 6px;">📍 En Pantalla</span>' : ''}</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="badge-opt">${this.state.photoFrontUrl ? '✅ Foto Lista' : '📷 Pendiente'}</span>
+                ${isBack ? '<button type="button" class="btn-guide-flip" onclick="ResinServiceApp.toggleFlip()" style="font-size: 9px; padding: 2px 7px;">🔄 Ver Frente</button>' : ''}
+              </div>
             </div>
 
             <div class="resin-photo-dropzone" onclick="document.getElementById('input-file-front-photo').click()">
               <input type="file" id="input-file-front-photo" accept="image/*" style="display: none;" onchange="ResinServiceApp.handleFrontPhotoUpload(event)">
               ${this.state.photoFrontUrl ? `
                 <img src="${this.state.photoFrontUrl}" class="resin-photo-preview-thumb" alt="Frente">
-                <span style="font-size: 12px; font-weight: 800; color: #FFF; display: block;">🔄 Toca para cambiar foto</span>
-                <span style="font-size: 10.5px; color: #34D399;">Foto cargada y ajustada en el molde</span>
+                <span style="font-size: 11px; font-weight: 800; color: #FFF; display: block;">🔄 Toca para cambiar foto</span>
+                <span style="font-size: 9.5px; color: #34D399;">Foto cargada y ajustada en el molde</span>
               ` : `
-                <span style="font-size: 32px; display: block; margin-bottom: 4px;">📸</span>
-                <strong style="font-size: 13px; color: #FFF; display: block;">Toca aquí para subir tu foto favorita</strong>
-                <span style="font-size: 11px; color: #94A3B8;">Compatible con fotos de galería, retratos, parejas o mascotas</span>
+                <span style="font-size: 24px; display: block; margin-bottom: 2px;">📸</span>
+                <strong style="font-size: 11.5px; color: #FFF; display: block;">Toca aquí para subir tu foto favorita</strong>
+                <span style="font-size: 9.5px; color: #94A3B8;">Compatible con fotos de galería, retratos, parejas o mascotas</span>
               `}
             </div>
 
             <!-- Sample Photos Quick Pick -->
             ${this.settings.samplePhotos && this.settings.samplePhotos.length ? `
-              <div style="margin-top: 10px;">
-                <span style="font-size: 10.5px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">O prueba con fotos de muestra:</span>
-                <div style="display: flex; gap: 8px;">
+              <div style="margin-top: 8px;">
+                <span style="font-size: 9.5px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">O prueba con fotos de muestra:</span>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                   ${this.settings.samplePhotos.map(sp => `
-                    <button type="button" onclick="ResinServiceApp.setSampleFrontPhoto('${sp.url}')" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 4px 10px; border-radius: 8px; font-size: 11px; cursor: pointer;">
+                    <button type="button" onclick="ResinServiceApp.setSampleFrontPhoto('${sp.url}')" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 3px 8px; border-radius: 6px; font-size: 10px; cursor: pointer;">
                       ${sp.title}
                     </button>
                   `).join('')}
@@ -918,12 +942,10 @@ const ResinServiceApp = {
               </div>
             ` : ''}
 
-            <!-- Border Effect -->
-            <div style="margin-top: 14px;">
             <!-- Forma de la Foto Delantera -->
-            <div style="margin-top: 10px; margin-bottom: 12px;">
-              <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">FORMA DEL RECORTE / MARCO (FRENTE)</label>
-              <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
+            <div style="margin-top: 8px; margin-bottom: 8px;">
+              <label style="font-size: 9.5px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">FORMA DEL RECORTE / MARCO (FRENTE)</label>
+              <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px;">
                 <button type="button" class="btn-framing-shape ${this.state.photoFrontShape === 'full' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('full', false)">🔲 Molde</button>
                 <button type="button" class="btn-framing-shape ${this.state.photoFrontShape === 'polaroid' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('polaroid', false)">📸 Polaroid</button>
                 <button type="button" class="btn-framing-shape ${this.state.photoFrontShape === 'circle' ? 'active' : ''}" onclick="ResinServiceApp.setPhotoFramingShape('circle', false)">⭕ Círculo</button>
@@ -932,10 +954,12 @@ const ResinServiceApp = {
               </div>
             </div>
 
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">ACABADO DEL BORDE / ENCAPSULADO</label>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <!-- Acabado del Borde -->
+            <div style="margin-top: 8px;">
+              <label style="font-size: 9.5px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 4px;">ACABADO DEL BORDE / ENCAPSULADO</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
                 ${this.borderEffects.map(be => `
-                  <div class="border-effect-card color-swatch-pill ${be.id === this.state.photoBorderEffect ? 'active' : ''}" data-effect="${be.id}" onclick="ResinServiceApp.setBorderEffect('${be.id}')" style="justify-content: center; padding: 8px 6px;">
+                  <div class="border-effect-card color-swatch-pill ${be.id === this.state.photoBorderEffect ? 'active' : ''}" data-effect="${be.id}" onclick="ResinServiceApp.setBorderEffect('${be.id}')" style="justify-content: center; padding: 5px 6px;">
                     <span>${be.name}</span>
                   </div>
                 `).join('')}
@@ -944,14 +968,15 @@ const ResinServiceApp = {
           </div>
 
           <!-- Cara Trasera -->
-          <div class="resin-section-card">
+          <div class="resin-section-card ${isBack ? 'active-face-card' : ''}">
             <div class="resin-section-title">
-              <span>2️⃣ ¿Qué deseas en la Cara Trasera (Reverso)?</span>
+              <span>2️⃣ ¿Qué deseas en la Cara Trasera (Reverso)? ${isBack ? '<span class="resin-live-tag" style="font-size: 8.5px; padding: 1px 6px;">📍 En Pantalla</span>' : ''}</span>
+              ${!isBack ? '<button type="button" class="btn-guide-flip" onclick="ResinServiceApp.toggleFlip()" style="font-size: 9px; padding: 2px 7px;">🔄 Girar al Reverso</button>' : ''}
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px;">
               ${this.backOptions.map(bo => `
-                <div class="back-type-card color-swatch-pill ${bo.id === this.state.photoBackType ? 'active' : ''}" data-backtype="${bo.id}" onclick="ResinServiceApp.setBackType('${bo.id}')" style="justify-content: flex-start; padding: 8px 10px;">
+                <div class="back-type-card color-swatch-pill ${bo.id === this.state.photoBackType ? 'active' : ''}" data-backtype="${bo.id}" onclick="ResinServiceApp.setBackType('${bo.id}')" style="justify-content: flex-start; padding: 6px 8px;">
                   <span>${bo.icon}</span> <span>${bo.name}</span>
                 </div>
               `).join('')}
@@ -1394,7 +1419,20 @@ const ResinServiceApp = {
 
     const uploadLbl = document.getElementById('lbl-stage-upload-photo');
     if (uploadLbl) {
-      uploadLbl.textContent = isBack ? 'Foto Reverso' : 'Foto Frente';
+      const hasPhoto = isBack ? !!this.state.photoBackUrl : !!this.state.photoFrontUrl;
+      uploadLbl.textContent = isBack 
+        ? (hasPhoto ? 'Cambiar Foto Reverso' : 'Agregar Foto Reverso') 
+        : (hasPhoto ? 'Cambiar Foto Frente' : 'Agregar Foto Frente');
+    }
+
+    const sideLbl = document.getElementById('lbl-flip-side');
+    if (sideLbl) {
+      sideLbl.textContent = isBack ? 'Volver al Frente' : 'Girar al Reverso';
+    }
+
+    const sideBadge = document.getElementById('resin-side-badge');
+    if (sideBadge) {
+      sideBadge.textContent = isBack ? '🔄 Reverso' : '✨ Frente';
     }
 
     const svgFront = document.getElementById('resin-keychain-svg');

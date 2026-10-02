@@ -2015,6 +2015,119 @@
     </div>
   </div>
 
+  <!-- Modal: Pedido Express de Oferta del Día (Flash 24 Horas) con GPS Obligatorio Fijo -->
+  <div id="modal-daily-offer-order" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999990; display: none; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; overflow-y: auto;">
+    <div style="background: #111827; border: 1.5px solid rgba(239, 68, 68, 0.45); border-radius: 20px; width: 100%; max-width: 480px; max-height: 94vh; overflow-y: auto; color: #FFF; box-shadow: 0 16px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column;">
+      
+      <!-- Modal Header -->
+      <div style="padding: 14px 16px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">🔥</span>
+          <div>
+            <h3 style="margin: 0; font-size: 15px; font-weight: 900; color: #FFF;">Pedir Oferta del Día</h3>
+            <span id="offer-order-timer-badge" style="font-size: 10.5px; color: #FCA5A5; font-weight: 700;">⏱️ Válida por 24 horas</span>
+          </div>
+        </div>
+        <button type="button" onclick="MarketplaceApp.closeDailyOfferOrderModal()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+
+      <!-- Offer Summary Card -->
+      <div style="padding: 14px 16px 6px 16px;">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; display: flex; gap: 12px; align-items: center;">
+          <img id="offer-order-img" src="/images/burger_royale.jpg" alt="Promo" style="width: 72px; height: 72px; border-radius: 12px; object-fit: cover; border: 1px solid rgba(255,255,255,0.15); background: #000; flex-shrink: 0;">
+          <div style="flex: 1; min-width: 0;">
+            <span id="offer-order-vendor" style="font-size: 11px; font-weight: 700; color: #94A3B8; display: block; margin-bottom: 2px;">🏪 Restaurante</span>
+            <h4 id="offer-order-title" style="margin: 0 0 4px 0; font-size: 14px; font-weight: 900; color: #FFF; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Combo Especial</h4>
+            <div style="display: flex; align-items: baseline; gap: 6px;">
+              <span id="offer-order-price" style="font-size: 16px; font-weight: 900; color: #34D399;">$0</span>
+              <span id="offer-order-orig-price" style="font-size: 11px; color: #64748B; text-decoration: line-through;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quantity Counter -->
+      <div style="padding: 6px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12.5px; font-weight: 700; color: #CBD5E1;">Cantidad de combos:</span>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+          <button type="button" onclick="MarketplaceApp.changeDailyOfferQty(-1)" style="width: 28px; height: 28px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; color: #FFF; font-size: 16px; font-weight: 900; cursor: pointer;">-</button>
+          <span id="offer-order-qty" style="font-size: 14px; font-weight: 900; color: #FFF; min-width: 20px; text-align: center;">1</span>
+          <button type="button" onclick="MarketplaceApp.changeDailyOfferQty(1)" style="width: 28px; height: 28px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; color: #FFF; font-size: 16px; font-weight: 900; cursor: pointer;">+</button>
+        </div>
+      </div>
+
+      <!-- Mandatory GPS & Contact Section -->
+      <form id="form-daily-offer-order" onsubmit="event.preventDefault(); MarketplaceApp.sendDailyOfferWhatsAppOrder();" style="padding: 10px 16px 16px 16px; display: flex; flex-direction: column; gap: 12px;">
+        
+        <!-- Client WhatsApp -->
+        <div>
+          <label style="font-size: 12px; font-weight: 800; color: #34D399; display: flex; align-items: center; gap: 6px; margin-bottom: 5px;">
+            <span>💬</span> Tu Número de WhatsApp (Para confirmar despacho):
+          </label>
+          <input type="tel" id="offer-order-client-whatsapp" placeholder="Ej. 04121234567 o 3001234567" required style="width: 100%; background: #0B0E17; border: 1.5px solid rgba(52, 211, 153, 0.4); color: #FFF; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; font-weight: 700; outline: none; box-sizing: border-box;" oninput="MarketplaceApp.validateDailyOfferForm()">
+        </div>
+
+        <!-- Mandatory GPS Location Box -->
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px;">📍</span>
+              <strong style="font-size: 12px; color: #FFF;">Ubicación GPS Satelital Obligatoria</strong>
+            </div>
+            <button type="button" onclick="MarketplaceApp.detectDailyOfferGps(true)" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #FFF; font-size: 10.5px; font-weight: 700; padding: 4px 8px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+              🔄 Reintentar GPS
+            </button>
+          </div>
+
+          <!-- GPS Status Notice -->
+          <div id="offer-order-gps-status" style="padding: 7px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #FCD34D;">
+            <span class="spinner-small" style="display: inline-block;"></span>
+            <span>Detectando ubicación satelital fija obligatoria...</span>
+          </div>
+
+          <!-- Immovable / Locked Leaflet Map Container -->
+          <div style="position: relative; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
+            <div id="offer-order-leaflet-map" style="width: 100%; height: 160px; background: #1E293B;"></div>
+            <div style="position: absolute; bottom: 6px; left: 8px; right: 8px; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 4px 8px; font-size: 9.5px; color: #E2E8F0; text-align: center; pointer-events: none; z-index: 999;">
+              🔒 Punto satelital fijo inamovible (GPS certificado para entrega exacta)
+            </div>
+          </div>
+        </div>
+
+        <!-- Complementary Delivery Address / Details -->
+        <div>
+          <label style="font-size: 11.5px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 5px;">
+            🏠 Dirección exacta / Casa, Edificio, Referencia:
+          </label>
+          <textarea id="offer-order-client-address" rows="2" placeholder="Ej. Calle 5 con Carrera 4, Casa #12 color azul, frente al abasto..." required style="width: 100%; background: #0B0E17; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; outline: none; box-sizing: border-box; resize: vertical;" oninput="MarketplaceApp.validateDailyOfferForm()"></textarea>
+        </div>
+
+        <!-- Kitchen / Order Notes -->
+        <div>
+          <label style="font-size: 11.5px; font-weight: 700; color: #94A3B8; display: block; margin-bottom: 4px;">
+            📝 Notas para la cocina (Opcional):
+          </label>
+          <input type="text" id="offer-order-client-notes" placeholder="Ej. Sin cebolla, salsas aparte" style="width: 100%; background: #0B0E17; border: 1px solid rgba(255,255,255,0.15); color: #FFF; padding: 8px 12px; border-radius: 8px; font-size: 12px; outline: none; box-sizing: border-box;">
+        </div>
+
+        <!-- Total Calculation & WhatsApp Order Button -->
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <div>
+            <span style="font-size: 11px; color: #94A3B8; display: block;">Total a Pagar:</span>
+            <strong id="offer-order-total-amount" style="font-size: 18px; font-weight: 900; color: #34D399;">$0 COP</strong>
+          </div>
+          <button type="submit" id="btn-submit-offer-whatsapp" disabled style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; padding: 12px 18px; border-radius: 12px; font-size: 13.5px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16,185,129,0.35); transition: opacity 0.2s ease, transform 0.1s ease;">
+            <span>💬</span> Pedir por WhatsApp
+          </button>
+        </div>
+        <span id="offer-order-submit-hint" style="font-size: 10.5px; color: #F87171; text-align: center; display: block;">
+          ⚠️ Esperando confirmación de tu ubicación GPS satelital obligatoria...
+        </span>
+
+      </form>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div id="toast" class="toast hidden">Mensaje de notificación</div>
 
@@ -2024,15 +2137,15 @@
   <script src="/js/qrcode.min.js?v=231"></script>
   <script src="/js/sound.js?v=231"></script>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-  <script src="/js/paint-service.js?v=246"></script>
-  <script src="/js/print3d-service.js?v=246"></script>
-  <script src="/js/resin-service.js?v=246"></script>
-  <script src="/js/pinata-service.js?v=246"></script>
-  <script src="/js/marketplace.js?v=246"></script>
+  <script src="/js/paint-service.js?v=252"></script>
+  <script src="/js/print3d-service.js?v=252"></script>
+  <script src="/js/resin-service.js?v=252"></script>
+  <script src="/js/pinata-service.js?v=252"></script>
+  <script src="/js/marketplace.js?v=252"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=246').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=252').then((reg) => {
           reg.update();
         }).catch(() => {});
       });

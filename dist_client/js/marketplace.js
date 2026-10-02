@@ -663,74 +663,413 @@ class MarketplaceController {
 
   async loadPromotions() {
     try {
-      const res = await fetch('/api/promotions');
-      const promos = await res.json();
+      const promoSection = document.getElementById('daily-promotions-section');
       const container = document.getElementById('daily-promotions-container');
-      const section = document.getElementById('daily-promotions-section');
-      if (!container || !section) return;
+      if (!container || !promoSection) return;
 
-      if (!Array.isArray(promos) || promos.length === 0) {
-        section.classList.add('hidden');
+      if (this.currentCategory !== 'comidas') {
+        promoSection.style.display = 'none';
+        promoSection.classList.add('hidden');
         return;
       }
 
+      const res = await fetch('/api/promotions');
+      const promos = await res.json();
+      this.dailyPromotionsList = Array.isArray(promos) ? promos : [];
+
       const now = Date.now();
-      container.innerHTML = promos.map(p => {
-        const expiresMs = new Date(p.expiresAt || p.expires_at || (new Date(p.createdAt).getTime() + 24*60*60*1000)).getTime();
+      // Filter out any promotions where expiresAt has already passed (< 24h lifespan)
+      const validPromos = this.dailyPromotionsList.filter(p => {
+        const expiresMs = new Date(p.expiresAt || (new Date(p.createdAt).getTime() + 24 * 60 * 60 * 1000)).getTime();
+        return p.active !== false && now < expiresMs;
+      });
+
+      if (validPromos.length === 0) {
+        promoSection.style.display = 'none';
+        promoSection.classList.add('hidden');
+        return;
+      }
+
+      container.innerHTML = validPromos.map(p => {
+        const expiresMs = new Date(p.expiresAt || (new Date(p.createdAt).getTime() + 24 * 60 * 60 * 1000)).getTime();
         const diffMs = Math.max(0, expiresMs - now);
         const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
         const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
         const origPrice = p.originalPrice || p.promoPrice;
         const discountPct = origPrice > p.promoPrice ? Math.round(((origPrice - p.promoPrice) / origPrice) * 100) : 0;
-        const discountBadge = discountPct > 0 ? `<span style="background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 8px; position: absolute; top: 8px; left: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">- ${discountPct}% OFF</span>` : '';
+        const discountBadge = discountPct > 0 ? `<span style="background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 8px; position: absolute; top: 8px; left: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">- ${discountPct}% OFF</span>` : '';
+        const currency = p.currency || 'COP';
+        const symbol = (currency === 'VES') ? 'Bs.' : '$';
 
         return `
-          <div onclick="MarketplaceApp.openPromoDirectly('${p.id}', '${p.establishmentId}', '${p.productId}')" style="min-width: 220px; max-width: 220px; background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 14px; overflow: hidden; cursor: pointer; flex-shrink: 0; position: relative; scroll-snap-align: start; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: transform 0.2s ease;">
+          <div onclick="MarketplaceApp.openDailyOfferOrderModal('${p.id}')" style="min-width: 220px; max-width: 220px; background: rgba(30, 41, 59, 0.95); border: 1.5px solid rgba(239, 68, 68, 0.45); border-radius: 14px; overflow: hidden; cursor: pointer; flex-shrink: 0; position: relative; scroll-snap-align: start; box-shadow: 0 4px 14px rgba(0,0,0,0.35); transition: transform 0.2s ease;">
             <div style="width: 100%; height: 110px; position: relative; background: #000;">
-              <img src="${p.image}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
+              <img src="${p.image || '/images/burger_royale.jpg'}" alt="${p.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
               ${discountBadge}
-              <span style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.85); color: #FCA5A5; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.4);">
+              <span style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.88); color: #FCA5A5; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45);">
                 ⏱️ ${hoursLeft}h ${minsLeft}m
               </span>
             </div>
             <div style="padding: 10px;">
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                <span style="font-size: 14px;">${p.establishmentLogo || '🏪'}</span>
-                <span style="font-size: 11px; font-weight: 700; color: #94A3B8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.establishmentName}</span>
+                <span style="font-size: 13px;">🏪</span>
+                <span style="font-size: 11px; font-weight: 700; color: #94A3B8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.establishmentName || 'Restaurante'}</span>
               </div>
-              <h5 style="margin: 0 0 4px 0; font-size: 13px; font-weight: 800; color: #FFF; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</h5>
+              <h5 style="margin: 0 0 4px 0; font-size: 13px; font-weight: 800; color: #FFF; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</h5>
               <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
                 <div>
-                  ${origPrice > p.promoPrice ? `<span style="font-size: 10.5px; color: #64748B; text-decoration: line-through; display: block;">$${Math.round(origPrice).toLocaleString('de-DE')}</span>` : ''}
-                  <span style="font-size: 13.5px; font-weight: 900; color: #10B981;">$${Math.round(p.promoPrice).toLocaleString('de-DE')} COP</span>
+                  ${origPrice > p.promoPrice ? `<span style="font-size: 10px; color: #64748B; text-decoration: line-through; display: block;">${symbol}${Math.round(origPrice).toLocaleString('de-DE')}</span>` : ''}
+                  <span style="font-size: 13.5px; font-weight: 900; color: #10B981;">${symbol}${Math.round(p.promoPrice).toLocaleString('de-DE')} ${currency}</span>
                 </div>
-                <span style="background: rgba(239,68,68,0.2); color: #F87171; border: 1px solid rgba(239,68,68,0.4); border-radius: 20px; font-size: 10px; font-weight: 800; padding: 4px 8px;">🔥 Ver Promo</span>
+                <span style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: #FFF; border-radius: 20px; font-size: 10px; font-weight: 800; padding: 4px 9px; box-shadow: 0 2px 6px rgba(239,68,68,0.4);">🔥 Pedir</span>
               </div>
             </div>
           </div>
         `;
       }).join('');
 
-      section.classList.remove('hidden');
+      promoSection.style.display = 'block';
+      promoSection.classList.remove('hidden');
     } catch(e) {
       console.warn('Error loading daily promos:', e);
     }
   }
 
-  async openPromoDirectly(promoId, establishmentId, productId) {
-    const est = this.establishments.find(e => e.id === establishmentId);
-    if (!est) return;
-    
-    // Open store view
-    this.openEstablishment(establishmentId);
+  // ==================== OFERTAS DEL DÍA: EXPRESS ORDER & MANDATORY FIXED GPS ====================
+  openDailyOfferOrderModal(promoId) {
+    const promo = (this.dailyPromotionsList || []).find(p => p.id === promoId);
+    if (!promo) {
+      alert('Oferta no disponible.');
+      return;
+    }
 
-    // After store renders, open product details modal directly!
-    setTimeout(() => {
-      if (typeof this.openProductModal === 'function') {
-        this.openProductModal(productId);
+    this.currentDailyOffer = promo;
+    this.dailyOfferQty = 1;
+    this.offerOrderGps = null;
+
+    const modal = document.getElementById('modal-daily-offer-order');
+    if (!modal) return;
+
+    // Fill details
+    const imgEl = document.getElementById('offer-order-img');
+    const vendorEl = document.getElementById('offer-order-vendor');
+    const titleEl = document.getElementById('offer-order-title');
+    const priceEl = document.getElementById('offer-order-price');
+    const origPriceEl = document.getElementById('offer-order-orig-price');
+    const timerBadgeEl = document.getElementById('offer-order-timer-badge');
+    const qtyEl = document.getElementById('offer-order-qty');
+    const whatsappInput = document.getElementById('offer-order-client-whatsapp');
+    const addressInput = document.getElementById('offer-order-client-address');
+    const notesInput = document.getElementById('offer-order-client-notes');
+
+    if (imgEl) imgEl.src = promo.image || '/images/burger_royale.jpg';
+    if (vendorEl) vendorEl.textContent = `🏪 ${promo.establishmentName || 'Restaurante'}`;
+    if (titleEl) titleEl.textContent = promo.title;
+
+    const currency = promo.currency || 'COP';
+    const symbol = (currency === 'VES') ? 'Bs.' : '$';
+    if (priceEl) priceEl.textContent = `${symbol}${Math.round(promo.promoPrice).toLocaleString('de-DE')} ${currency}`;
+
+    const orig = promo.originalPrice || promo.promoPrice;
+    if (origPriceEl) {
+      origPriceEl.textContent = (orig > promo.promoPrice) ? `${symbol}${Math.round(orig).toLocaleString('de-DE')}` : '';
+    }
+
+    // Remaining time
+    const now = Date.now();
+    const expiresMs = new Date(promo.expiresAt || (new Date(promo.createdAt).getTime() + 24 * 60 * 60 * 1000)).getTime();
+    const diffMs = Math.max(0, expiresMs - now);
+    const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+    const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    if (timerBadgeEl) timerBadgeEl.textContent = `⏱️ Quedan ${hoursLeft}h ${minsLeft}m de oferta`;
+
+    if (qtyEl) qtyEl.textContent = '1';
+    if (notesInput) notesInput.value = '';
+
+    // Auto-fill saved client whatsapp & address
+    try {
+      const savedPhone = localStorage.getItem('pedigochos_client_whatsapp') || localStorage.getItem('pedigochos_customer_phone') || '';
+      if (whatsappInput && !whatsappInput.value) whatsappInput.value = savedPhone;
+      const savedAddr = localStorage.getItem('pedigochos_client_address') || localStorage.getItem('pedigochos_user_address') || '';
+      if (addressInput && !addressInput.value) addressInput.value = savedAddr;
+    } catch(e) {}
+
+    this.updateDailyOfferTotal();
+
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
+
+    // Automatically trigger mandatory GPS detection immediately!
+    this.detectDailyOfferGps(false);
+  }
+
+  closeDailyOfferOrderModal() {
+    const modal = document.getElementById('modal-daily-offer-order');
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
+    if (this.offerOrderMap) {
+      try {
+        this.offerOrderMap.remove();
+        this.offerOrderMap = null;
+        this.offerOrderMarker = null;
+      } catch(e) {}
+    }
+  }
+
+  changeDailyOfferQty(delta) {
+    let next = (this.dailyOfferQty || 1) + delta;
+    if (next < 1) next = 1;
+    if (next > 20) next = 20;
+    this.dailyOfferQty = next;
+    const qtyEl = document.getElementById('offer-order-qty');
+    if (qtyEl) qtyEl.textContent = next;
+    this.updateDailyOfferTotal();
+  }
+
+  updateDailyOfferTotal() {
+    if (!this.currentDailyOffer) return;
+    const qty = this.dailyOfferQty || 1;
+    const total = (this.currentDailyOffer.promoPrice || 0) * qty;
+    const currency = this.currentDailyOffer.currency || 'COP';
+    const symbol = (currency === 'VES') ? 'Bs.' : '$';
+    const totalEl = document.getElementById('offer-order-total-amount');
+    if (totalEl) totalEl.textContent = `${symbol}${Math.round(total).toLocaleString('de-DE')} ${currency}`;
+  }
+
+  detectDailyOfferGps(userInitiated = false) {
+    const statusEl = document.getElementById('offer-order-gps-status');
+
+    if (statusEl) {
+      statusEl.style.background = 'rgba(245, 158, 11, 0.15)';
+      statusEl.style.borderColor = 'rgba(245, 158, 11, 0.35)';
+      statusEl.style.color = '#FCD34D';
+      statusEl.innerHTML = `
+        <span class="spinner-small" style="display: inline-block;"></span>
+        <span>${userInitiated ? 'Reintentando señal satelital obligatoria...' : 'Detectando ubicación satelital fija obligatoria...'}</span>
+      `;
+    }
+
+    if (!navigator.geolocation) {
+      if (statusEl) {
+        statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
+        statusEl.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+        statusEl.style.color = '#FCA5A5';
+        statusEl.innerHTML = '❌ Tu navegador no soporta geolocalización GPS.';
       }
-    }, 350);
+      this.validateDailyOfferForm();
+      return;
+    }
+
+    const geoOptions = {
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const accuracy = Math.round(pos.coords.accuracy || 0);
+
+        this.offerOrderGps = { lat, lng, accuracy };
+
+        if (statusEl) {
+          statusEl.style.background = 'rgba(16, 185, 129, 0.15)';
+          statusEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+          statusEl.style.color = '#34D399';
+          statusEl.innerHTML = `
+            <span>✅ Ubicación satelital fija confirmada (±${accuracy}m)</span>
+          `;
+        }
+
+        // Initialize or move Leaflet Map with STRICTLY IMMOVABLE PIN
+        this.renderFixedGpsMap(lat, lng);
+
+        // Reverse geocode to assist address input if empty
+        const addressInput = document.getElementById('offer-order-client-address');
+        if (addressInput && !addressInput.value.trim()) {
+          this.reverseGeocodeDailyOffer(lat, lng);
+        }
+
+        this.validateDailyOfferForm();
+      },
+      (err) => {
+        console.warn('Daily offer GPS detection error:', err);
+        this.offerOrderGps = null;
+        if (statusEl) {
+          statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
+          statusEl.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+          statusEl.style.color = '#FCA5A5';
+          statusEl.innerHTML = '<span>⚠️ GPS Requerido: Por favor activa la ubicación satelital de tu teléfono y permite el permiso para pedir.</span>';
+        }
+        this.validateDailyOfferForm();
+      },
+      geoOptions
+    );
+  }
+
+  renderFixedGpsMap(lat, lng) {
+    const mapEl = document.getElementById('offer-order-leaflet-map');
+    if (!mapEl || typeof L === 'undefined') return;
+
+    if (!this.offerOrderMap) {
+      this.offerOrderMap = L.map(mapEl, {
+        center: [lat, lng],
+        zoom: 16,
+        zoomControl: true,
+        dragging: true,
+        scrollWheelZoom: false,
+        doubleClickZoom: false
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(this.offerOrderMap);
+
+      // Create strictly NON-DRAGGABLE marker ("sin poder mover el punto de la ubicacion fija en el mapa")
+      this.offerOrderMarker = L.marker([lat, lng], {
+        draggable: false // STRICT REQUIREMENT: Point is locked and immovable
+      }).addTo(this.offerOrderMap);
+
+      // Ensure no clicks on the map can move the marker
+      this.offerOrderMap.off('click');
+
+      this.offerOrderMarker.bindPopup('<b>📍 Tu Ubicación GPS Fija</b><br>Coordenadas certificadas de entrega').openPopup();
+    } else {
+      this.offerOrderMap.setView([lat, lng], 16);
+      if (this.offerOrderMarker) {
+        this.offerOrderMarker.setLatLng([lat, lng]);
+      } else {
+        this.offerOrderMarker = L.marker([lat, lng], { draggable: false }).addTo(this.offerOrderMap);
+      }
+    }
+
+    setTimeout(() => {
+      if (this.offerOrderMap) {
+        this.offerOrderMap.invalidateSize();
+      }
+    }, 250);
+  }
+
+  async reverseGeocodeDailyOffer(lat, lng) {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      const data = await res.json();
+      if (data && data.display_name) {
+        const addressInput = document.getElementById('offer-order-client-address');
+        if (addressInput && !addressInput.value.trim()) {
+          addressInput.value = data.display_name;
+          this.validateDailyOfferForm();
+        }
+      }
+    } catch(e) {}
+  }
+
+  validateDailyOfferForm() {
+    const whatsapp = (document.getElementById('offer-order-client-whatsapp')?.value || '').trim();
+    const address = (document.getElementById('offer-order-client-address')?.value || '').trim();
+    const hasGps = !!(this.offerOrderGps && this.offerOrderGps.lat && this.offerOrderGps.lng);
+    const submitBtn = document.getElementById('btn-submit-offer-whatsapp');
+    const hintEl = document.getElementById('offer-order-submit-hint');
+
+    const isValid = (whatsapp.length >= 7) && (address.length >= 4) && hasGps;
+
+    if (submitBtn) {
+      submitBtn.disabled = !isValid;
+      submitBtn.style.opacity = isValid ? '1' : '0.45';
+      submitBtn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+    }
+
+    if (hintEl) {
+      if (!hasGps) {
+        hintEl.style.display = 'block';
+        hintEl.style.color = '#F87171';
+        hintEl.textContent = '⚠️ Obligatorio: Se requiere la detección automática de tu GPS satelital.';
+      } else if (whatsapp.length < 7) {
+        hintEl.style.display = 'block';
+        hintEl.style.color = '#FCD34D';
+        hintEl.textContent = 'ℹ️ Ingresa tu número de WhatsApp para despachar tu pedido.';
+      } else if (address.length < 4) {
+        hintEl.style.display = 'block';
+        hintEl.style.color = '#FCD34D';
+        hintEl.textContent = 'ℹ️ Completa tu dirección o punto de referencia.';
+      } else {
+        hintEl.style.display = 'none';
+      }
+    }
+
+    return isValid;
+  }
+
+  sendDailyOfferWhatsAppOrder() {
+    if (!this.validateDailyOfferForm()) {
+      alert('Por favor verifica que el GPS esté detectado y tus datos de contacto y dirección estén completos.');
+      return;
+    }
+
+    const promo = this.currentDailyOffer;
+    if (!promo) return;
+
+    const whatsapp = (document.getElementById('offer-order-client-whatsapp')?.value || '').trim();
+    const address = (document.getElementById('offer-order-client-address')?.value || '').trim();
+    const notes = (document.getElementById('offer-order-client-notes')?.value || '').trim();
+    const qty = this.dailyOfferQty || 1;
+    const currency = promo.currency || 'COP';
+    const symbol = (currency === 'VES') ? 'Bs.' : '$';
+    const total = Math.round((promo.promoPrice || 0) * qty).toLocaleString('de-DE');
+
+    const lat = this.offerOrderGps.lat.toFixed(6);
+    const lng = this.offerOrderGps.lng.toFixed(6);
+    const mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+
+    // Target vendor WhatsApp
+    let targetPhone = promo.vendorWhatsapp || '';
+    let cleanPhone = targetPhone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = '58' + cleanPhone.substring(1);
+    } else if (cleanPhone.length === 10 && cleanPhone.startsWith('4')) {
+      cleanPhone = '58' + cleanPhone;
+    } else if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
+      cleanPhone = '57' + cleanPhone;
+    }
+
+    if (!cleanPhone) {
+      alert('El comercio emisor no tiene un número de WhatsApp configurado para recibir pedidos.');
+      return;
+    }
+
+    // Save client info for future convenience
+    try {
+      localStorage.setItem('pedigochos_client_whatsapp', whatsapp);
+      localStorage.setItem('pedigochos_client_address', address);
+    } catch(e) {}
+
+    const text = 
+`🔥 *¡NUEVO PEDIDO DE OFERTA FLASH (24H)!*
+━━━━━━━━━━━━━━━━━━━━
+🍔 *Oferta:* ${promo.title}
+🏪 *Negocio:* ${promo.establishmentName || 'Comercio'}
+🔢 *Cantidad:* ${qty} combo(s)
+💰 *Total a Pagar:* ${symbol}${total} ${currency}
+━━━━━━━━━━━━━━━━━━━━
+👤 *WhatsApp Cliente:* ${whatsapp}
+🏠 *Dirección de Entrega:* ${address}
+${notes ? `📝 *Notas:* ${notes}\n` : ''}📍 *UBICACIÓN GPS FIJA SATELITAL (OBLIGATORIA):*
+${mapsLink}
+━━━━━━━━━━━━━━━━━━━━
+🚀 *Generado vía PediGochos*`;
+
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
+
+    this.closeDailyOfferOrderModal();
+    if (typeof this.showToast === 'function') {
+      this.showToast('🎉 ¡Redirigiendo a WhatsApp con tu pedido y ubicación satelital!');
+    }
   }
 
   // Navigation
@@ -749,6 +1088,17 @@ class MarketplaceController {
         card.classList.remove('active');
       }
     });
+
+    // Daily offers only appear when category is 'comidas'
+    if (category === 'comidas') {
+      this.loadPromotions();
+    } else {
+      const promoSection = document.getElementById('daily-promotions-section');
+      if (promoSection) {
+        promoSection.style.display = 'none';
+        promoSection.classList.add('hidden');
+      }
+    }
 
     // Category selected -> Keep floating action bubbles visible while browsing on home
     this.updateFloatingAndHeaderSos(false);
