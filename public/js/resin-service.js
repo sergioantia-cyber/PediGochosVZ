@@ -142,7 +142,7 @@ const ResinServiceApp = {
   // Current customization state
   state: {
     productType: 'photo', // 'photo' | 'letter'
-    activeTab: 'shape', // 'shape' | 'photo' | 'nfc' | 'finishes'
+    activeTab: 'shape', // 'shape' | 'photo' | 'nfc'
     isFlipped: false, // false: front, true: back
 
     // Photo Transform & Framing Shape for each side:
@@ -176,8 +176,8 @@ const ResinServiceApp = {
     customName: '',
 
     // Shared finishes:
-    tasselName: 'Rosa Pastel',
-    tasselHex: '#F472B6',
+    tasselName: 'Sin Borla',
+    tasselHex: 'none',
     hardware: 'gold', // 'gold' | 'silver'
     extraCharmId: 'none',
     quantity: 1,
@@ -298,8 +298,11 @@ const ResinServiceApp = {
     this.updateGuideBubble();
   },
 
-  // Switch active control tab (Shape, Photos, NFC, Finishes)
+  // Switch active control tab (Shape, Photos, NFC)
   setActiveTab(tab) {
+    if (tab === 'finishes' || !['shape', 'photo', 'nfc'].includes(tab)) {
+      tab = 'shape';
+    }
     this.state.activeTab = tab;
     document.querySelectorAll('.resin-tab-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.tab === tab);
@@ -762,9 +765,6 @@ const ResinServiceApp = {
               <button type="button" class="resin-tab-btn" data-tab="nfc" onclick="ResinServiceApp.setActiveTab('nfc')">
                 <span>📶</span> 3. Chip NFC
               </button>
-              <button type="button" class="resin-tab-btn" data-tab="finishes" onclick="ResinServiceApp.setActiveTab('finishes')">
-                <span>✨</span> 4. Borla & Herrajes
-              </button>
             </div>
 
             <!-- Tab Content Dynamic Container -->
@@ -910,6 +910,25 @@ const ResinServiceApp = {
             <p style="font-size: 11.5px; color: #94A3B8; margin: 4px 0 0 0; line-height: 1.4;">
               💡 Cada pieza se vacía artesanalmente con resina epóxica de alta pureza cristalina y filtro UV contra amarillamiento.
             </p>
+          </div>
+
+          <div class="resin-section-card">
+            <div class="resin-section-title">
+              <span>🎨 Estilo de Vaciado & Textura Real</span>
+              <span class="badge-opt">${this.state.inclusions}</span>
+            </div>
+            <div class="resin-styles-grid">
+              ${this.styles.map(st => `
+                <div class="resin-style-card ${st.id === this.state.styleId ? 'active' : ''}" id="style-card-${st.id}" onclick="ResinServiceApp.setStyle('${st.id}')">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <div class="resin-style-swatch" style="background: ${st.previewGradient};"></div>
+                    <span class="resin-style-badge">${st.tag}</span>
+                  </div>
+                  <strong>${st.name}</strong>
+                  <span>${st.desc}</span>
+                </div>
+              `).join('')}
+            </div>
           </div>
         `;
       } else {
@@ -1151,75 +1170,6 @@ const ResinServiceApp = {
               👆 Marca la casilla para agregar el chip NFC a tu llavero de resina.
             </div>
           `}
-        </div>
-      `;
-    } else if (this.state.activeTab === 'finishes') {
-      area.innerHTML = `
-        <!-- Estilo de Vaciado & Textura de Resina -->
-        <div class="resin-section-card">
-          <div class="resin-section-title">
-            <span>🎨 Estilo de Vaciado & Textura de Resina</span>
-            <span class="badge-opt">${this.state.inclusions}</span>
-          </div>
-          <div class="resin-styles-grid">
-            ${this.styles.map(st => `
-              <div class="resin-style-card ${st.id === this.state.styleId ? 'active' : ''}" id="finishes-style-card-${st.id}" onclick="ResinServiceApp.setStyle('${st.id}')">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                  <div class="resin-style-swatch" style="background: ${st.previewGradient};"></div>
-                  <span class="resin-style-badge">${st.tag}</span>
-                </div>
-                <strong>${st.name}</strong>
-                <span>${st.desc}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Color de Borla -->
-        <div class="resin-section-card">
-          <div class="resin-section-title">
-            <span>Color de la Borla Decorativa (Tassel de Gamuza)</span>
-            <span class="badge-opt">${this.state.tasselName}</span>
-          </div>
-          <div class="swatches-scroll-row">
-            ${this.tassels.map(t => `
-              <div class="color-swatch-pill ${t.name === this.state.tasselName ? 'active' : ''}" id="tassel-pill-${t.hex.replace('#','')}" onclick="ResinServiceApp.setTassel('${t.hex}', '${t.name}')">
-                <span class="swatch-circle" style="background: ${t.hex};"></span>
-                <span>${t.name}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Herraje & Dije -->
-        <div class="resin-section-card">
-          <div class="resin-section-title">
-            <span>Herraje Metálico & Dije Opcional</span>
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">COLOR DE LA ARGOLLA Y CADENA</label>
-            <div style="display: flex; gap: 10px;">
-              <button type="button" class="color-swatch-pill ${this.state.hardware === 'gold' ? 'active' : ''}" id="btn-metal-gold" onclick="ResinServiceApp.setHardware('gold')" style="flex: 1; justify-content: center;">
-                ✨ Dorado de Lujo
-              </button>
-              <button type="button" class="color-swatch-pill ${this.state.hardware === 'silver' ? 'active' : ''}" id="btn-metal-silver" onclick="ResinServiceApp.setHardware('silver')" style="flex: 1; justify-content: center;">
-                🔘 Plateado Cromado
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label style="font-size: 11px; color: #94A3B8; font-weight: 700; display: block; margin-bottom: 6px;">DIJE ADICIONAL EN RESINA (OPCIONAL)</label>
-            <div class="swatches-scroll-row">
-              ${this.charms.map(ch => `
-                <div class="color-swatch-pill ${ch.id === this.state.extraCharmId ? 'active' : ''}" id="charm-pill-${ch.id}" onclick="ResinServiceApp.setCharm('${ch.id}')">
-                  <span>${ch.icon}</span>
-                  <span>${ch.name}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
         </div>
       `;
     }
@@ -2562,7 +2512,7 @@ const ResinServiceApp = {
       if (isPhoto && this.state.hasNfc) {
         desc += `<br>📶 <em>Chip NFC Inteligente incluido (${this.state.nfcType})</em>`;
       }
-      desc += `<br>✨ Herraje: ${this.state.hardware === 'gold' ? 'Dorado' : 'Plateado'} • Borla: ${this.state.tasselName}`;
+      desc += `<br>✨ <em>Estilo de Vaciado: ${this.state.inclusions}</em>`;
       desc += `<br>🎨 <strong>Presupuesto: Bajo Cotización Previa (Presupuesto sin costo)</strong>`;
 
       summaryBox.innerHTML = desc;
@@ -2731,12 +2681,6 @@ const ResinServiceApp = {
       }
     }
 
-    itemBlock += `🔘 *Herraje Metálico:* ${this.state.hardware === 'gold' ? 'Dorado de Lujo ✨' : 'Plateado Cromado 🔘'}\n`;
-    itemBlock += `🪢 *Borla de Gamuza (Tassel):* ${this.state.tasselName}\n`;
-    if (this.state.extraCharmId !== 'none') {
-      const charmObj = this.charms.find(c => c.id === this.state.extraCharmId);
-      itemBlock += `🧸 *Dije Extra:* ${charmObj ? charmObj.name : 'Ninguno'}\n`;
-    }
     itemBlock += `🔢 *Cantidad:* ${this.state.quantity} unidad(es)\n`;
 
     let deliveryBlock = `📦 *DATOS DE ENTREGA & CONTACTO:*\n`;
