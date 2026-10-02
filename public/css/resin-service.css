@@ -138,20 +138,23 @@
   background: radial-gradient(circle at center, #262E45 0%, #111624 85%);
   border: 1.5px solid rgba(244, 114, 182, 0.35);
   border-radius: 18px;
-  padding: 10px 12px;
+  padding: 8px 10px 10px 10px;
   text-align: center;
   position: relative;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), inset 0 0 24px rgba(244, 114, 182, 0.08);
-  overflow: visible;
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
 }
 
 @media (max-width: 860px) {
   .resin-preview-stage {
     border-radius: 16px;
     border: 1.5px solid rgba(244, 114, 182, 0.35);
-    padding: 8px 10px;
-    max-height: none;
-    overflow: visible;
+    padding: 6px 8px 10px 8px;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 }
 
@@ -728,17 +731,20 @@
 #resin-keychain-svg-back {
   width: 100%;
   height: auto;
-  max-height: 270px;
+  aspect-ratio: 340 / 410;
   display: block;
   user-select: none;
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.65));
   transition: transform 0.3s ease;
+  overflow: visible !important;
+  max-height: none !important;
 }
 
 @media (max-width: 860px) {
   #resin-keychain-svg,
   #resin-keychain-svg-back {
-    max-height: 200px;
+    max-height: none !important;
+    overflow: visible !important;
   }
 }
 
@@ -1321,4 +1327,40 @@
 
 .resin-drag-area:hover {
   stroke-width: 2.5px;
+}
+
+/* Compact & Space-Saving Guide Bubble Styles */
+.guide-bubble-compact-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.guide-bubble-info-block {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.guide-bubble-compact-header strong {
+  display: block;
+  font-size: 11px;
+  color: #FFF;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.guide-bubble-compact-header p {
+  margin: 1px 0 0 0;
+  font-size: 9.5px;
+  color: #CBD5E1;
+  line-height: 1.25;
+}
+
+.keychain-flip-container,
+.keychain-flip-inner,
+.keychain-flip-front,
+.keychain-flip-back {
+  overflow: visible !important;
 }

@@ -612,31 +612,27 @@ const ResinServiceApp = {
                 <span class="resin-side-badge" id="resin-side-badge">✨ Frente</span>
               </div>
 
-              <!-- Interactive Step Guide Bubble -->
+              <!-- Interactive Step Guide Bubble (Compact & Clear) -->
               <div class="resin-guide-bubble" id="resin-guide-bubble">
-                <div class="guide-bubble-content">
-                  <div class="guide-bubble-badge-row">
-                    <span class="guide-bubble-step-badge" id="guide-bubble-step-badge">Paso 1 de 2: Foto Frontal</span>
-                    <span class="guide-bubble-preserve-pill" id="guide-bubble-preserve-pill">🔒 Tus fotos se mantienen al girar</span>
-                  </div>
-                  <div class="guide-bubble-text-row">
-                    <span class="guide-bubble-avatar">💡</span>
-                    <div class="guide-bubble-copy">
-                      <strong id="guide-bubble-title">Primero sube la foto de este lado (Frente)</strong>
-                      <p id="guide-bubble-desc">
-                        Toca la vista previa para colocar y mover tu foto. Cuando estés listo, gira el llavero 🔄 para agregar la foto trasera. <em>(¡Ambas fotos se mantienen guardadas!)</em>
-                      </p>
+                <div class="guide-bubble-compact-header">
+                  <div class="guide-bubble-info-block">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                      <span class="guide-bubble-avatar">💡</span>
+                      <strong id="guide-bubble-title" style="font-size: 11px; color: #FFF;">1º Elige foto de este lado (Frente)</strong>
+                      <span class="guide-bubble-step-badge" id="guide-bubble-step-badge" style="font-size: 8.5px; padding: 1px 6px;">Paso 1/2</span>
                     </div>
+                    <p id="guide-bubble-desc" style="margin: 2px 0 0 0; font-size: 9.5px; color: #CBD5E1; line-height: 1.25;">
+                      Toca la vista previa para colocar tu foto. Al girar 🔄 ambas fotos se mantienen guardadas.
+                    </p>
                   </div>
-                </div>
-                <div class="guide-bubble-footer">
                   <button type="button" class="btn-guide-flip" id="btn-guide-flip" onclick="ResinServiceApp.toggleFlip()">
                     <span id="btn-guide-flip-text">🔄 Girar para Foto Trasera</span>
                   </button>
-                  <div class="guide-bubble-photos-status" id="guide-bubble-photos-status">
-                    <span id="status-front-photo" class="badge-photo-saved">📷 Frente: Pendiente</span>
-                    <span id="status-back-photo" class="badge-photo-saved">📷 Reverso: Pendiente</span>
-                  </div>
+                </div>
+                <div class="guide-bubble-photos-status" id="guide-bubble-photos-status" style="margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+                  <span id="status-front-photo" class="badge-photo-saved">📷 Frente: Pendiente</span>
+                  <span id="guide-bubble-preserve-pill" style="font-size: 8.5px; color: #34D399; font-weight: 800;">🔒 Tus fotos se mantienen al girar</span>
+                  <span id="status-back-photo" class="badge-photo-saved">📷 Reverso: Pendiente</span>
                 </div>
               </div>
 
@@ -646,14 +642,14 @@ const ResinServiceApp = {
                   
                   <!-- Front Face -->
                   <div class="keychain-flip-front">
-                    <svg id="resin-keychain-svg" viewBox="0 0 340 430" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+                    <svg id="resin-keychain-svg" viewBox="0 0 340 410" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
                       <!-- Filled dynamically in updateVisualPreview -->
                     </svg>
                   </div>
 
                   <!-- Back Face -->
                   <div class="keychain-flip-back">
-                    <svg id="resin-keychain-svg-back" viewBox="0 0 340 430" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+                    <svg id="resin-keychain-svg-back" viewBox="0 0 340 410" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
                       <!-- Filled dynamically in updateVisualPreview -->
                     </svg>
                   </div>
