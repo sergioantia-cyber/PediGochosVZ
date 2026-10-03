@@ -6005,8 +6005,8 @@
       "longitude": null,
       "location_lat": null,
       "location_lng": null,
-      "open_time": "17:00",
-      "close_time": "00:00",
+      "open_time": "10:00",
+      "close_time": "23:00",
       "disabled": false
     },
     {
@@ -8561,8 +8561,8 @@
       "longitude": null,
       "location_lat": null,
       "location_lng": null,
-      "open_time": "17:00",
-      "close_time": "00:00",
+      "open_time": "07:00",
+      "close_time": "23:00",
       "disabled": false,
       "address": "Frente al CICPC San Antonio del Táchira"
     },
@@ -10509,8 +10509,8 @@
       "longitude": null,
       "location_lat": null,
       "location_lng": null,
-      "open_time": "17:00",
-      "close_time": "00:00",
+      "open_time": "11:30",
+      "close_time": "23:00",
       "disabled": false
     },
     {
@@ -20135,8 +20135,8 @@
       "longitude": null,
       "location_lat": null,
       "location_lng": null,
-      "open_time": "17:00",
-      "close_time": "00:00",
+      "open_time": "11:00",
+      "close_time": "23:00",
       "disabled": false
     },
     {
@@ -20210,8 +20210,8 @@
       "longitude": null,
       "location_lat": null,
       "location_lng": null,
-      "open_time": "17:00",
-      "close_time": "00:00",
+      "open_time": "08:00",
+      "close_time": "23:00",
       "disabled": false
     },
     {
@@ -20871,8 +20871,8 @@
       "phone": "0414-7000000",
       "address": "San Antonio del Táchira",
       "location": "San Antonio",
-      "open_time": "17:00",
-      "close_time": "00:00",
+      "open_time": "08:00",
+      "close_time": "23:00",
       "is_active": true,
       "is_paused": false,
       "tables_count": 10,

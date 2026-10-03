@@ -1596,10 +1596,21 @@ ${mapsLink}
     categoryBadge.innerText = categoryEmojis[est.category] || est.category;
     categoryBadge.className = 'est-badge ' + est.category;
 
-    // Delivery time (minutes)
+    // Delivery time or Open/Closed status in store header
     const deliverySpan = document.querySelector('.est-delivery-time');
+    const isStoreOpen = this.isEstablishmentOpen(est);
     if (deliverySpan) {
-      deliverySpan.innerText = this.getFormattedDeliveryTime(est);
+      if (isStoreOpen) {
+        deliverySpan.innerHTML = `🟢 Abierto · ⏱️ ${this.getFormattedDeliveryTime(est)}`;
+        deliverySpan.style.background = 'rgba(16, 185, 129, 0.18)';
+        deliverySpan.style.color = '#34D399';
+        deliverySpan.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+      } else {
+        deliverySpan.innerHTML = `🌙 Abre a las ${this.formatTime12h(est.open_time)}`;
+        deliverySpan.style.background = 'rgba(255, 255, 255, 0.08)';
+        deliverySpan.style.color = '#CBD5E1';
+        deliverySpan.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+      }
     }
 
     // Dynamic rating badge (show "Nuevo" if < 3 reviews, stars only with sufficient ratings)
@@ -1659,9 +1670,9 @@ ${mapsLink}
     const isOpen = this.isEstablishmentOpen(est);
     if (!isOpen) {
       closedStoreBanner.innerHTML = `
-        <div style="background: rgba(15, 23, 42, 0.92); border: 1.5px solid #EF4444; color: #FFFFFF; padding: 12px 16px; border-radius: 14px; font-weight: 700; font-size: 12.5px; margin-top: 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
-          <span style="font-size: 22px; flex-shrink: 0;">🔴</span>
-          <span style="line-height: 1.4;"><strong style="color: #FCA5A5; font-size: 13px;">Restaurante Cerrado:</strong> Horario de Atención: <strong style="color: #FEF08A;">${this.formatTime12h(est.open_time)} a ${this.formatTime12h(est.close_time)}</strong>. Puedes consultar el menú pero los pedidos están desactivados fuera de horario.</span>
+        <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid rgba(245, 158, 11, 0.45); color: #FFFFFF; padding: 12px 16px; border-radius: 14px; font-weight: 700; font-size: 12.5px; margin-top: 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+          <span style="font-size: 22px; flex-shrink: 0;">🌙</span>
+          <span style="line-height: 1.4;"><strong style="color: #FCD34D; font-size: 13px;">Abre a las ${this.formatTime12h(est.open_time)}:</strong> Horario de atención: <strong style="color: #FEF08A;">${this.formatTime12h(est.open_time)} a ${this.formatTime12h(est.close_time)}</strong>. Puedes explorar el menú completo y planificar tu pedido.</span>
         </div>
       `;
       closedStoreBanner.style.display = 'block';
@@ -1774,6 +1785,102 @@ ${mapsLink}
     return `<div class="est-row-rating" onclick="event.stopPropagation(); MarketplaceApp.openReviewsListModal('${est.id}')" style="cursor: pointer; background: rgba(255, 170, 0, 0.16); border: 1px solid rgba(255, 170, 0, 0.35); color: #FFAA00;">
       ⭐ ${ratingVal} <span style="opacity: 0.85; font-size: 9.5px;">(${totalReviews})</span>
     </div>`;
+  }
+
+  // Create Establishment Card element with distinct open vs upcoming styling
+  createEstablishmentCard(est) {
+    const card = document.createElement('div');
+    card.className = 'est-row-card est-brand-card';
+    const isOpen = this.isEstablishmentOpen(est);
+    const brand = this.getEstablishmentBrandTheme(est);
+
+    if (!isOpen) {
+      card.style.opacity = '0.85';
+      card.style.filter = 'grayscale(0.18)';
+    }
+
+    card.onclick = () => this.openEstablishment(est.id);
+
+    // Set CSS custom variables for dynamic brand styling
+    card.style.setProperty('--card-brand-tint', brand.cardTint);
+    card.style.setProperty('--card-brand-border', brand.cardBorder);
+    card.style.setProperty('--card-brand-glow', brand.cardGlow);
+    card.style.background = brand.cardBg;
+    card.style.borderColor = isOpen ? brand.cardBorder : 'rgba(255, 255, 255, 0.12)';
+
+    // Determine representation photo
+    const photoUrl = est.logoImage || (est.products && est.products[0] ? est.products[0].image : null);
+    let imgHTML = '';
+    if (photoUrl) {
+      imgHTML = `<img src="${photoUrl}" alt="${est.name}" class="est-row-img" style="object-fit: contain; width: 100%; height: 100%; padding: 3px; box-sizing: border-box;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'">`;
+    }
+
+    const deliveryTimeStr = this.getFormattedDeliveryTime(est);
+
+    const statusBadge = isOpen
+      ? `<span class="est-open-badge" style="background: rgba(16, 185, 129, 0.95); color: #FFF; padding: 2px 5px; border-radius: 6px; font-size: 8.5px; font-weight: 900; position: absolute; bottom: 3px; left: 3px; right: 3px; text-align: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4); z-index: 2; letter-spacing: 0.3px;">🟢 ABIERTO</span>`
+      : `<span class="est-closed-badge" style="background: rgba(30, 41, 59, 0.92); color: #E2E8F0; border: 1px solid rgba(255, 255, 255, 0.15); padding: 2px 3px; border-radius: 6px; font-size: 8px; font-weight: 800; position: absolute; bottom: 3px; left: 3px; right: 3px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); z-index: 2; backdrop-filter: blur(4px);">🌙 Abre ${this.formatTime12h(est.open_time)}</span>`;
+
+    const highTrafficBadge = (isOpen && est.isHighTraffic)
+      ? `<span class="est-traffic-badge" style="background: #dc2626; color: #ffffff; padding: 2px 4px; border-radius: 6px; font-size: 8px; font-weight: 900; position: absolute; top: 3px; left: 3px; right: 3px; text-align: center; z-index: 2;">🚨 Tráfico Alto</span>` 
+      : '';
+
+    const descSnippet = (est.description || '').split('.')[0] || est.description || '';
+
+    const statusTimeMarkup = isOpen
+      ? `<span style="background: rgba(16, 185, 129, 0.16); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+           🟢 Abierto · ${deliveryTimeStr}
+         </span>
+         <span class="free-delivery" style="background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 7px; border-radius: 6px; font-weight: 800; font-size: 10.5px;">
+           🛵 ${this.formatPesos(est.delivery_fee || 5000)}
+         </span>`
+      : `<span style="background: rgba(255, 255, 255, 0.05); color: #CBD5E1; border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 10.5px; display: inline-flex; align-items: center; gap: 4px;">
+           🕒 Abre a las ${this.formatTime12h(est.open_time)}
+         </span>
+         <span style="background: rgba(148, 163, 184, 0.1); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.2); padding: 2px 6px; border-radius: 6px; font-weight: 800; font-size: 10px;">
+           🌙 Próximamente
+         </span>`;
+
+    const ctaMarkup = isOpen
+      ? `<button type="button" class="btn-brand-menu-cta" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')" style="background: ${brand.btnGradient}; color: ${brand.btnTextColor || '#FFFFFF'}; border: 1px solid ${brand.btnBorder || 'rgba(255,255,255,0.25)'}; box-shadow: 0 3px 10px ${brand.btnShadow}; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.22s ease;">
+           <span style="font-size: 12px;">${brand.btnIcon}</span>
+           <span>${brand.btnText}</span>
+           <span class="cta-arrow" style="font-size: 10px; opacity: 0.9;">➔</span>
+         </button>`
+      : `<button type="button" class="btn-brand-menu-cta" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')" style="background: rgba(255, 255, 255, 0.06); color: #CBD5E1; border: 1px solid rgba(255, 255, 255, 0.15); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.22s ease;">
+           <span style="font-size: 12px;">📖</span>
+           <span>Ver Menú</span>
+           <span class="cta-arrow" style="font-size: 10px; opacity: 0.7;">➔</span>
+         </button>`;
+
+    card.innerHTML = `
+      <div class="est-row-img-wrapper" style="background: ${brand.logoBg}; border: 1.5px solid ${brand.logoBorder}; box-shadow: 0 4px 14px ${brand.logoShadow};">
+        ${imgHTML}
+        <div class="est-row-img-placeholder hidden">${est.logo || '🏪'}</div>
+        ${statusBadge}
+        ${highTrafficBadge}
+      </div>
+      <div class="est-row-info">
+        <div class="est-row-header-flex">
+          <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; color: #FFFFFF; font-weight: 900; font-size: 14px;">${est.name}</h4>
+          ${this.getEstablishmentRatingMarkup(est, 'row')}
+        </div>
+        <div class="est-row-desc" style="color: #94A3B8; font-size: 11.5px; margin: 2px 0;">
+          <span class="est-pill-category" style="background: ${brand.pillBg}; color: ${brand.pillColor}; border: 1px solid ${brand.pillBorder}; padding: 1.5px 6px; border-radius: 5px; font-size: 10px; font-weight: 800; margin-right: 5px; display: inline-block;">
+            ${brand.categoryTag}
+          </span>
+          <span>${descSnippet}</span>
+        </div>
+        <div class="est-row-details-row" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            ${statusTimeMarkup}
+          </div>
+          ${ctaMarkup}
+        </div>
+      </div>
+    `;
+
+    return card;
   }
 
   // Render lists
@@ -2226,25 +2333,15 @@ ${mapsLink}
       const normUserLoc = (this.currentLocation || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       return normEstLoc.includes(normUserLoc) || normUserLoc.includes(normEstLoc);
     });
-    const list = this.shuffleWithSeed(rawList, this.getSessionSeed());
+    const openRaw = rawList.filter(e => this.isEstablishmentOpen(e));
+    const closedRaw = rawList.filter(e => !this.isEstablishmentOpen(e));
+    const openList = this.shuffleWithSeed(openRaw, this.getSessionSeed());
+    const closedList = this.shuffleWithSeed(closedRaw, this.getSessionSeed());
 
-    // Update the "Todos los Comercios" header dynamically with category name and count
+    // Hide outer all-restaurants-header as dedicated section headers will be rendered directly in grid
     const allRestHeader = document.getElementById('all-restaurants-header');
-    const allRestTitle = document.getElementById('all-restaurants-title-text');
-    if (allRestHeader && allRestTitle) {
-      if (list.length === 0) {
-        allRestHeader.style.display = 'none';
-      } else {
-        allRestHeader.style.display = 'block';
-        if (window.activeFoodTypeFilter && window.activeFoodTypeFilter !== 'all') {
-          const catLabel = categoryNames[window.activeFoodTypeFilter] || this.capitalize(window.activeFoodTypeFilter);
-          allRestTitle.textContent = `Comercios: ${catLabel} (${list.length})`;
-        } else if (this.currentCategory && this.currentCategory !== 'comidas') {
-          allRestTitle.textContent = `Comercios: ${this.capitalize(this.currentCategory)} (${list.length})`;
-        } else {
-          allRestTitle.textContent = 'Todos los Comercios';
-        }
-      }
+    if (allRestHeader) {
+      allRestHeader.style.display = 'none';
     }
 
     // Hide daily promo section when filtering specific food type to avoid distraction
@@ -2256,12 +2353,12 @@ ${mapsLink}
       }
     }
 
-    // Render Featured Horizontal Carousel
+    // Render Featured Horizontal Carousel (Prioritizes open stores first)
     this.renderFeaturedCarousel();
 
     grid.innerHTML = '';
 
-    if (list.length === 0) {
+    if (rawList.length === 0) {
       const activeName = (window.activeFoodTypeFilter && categoryNames[window.activeFoodTypeFilter]) 
         ? categoryNames[window.activeFoodTypeFilter] 
         : (this.capitalize(this.currentCategory) || 'esta categoría');
@@ -2302,84 +2399,61 @@ ${mapsLink}
       return;
     }
 
-    list.forEach(est => {
-      const card = document.createElement('div');
-      card.className = 'est-row-card est-brand-card';
-      const isOpen = this.isEstablishmentOpen(est);
-      const brand = this.getEstablishmentBrandTheme(est);
-
-      if (!isOpen) {
-        card.style.opacity = '0.78';
-        card.style.filter = 'grayscale(0.25)';
-      }
-
-      card.onclick = () => this.openEstablishment(est.id);
-
-      // Set CSS custom variables for dynamic brand styling
-      card.style.setProperty('--card-brand-tint', brand.cardTint);
-      card.style.setProperty('--card-brand-border', brand.cardBorder);
-      card.style.setProperty('--card-brand-glow', brand.cardGlow);
-      card.style.background = brand.cardBg;
-      card.style.borderColor = brand.cardBorder;
-
-      // Determine representation photo
-      const photoUrl = est.logoImage || (est.products && est.products[0] ? est.products[0].image : null);
-      let imgHTML = '';
-      if (photoUrl) {
-        imgHTML = `<img src="${photoUrl}" alt="${est.name}" class="est-row-img" style="object-fit: contain; width: 100%; height: 100%; padding: 3px; box-sizing: border-box;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'">`;
-      }
-
-      const deliveryTimeStr = this.getFormattedDeliveryTime(est);
-
-      const closedBadge = !isOpen 
-        ? `<span class="est-closed-badge" style="background: rgba(239, 68, 68, 0.95); color: #FFF; padding: 2px 4px; border-radius: 6px; font-size: 8.5px; font-weight: 900; position: absolute; bottom: 3px; left: 3px; right: 3px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); z-index: 2;">🔴 Cerrado</span>`
-        : '';
-
-      const highTrafficBadge = est.isHighTraffic 
-        ? `<span class="est-traffic-badge" style="background: #dc2626; color: #ffffff; padding: 2px 4px; border-radius: 6px; font-size: 8px; font-weight: 900; position: absolute; top: 3px; left: 3px; right: 3px; text-align: center; z-index: 2;">🚨 Tráfico Alto</span>` 
-        : '';
-
-      const descSnippet = (est.description || '').split('.')[0] || est.description || '';
-
-      card.innerHTML = `
-        <div class="est-row-img-wrapper" style="background: ${brand.logoBg}; border: 1.5px solid ${brand.logoBorder}; box-shadow: 0 4px 14px ${brand.logoShadow};">
-          ${imgHTML}
-          <div class="est-row-img-placeholder hidden">${est.logo || '🏪'}</div>
-          ${closedBadge}
-          ${highTrafficBadge}
+    // 1. SECCIÓN: ABIERTOS AHORA (Suben automáticamente a la cima)
+    if (openList.length > 0) {
+      const openHeader = document.createElement('div');
+      openHeader.style.cssText = 'grid-column: 1 / -1; margin: 10px 0 6px 0; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(90deg, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0.03)); border-left: 4px solid #10B981; padding: 10px 14px; border-radius: 12px; border-top: 1px solid rgba(16, 185, 129, 0.25); border-right: 1px solid rgba(16, 185, 129, 0.25); border-bottom: 1px solid rgba(16, 185, 129, 0.25);';
+      openHeader.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">🟢</span>
+          <div>
+            <h4 style="margin: 0; font-size: 13.5px; font-weight: 900; color: #FFFFFF; letter-spacing: 0.3px;">ABIERTOS AHORA (${openList.length})</h4>
+            <p style="margin: 0; font-size: 11px; color: #6EE7B7; font-weight: 600;">Listos para preparar tu pedido y entregar volando ⚡</p>
+          </div>
         </div>
-        <div class="est-row-info">
-          <div class="est-row-header-flex">
-            <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; color: #FFFFFF; font-weight: 900; font-size: 14px;">${est.name}</h4>
-            ${this.getEstablishmentRatingMarkup(est, 'row')}
-          </div>
-          <div class="est-row-desc" style="color: #94A3B8; font-size: 11.5px; margin: 2px 0;">
-            <span class="est-pill-category" style="background: ${brand.pillBg}; color: ${brand.pillColor}; border: 1px solid ${brand.pillBorder}; padding: 1.5px 6px; border-radius: 5px; font-size: 10px; font-weight: 800; margin-right: 5px; display: inline-block;">
-              ${brand.categoryTag}
-            </span>
-            <span>${descSnippet}</span>
-          </div>
-          <div class="est-row-details-row" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="color: #94A3B8; font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 3px;">
-                ⏱️ ${deliveryTimeStr}
-              </span>
-              <span class="free-delivery" style="background: ${isOpen ? 'rgba(59, 130, 246, 0.15)' : 'rgba(239, 68, 68, 0.15)'}; color: ${isOpen ? '#60A5FA' : '#F87171'}; border: 1px solid ${isOpen ? 'rgba(59, 130, 246, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; padding: 1.5px 7px; border-radius: 6px; font-weight: 800; font-size: 10.5px;">
-                ${isOpen ? '🛵 ' + this.formatPesos(est.delivery_fee || 5000) : '🔴 Cerrado'}
-              </span>
-            </div>
-            
-            <!-- BOTÓN BONITO PERSONALIZADO CON LA ESTÉTICA DE CADA LOGO -->
-            <button type="button" class="btn-brand-menu-cta" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')" style="background: ${brand.btnGradient}; color: ${brand.btnTextColor || '#FFFFFF'}; border: 1px solid ${brand.btnBorder || 'rgba(255,255,255,0.25)'}; box-shadow: 0 3px 10px ${brand.btnShadow}; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.22s ease;">
-              <span style="font-size: 12px;">${brand.btnIcon}</span>
-              <span>${brand.btnText}</span>
-              <span class="cta-arrow" style="font-size: 10px; opacity: 0.9;">➔</span>
-            </button>
+        <span style="font-size: 10px; font-weight: 800; background: rgba(16, 185, 129, 0.25); color: #34D399; padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.4); white-space: nowrap;">Pide Ya</span>
+      `;
+      grid.appendChild(openHeader);
+
+      openList.forEach(est => {
+        grid.appendChild(this.createEstablishmentCard(est));
+      });
+    } else {
+      // Si todos están cerrados por la hora, banner informativo para no generar frustración
+      const soonBanner = document.createElement('div');
+      soonBanner.style.cssText = 'grid-column: 1 / -1; margin: 8px 0 10px 0; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);';
+      soonBanner.innerHTML = `
+        <span style="font-size: 22px; flex-shrink: 0;">🕒</span>
+        <div style="flex: 1;">
+          <div style="font-size: 12.5px; font-weight: 800; color: #FCD34D;">Comercios abriendo próximamente</div>
+          <div style="font-size: 11.5px; color: #CBD5E1; font-weight: 500; margin-top: 2px;">
+            La mayoría de restaurantes inician despacho a partir de las <strong>5:00 PM</strong>. Puedes explorar sus menús y planificar tu orden con antelación.
           </div>
         </div>
       `;
-      grid.appendChild(card);
-    });
+      grid.appendChild(soonBanner);
+    }
+
+    // 2. SECCIÓN: PRÓXIMAMENTE / CERRADOS
+    if (closedList.length > 0) {
+      const closedHeader = document.createElement('div');
+      closedHeader.style.cssText = 'grid-column: 1 / -1; margin: 18px 0 6px 0; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(90deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.02)); border-left: 4px solid #64748B; padding: 10px 14px; border-radius: 12px; border-top: 1px solid rgba(148, 163, 184, 0.2); border-right: 1px solid rgba(148, 163, 184, 0.2); border-bottom: 1px solid rgba(148, 163, 184, 0.2);';
+      closedHeader.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">🌙</span>
+          <div>
+            <h4 style="margin: 0; font-size: 13.5px; font-weight: 900; color: #E2E8F0; letter-spacing: 0.3px;">PRÓXIMAMENTE / CERRADOS (${closedList.length})</h4>
+            <p style="margin: 0; font-size: 11px; color: #94A3B8; font-weight: 600;">Explora el menú y programa tu pedido para la hora de apertura</p>
+          </div>
+        </div>
+        <span style="font-size: 10px; font-weight: 700; background: rgba(255, 255, 255, 0.06); color: #CBD5E1; padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); white-space: nowrap;">Ver Menús</span>
+      `;
+      grid.appendChild(closedHeader);
+
+      closedList.forEach(est => {
+        grid.appendChild(this.createEstablishmentCard(est));
+      });
+    }
   }
 
   getEstablishmentBrandTheme(est) {
@@ -2840,16 +2914,21 @@ ${mapsLink}
     section.classList.remove('hidden');
     container.innerHTML = '';
 
-    const featuredShuffled = this.shuffleWithSeed(activeEsts, this.getSessionSeed()).slice(0, 6);
+    const openFeatured = activeEsts.filter(e => this.isEstablishmentOpen(e));
+    const closedFeatured = activeEsts.filter(e => !this.isEstablishmentOpen(e));
+    const featuredShuffled = [
+      ...this.shuffleWithSeed(openFeatured, this.getSessionSeed()),
+      ...this.shuffleWithSeed(closedFeatured, this.getSessionSeed())
+    ].slice(0, 8);
 
     featuredShuffled.forEach(est => {
-      const card = document.createElement('div');
-      card.style.cssText = 'min-width: 200px; width: 200px; flex-shrink: 0; background: rgba(18, 18, 24, 0.95); border: 1px solid rgba(255, 94, 58, 0.2); border-radius: 14px; padding: 8px 10px; cursor: pointer; scroll-snap-align: start; transition: transform 0.2s, border-color 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
       const isOpen = this.isEstablishmentOpen(est);
+      const card = document.createElement('div');
+      card.style.cssText = `min-width: 200px; width: 200px; flex-shrink: 0; background: rgba(18, 18, 24, 0.95); border: 1px solid ${isOpen ? 'rgba(16, 185, 129, 0.35)' : 'rgba(255, 255, 255, 0.1)'}; border-radius: 14px; padding: 8px 10px; cursor: pointer; scroll-snap-align: start; transition: transform 0.2s, border-color 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);`;
 
       if (!isOpen) {
-        card.style.opacity = '0.75';
-        card.style.filter = 'grayscale(0.3)';
+        card.style.opacity = '0.85';
+        card.style.filter = 'grayscale(0.18)';
       }
 
       card.onclick = () => this.openEstablishment(est.id);
@@ -2860,20 +2939,25 @@ ${mapsLink}
         imgHTML = `<img src="${photoUrl}" alt="${est.name}" style="object-fit: contain; width: 100%; height: 100%; padding: 2px; box-sizing: border-box;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'">`;
       }
 
+      const statusTag = isOpen
+        ? `<div style="font-size: 9.5px; color: #34D399; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;">🟢 Abierto · ${this.getFormattedDeliveryTime(est)}</div>`
+        : `<div style="font-size: 9.5px; color: #CBD5E1; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">🕒 Abre ${this.formatTime12h(est.open_time)}</div>`;
+
       card.innerHTML = `
-        <div style="width: 54px; height: 54px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="width: 54px; height: 54px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; border: 1px solid ${isOpen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.1)'};">
           ${imgHTML}
           <div class="hidden" style="font-size: 22px;">${est.logo || '🏪'}</div>
+          ${isOpen ? '<span style="position: absolute; bottom: 2px; left: 2px; right: 2px; background: rgba(16,185,129,0.92); color: #fff; font-size: 7.5px; font-weight: 900; text-align: center; border-radius: 4px; padding: 1px 0;">ABIERTO</span>' : ''}
         </div>
         <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
             <h5 style="margin: 0; font-size: 12px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">${est.name}</h5>
             ${this.getEstablishmentRatingMarkup(est, 'mini')}
           </div>
-          <div style="font-size: 10px; color: var(--accent); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✨ Destacado</div>
+          ${statusTag}
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; margin-top: 2px;">
             <span style="color: #3B82F6; font-weight: 800;">🚲 ${this.formatPesos(est.delivery_fee || 5000)}</span>
-            <span style="color: #94A3B8;">${this.getFormattedDeliveryTime(est)}</span>
+            <span style="color: ${isOpen ? '#FCD34D' : '#94A3B8'}; font-weight: 700;">${isOpen ? '✨ Destacado' : '📖 Menú'}</span>
           </div>
         </div>
       `;
