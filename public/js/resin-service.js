@@ -31,10 +31,12 @@ const ResinServiceApp = {
   ],
 
   borderEffects: [
-    { id: 'gold_flakes', name: 'Borde Pan de Oro 24K', desc: 'Copos dorados brillantes' },
-    { id: 'silver_flakes', name: 'Borde Pan de Plata', desc: 'Copos plateados glaciares' },
-    { id: 'glitter', name: 'Borde Glitter Rosa/Oro', desc: 'Destellos holográficos' },
-    { id: 'crystal', name: 'Resina Cristalina Pura', desc: 'Transparencia total sin borde' }
+    { id: 'sapphire_gold', name: 'Zafiro & Hojas de Oro', desc: 'Borde azul zafiro con oro 24K' },
+    { id: 'terracotta_gold_dip', name: 'Terracota & Chunky Gold', desc: 'Borde salmón y chunky glitter' },
+    { id: 'geode_navy_gold', name: 'Geoda Azul Noche & Vetas', desc: 'Vetas de cuarzo dorado' },
+    { id: 'ebony_cosmic_holo', name: 'Ébano & Confeti Holográfico', desc: 'Negro ónix con prisma cósmico' },
+    { id: 'neon_pink_mermaid', name: 'Rosa Neón & Escamas Ópalo', desc: 'Rosa neón con lentejuelas sirena' },
+    { id: 'cobalt_silver_flakes', name: 'Cobalto & Copos de Plata', desc: 'Azul eléctrico y plata pura' }
   ],
 
   backOptions: [
@@ -68,53 +70,46 @@ const ResinServiceApp = {
 
   styles: [
     {
-      id: 'bicolor',
-      name: 'Bicolor Cristal & Oro 24K',
-      desc: 'Mitad pigmento vibrante y mitad cristal transparente con láminas de oro flotantes',
-      tag: 'Más Pedido ⭐',
-      previewGradient: 'linear-gradient(135deg, #F472B6 48%, #FEF08A 52%)'
+      id: 'sapphire_gold',
+      name: 'Azul Zafiro & Hojas de Oro 24K',
+      desc: 'Resina translúcida azul zafiro marino con láminas de oro puro 24K flotantes en suspensión 3D',
+      tag: 'Llavero B ⭐',
+      previewGradient: 'radial-gradient(circle at 65% 35%, #2563EB 0%, #1D4ED8 40%, #0F172A 100%)'
     },
     {
-      id: 'gold_flakes',
-      name: 'Hojas de Oro 24K Flotantes',
-      desc: 'Láminas de oro puro encapsuladas en suspensión tridimensional en resina ultra-clara',
-      tag: 'Elegante 👑',
-      previewGradient: 'radial-gradient(circle, #FEF08A 20%, #CA8A04 60%, #713F12 100%)'
+      id: 'terracotta_gold_dip',
+      name: 'Rosa Terracota & Chunky Gold Dip',
+      desc: 'Base salmón terracota sedosa con puntas y extremos bañados en chunky glitter y lentejuelas de oro',
+      tag: 'Llavero W ✨',
+      previewGradient: 'linear-gradient(135deg, #FDE047 0%, #EAB308 18%, #E08373 45%, #C26354 70%, #FDE047 100%)'
     },
     {
-      id: 'silver_flakes',
-      name: 'Copos de Plata Glacial',
-      desc: 'Hojuelas de plata brillante con micro-destellos platino sobre resina cristalina',
-      tag: 'Glacial ❄️',
-      previewGradient: 'linear-gradient(135deg, #FFFFFF 0%, #94A3B8 50%, #E2E8F0 100%)'
+      id: 'geode_navy_gold',
+      name: 'Geoda Azul Noche & Vetas de Oro',
+      desc: 'Azul marino sólido pulido atravesado por una veta diagonal geoda de pepitas de oro en relieve',
+      tag: 'Llavero J 💎',
+      previewGradient: 'linear-gradient(135deg, #0A192F 0%, #1E3A8A 32%, #F59E0B 48%, #FEF08A 53%, #0A192F 70%)'
     },
     {
-      id: 'glitter_full',
-      name: 'Glitter Holográfico Prisma',
-      desc: 'Escarcha hexagonal premium que refracta destellos arcoíris con la luz del sol',
-      tag: 'Ultra Brillo ✨',
-      previewGradient: 'linear-gradient(135deg, #F472B6 0%, #38BDF8 50%, #FACC15 100%)'
+      id: 'ebony_cosmic_holo',
+      name: 'Negro Ébano & Confeti Holográfico',
+      desc: 'Cuerpo en negro ónix azabache con extremos de resina cristal repleta de confeti prisma cósmico',
+      tag: 'Llavero L 🚀',
+      previewGradient: 'linear-gradient(135deg, #F472B6 0%, #38BDF8 18%, #111827 35%, #05070A 68%, #34D399 85%, #FACC15 100%)'
     },
     {
-      id: 'flowers',
-      name: 'Jardín Botánico & Flores',
-      desc: 'Mini pétalos y flores secas naturales prensadas a mano en resina transparente',
-      tag: 'Artesanal 🌸',
-      previewGradient: 'linear-gradient(135deg, #FBCFE8 0%, #FDE047 40%, #BBF7D0 100%)'
+      id: 'neon_pink_mermaid',
+      name: 'Rosa Neón Barbie & Escamas Ópalo',
+      desc: 'Rosa neón vibrante con curvas bañadas en lentejuelas hexagonales y escamas iridiscentes de sirena',
+      tag: 'Llavero S 💖',
+      previewGradient: 'radial-gradient(circle at 40% 30%, #FDA4AF 0%, #FF2D78 50%, #BE123C 100%)'
     },
     {
-      id: 'marble_swirl',
-      name: 'Mármol Místico & Humo de Mica',
-      desc: 'Efecto ahumado con remolinos nacarados de pigmento perlado en movimiento',
-      tag: 'Exclusivo 🌀',
-      previewGradient: 'linear-gradient(135deg, #3B82F6 0%, #9333EA 50%, #0F172A 100%)'
-    },
-    {
-      id: 'crystal',
-      name: 'Cristal Óptico Puro',
-      desc: 'Acabado de vidrio líquido pulido 100% transparente con reflejos especulares',
-      tag: 'Minimalista 💎',
-      previewGradient: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(203,213,225,0.4) 100%)'
+      id: 'cobalt_silver_flakes',
+      name: 'Cobalto Eléctrico & Copos de Plata',
+      desc: 'Azul cobalto eléctrico translúcido con hojuelas de plata pura y platino en suspensión tridimensional',
+      tag: 'Copos Plata ❄️',
+      previewGradient: 'linear-gradient(135deg, #1D4ED8 0%, #3B82F6 45%, #E2E8F0 82%, #FFFFFF 100%)'
     }
   ],
 
@@ -134,7 +129,7 @@ const ResinServiceApp = {
     photoShape: 'rectangle',
     photoShapeName: 'Plaquita Polaroid',
     photoFrontUrl: '', // uploaded data URL
-    photoBorderEffect: 'gold_flakes',
+    photoBorderEffect: 'sapphire_gold',
     photoBackType: 'photo', // 'photo' | 'spotify' | 'phrase' | 'glitter'
     photoBackUrl: '', // uploaded data URL for 2nd photo
     photoBackSpotifySong: '',
@@ -148,10 +143,10 @@ const ResinServiceApp = {
 
     // Letter Keychain properties:
     letter: 'M',
-    styleId: 'bicolor',
-    baseColorHex: '#F472B6',
-    baseColorName: 'Rosa Pastel',
-    inclusions: 'Bicolor con Glitter & Hoja de Oro',
+    styleId: 'sapphire_gold',
+    baseColorHex: '#1D4ED8',
+    baseColorName: 'Azul Zafiro',
+    inclusions: 'Azul Zafiro & Hojas de Oro 24K',
     customName: '',
 
     // Shared finishes:
@@ -1525,24 +1520,47 @@ const ResinServiceApp = {
           <feGaussianBlur stdDeviation="8" result="blur" />
           <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0" />
         </filter>
-              <!-- High-Realism Resin Shader & Inclusions Defs -->
-        <linearGradient id="champagneResinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="rgba(254, 240, 138, 0.18)" />
-          <stop offset="50%" stop-color="rgba(255, 255, 255, 0.08)" />
-          <stop offset="100%" stop-color="rgba(234, 179, 8, 0.12)" />
+        <!-- High-Realism Artisan Resin Shader & Inclusions Defs (Photos Extracted) -->
+        <linearGradient id="sapphireResinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.95" />
+          <stop offset="35%" stop-color="#1D4ED8" stop-opacity="0.98" />
+          <stop offset="70%" stop-color="#1E3A8A" stop-opacity="1.0" />
+          <stop offset="100%" stop-color="#0A1128" stop-opacity="1.0" />
         </linearGradient>
 
-        <linearGradient id="glacialResinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.35)" />
-          <stop offset="50%" stop-color="rgba(241, 245, 249, 0.15)" />
-          <stop offset="100%" stop-color="rgba(203, 213, 225, 0.25)" />
+        <linearGradient id="terracottaResinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#F2A093" />
+          <stop offset="40%" stop-color="#E08373" />
+          <stop offset="75%" stop-color="#C26354" />
+          <stop offset="100%" stop-color="#9C4436" />
         </linearGradient>
 
-        <linearGradient id="micaSwirlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.85)" />
-          <stop offset="30%" stop-color="rgba(192, 132, 252, 0.65)" />
-          <stop offset="70%" stop-color="rgba(56, 189, 248, 0.55)" />
-          <stop offset="100%" stop-color="rgba(244, 114, 182, 0.80)" />
+        <linearGradient id="navyGeodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0F224A" />
+          <stop offset="45%" stop-color="#0A192F" />
+          <stop offset="85%" stop-color="#060F1E" />
+          <stop offset="100%" stop-color="#020617" />
+        </linearGradient>
+
+        <linearGradient id="ebonyResinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#1F293D" />
+          <stop offset="30%" stop-color="#0F172A" />
+          <stop offset="75%" stop-color="#050811" />
+          <stop offset="100%" stop-color="#020408" />
+        </linearGradient>
+
+        <radialGradient id="neonPinkResinGrad" cx="38%" cy="32%" r="68%">
+          <stop offset="0%" stop-color="#FFA6C4" />
+          <stop offset="25%" stop-color="#FF2D78" />
+          <stop offset="70%" stop-color="#E11D48" />
+          <stop offset="100%" stop-color="#880C2E" />
+        </radialGradient>
+
+        <linearGradient id="cobaltResinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#60A5FA" />
+          <stop offset="35%" stop-color="#2563EB" />
+          <stop offset="75%" stop-color="#1D4ED8" />
+          <stop offset="100%" stop-color="#0F172A" />
         </linearGradient>
 
         <radialGradient id="goldNuggetLight" cx="35%" cy="30%" r="70%">
@@ -1559,257 +1577,293 @@ const ResinServiceApp = {
           <stop offset="100%" stop-color="#475569" />
         </radialGradient>
 
-        <!-- Daisy Petal Gradient -->
-        <linearGradient id="daisyPetalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#FFFFFF" />
-          <stop offset="75%" stop-color="#F8FAFC" />
-          <stop offset="100%" stop-color="#FEF08A" />
-        </linearGradient>
+        <!-- Chunky Gold Dip Pattern (Llavero W) -->
+        <pattern id="chunkyGoldDipPattern" width="36" height="36" patternUnits="userSpaceOnUse">
+          <polygon points="12,4 16,6 16,11 12,13 8,11 8,6" fill="#FEF08A" stroke="#EAB308" stroke-width="0.8" />
+          <polygon points="28,16 33,18 33,24 28,26 23,24 23,18" fill="#FDE047" stroke="#CA8A04" stroke-width="0.8" />
+          <polygon points="10,24 15,26 15,32 10,34 5,32 5,26" fill="#FACC15" />
+          <circle cx="20" cy="8" r="2.2" fill="#FFFDF0" />
+          <circle cx="6" cy="16" r="1.5" fill="#FEF08A" />
+          <circle cx="28" cy="4" r="1.8" fill="#FFF" />
+          <circle cx="22" cy="30" r="2.5" fill="#FEF08A" />
+        </pattern>
 
-        <!-- Sakura Pink Petal Gradient -->
-        <linearGradient id="sakuraPetalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#FCE7F3" />
-          <stop offset="50%" stop-color="#F472B6" />
-          <stop offset="100%" stop-color="#DB2777" />
-        </linearGradient>
+        <!-- Cosmic Holographic Confetti Pattern (Llavero L) -->
+        <pattern id="cosmicHoloConfettiPattern" width="44" height="44" patternUnits="userSpaceOnUse">
+          <polygon points="10,4 15,7 15,13 10,16 5,13 5,7" fill="#34D399" stroke="#A7F3D0" stroke-width="0.6" opacity="0.9" />
+          <polygon points="32,6 37,9 37,15 32,18 27,15 27,9" fill="#F472B6" stroke="#FBCFE8" stroke-width="0.6" opacity="0.9" />
+          <polygon points="22,22 27,25 27,31 22,34 17,31 17,25" fill="#38BDF8" stroke="#BAE6FD" stroke-width="0.6" opacity="0.95" />
+          <polygon points="8,32 13,34 13,40 8,42 3,40 3,34" fill="#FACC15" stroke="#FEF08A" stroke-width="0.6" opacity="0.9" />
+          <polygon points="36,30 40,32 40,37 36,39 32,37 32,32" fill="#C084FC" stroke="#E9D5FF" stroke-width="0.6" opacity="0.9" />
+          <circle cx="18" cy="8" r="1.6" fill="#FFF" />
+          <circle cx="26" cy="14" r="1.2" fill="#FFF" />
+          <circle cx="4" cy="22" r="1.5" fill="#FFF" />
+          <circle cx="38" cy="20" r="1.8" fill="#FFF" />
+        </pattern>
 
-        <!-- Fern Leaf Green Gradient -->
-        <linearGradient id="fernLeafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#86EFAC" />
-          <stop offset="50%" stop-color="#22C55E" />
-          <stop offset="100%" stop-color="#15803D" />
-        </linearGradient>
-
-        <!-- Holographic Prismatic Pattern -->
-        <pattern id="holoPrismHexPattern" width="48" height="48" patternUnits="userSpaceOnUse">
-          <polygon points="12,4 16,6 16,11 12,13 8,11 8,6" fill="rgba(244,114,182,0.85)" />
-          <polygon points="36,8 40,10 40,15 36,17 32,15 32,10" fill="rgba(56,189,248,0.9)" />
-          <polygon points="24,24 28,26 28,31 24,33 20,31 20,26" fill="rgba(250,204,21,0.92)" />
-          <polygon points="10,36 14,38 14,43 10,45 6,43 6,38" fill="rgba(168,85,247,0.88)" />
-          <polygon points="38,34 42,36 42,41 38,43 34,41 34,36" fill="rgba(52,211,153,0.85)" />
-          <circle cx="24" cy="10" r="1.5" fill="#FFF" />
-          <circle cx="16" cy="24" r="1.2" fill="#FFF" />
-          <circle cx="34" cy="26" r="1.6" fill="#FFF" />
-          <text x="24" y="24" font-size="8" fill="#FFF" opacity="0.8">✦</text>
+        <!-- Opal Mermaid Scales Pattern (Llavero S) -->
+        <pattern id="opalMermaidScalesPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+          <polygon points="12,5 17,8 17,14 12,17 7,14 7,8" fill="rgba(255,255,255,0.9)" stroke="#BAE6FD" stroke-width="0.8" />
+          <polygon points="30,7 35,10 35,16 30,19 25,16 25,10" fill="rgba(254,240,138,0.85)" stroke="#FDE047" stroke-width="0.8" />
+          <polygon points="20,22 25,25 25,31 20,34 15,31 15,25" fill="rgba(251,207,232,0.9)" stroke="#F472B6" stroke-width="0.8" />
+          <polygon points="8,28 13,31 13,37 8,40 3,37 3,31" fill="rgba(167,243,208,0.85)" stroke="#6EE7B7" stroke-width="0.8" />
+          <polygon points="34,26 38,28 38,33 34,35 30,33 30,28" fill="rgba(233,213,255,0.85)" stroke="#C084FC" stroke-width="0.8" />
+          <circle cx="22" cy="10" r="2.2" fill="#FFF" />
+          <circle cx="6" cy="18" r="1.5" fill="#FEF08A" />
+          <circle cx="32" cy="36" r="1.8" fill="#FFF" />
         </pattern>
       </defs>
     `;
 
-    // Comprehensive, Photorealistic Texture & Inclusions Engine
+    // Comprehensive, Photorealistic Texture & Inclusions Engine (Extracted from Real Artisan Keychains)
     const renderResinStyleLayer = (styleId, baseColor, clipId) => {
       let content = '';
 
-      if (styleId === 'bicolor') {
+      if (styleId === 'sapphire_gold') {
+        // Estética Llavero B: Azul Zafiro Océano con Hojas de Oro Flotantes
         content = `
-          <!-- Bicolor: Rich Base Color Bottom Half -->
-          <rect x="0" y="100" width="340" height="300" fill="${baseColor}" />
-          <!-- Diagonal Wave: Crystal Clear Top Half -->
-          <path d="M -20,90 L 360,90 L 360,250 Q 180,310 -20,230 Z" fill="url(#champagneResinGrad)" />
-          <!-- Golden Split Seam Shadow -->
-          <path d="M -20,230 Q 180,310 360,250" stroke="rgba(0,0,0,0.25)" stroke-width="6" fill="none" />
-          <!-- Authentic Floating 24K Gold Leaf Flakes Along the Wave -->
-          <g filter="drop-shadow(0 2px 4px rgba(0,0,0,0.4))">
-            <!-- Large Jagged Foil Nuggets -->
-            <polygon points="65,220 85,215 92,232 78,245 60,235" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <polygon points="120,240 142,235 155,255 138,268 115,252" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <polygon points="175,255 198,248 212,270 190,285 168,268" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <polygon points="230,240 252,235 264,256 245,269 224,254" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <polygon points="280,225 302,220 310,238 295,250 275,240" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <!-- Medium Floating Flakes -->
-            <polygon points="90,195 102,190 108,202 96,208" fill="url(#goldNuggetLight)" />
-            <polygon points="145,210 158,205 164,218 150,224" fill="url(#goldNuggetLight)" />
-            <polygon points="205,220 218,215 225,230 210,236" fill="url(#goldNuggetLight)" />
-            <polygon points="260,205 272,200 278,214 265,219" fill="url(#goldNuggetLight)" />
-            <polygon points="110,270 120,266 125,276 114,281" fill="url(#goldNuggetLight)" />
-            <polygon points="160,285 172,280 178,292 165,298" fill="url(#goldNuggetLight)" />
-            <polygon points="215,275 226,270 232,282 220,288" fill="url(#goldNuggetLight)" />
-            <!-- Micro Stardust Sparks -->
-            <circle cx="75" cy="205" r="1.8" fill="#FFFDF0" />
-            <circle cx="135" cy="225" r="2.2" fill="#FEF08A" />
-            <circle cx="185" cy="235" r="1.5" fill="#FFFDF0" />
-            <circle cx="245" cy="225" r="2.0" fill="#FEF08A" />
-            <circle cx="295" cy="210" r="1.6" fill="#FFFDF0" />
-            <circle cx="150" cy="275" r="1.4" fill="#FEF08A" />
-            <circle cx="200" cy="285" r="1.8" fill="#FFF" />
-          </g>
-          <!-- Surface Caustic Highlight -->
-          <path d="M 40,140 Q 170,190 300,150 L 300,180 Q 170,220 40,170 Z" fill="url(#liquidGlossGrad)" opacity="0.6" />
-        `;
-      } else if (styleId === 'gold_flakes') {
-        content = `
-          <!-- Crystal Champagne Base -->
-          <rect x="0" y="100" width="340" height="300" fill="url(#champagneResinGrad)" />
-          <rect x="0" y="100" width="340" height="300" fill="rgba(254, 240, 138, 0.08)" />
-          <!-- 3D Suspended Gold Leaf Nuggets & Foil -->
-          <g filter="drop-shadow(0 3px 6px rgba(0,0,0,0.35))">
-            <!-- Background Depth Layer -->
-            <polygon points="70,160 88,154 94,172 80,182 65,172" fill="#CA8A04" opacity="0.65" />
-            <polygon points="220,165 240,158 248,176 232,188 215,178" fill="#CA8A04" opacity="0.65" />
-            <polygon points="140,290 160,284 168,304 150,316 135,302" fill="#CA8A04" opacity="0.65" />
-            <polygon points="240,295 260,288 270,310 252,322 235,308" fill="#CA8A04" opacity="0.65" />
-            <!-- Midground Radiant Foil Chunks -->
-            <polygon points="130,170 155,162 165,188 145,202 122,185" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <polygon points="175,200 202,192 215,220 192,236 168,218" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <polygon points="85,240 110,232 120,258 100,274 78,255" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <polygon points="180,260 205,252 218,278 196,294 172,276" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <polygon points="115,315 138,308 148,330 130,344 110,330" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <polygon points="205,320 228,314 238,336 220,350 198,335" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
-            <!-- Foreground Specular Nuggets -->
-            <polygon points="150,225 168,218 176,238 162,248 144,236" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1.0" />
-            <polygon points="95,285 112,280 118,296 106,305 90,295" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1.0" />
-            <polygon points="225,235 242,228 250,248 236,258 220,246" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1.0" />
-            <!-- Scattered Gold Particles -->
-            <circle cx="80" cy="140" r="2.2" fill="#FEF08A" />
-            <circle cx="160" cy="145" r="1.8" fill="#FFFDF0" />
-            <circle cx="230" cy="140" r="2.0" fill="#FEF08A" />
-            <circle cx="110" cy="205" r="2.5" fill="#FEF08A" />
-            <circle cx="215" cy="190" r="1.8" fill="#FFFDF0" />
-            <circle cx="145" cy="260" r="2.0" fill="#FEF08A" />
-            <circle cx="165" cy="310" r="2.2" fill="#FEF08A" />
-            <circle cx="250" cy="275" r="1.9" fill="#FFFDF0" />
-          </g>
-          <!-- Optical Glass Dome Highlights -->
-          <path d="M 50,150 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.7" />
-          <path d="M 40,320 Q 170,360 300,320" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" />
-        `;
-      } else if (styleId === 'silver_flakes') {
-        content = `
-          <!-- Glacial Ice Crystal Base -->
-          <rect x="0" y="100" width="340" height="300" fill="url(#glacialResinGrad)" />
-          <!-- 3D Suspended Platinum & Silver Foil -->
-          <g filter="drop-shadow(0 3px 6px rgba(0,0,0,0.35))">
-            <!-- Background Layer -->
-            <polygon points="75,165 92,160 98,175 85,185 70,175" fill="#64748B" opacity="0.65" />
-            <polygon points="215,160 235,154 242,170 228,180 210,172" fill="#64748B" opacity="0.65" />
-            <polygon points="145,285 165,280 172,298 156,310 140,298" fill="#64748B" opacity="0.65" />
-            <!-- Midground Platinum Chunks -->
-            <polygon points="125,175 150,168 160,192 140,206 118,190" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
-            <polygon points="180,195 205,188 218,214 195,230 172,212" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
-            <polygon points="85,245 110,238 120,262 100,278 78,260" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
-            <polygon points="185,255 210,248 222,274 200,290 176,272" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
-            <polygon points="115,310 138,304 148,326 130,340 110,326" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
-            <polygon points="210,315 232,310 242,330 225,344 202,330" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
-            <!-- Specular Facets -->
-            <circle cx="85" cy="145" r="2.0" fill="#FFF" />
-            <circle cx="165" cy="150" r="1.8" fill="#FFF" />
-            <circle cx="225" cy="145" r="2.2" fill="#E2E8F0" />
-            <circle cx="115" cy="210" r="2.5" fill="#FFF" />
-            <circle cx="220" cy="195" r="1.8" fill="#FFF" />
-            <circle cx="150" cy="265" r="2.2" fill="#E2E8F0" />
-            <circle cx="170" cy="315" r="2.4" fill="#FFF" />
-          </g>
-          <!-- Glacial Shimmer Overlay -->
-          <path d="M 50,150 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.75" />
-          <path d="M 40,320 Q 170,360 300,320" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none" />
-        `;
-      } else if (styleId === 'glitter_full') {
-        content = `
-          <!-- Base Vibrant Color -->
-          <rect x="0" y="100" width="340" height="300" fill="${baseColor}" />
-          <!-- Holographic Hexagonal Prism Pattern Overlay -->
-          <rect x="0" y="100" width="340" height="300" fill="url(#holoPrismHexPattern)" />
-          <rect x="0" y="100" width="340" height="300" fill="url(#chunkyGlitterPattern)" opacity="0.65" />
-          <!-- Prismatic Sparkle Starbursts -->
-          <g filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))">
-            <text x="80" y="180" font-size="20" fill="#FFF">✨</text>
-            <text x="210" y="190" font-size="24" fill="#FEF08A">⭐</text>
-            <text x="130" y="270" font-size="26" fill="#FFF">✨</text>
-            <text x="230" y="290" font-size="18" fill="#FEF08A">⭐</text>
-            <text x="170" y="340" font-size="22" fill="#FFF">✨</text>
-          </g>
-          <!-- Surface Liquid Reflection -->
-          <path d="M 50,150 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.7" />
-        `;
-      } else if (styleId === 'flowers') {
-        content = `
-          <!-- Crystal Clear Botanical Bed -->
-          <rect x="0" y="100" width="340" height="300" fill="url(#champagneResinGrad)" />
-          <rect x="0" y="100" width="340" height="300" fill="rgba(255, 255, 255, 0.12)" />
+          <!-- Deep Oceanic Translucent Sapphire Glass Base -->
+          <rect x="0" y="100" width="340" height="300" fill="url(#sapphireResinGrad)" />
           
-          <!-- Authentic Pressed Flowers & Botanical Leaves in 3D Suspension -->
-          <g filter="drop-shadow(0 4px 8px rgba(0,0,0,0.45))">
-            <!-- Green Fern Sprig (Left) -->
-            <g transform="translate(65, 175) rotate(-25)">
-              <path d="M 20,60 Q 15,30 25,0" stroke="#15803D" stroke-width="2.5" fill="none" />
-              <path d="M 17,45 Q 8,42 6,48 Q 12,50 18,48" fill="url(#fernLeafGrad)" />
-              <path d="M 19,35 Q 28,32 30,38 Q 24,40 19,37" fill="url(#fernLeafGrad)" />
-              <path d="M 16,25 Q 7,22 5,28 Q 11,30 17,28" fill="url(#fernLeafGrad)" />
-              <path d="M 19,15 Q 28,12 30,18 Q 24,20 19,17" fill="url(#fernLeafGrad)" />
-            </g>
+          <!-- Inner Fluid Caustic Wave Refraction -->
+          <path d="M 40,130 Q 170,185 300,140 L 300,205 Q 170,260 40,195 Z" fill="rgba(56, 189, 248, 0.25)" />
+          
+          <!-- Real 24K Suspended Gold Leaf Nuggets & Foil -->
+          <g filter="drop-shadow(0 3px 6px rgba(0,0,0,0.55))">
+            <!-- Background Depth Foil Chunks -->
+            <polygon points="65,160 85,152 94,172 78,185 60,172" fill="#CA8A04" opacity="0.7" />
+            <polygon points="215,160 238,152 248,174 230,188 210,175" fill="#CA8A04" opacity="0.7" />
+            <polygon points="135,285 158,278 168,300 148,315 130,298" fill="#CA8A04" opacity="0.7" />
+            <polygon points="235,290 258,282 268,306 248,320 230,305" fill="#CA8A04" opacity="0.7" />
 
-            <!-- White Pressed Daisy (Center Blossom) -->
-            <g transform="translate(170, 235)">
-              <!-- 10 Pressed Daisy Petals -->
-              ${[0, 36, 72, 108, 144, 180, 216, 252, 288, 324].map(deg => `
-                <ellipse cx="0" cy="-24" rx="7.5" ry="17" fill="url(#daisyPetalGrad)" stroke="rgba(0,0,0,0.12)" stroke-width="0.8" transform="rotate(${deg})" />
-              `).join('')}
-              <!-- Golden Stamen Center -->
-              <circle cx="0" cy="0" r="11" fill="url(#goldNuggetLight)" stroke="#A16207" stroke-width="1.2" />
-              <circle cx="0" cy="0" r="9" fill="#CA8A04" opacity="0.6" />
-              <!-- Texture dots in stamen -->
-              <circle cx="-3" cy="-3" r="1.2" fill="#FEF08A" />
-              <circle cx="3" cy="-2" r="1.2" fill="#FEF08A" />
-              <circle cx="-1" cy="3" r="1.2" fill="#FEF08A" />
-              <circle cx="3" cy="2" r="1.2" fill="#FEF08A" />
-            </g>
+            <!-- Midground Radiant Jagged Gold Leaf Flakes -->
+            <polygon points="120,165 148,155 160,185 138,202 112,182" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="175,195 205,185 220,216 195,234 168,214" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="80,235 108,225 118,255 96,272 72,252" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="175,255 202,246 215,275 192,292 168,272" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="110,315 135,306 145,330 125,346 102,330" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="205,320 230,312 242,336 222,352 198,335" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
 
-            <!-- Sakura Blossom (Top-Right) -->
-            <g transform="translate(225, 175) scale(0.85)">
-              ${[0, 72, 144, 216, 288].map(deg => `
-                <path d="M 0,0 C -12,-18 -10,-28 -3,-30 L 0,-26 L 3,-30 C 10,-28 12,-18 0,0 Z" fill="url(#sakuraPetalGrad)" stroke="#DB2777" stroke-width="0.8" transform="rotate(${deg})" />
-              `).join('')}
-              <circle cx="0" cy="0" r="6" fill="#FDE047" stroke="#CA8A04" stroke-width="1" />
-            </g>
+            <!-- Foreground Floating Gold Nuggets with Brilliant Edges -->
+            <polygon points="145,220 165,212 174,234 158,246 138,232" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1.0" />
+            <polygon points="90,280 110,274 116,292 102,302 85,290" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1.0" />
+            <polygon points="220,230 240,222 248,244 232,256 215,242" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1.0" />
 
-            <!-- Lavender Spray (Bottom-Left) -->
-            <g transform="translate(100, 285) rotate(20) scale(0.9)">
-              <line x1="10" y1="50" x2="10" y2="0" stroke="#166534" stroke-width="2" />
-              <ellipse cx="6" cy="10" rx="4" ry="7" fill="#A855F7" />
-              <ellipse cx="14" cy="12" rx="4" ry="7" fill="#C084FC" />
-              <ellipse cx="7" cy="22" rx="4.5" ry="7.5" fill="#A855F7" />
-              <ellipse cx="13" cy="24" rx="4.5" ry="7.5" fill="#C084FC" />
-              <ellipse cx="8" cy="34" rx="4.5" ry="8" fill="#9333EA" />
-              <ellipse cx="12" cy="36" rx="4.5" ry="8" fill="#C084FC" />
-            </g>
-
-            <!-- Floating Golden Flakes & Botanical Pollen -->
-            <circle cx="120" cy="165" r="2.2" fill="#FEF08A" />
-            <circle cx="205" cy="140" r="1.8" fill="#FEF08A" />
-            <circle cx="245" cy="240" r="2.4" fill="#FEF08A" />
-            <circle cx="150" cy="315" r="1.9" fill="#FEF08A" />
-            <circle cx="215" cy="310" r="2.1" fill="#FEF08A" />
-            <polygon points="135,215 142,212 145,220 138,224" fill="url(#goldNuggetLight)" />
-            <polygon points="210,210 218,206 222,215 214,219" fill="url(#goldNuggetLight)" />
+            <!-- Floating Stardust Particles & Micro Glitter -->
+            <circle cx="75" cy="135" r="2.2" fill="#FEF08A" />
+            <circle cx="155" cy="140" r="1.8" fill="#FFFDF0" />
+            <circle cx="235" cy="135" r="2.0" fill="#FEF08A" />
+            <circle cx="105" cy="200" r="2.5" fill="#FEF08A" />
+            <circle cx="210" cy="185" r="1.8" fill="#FFFDF0" />
+            <circle cx="140" cy="255" r="2.0" fill="#FEF08A" />
+            <circle cx="160" cy="305" r="2.2" fill="#FEF08A" />
+            <circle cx="245" cy="270" r="1.9" fill="#FFFDF0" />
+            <circle cx="85" cy="340" r="2.2" fill="#FEF08A" />
+            <circle cx="270" cy="335" r="2.0" fill="#FFFDF0" />
           </g>
 
-          <!-- Crystal Clear Specular Dome -->
-          <path d="M 50,150 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.7" />
-          <path d="M 40,320 Q 170,360 300,320" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" />
+          <!-- Glass Liquid Dome Reflections -->
+          <path d="M 50,145 Q 170,200 290,155 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.8" />
+          <path d="M 40,320 Q 170,360 300,320" stroke="rgba(255,255,255,0.45)" stroke-width="2.2" fill="none" />
         `;
-      } else if (styleId === 'marble_swirl') {
+      } else if (styleId === 'terracotta_gold_dip') {
+        // Estética Llavero W: Rosa Terracota Pastel & Puntas en Chunky Gold Dip
         content = `
-          <!-- Deep Pigment Base -->
-          <rect x="0" y="100" width="340" height="300" fill="${baseColor}" />
-          <!-- Fluid Smoke Ribbons & Pearlescent Mica Swirls -->
-          <g opacity="0.85" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.5))">
-            <path d="M -20,160 C 60,120 120,240 200,180 C 260,130 310,210 360,170 L 360,250 C 290,290 220,210 160,260 C 90,320 40,220 -20,240 Z" fill="url(#micaSwirlGrad)" />
-            <path d="M -20,260 C 50,220 130,340 210,270 C 270,220 320,310 360,280 L 360,340 C 280,380 200,310 140,350 C 70,390 30,310 -20,330 Z" fill="url(#micaSwirlGrad)" opacity="0.75" />
-            <!-- Golden Veins Threading the Marble -->
-            <path d="M 20,150 Q 110,210 180,175 T 320,180" stroke="url(#goldNuggetLight)" stroke-width="2.5" fill="none" opacity="0.9" />
-            <path d="M 50,250 Q 140,300 220,265 T 330,290" stroke="url(#goldNuggetLight)" stroke-width="2.2" fill="none" opacity="0.85" />
+          <!-- Silky Salmon Terracotta Pigment Body -->
+          <rect x="0" y="100" width="340" height="300" fill="url(#terracottaResinGrad)" />
+          
+          <!-- Top Tips Chunky Gold Dipped Area -->
+          <path d="M -20,90 L 360,90 L 360,205 C 275,170 215,220 155,180 C 95,140 35,195 -20,165 Z" fill="url(#chunkyGoldDipPattern)" />
+          <path d="M -20,90 L 360,90 L 360,205 C 275,170 215,220 155,180 C 95,140 35,195 -20,165 Z" fill="rgba(234, 179, 8, 0.45)" />
+
+          <!-- Bottom Base Chunky Gold Dipped Area -->
+          <path d="M -20,295 C 65,260 145,325 225,280 C 285,255 325,295 360,275 L 360,410 L -20,410 Z" fill="url(#chunkyGoldDipPattern)" />
+          <path d="M -20,295 C 65,260 145,325 225,280 C 285,255 325,295 360,275 L 360,410 L -20,410 Z" fill="rgba(234, 179, 8, 0.45)" />
+
+          <!-- Giant Chunky Hexagonal Gold Sequins Along the Dipped Seams -->
+          <g filter="drop-shadow(0 2px 5px rgba(0,0,0,0.4))">
+            <!-- Top Dipped Edge Sequins -->
+            <polygon points="65,175 75,170 82,182 72,192 58,185" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="125,180 138,174 146,188 134,198 120,190" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="195,195 208,188 218,202 205,214 190,205" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="265,180 278,175 285,188 274,198 260,192" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <!-- Bottom Dipped Edge Sequins -->
+            <polygon points="80,285 92,280 100,292 88,302 75,295" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="160,295 174,288 184,302 170,314 154,306" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="245,280 258,274 266,288 252,298 238,290" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <!-- Scattered Gold Flakes Drifting Across Center Body -->
+            <circle cx="105" cy="235" r="2.8" fill="#FEF08A" />
+            <circle cx="170" cy="245" r="2.2" fill="#FEF08A" />
+            <circle cx="230" cy="240" r="2.6" fill="#FEF08A" />
           </g>
-          <!-- Surface Caustic Highlight -->
-          <path d="M 50,150 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.7" />
+
+          <!-- Resin Dome Caustic Sheen -->
+          <path d="M 50,145 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.75" />
+          <path d="M 40,310 Q 170,350 300,310" stroke="rgba(255,255,255,0.45)" stroke-width="2.2" fill="none" />
+        `;
+      } else if (styleId === 'geode_navy_gold') {
+        // Estética Llavero J: Azul Noche Geoda Mineral & Vetas de Cuarzo Dorado
+        content = `
+          <!-- Deep Midnight Ultramarine Blue Body -->
+          <rect x="0" y="100" width="340" height="300" fill="url(#navyGeodeGrad)" />
+
+          <!-- Organic Diagonal Geode Fissure Base & Shadow -->
+          <path d="M 20,345 Q 110,290 170,245 T 320,135" stroke="rgba(0,0,0,0.7)" stroke-width="28" fill="none" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.9))" />
+          <path d="M 20,345 Q 110,290 170,245 T 320,135" stroke="#78350F" stroke-width="20" fill="none" />
+          <path d="M 20,345 Q 110,290 170,245 T 320,135" stroke="url(#goldNuggetLight)" stroke-width="14" fill="none" />
+
+          <!-- Secondary Geode Cluster in Top Corner (True to J Keychain) -->
+          <g transform="translate(180, 110) rotate(-15)">
+            <ellipse cx="20" cy="20" rx="36" ry="18" fill="rgba(0,0,0,0.5)" />
+            <ellipse cx="20" cy="20" rx="28" ry="12" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="1.2" />
+          </g>
+
+          <!-- Packed 3D Gold Quartz Crystals & Chunks Along Fissure -->
+          <g filter="drop-shadow(0 2px 4px rgba(0,0,0,0.7))">
+            <!-- Top Cluster Crystals -->
+            <polygon points="245,130 262,122 272,140 258,150 240,140" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1" />
+            <polygon points="215,155 230,148 238,162 225,172 210,162" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="185,185 204,178 212,196 196,208 180,195" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1" />
+            <polygon points="150,220 172,212 182,234 162,246 142,232" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="115,260 135,252 144,272 126,284 108,270" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1" />
+            <polygon points="80,295 100,288 108,308 92,320 74,306" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="45,330 65,322 74,342 58,354 40,340" fill="url(#goldNuggetLight)" stroke="#FFF" stroke-width="1" />
+            
+            <!-- Fine Gold Quartz Stardust Radiating from the Geode Crack -->
+            <circle cx="165" cy="180" r="2.2" fill="#FEF08A" />
+            <circle cx="230" cy="205" r="2.5" fill="#FFFDF0" />
+            <circle cx="130" cy="235" r="2.0" fill="#FEF08A" />
+            <circle cx="190" cy="260" r="2.2" fill="#FEF08A" />
+            <circle cx="95" cy="275" r="2.5" fill="#FFFDF0" />
+            <circle cx="60" cy="315" r="2.2" fill="#FEF08A" />
+          </g>
+
+          <!-- High-End Liquid Polish Highlight -->
+          <path d="M 45,145 Q 170,205 295,155 L 295,195 Q 170,245 45,185 Z" fill="url(#liquidGlossGrad)" opacity="0.8" />
+          <path d="M 40,320 Q 170,360 300,320" stroke="rgba(255,255,255,0.4)" stroke-width="2.2" fill="none" />
+        `;
+      } else if (styleId === 'ebony_cosmic_holo') {
+        // Estética Llavero L: Negro Ébano & Extremos con Confeti Holográfico Cósmico
+        content = `
+          <!-- Deep Jet Black Lacquer Body -->
+          <rect x="0" y="100" width="340" height="300" fill="url(#ebonyResinGrad)" />
+
+          <!-- Top Cosmic Prismatic Clear Dipped Section -->
+          <path d="M -20,90 L 360,90 L 360,195 C 265,160 185,215 105,170 C 45,145 15,180 -20,165 Z" fill="rgba(15, 23, 42, 0.45)" />
+          <path d="M -20,90 L 360,90 L 360,195 C 265,160 185,215 105,170 C 45,145 15,180 -20,165 Z" fill="url(#cosmicHoloConfettiPattern)" />
+
+          <!-- Bottom Horizontal Base Cosmic Prismatic Section -->
+          <path d="M -20,295 C 75,260 175,320 255,285 C 305,265 335,300 360,285 L 360,410 L -20,410 Z" fill="rgba(15, 23, 42, 0.45)" />
+          <path d="M -20,295 C 75,260 175,320 255,285 C 305,265 335,300 360,285 L 360,410 L -20,410 Z" fill="url(#cosmicHoloConfettiPattern)" />
+
+          <!-- Chunky Multicolored Holographic Hexagons Falling into the Black -->
+          <g filter="drop-shadow(0 2px 5px rgba(0,0,0,0.8))">
+            <!-- Top Section Chunky Hexagons -->
+            <polygon points="70,160 80,154 86,166 76,176 62,170" fill="#38BDF8" stroke="#BAE6FD" stroke-width="0.8" />
+            <polygon points="120,168 132,162 140,174 128,184 114,178" fill="#F472B6" stroke="#FBCFE8" stroke-width="0.8" />
+            <polygon points="190,175 204,168 214,182 200,194 184,186" fill="#34D399" stroke="#A7F3D0" stroke-width="0.8" />
+            <polygon points="250,160 262,154 270,168 258,178 244,170" fill="#FACC15" stroke="#FEF08A" stroke-width="0.8" />
+            <!-- Bottom Section Chunky Hexagons -->
+            <polygon points="75,305 88,300 96,312 84,324 70,316" fill="#F472B6" stroke="#FBCFE8" stroke-width="0.8" />
+            <polygon points="155,300 170,294 180,308 166,320 150,312" fill="#38BDF8" stroke="#BAE6FD" stroke-width="0.8" />
+            <polygon points="230,295 244,288 254,302 240,314 224,306" fill="#34D399" stroke="#A7F3D0" stroke-width="0.8" />
+            <polygon points="280,310 292,304 300,318 288,328 274,322" fill="#FACC15" stroke="#FEF08A" stroke-width="0.8" />
+            
+            <!-- Cosmic Starburst Refractions -->
+            <text x="95" y="150" font-size="16" fill="#FFF">✦</text>
+            <text x="220" y="160" font-size="18" fill="#FFF">✨</text>
+            <text x="120" y="325" font-size="16" fill="#FFF">✦</text>
+            <text x="255" y="335" font-size="18" fill="#FFF">✨</text>
+          </g>
+
+          <!-- Mirror Piano Finish Specular Highlight -->
+          <path d="M 50,145 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.85" />
+          <path d="M 40,315 Q 170,355 300,315" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" fill="none" />
+        `;
+      } else if (styleId === 'neon_pink_mermaid') {
+        // Estética Llavero S: Rosa Neón Barbie & Escamas Iridiscentes de Sirena
+        content = `
+          <!-- Juicy Neon Barbie Candy Pink Base -->
+          <rect x="0" y="100" width="340" height="300" fill="url(#neonPinkResinGrad)" />
+
+          <!-- Top Curvature Packed Mermaid Opal Scales -->
+          <path d="M -20,90 L 360,90 L 360,215 C 270,170 190,225 120,180 C 60,145 10,190 -20,170 Z" fill="url(#opalMermaidScalesPattern)" />
+          
+          <!-- Bottom Tail Curvature Packed Mermaid Opal Scales -->
+          <path d="M -20,290 C 70,250 160,320 240,275 C 290,250 330,290 360,275 L 360,410 L -20,410 Z" fill="url(#opalMermaidScalesPattern)" />
+
+          <!-- Handcrafted Iridescent Mermaid Hexagons with Aurora Glow -->
+          <g filter="drop-shadow(0 2px 5px rgba(190,18,60,0.6))">
+            <!-- Upper Arch Scales -->
+            <polygon points="65,170 78,164 86,176 74,188 60,180" fill="rgba(255,255,255,0.95)" stroke="#BAE6FD" stroke-width="1.2" />
+            <polygon points="120,185 135,178 145,192 130,204 115,195" fill="rgba(254,240,138,0.95)" stroke="#FDE047" stroke-width="1.2" />
+            <polygon points="180,195 195,188 205,202 190,214 175,206" fill="rgba(167,243,208,0.92)" stroke="#6EE7B7" stroke-width="1.2" />
+            <polygon points="245,180 260,174 270,188 255,200 240,192" fill="rgba(251,207,232,0.95)" stroke="#F472B6" stroke-width="1.2" />
+            <!-- Lower Curve Scales -->
+            <polygon points="75,295 90,288 100,302 85,314 70,305" fill="rgba(254,240,138,0.95)" stroke="#FDE047" stroke-width="1.2" />
+            <polygon points="145,290 160,284 170,298 155,310 140,302" fill="rgba(255,255,255,0.95)" stroke="#BAE6FD" stroke-width="1.2" />
+            <polygon points="215,280 230,274 240,288 225,300 210,292" fill="rgba(167,243,208,0.92)" stroke="#6EE7B7" stroke-width="1.2" />
+            <polygon points="275,290 290,284 300,298 285,310 270,302" fill="rgba(251,207,232,0.95)" stroke="#F472B6" stroke-width="1.2" />
+            
+            <!-- Fine Mermaid Opal Stardust -->
+            <circle cx="95" cy="225" r="2.5" fill="#FEF08A" />
+            <circle cx="160" cy="235" r="2.2" fill="#FFF" />
+            <circle cx="225" cy="230" r="2.5" fill="#FEF08A" />
+            <text x="140" y="170" font-size="14" fill="#FFF">✨</text>
+            <text x="210" y="325" font-size="14" fill="#FFF">✨</text>
+          </g>
+
+          <!-- Candy Jelly Gloss Caustics -->
+          <path d="M 50,145 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.8" />
+          <path d="M 40,315 Q 170,355 300,315" stroke="rgba(255,255,255,0.5)" stroke-width="2.2" fill="none" />
+        `;
+      } else if (styleId === 'cobalt_silver_flakes') {
+        // Estética Llavero Azul con Plata (Foto 5): Cobalto Eléctrico & Copos de Plata Pura
+        content = `
+          <!-- Electric Cobalt Blue Translucent Base -->
+          <rect x="0" y="100" width="340" height="300" fill="url(#cobaltResinGrad)" />
+
+          <!-- Internal Liquid Caustic Ocean Glow -->
+          <path d="M 40,135 Q 170,190 300,145 L 300,205 Q 170,260 40,195 Z" fill="rgba(147, 197, 253, 0.28)" />
+
+          <!-- 3D Suspended Platinum & Silver Foil Flakes -->
+          <g filter="drop-shadow(0 3px 6px rgba(0,0,0,0.5))">
+            <!-- Background Depth Layer -->
+            <polygon points="70,165 90,158 98,176 82,188 65,176" fill="#64748B" opacity="0.7" />
+            <polygon points="215,160 238,154 246,172 230,184 210,174" fill="#64748B" opacity="0.7" />
+            <polygon points="140,285 162,278 170,300 152,314 135,300" fill="#64748B" opacity="0.7" />
+            <!-- Midground Platinum Chunks -->
+            <polygon points="120,170 148,162 158,190 136,206 112,188" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
+            <polygon points="175,195 202,188 216,216 192,232 168,214" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
+            <polygon points="80,240 108,232 118,260 96,276 72,258" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
+            <polygon points="180,255 206,248 218,276 196,292 172,274" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
+            <polygon points="110,312 135,305 145,328 126,344 104,328" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
+            <!-- Foreground Pure Silver Nuggets -->
+            <circle cx="85" cy="140" r="2.2" fill="#FFF" />
+            <circle cx="165" cy="145" r="1.8" fill="#FFF" />
+            <circle cx="225" cy="140" r="2.2" fill="#E2E8F0" />
+            <circle cx="115" cy="205" r="2.5" fill="#FFF" />
+            <circle cx="220" cy="190" r="1.8" fill="#FFF" />
+            <circle cx="150" cy="260" r="2.2" fill="#E2E8F0" />
+            <circle cx="170" cy="310" r="2.4" fill="#FFF" />
+            <circle cx="245" cy="275" r="2.0" fill="#FFF" />
+          </g>
+
+          <!-- Glacial Mirror Sheen -->
+          <path d="M 50,145 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.8" />
+          <path d="M 40,320 Q 170,360 300,320" stroke="rgba(255,255,255,0.55)" stroke-width="2.2" fill="none" />
         `;
       } else {
-        // 'crystal': 100% Optical Glass
+        // Fallback default: Sapphire Blue with 24K Gold Flakes
         content = `
-          <rect x="0" y="100" width="340" height="300" fill="url(#champagneResinGrad)" />
-          <rect x="0" y="100" width="340" height="300" fill="rgba(255, 255, 255, 0.08)" />
-          <!-- Thick Liquid Bevel Reflections -->
-          <path d="M 40,140 Q 170,195 300,150 L 300,200 Q 170,255 40,190 Z" fill="url(#liquidGlossGrad)" opacity="0.85" />
-          <path d="M 60,260 Q 170,310 280,275 L 280,295 Q 170,335 60,295 Z" fill="url(#liquidGlossGrad)" opacity="0.5" />
-          <path d="M 40,320 Q 170,360 300,320" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" fill="none" />
+          <rect x="0" y="100" width="340" height="300" fill="url(#sapphireResinGrad)" />
+          <g filter="drop-shadow(0 3px 6px rgba(0,0,0,0.5))">
+            <polygon points="120,170 148,160 160,188 138,204 112,185" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <polygon points="180,220 205,212 218,238 196,252 172,236" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
+            <circle cx="110" cy="205" r="2.5" fill="#FEF08A" />
+            <circle cx="220" cy="190" r="2.2" fill="#FFFDF0" />
+          </g>
+          <path d="M 50,145 Q 170,205 290,160 L 290,195 Q 170,245 50,185 Z" fill="url(#liquidGlossGrad)" opacity="0.8" />
         `;
       }
 
@@ -1833,31 +1887,75 @@ const ResinServiceApp = {
       `;
     };
 
-    // Authentic Resin Framing & Border Effects for Photo Mode
+    // Authentic Resin Framing & Border Effects for Photo Mode (Photos Extracted)
     const getBorderFlakesHtml = (clipId) => {
-      const effect = this.state.photoBorderEffect || this.state.styleId || 'gold_flakes';
-      if (effect === 'gold_flakes' || effect === 'bicolor') {
+      const effect = this.state.photoBorderEffect || this.state.styleId || 'sapphire_gold';
+      if (effect === 'sapphire_gold') {
         return `
-          <g clip-path="url(#${clipId})" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.45))">
-            <!-- Perimeter Border Floating Gold Nuggets -->
+          <g clip-path="url(#${clipId})" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.55))">
+            <!-- Perimeter Floating Gold Leaf Flakes on Sapphire Frame -->
             <polygon points="50,115 72,110 80,128 64,138 48,128" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
             <polygon points="260,115 282,110 290,130 274,142 258,130" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
             <polygon points="50,360 72,352 82,374 65,386 46,372" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
             <polygon points="260,358 284,350 292,372 275,385 255,372" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="0.8" />
             <polygon points="150,115 168,110 174,124 160,130 146,122" fill="url(#goldNuggetLight)" />
             <polygon points="150,370 170,364 178,380 162,388 146,380" fill="url(#goldNuggetLight)" />
-            <!-- Scattered Gold Stardust Along Border -->
             <circle cx="60" cy="200" r="2.2" fill="#FEF08A" />
             <circle cx="58" cy="280" r="2.5" fill="#FEF08A" />
             <circle cx="282" cy="200" r="2.2" fill="#FEF08A" />
             <circle cx="284" cy="280" r="2.5" fill="#FEF08A" />
-            <circle cx="110" cy="120" r="1.8" fill="#FFFDF0" />
-            <circle cx="230" cy="120" r="1.8" fill="#FFFDF0" />
           </g>
         `;
-      } else if (effect === 'silver_flakes') {
+      } else if (effect === 'terracotta_gold_dip') {
         return `
-          <g clip-path="url(#${clipId})" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.45))">
+          <g clip-path="url(#${clipId})" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))">
+            <!-- Chunky Gold Dipped Corners on Terracotta Frame -->
+            <polygon points="48,115 76,110 84,134 66,145 44,132" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="1.0" />
+            <polygon points="256,115 284,110 292,132 275,145 252,135" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="1.0" />
+            <polygon points="48,355 76,348 85,372 68,386 44,372" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="1.0" />
+            <polygon points="256,355 284,348 294,372 276,386 252,372" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="1.0" />
+            <circle cx="62" cy="180" r="2.5" fill="#FEF08A" />
+            <circle cx="278" cy="180" r="2.5" fill="#FEF08A" />
+            <circle cx="62" cy="300" r="2.5" fill="#FEF08A" />
+            <circle cx="278" cy="300" r="2.5" fill="#FEF08A" />
+          </g>
+        `;
+      } else if (effect === 'geode_navy_gold') {
+        return `
+          <g clip-path="url(#${clipId})" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.7))">
+            <!-- Diagonal Geode Vein Border Inclusions -->
+            <polygon points="46,120 70,112 80,132 64,142 46,134" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="1.0" />
+            <polygon points="258,358 284,348 294,370 276,385 252,372" fill="url(#goldNuggetLight)" stroke="#FEF08A" stroke-width="1.0" />
+            <circle cx="65" cy="220" r="2.8" fill="#FEF08A" />
+            <circle cx="275" cy="260" r="2.8" fill="#FEF08A" />
+          </g>
+        `;
+      } else if (effect === 'ebony_cosmic_holo') {
+        return `
+          <g clip-path="url(#${clipId})">
+            <!-- Multicolored Holographic Confetti Border -->
+            <rect x="0" y="100" width="340" height="300" fill="url(#cosmicHoloConfettiPattern)" opacity="0.65" />
+            <text x="60" y="135" font-size="16" fill="#FFF">✨</text>
+            <text x="270" y="135" font-size="16" fill="#FEF08A">✦</text>
+            <text x="60" y="375" font-size="16" fill="#FEF08A">✦</text>
+            <text x="270" y="375" font-size="16" fill="#FFF">✨</text>
+          </g>
+        `;
+      } else if (effect === 'neon_pink_mermaid') {
+        return `
+          <g clip-path="url(#${clipId})">
+            <!-- Iridescent Opal Mermaid Scales Border -->
+            <rect x="0" y="100" width="340" height="300" fill="url(#opalMermaidScalesPattern)" opacity="0.75" />
+            <polygon points="50,115 72,110 80,128 64,138 48,128" fill="rgba(255,255,255,0.95)" stroke="#BAE6FD" stroke-width="1.0" />
+            <polygon points="260,115 282,110 290,130 274,142 258,130" fill="rgba(254,240,138,0.95)" stroke="#FDE047" stroke-width="1.0" />
+            <polygon points="50,360 72,352 82,374 65,386 46,372" fill="rgba(167,243,208,0.95)" stroke="#6EE7B7" stroke-width="1.0" />
+            <polygon points="260,358 284,350 292,372 275,385 255,372" fill="rgba(251,207,232,0.95)" stroke="#F472B6" stroke-width="1.0" />
+          </g>
+        `;
+      } else if (effect === 'cobalt_silver_flakes') {
+        return `
+          <g clip-path="url(#${clipId})" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))">
+            <!-- Platinum & Pure Silver Flakes Border -->
             <polygon points="50,115 72,110 80,128 64,138 48,128" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
             <polygon points="260,115 282,110 290,130 274,142 258,130" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
             <polygon points="50,360 72,352 82,374 65,386 46,372" fill="url(#silverNuggetLight)" stroke="#FFF" stroke-width="0.8" />
@@ -1866,36 +1964,6 @@ const ResinServiceApp = {
             <circle cx="58" cy="280" r="2.5" fill="#E2E8F0" />
             <circle cx="282" cy="200" r="2.2" fill="#FFF" />
             <circle cx="284" cy="280" r="2.5" fill="#E2E8F0" />
-          </g>
-        `;
-      } else if (effect === 'flowers') {
-        return `
-          <g clip-path="url(#${clipId})" filter="drop-shadow(0 3px 6px rgba(0,0,0,0.45))">
-            <!-- Corner Botanical Pressed Flowers -->
-            <g transform="translate(68, 135) scale(0.65)">
-              ${[0, 45, 90, 135, 180, 225, 270, 315].map(deg => `
-                <ellipse cx="0" cy="-18" rx="6" ry="14" fill="url(#daisyPetalGrad)" stroke="rgba(0,0,0,0.1)" stroke-width="0.8" transform="rotate(${deg})" />
-              `).join('')}
-              <circle cx="0" cy="0" r="9" fill="url(#goldNuggetLight)" />
-            </g>
-            <g transform="translate(272, 365) scale(0.65)">
-              ${[0, 72, 144, 216, 288].map(deg => `
-                <path d="M 0,0 C -10,-15 -8,-24 -2,-26 L 0,-22 L 2,-26 C 8,-24 10,-15 0,0 Z" fill="url(#sakuraPetalGrad)" transform="rotate(${deg})" />
-              `).join('')}
-              <circle cx="0" cy="0" r="5" fill="#FDE047" />
-            </g>
-            <circle cx="80" cy="365" r="2.5" fill="#FEF08A" />
-            <circle cx="265" cy="135" r="2.2" fill="#FEF08A" />
-          </g>
-        `;
-      } else if (effect === 'glitter' || effect === 'glitter_full') {
-        return `
-          <g clip-path="url(#${clipId})">
-            <rect x="0" y="100" width="340" height="300" fill="url(#holoPrismHexPattern)" opacity="0.6" />
-            <text x="65" y="135" font-size="14" fill="#FFF">✨</text>
-            <text x="265" y="135" font-size="16" fill="#FEF08A">⭐</text>
-            <text x="65" y="375" font-size="16" fill="#FEF08A">⭐</text>
-            <text x="265" y="375" font-size="14" fill="#FFF">✨</text>
           </g>
         `;
       }

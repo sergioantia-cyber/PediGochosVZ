@@ -8985,14 +8985,14 @@ class AdminController {
         <div><span style="color: #94A3B8; font-size: 10px; display: block;">CHIP NFC INTELIGENTE:</span>${q.hasNfc ? `<strong style="color: #10B981;">✅ Activo (${q.nfcType || 'NFC'})</strong> ${q.nfcUrl ? `<a href="${q.nfcUrl}" target="_blank" style="color: #38BDF8; font-size: 10.5px; text-decoration: underline; margin-left: 4px;">Enlace</a>` : ''}` : '<span style="color: #94A3B8;">Sin Chip</span>'}</div>
         <div><span style="color: #94A3B8; font-size: 10px; display: block;">ESTILO DE VACIADO:</span><strong style="color: #38BDF8;">${q.inclusions || q.styleName || 'Artesanal Premium'}</strong></div>
       ` : `
-        <div><span style="color: #94A3B8; font-size: 10px; display: block;">COLOR & BASE:</span><strong style="color: #FFF;">${q.baseColorName || 'Rosa'}</strong></div>
-        <div><span style="color: #94A3B8; font-size: 10px; display: block;">ESTILO DE VACIADO:</span><strong style="color: #F472B6;">${q.inclusions || q.styleName || 'Bicolor Oro 24K'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">COLOR & BASE:</span><strong style="color: #FFF;">${q.baseColorName || 'Azul Zafiro'}</strong></div>
+        <div><span style="color: #94A3B8; font-size: 10px; display: block;">ESTILO DE VACIADO:</span><strong style="color: #F472B6;">${q.inclusions || q.styleName || 'Azul Zafiro & Hojas de Oro 24K'}</strong></div>
         <div><span style="color: #94A3B8; font-size: 10px; display: block;">NOMBRE SELLADO:</span><strong style="color: #FFF;">${q.customName ? `"${q.customName}"` : 'Sin nombre'}</strong></div>
       `;
 
       let waDetails = isPhoto
         ? `📸 Molde: ${q.photoShapeName || q.photoShape}\n🔄 Reverso: ${q.photoBackType || 'Normal'}\n📶 NFC: ${q.hasNfc ? (q.nfcUrl || 'Sí') : 'No'}\n🎨 Acabado: ${q.inclusions || q.styleName || 'Artesanal'}`
-        : `🔤 Inicial: "${q.letter}"\n🎨 Estilo: ${q.inclusions || q.styleName || 'Bicolor'}\n🎨 Color Base: ${q.baseColorName || 'Rosa'}\n✍️ Nombre: ${q.customName || 'Sin nombre'}`;
+        : `🔤 Inicial: "${q.letter}"\n🎨 Estilo: ${q.inclusions || q.styleName || 'Azul Zafiro & Hojas de Oro 24K'}\n🎨 Color Base: ${q.baseColorName || 'Azul Zafiro'}\n✍️ Nombre: ${q.customName || 'Sin nombre'}`;
 
       const waMsg = `✨ *PEDIDO #${q.id} SHELLI ART*\n👤 Cliente: ${q.clientName} (${q.clientPhone || 'Sin tel'})\n${waDetails}\n💰 Presupuesto: ${price ? `$${price} USD` : 'Bajo Cotización Previa'}`;
       const chatInspectorTitle = isPhoto
