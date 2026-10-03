@@ -783,12 +783,12 @@
 }
 
 .view {
-  display: none;
+  display: none !important;
   animation: fadeIn var(--transition-normal);
 }
 
 .view.active {
-  display: block;
+  display: block !important;
 }
 
 /* ==========================================================================

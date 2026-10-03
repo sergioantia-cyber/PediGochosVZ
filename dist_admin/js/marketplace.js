@@ -1545,8 +1545,14 @@ ${mapsLink}
 
     const estView = document.getElementById('establishment-view');
     const homeView = document.getElementById('home-view');
-    if (estView) estView.classList.remove('active');
-    if (homeView) homeView.classList.add('active');
+    if (estView) {
+      estView.classList.remove('active');
+      estView.style.setProperty('display', 'none', 'important');
+    }
+    if (homeView) {
+      homeView.classList.add('active');
+      homeView.style.setProperty('display', 'block', 'important');
+    }
 
     // Restore active state to main Restaurantes category card
     document.querySelectorAll('.category-card-delivercity').forEach(card => {
@@ -1580,174 +1586,221 @@ ${mapsLink}
   }
 
   openEstablishment(estId, pushState = true) {
-    const est = this.establishments.find(e => e.id === estId);
-    if (!est) return;
+    try {
+      const est = (this.establishments || []).find(e => e.id === estId || String(e.id) === String(estId));
+      if (!est) {
+        console.warn('Establishment not found:', estId);
+        return;
+      }
 
-    if (est.disabled) {
-      this.showToast('⚠️ Este comercio se encuentra temporalmente inactivo.');
-      this.goHome();
-      return;
-    }
+      if (est.disabled) {
+        this.showToast('⚠️ Este comercio se encuentra temporalmente inactivo.');
+        this.goHome();
+        return;
+      }
 
-    this.selectedEstablishment = est;
+      this.selectedEstablishment = est;
 
-    if (!this.isEstablishmentOpen(est)) {
-      this.showToast(`🔴 Local CERRADO (${this.formatTime12h(est.open_time)} - ${this.formatTime12h(est.close_time)}). Puedes explorar la carta.`);
-    }
+      if (!this.isEstablishmentOpen(est)) {
+        this.showToast(`🔴 Local CERRADO (${this.formatTime12h(est.open_time)} - ${this.formatTime12h(est.close_time)}). Puedes explorar la carta.`);
+      }
 
-    if (pushState) {
-      window.history.pushState({ view: 'establishment', estId: estId }, '');
-    }
+      if (pushState) {
+        try {
+          window.history.pushState({ view: 'establishment', estId: est.id }, '');
+        } catch(e) {}
+      }
 
-    // Inside establishment -> Hide floating bubbles and show header SOS button
-    this.updateFloatingAndHeaderSos(true);
+      // Inside establishment -> Hide floating bubbles and show header SOS button
+      this.updateFloatingAndHeaderSos(true);
 
-    // Apply custom accent theme color
-    if (est.themeColor) {
-      document.documentElement.style.setProperty('--primary', est.themeColor);
-      // Darken accent color for hover state
-      const darken = (hex, pct) => {
-        hex = hex.replace(/^\s*#|\s*$/g, '');
-        if (hex.length === 3) hex = hex.replace(/(.)/g, '$1$1');
-        let r = parseInt(hex.substr(0, 2), 16),
-            g = parseInt(hex.substr(2, 2), 16),
-            b = parseInt(hex.substr(4, 2), 16);
-        r = Math.max(0, Math.min(255, r - r * (pct / 100)));
-        g = Math.max(0, Math.min(255, g - g * (pct / 100)));
-        b = Math.max(0, Math.min(255, b - b * (pct / 100)));
-        return `#${Math.round(r).toString(16).padStart(2, '0')}${Math.round(g).toString(16).padStart(2, '0')}${Math.round(b).toString(16).padStart(2, '0')}`;
+      // Apply custom accent theme color
+      try {
+        if (est.themeColor && /^#[0-9a-fA-F]{3,8}$/.test(est.themeColor.trim())) {
+          document.documentElement.style.setProperty('--primary', est.themeColor);
+          const darken = (hex, pct) => {
+            hex = hex.replace(/^\s*#|\s*$/g, '');
+            if (hex.length === 3) hex = hex.replace(/(.)/g, '$1$1');
+            let r = parseInt(hex.substr(0, 2), 16),
+                g = parseInt(hex.substr(2, 2), 16),
+                b = parseInt(hex.substr(4, 2), 16);
+            r = Math.max(0, Math.min(255, r - r * (pct / 100)));
+            g = Math.max(0, Math.min(255, r - r * (pct / 100)));
+            b = Math.max(0, Math.min(255, b - b * (pct / 100)));
+            return `#${Math.round(r).toString(16).padStart(2, '0')}${Math.round(g).toString(16).padStart(2, '0')}${Math.round(g).toString(16).padStart(2, '0')}`;
+          };
+          document.documentElement.style.setProperty('--primary-hover', darken(est.themeColor, 12));
+        } else {
+          document.documentElement.style.setProperty('--primary', '#FF5E3A');
+          document.documentElement.style.setProperty('--primary-hover', '#E04A27');
+        }
+      } catch(e) {
+        document.documentElement.style.setProperty('--primary', '#FF5E3A');
+        document.documentElement.style.setProperty('--primary-hover', '#E04A27');
+      }
+
+      // Set header details
+      const bannerDiv = document.getElementById('est-banner');
+      if (bannerDiv) {
+        const isImageBanner = est.banner && (est.banner.startsWith('http') || est.banner.startsWith('/') || est.bannerType === 'image');
+        if (isImageBanner) {
+          bannerDiv.style.background = `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${est.banner}')`;
+          bannerDiv.style.backgroundSize = 'cover';
+          bannerDiv.style.backgroundPosition = 'center';
+        } else {
+          bannerDiv.style.background = est.banner || 'linear-gradient(135deg, #1F2937, #111827)';
+        }
+      }
+
+      const logoDiv = document.getElementById('est-logo');
+      if (logoDiv) {
+        if (est.logoImage) {
+          logoDiv.innerHTML = `<img src="${est.logoImage}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else {
+          logoDiv.innerHTML = est.logo || '🏪';
+        }
+      }
+
+      const nameEl = document.getElementById('est-name');
+      if (nameEl) nameEl.innerText = est.name || '';
+      const descEl = document.getElementById('est-desc');
+      if (descEl) descEl.innerText = est.description || '';
+
+      // Category mapping
+      const categoryEmojis = {
+        comidas: '🍔 Comida',
+        farmacias: '💊 Farmacia',
+        servicios: '🛵 Servicio',
+        mercados: '🛒 Mercado',
+        ferreterias: '🛠️ Ferretería'
       };
-      document.documentElement.style.setProperty('--primary-hover', darken(est.themeColor, 12));
-    } else {
-      document.documentElement.style.setProperty('--primary', '#FF5E3A');
-      document.documentElement.style.setProperty('--primary-hover', '#E04A27');
-    }
-
-    // Set header details
-    const bannerDiv = document.getElementById('est-banner');
-    const isImageBanner = est.banner && (est.banner.startsWith('http') || est.banner.startsWith('/') || est.bannerType === 'image');
-    
-    if (isImageBanner) {
-      bannerDiv.style.background = `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${est.banner}')`;
-      bannerDiv.style.backgroundSize = 'cover';
-      bannerDiv.style.backgroundPosition = 'center';
-    } else {
-      bannerDiv.style.background = est.banner || 'linear-gradient(135deg, #1F2937, #111827)';
-    }
-
-    const logoDiv = document.getElementById('est-logo');
-    if (est.logoImage) {
-      logoDiv.innerHTML = `<img src="${est.logoImage}" style="width: 100%; height: 100%; object-fit: cover;">`;
-    } else {
-      logoDiv.innerHTML = est.logo || '🏪';
-    }
-    document.getElementById('est-name').innerText = est.name;
-    document.getElementById('est-desc').innerText = est.description || '';
-    
-    // Category mapping
-    const categoryEmojis = {
-      comidas: '🍔 Comida',
-      farmacias: '💊 Farmacia',
-      servicios: '🛵 Servicio',
-      mercados: '🛒 Mercado',
-      ferreterias: '🛠️ Ferretería'
-    };
-    const categoryBadge = document.getElementById('est-category-badge');
-    categoryBadge.innerText = categoryEmojis[est.category] || est.category;
-    categoryBadge.className = 'est-badge ' + est.category;
-
-    // Delivery time or Open/Closed status in store header
-    const deliverySpan = document.querySelector('.est-delivery-time');
-    const isStoreOpen = this.isEstablishmentOpen(est);
-    if (deliverySpan) {
-      if (isStoreOpen) {
-        deliverySpan.innerHTML = `🟢 Abierto · ⏱️ ${this.getFormattedDeliveryTime(est)}`;
-        deliverySpan.style.background = 'rgba(16, 185, 129, 0.18)';
-        deliverySpan.style.color = '#34D399';
-        deliverySpan.style.border = '1px solid rgba(16, 185, 129, 0.35)';
-      } else {
-        deliverySpan.innerHTML = `🌙 Abre a las ${this.formatTime12h(est.open_time)}`;
-        deliverySpan.style.background = 'rgba(255, 255, 255, 0.08)';
-        deliverySpan.style.color = '#CBD5E1';
-        deliverySpan.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+      const categoryBadge = document.getElementById('est-category-badge');
+      if (categoryBadge) {
+        categoryBadge.innerText = categoryEmojis[est.category] || est.category || '🍔 Comida';
+        categoryBadge.className = 'est-badge ' + (est.category || 'comidas');
       }
-    }
 
-    // Dynamic rating badge (show "Nuevo" if < 3 reviews, stars only with sufficient ratings)
-    const ratingEl = document.querySelector('#establishment-view .est-rating');
-    if (ratingEl) {
-      const totalReviews = Number(est.totalReviews || 0);
-      const avgRating = Number(est.avgRating || 0);
-      const hasEnough = totalReviews >= 3 && avgRating > 0;
-      if (hasEnough) {
-        ratingEl.innerHTML = `⭐ ${avgRating.toFixed(1)} <span style="opacity: 0.85; font-size: 10px;">(${totalReviews})</span>`;
-        ratingEl.style.background = 'rgba(255, 170, 0, 0.16)';
-        ratingEl.style.border = '1px solid rgba(255, 170, 0, 0.35)';
-        ratingEl.style.color = '#FFAA00';
-        ratingEl.style.cursor = 'pointer';
-        ratingEl.onclick = () => MarketplaceApp.openReviewsListModal(est.id);
-      } else {
-        ratingEl.innerHTML = `✨ Nuevo`;
-        ratingEl.style.background = 'rgba(16, 185, 129, 0.15)';
-        ratingEl.style.border = '1px solid rgba(16, 185, 129, 0.35)';
-        ratingEl.style.color = '#34D399';
-        ratingEl.style.cursor = 'default';
-        ratingEl.onclick = null;
+      // Delivery time or Open/Closed status in store header
+      const deliverySpan = document.querySelector('.est-delivery-time');
+      const isStoreOpen = this.isEstablishmentOpen(est);
+      if (deliverySpan) {
+        if (isStoreOpen) {
+          deliverySpan.innerHTML = `🟢 Abierto · ⏱️ ${this.getFormattedDeliveryTime(est)}`;
+          deliverySpan.style.background = 'rgba(16, 185, 129, 0.18)';
+          deliverySpan.style.color = '#34D399';
+          deliverySpan.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+        } else {
+          deliverySpan.innerHTML = `🌙 Abre a las ${this.formatTime12h(est.open_time)}`;
+          deliverySpan.style.background = 'rgba(255, 255, 255, 0.08)';
+          deliverySpan.style.color = '#CBD5E1';
+          deliverySpan.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+        }
       }
+
+      // Dynamic rating badge
+      const ratingEl = document.querySelector('#establishment-view .est-rating');
+      if (ratingEl) {
+        const totalReviews = Number(est.totalReviews || 0);
+        const avgRating = Number(est.avgRating || 0);
+        const hasEnough = totalReviews >= 3 && avgRating > 0;
+        if (hasEnough) {
+          ratingEl.innerHTML = `⭐ ${avgRating.toFixed(1)} <span style="opacity: 0.85; font-size: 10px;">(${totalReviews})</span>`;
+          ratingEl.style.background = 'rgba(255, 170, 0, 0.16)';
+          ratingEl.style.border = '1px solid rgba(255, 170, 0, 0.35)';
+          ratingEl.style.color = '#FFAA00';
+          ratingEl.style.cursor = 'pointer';
+          ratingEl.onclick = () => MarketplaceApp.openReviewsListModal(est.id);
+        } else {
+          ratingEl.innerHTML = `✨ Nuevo`;
+          ratingEl.style.background = 'rgba(16, 185, 129, 0.15)';
+          ratingEl.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+          ratingEl.style.color = '#34D399';
+          ratingEl.style.cursor = 'default';
+          ratingEl.onclick = null;
+        }
+      }
+
+      // High traffic banner
+      let highTrafficBanner = document.getElementById('est-high-traffic-banner');
+      if (!highTrafficBanner) {
+        highTrafficBanner = document.createElement('div');
+        highTrafficBanner.id = 'est-high-traffic-banner';
+        const headerInfo = document.querySelector('.establishment-header .est-info') || document.querySelector('.establishment-header');
+        if (headerInfo) headerInfo.appendChild(highTrafficBanner);
+      }
+      if (est && est.isHighTraffic) {
+        const extra = est.extraPrepTime || 20;
+        highTrafficBanner.innerHTML = `
+          <div style="background: rgba(15, 23, 42, 0.92); border: 1.5px solid #F59E0B; color: #FFFFFF; padding: 12px 16px; border-radius: 14px; font-weight: 700; font-size: 12.5px; margin-top: 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+            <span style="font-size: 22px; flex-shrink: 0;">🚨</span>
+            <span style="line-height: 1.4;"><strong style="color: #FCD34D; font-size: 13px;">Tráfico Alto en Cocina:</strong> El tiempo estimado de entrega aumenta en <strong style="color: #FEF08A;">+${extra} min</strong> debido a la alta afluencia de personas en el local.</span>
+          </div>
+        `;
+        highTrafficBanner.style.display = 'block';
+      } else if (highTrafficBanner) {
+        highTrafficBanner.style.display = 'none';
+      }
+
+      // Closed store banner
+      let closedStoreBanner = document.getElementById('est-closed-store-banner');
+      if (!closedStoreBanner) {
+        closedStoreBanner = document.createElement('div');
+        closedStoreBanner.id = 'est-closed-store-banner';
+        const headerInfo = document.querySelector('.establishment-header .est-info') || document.querySelector('.establishment-header');
+        if (headerInfo) headerInfo.appendChild(closedStoreBanner);
+      }
+      const isOpen = this.isEstablishmentOpen(est);
+      if (!isOpen) {
+        closedStoreBanner.innerHTML = `
+          <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid rgba(245, 158, 11, 0.45); color: #FFFFFF; padding: 12px 16px; border-radius: 14px; font-weight: 700; font-size: 12.5px; margin-top: 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+            <span style="font-size: 22px; flex-shrink: 0;">🌙</span>
+            <span style="line-height: 1.4;"><strong style="color: #FCD34D; font-size: 13px;">Abre a las ${this.formatTime12h(est.open_time)}:</strong> Horario de atención: <strong style="color: #FEF08A;">${this.formatTime12h(est.open_time)} a ${this.formatTime12h(est.close_time)}</strong>. Puedes explorar el menú completo y planificar tu pedido.</span>
+          </div>
+        `;
+        closedStoreBanner.style.display = 'block';
+      } else if (closedStoreBanner) {
+        closedStoreBanner.style.display = 'none';
+      }
+
+      // Render internal categories and products
+      try {
+        this.renderInternalCategories(est);
+      } catch(e) {
+        console.warn('Error in renderInternalCategories:', e);
+      }
+      try {
+        this.renderProducts(est.products);
+      } catch(e) {
+        console.warn('Error in renderProducts:', e);
+      }
+
+      // Switch views cleanly with absolute priority
+      const homeView = document.getElementById('home-view');
+      const estView = document.getElementById('establishment-view');
+      if (homeView) {
+        homeView.classList.remove('active');
+        homeView.style.setProperty('display', 'none', 'important');
+      }
+      if (estView) {
+        estView.classList.add('active');
+        estView.style.setProperty('display', 'block', 'important');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (fatalErr) {
+      console.error('Fatal error in openEstablishment:', fatalErr);
+      const homeView = document.getElementById('home-view');
+      const estView = document.getElementById('establishment-view');
+      if (homeView) {
+        homeView.classList.remove('active');
+        homeView.style.setProperty('display', 'none', 'important');
+      }
+      if (estView) {
+        estView.classList.add('active');
+        estView.style.setProperty('display', 'block', 'important');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    // High traffic banner in store header
-    let highTrafficBanner = document.getElementById('est-high-traffic-banner');
-    if (!highTrafficBanner) {
-      highTrafficBanner = document.createElement('div');
-      highTrafficBanner.id = 'est-high-traffic-banner';
-      const headerInfo = document.querySelector('.establishment-header .est-info') || document.querySelector('.establishment-header');
-      if (headerInfo) headerInfo.appendChild(highTrafficBanner);
-    }
-
-    if (est && est.isHighTraffic) {
-      const extra = est.extraPrepTime || 20;
-      highTrafficBanner.innerHTML = `
-        <div style="background: rgba(15, 23, 42, 0.92); border: 1.5px solid #F59E0B; color: #FFFFFF; padding: 12px 16px; border-radius: 14px; font-weight: 700; font-size: 12.5px; margin-top: 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
-          <span style="font-size: 22px; flex-shrink: 0;">🚨</span>
-          <span style="line-height: 1.4;"><strong style="color: #FCD34D; font-size: 13px;">Tráfico Alto en Cocina:</strong> El tiempo estimado de entrega aumenta en <strong style="color: #FEF08A;">+${extra} min</strong> debido a la alta afluencia de personas en el local.</span>
-        </div>
-      `;
-      highTrafficBanner.style.display = 'block';
-    } else if (highTrafficBanner) {
-      highTrafficBanner.style.display = 'none';
-    }
-
-    // Closed store banner in store header
-    let closedStoreBanner = document.getElementById('est-closed-store-banner');
-    if (!closedStoreBanner) {
-      closedStoreBanner = document.createElement('div');
-      closedStoreBanner.id = 'est-closed-store-banner';
-      const headerInfo = document.querySelector('.establishment-header .est-info') || document.querySelector('.establishment-header');
-      if (headerInfo) headerInfo.appendChild(closedStoreBanner);
-    }
-
-    const isOpen = this.isEstablishmentOpen(est);
-    if (!isOpen) {
-      closedStoreBanner.innerHTML = `
-        <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid rgba(245, 158, 11, 0.45); color: #FFFFFF; padding: 12px 16px; border-radius: 14px; font-weight: 700; font-size: 12.5px; margin-top: 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
-          <span style="font-size: 22px; flex-shrink: 0;">🌙</span>
-          <span style="line-height: 1.4;"><strong style="color: #FCD34D; font-size: 13px;">Abre a las ${this.formatTime12h(est.open_time)}:</strong> Horario de atención: <strong style="color: #FEF08A;">${this.formatTime12h(est.open_time)} a ${this.formatTime12h(est.close_time)}</strong>. Puedes explorar el menú completo y planificar tu pedido.</span>
-        </div>
-      `;
-      closedStoreBanner.style.display = 'block';
-    } else if (closedStoreBanner) {
-      closedStoreBanner.style.display = 'none';
-    }
-
-    // Render internal categories and products
-    this.renderInternalCategories(est);
-    this.renderProducts(est.products);
-
-    // Switch views
-    document.getElementById('home-view').classList.remove('active');
-    document.getElementById('establishment-view').classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   getFormattedDeliveryTime(est) {
@@ -1845,7 +1898,8 @@ ${mapsLink}
       card.style.filter = 'grayscale(0.15)';
     }
 
-    card.onclick = () => this.openEstablishment(est.id);
+    card.onclick = () => MarketplaceApp.openEstablishment(est.id);
+    card.setAttribute('onclick', `MarketplaceApp.openEstablishment('${est.id}')`);
 
     // Determine banner image
     const photoUrl = est.banner || est.bannerImage || (est.products && est.products[0] ? est.products[0].image : null) || est.image || est.logoImage || '/images/burger_royale.jpg';
@@ -3416,7 +3470,8 @@ ${mapsLink}
         card.style.filter = 'grayscale(0.18)';
       }
 
-      card.onclick = () => this.openEstablishment(est.id);
+      card.onclick = () => MarketplaceApp.openEstablishment(est.id);
+      card.setAttribute('onclick', `MarketplaceApp.openEstablishment('${est.id}')`);
 
       const photoUrl = est.logoImage || (est.products && est.products[0] ? est.products[0].image : null);
       let imgHTML = '';
