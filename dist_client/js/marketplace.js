@@ -1602,6 +1602,29 @@ ${mapsLink}
       deliverySpan.innerText = this.getFormattedDeliveryTime(est);
     }
 
+    // Dynamic rating badge (show "Nuevo" if < 3 reviews, stars only with sufficient ratings)
+    const ratingEl = document.querySelector('#establishment-view .est-rating');
+    if (ratingEl) {
+      const totalReviews = Number(est.totalReviews || 0);
+      const avgRating = Number(est.avgRating || 0);
+      const hasEnough = totalReviews >= 3 && avgRating > 0;
+      if (hasEnough) {
+        ratingEl.innerHTML = `⭐ ${avgRating.toFixed(1)} <span style="opacity: 0.85; font-size: 10px;">(${totalReviews})</span>`;
+        ratingEl.style.background = 'rgba(255, 170, 0, 0.16)';
+        ratingEl.style.border = '1px solid rgba(255, 170, 0, 0.35)';
+        ratingEl.style.color = '#FFAA00';
+        ratingEl.style.cursor = 'pointer';
+        ratingEl.onclick = () => MarketplaceApp.openReviewsListModal(est.id);
+      } else {
+        ratingEl.innerHTML = `✨ Nuevo`;
+        ratingEl.style.background = 'rgba(16, 185, 129, 0.15)';
+        ratingEl.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+        ratingEl.style.color = '#34D399';
+        ratingEl.style.cursor = 'default';
+        ratingEl.onclick = null;
+      }
+    }
+
     // High traffic banner in store header
     let highTrafficBanner = document.getElementById('est-high-traffic-banner');
     if (!highTrafficBanner) {
@@ -1727,6 +1750,30 @@ ${mapsLink}
   // Legacy fallback grid
   renderFoodCategoriesGrid() {
     this.renderFoodBubbleCarousel();
+  }
+
+  // Helper to render rating markup (shows 'Nuevo' if < 3 reviews, stars only with sufficient reviews)
+  getEstablishmentRatingMarkup(est, variant = 'row') {
+    const totalReviews = Number(est.totalReviews || 0);
+    const avgRating = Number(est.avgRating || 0);
+    const hasEnough = totalReviews >= 3 && avgRating > 0;
+
+    if (!hasEnough) {
+      if (variant === 'mini') {
+        return `<span style="font-size: 9px; font-weight: 800; color: #10B981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.5px 5px; border-radius: 5px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px;">✨ Nuevo</span>`;
+      }
+      return `<div class="est-row-rating" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; font-weight: 800; padding: 2px 7px; border-radius: 6px; font-size: 10.5px; display: inline-flex; align-items: center; gap: 2px;">
+        ✨ Nuevo
+      </div>`;
+    }
+
+    const ratingVal = avgRating.toFixed(1);
+    if (variant === 'mini') {
+      return `<span style="font-size: 9.5px; color: #FFCC00; font-weight: 800; flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px;">⭐ ${ratingVal}</span>`;
+    }
+    return `<div class="est-row-rating" onclick="event.stopPropagation(); MarketplaceApp.openReviewsListModal('${est.id}')" style="cursor: pointer; background: rgba(255, 170, 0, 0.16); border: 1px solid rgba(255, 170, 0, 0.35); color: #FFAA00;">
+      ⭐ ${ratingVal} <span style="opacity: 0.85; font-size: 9.5px;">(${totalReviews})</span>
+    </div>`;
   }
 
   // Render lists
@@ -2292,9 +2339,6 @@ ${mapsLink}
         ? `<span class="est-traffic-badge" style="background: #dc2626; color: #ffffff; padding: 2px 4px; border-radius: 6px; font-size: 8px; font-weight: 900; position: absolute; top: 3px; left: 3px; right: 3px; text-align: center; z-index: 2;">🚨 Tráfico Alto</span>` 
         : '';
 
-      const ratingVal = est.avgRating ? parseFloat(est.avgRating).toFixed(1) : '4.9';
-      const totalRev = est.totalReviews !== undefined ? est.totalReviews : Math.floor(10 + Math.random() * 25);
-
       const descSnippet = (est.description || '').split('.')[0] || est.description || '';
 
       card.innerHTML = `
@@ -2307,9 +2351,7 @@ ${mapsLink}
         <div class="est-row-info">
           <div class="est-row-header-flex">
             <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; color: #FFFFFF; font-weight: 900; font-size: 14px;">${est.name}</h4>
-            <div class="est-row-rating" onclick="event.stopPropagation(); MarketplaceApp.openReviewsListModal('${est.id}')" style="cursor: pointer; background: rgba(255, 170, 0, 0.16); border: 1px solid rgba(255, 170, 0, 0.35); color: #FFAA00;">
-              ⭐ ${ratingVal} <span style="opacity: 0.85; font-size: 9.5px;">(${totalRev})</span>
-            </div>
+            ${this.getEstablishmentRatingMarkup(est, 'row')}
           </div>
           <div class="est-row-desc" style="color: #94A3B8; font-size: 11.5px; margin: 2px 0;">
             <span class="est-pill-category" style="background: ${brand.pillBg}; color: ${brand.pillColor}; border: 1px solid ${brand.pillBorder}; padding: 1.5px 6px; border-radius: 5px; font-size: 10px; font-weight: 800; margin-right: 5px; display: inline-block;">
@@ -2826,7 +2868,7 @@ ${mapsLink}
         <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
             <h5 style="margin: 0; font-size: 12px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">${est.name}</h5>
-            <span style="font-size: 9.5px; color: #FFCC00; font-weight: 800; flex-shrink: 0;">★ 0.0</span>
+            ${this.getEstablishmentRatingMarkup(est, 'mini')}
           </div>
           <div style="font-size: 10px; color: var(--accent); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✨ Destacado</div>
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; margin-top: 2px;">

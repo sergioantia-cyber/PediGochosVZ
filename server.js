@@ -1219,8 +1219,23 @@ app.get('/api/establishments', (req, res) => {
   const db = readDB();
   const includeDisabled = req.query.include_disabled === 'true' || req.query.all === 'true';
   const filtered = includeDisabled ? db.establishments : db.establishments.filter(e => !e.disabled);
-  // Strip linkKey before sending to client for security
-  const sanitized = filtered.map(({ linkKey, ...rest }) => rest);
+  const allReviews = Array.isArray(db.reviews) ? db.reviews : [];
+
+  // Strip linkKey before sending to client for security & compute dynamic reviews count/rating
+  const sanitized = filtered.map(({ linkKey, ...rest }) => {
+    const estReviews = allReviews.filter(r => r && r.establishmentId === rest.id);
+    const totalReviews = estReviews.length;
+    let avgRating = 0;
+    if (totalReviews > 0) {
+      const sum = estReviews.reduce((acc, r) => acc + (parseFloat(r.rating) || 5), 0);
+      avgRating = parseFloat((sum / totalReviews).toFixed(1));
+    }
+    return {
+      ...rest,
+      totalReviews,
+      avgRating
+    };
+  });
   res.json(sanitized);
 });
 
