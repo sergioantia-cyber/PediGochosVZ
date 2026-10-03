@@ -47,98 +47,60 @@
   </div>
 
   <!-- App Header (Rapi Gochos Style) -->
-  <header class="app-header">
-    <div class="header-container">
-      <div class="delivery-address-area" onclick="MarketplaceApp.requestAutomaticGPS(true)" title="Toca para actualizar tu ubicación GPS en vivo">
-        <span class="location-icon">📍</span>
-        <span class="address-text" id="header-selected-address">San Antonio del Táchira</span>
-        <span class="dropdown-arrow">▼</span>
-      </div>
-      
-      <div class="logo-area" onclick="MarketplaceApp.goHome()" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-        <img src="/images/logo-pedigochos.png" alt="PediGochos" class="header-logo-badge">
-        <div class="logo-text-wrapper">
-          <h1 class="logo-text">Pedi<span>Gochos</span></h1>
-          <span class="logo-slogan">Pide lo que quieras ⚡ En tu puerta</span>
-        </div>
-        <div class="live-active-light-badge" title="Página y Servidor Activos en Vivo">
-          <span class="green-pulse-dot"></span>
-          <span class="live-label">EN LÍNEA</span>
-        </div>
-      </div>
-
-      <div class="header-actions">
-        <!-- GochoPoints Badge -->
-        <button type="button" id="header-gochopoints-btn" onclick="MarketplaceApp.openGochoPointsModal()" title="Ver tus GochoPoints">
-          ⭐ <span id="header-gochopoints-val">0</span> Pts
-        </button>
-
-        <!-- User Orders History Button -->
-        <button type="button" id="header-orders-btn" onclick="MarketplaceApp.openUserOrdersModal()" title="Mis Pedidos">
-          📋 <span>Mis Pedidos</span>
-        </button>
-
-        <!-- Top Back Button -->
-        <button class="btn-top-header" onclick="MarketplaceApp.handleNavBack()" title="Volver / Atrás">
-          <span>⬅</span> <span>Atrás</span>
-        </button>
-
-        <!-- Top Header Cart Button -->
-        <button class="btn-top-header btn-header-cart" onclick="MarketplaceApp.openCartModal()" title="Ver Carrito">
-          <span>🛒</span>
-          <span id="header-cart-badge-count">0</span>
-          <span id="header-cart-badge-total">$0</span>
-        </button>
-
-        <!-- Header S.O.S Button (Appears when viewing a category or store) -->
-        <button type="button" id="header-sos-btn" class="btn-sos-header hidden" onclick="MarketplaceApp.toggleSosMenu()" title="Emergencias y Auxilio Vial S.O.S">
-          🚨 <span>S.O.S</span>
-        </button>
-        
-        <div id="auth-status-container" style="position: relative;">
-          <button class="btn-notification btn-login-pulse" onclick="MarketplaceApp.loginWithGoogle()" onmouseenter="MarketplaceApp.showLoginPrompt()" title="Iniciar Sesión con Google">
-            <span class="login-pulse-badge"></span>
-            <span>🔑</span> <span>Ingresar</span>
-          </button>
-          
-          <div id="login-reward-prompt" class="login-prompt-bubble" onclick="MarketplaceApp.loginWithGoogle()">
-            <div class="login-prompt-arrow"></div>
-            <div class="login-prompt-header">
-              <span class="login-prompt-tag">⚠️ ¡Inicia Sesión!</span>
-              <button type="button" class="login-prompt-close-btn" onclick="event.stopPropagation(); MarketplaceApp.dismissLoginPrompt()" title="Cerrar aviso">✕</button>
-            </div>
-            <div class="login-prompt-body">
-              Si no ingresas, <strong>no se guardarán tus datos</strong> de perfil ni <strong>acumularás GochoPoints ⭐</strong> en tus pedidos.
-            </div>
-            <div class="login-prompt-action">
-              <span>Toca para ingresar con Google 🚀</span>
-            </div>
+  <header class="app-header app-header-modern">
+    <div class="header-container modern-header-container">
+      <!-- Left: Logo & Location dropdown -->
+      <div class="modern-header-brand-col">
+        <div class="modern-logo-row" onclick="MarketplaceApp.goHome()" style="cursor: pointer;">
+          <img src="/images/logo-pedigochos.png" alt="PediGochos" class="modern-logo-img">
+          <div class="modern-logo-text-box">
+            <h1 class="modern-brand-name">Pedi<span>Gochos</span></h1>
+            <span class="modern-brand-category">Restaurante <span class="caret-down">⌵</span></span>
           </div>
+        </div>
+        <div class="modern-location-picker" onclick="MarketplaceApp.requestAutomaticGPS(true)" title="Toca para actualizar tu ubicación GPS en vivo">
+          <span class="loc-pin">📍</span>
+          <span class="loc-name" id="header-selected-address">San Antonio del Táchira</span>
+          <span class="loc-caret">⌵</span>
+        </div>
+      </div>
+
+      <!-- Right: Delivery Rate Pill, Cart & Profile -->
+      <div class="modern-header-actions-col">
+        <!-- Delivery fee pill (Frontera standard) -->
+        <div class="delivery-rate-pill" id="header-delivery-rate-pill" title="Tarifa de entrega base">
+          <span class="rate-icon">🛵</span>
+          <span class="rate-amount">$ 0.8</span>
+        </div>
+
+        <!-- Cart Bag Button with Count Badge -->
+        <button type="button" class="modern-cart-btn" onclick="MarketplaceApp.openCartModal()" title="Ver Carrito">
+          <span class="bag-icon">🛍️</span>
+          <span class="modern-cart-badge" id="header-cart-badge-count">0</span>
+        </button>
+
+        <!-- User Profile Avatar Button -->
+        <div id="auth-status-container" class="modern-user-auth-box">
+          <button type="button" class="modern-avatar-btn" onclick="MarketplaceApp.loginWithGoogle()" title="Perfil / Ingresar">
+            <span class="avatar-icon">👤</span>
+          </button>
         </div>
       </div>
     </div>
     
-    <!-- Search Bar Section (Protagonista de Pedi Gochos) -->
-    <div class="search-section-wrapper protagonist-search-section">
-      <div class="search-bar-container protagonist-search-container">
+    <!-- Search Bar Section with Integrated Currency Toggles (Sin Tendencias) -->
+    <div class="search-section-wrapper modern-search-wrapper">
+      <div class="search-bar-container modern-search-container">
         <span class="search-icon">🔍</span>
-        <input type="text" id="global-search" placeholder="¿Qué quieres pedir hoy? (ej. Hamburguesa, Pizza, Salchipapa...)" oninput="MarketplaceApp.handleSearch(event)" autocomplete="off">
+        <input type="text" id="global-search" placeholder="Buscar hamburguesas, pizzas, platos..." oninput="MarketplaceApp.handleSearch(event)" autocomplete="off">
         <button type="button" id="search-clear-btn" class="search-clear-btn hidden" onclick="MarketplaceApp.clearSearch()" title="Limpiar búsqueda">✕</button>
-      </div>
-
-      <!-- Quick Discovery Chips (Restaurante + Plato + Categoría) -->
-      <div class="search-quick-chips" id="search-quick-chips">
-        <span class="chip-hint">🔥 Tendencias:</span>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Hamburguesas')">🍔 Hamburguesas</button>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Pizzas')">🍕 Pizzas</button>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Salchipapas')">🍟 Salchipapas</button>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Perros calientes')">🌭 Perros</button>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Shawarma')">🌯 Shawarma</button>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Tequeños')">🥟 Tequeños</button>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Postres')">🍰 Postres</button>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Farmacia')">💊 Farmacias</button>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Llaveros')">🎁 Llaveros 3D</button>
-        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Cauchera')">🛠 Cauchera 24/7</button>
+        
+        <!-- Embedded Currency Switcher: COP | USD | Bs. -->
+        <div class="modern-currency-switch" id="search-currency-toggles" aria-label="Seleccionar moneda">
+          <button type="button" class="curr-pill active" data-curr="COP" onclick="MarketplaceApp.setCurrency('COP')">COP</button>
+          <button type="button" class="curr-pill" data-curr="USD" onclick="MarketplaceApp.setCurrency('USD')">USD</button>
+          <button type="button" class="curr-pill" data-curr="VES" onclick="MarketplaceApp.setCurrency('VES')">Bs.</button>
+        </div>
       </div>
     </div>
   </header>
@@ -341,33 +303,86 @@
           <a href="#" class="btn-view-all" onclick="event.preventDefault(); MarketplaceApp.filterRestaurantsByFoodType('all')">Ver todos <span class="arrow-icon">›</span></a>
         </div>
 
-        <!-- Dynamic Food Type Filter Chips (Hamburguesas, Pizzas, Arepas, Bebidas, etc.) -->
-        <div id="food-type-filters-container" style="display: flex; gap: 8px; overflow-x: auto; padding: 6px 0 14px 0; -webkit-overflow-scrolling: touch;" class="premium-scroll">
-        </div>
+        <!-- Hero Promo Card: PROMO DEL DÍA 24H -->
+        <section id="daily-promotions-section" class="hero-promo-24h-section" style="margin-bottom: 22px;">
+          <div class="hero-promo-24h-card" onclick="MarketplaceApp.openDailyOfferOrderModal()" style="background: linear-gradient(135deg, #B43403 0%, #6A2108 100%); border-radius: 20px; padding: 16px 14px; color: #FFFFFF; box-shadow: 0 10px 28px rgba(180, 52, 3, 0.35); position: relative; overflow: hidden; cursor: pointer;">
+            <!-- Top Row -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+              <span style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); color: #FCD34D; font-size: 10.5px; font-weight: 900; padding: 3px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px;">
+                ⚡ PROMO DEL DÍA 24H
+              </span>
+              <span id="hero-promo-countdown" class="hero-countdown-pill" style="background: rgba(0, 0, 0, 0.35); color: #FEE2E2; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                🕒 14:02:58
+              </span>
+            </div>
 
-        <!-- Daily Promotions Carousel Section (Carrusel Horizontal de Promociones del Día - 24 Horas) -->
-        <section id="daily-promotions-section" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 18px; padding: 14px 12px 10px 12px; box-shadow: 0 8px 24px rgba(239, 68, 68, 0.12);" class="hidden">
-          <div class="section-header-flex" style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-            <h4 style="font-size: 14px; font-weight: 800; color: #FFF; margin: 0; display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 18px;">🔥</span> <span>PROMO DEL DÍA</span> <span style="font-size: 10px; background: #EF4444; color: #FFF; padding: 2px 8px; border-radius: 12px; font-weight: 900;">24h Oferta</span>
-            </h4>
-            <span style="font-size: 10.5px; color: #FCA5A5; font-weight: 700;">⏱️ Expira en 24h</span>
+            <!-- Body split -->
+            <div style="display: flex; gap: 14px; align-items: center;">
+              <!-- Left Content -->
+              <div style="flex: 1; min-width: 0;">
+                <span id="hero-promo-badge" style="background: #F59E0B; color: #78350F; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 6px; display: inline-block; margin-bottom: 6px;">
+                  30% OFF COMBO BRUTAL
+                </span>
+                <h3 id="hero-promo-title" style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFFFFF; line-height: 1.25; letter-spacing: -0.2px;">
+                  Doble Gocha Smash + Papas & Malta
+                </h3>
+                <p id="hero-promo-desc" style="margin: 0 0 10px 0; font-size: 11.5px; color: #FED7AA; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                  Queso de mano fundido, tocineta crujiente, papas rústicas y malta fría.
+                </p>
+                <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+                  <strong id="hero-promo-price-cop" style="font-size: 20px; font-weight: 900; color: #FFFFFF;">$18.000 COP</strong>
+                  <span id="hero-promo-orig-price" style="font-size: 12px; color: #FCA5A5; text-decoration: line-through;">$26.000</span>
+                  <span id="hero-promo-price-usd" style="font-size: 11px; color: #FEF3C7; font-weight: 700;">(3,6 USD)</span>
+                </div>
+              </div>
+
+              <!-- Right Image -->
+              <div style="width: 108px; height: 108px; border-radius: 16px; overflow: hidden; position: relative; flex-shrink: 0; box-shadow: 0 6px 16px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.15);">
+                <img id="hero-promo-img" src="/images/burger_royale.jpg" alt="Promo del Día" style="width: 100%; height: 100%; object-fit: cover;">
+                <span style="position: absolute; bottom: 4px; right: 4px; background: rgba(16, 185, 129, 0.95); color: #FFF; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 6px;">
+                  🍔 OFERTA
+                </span>
+              </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); gap: 10px;">
+              <span style="font-size: 11px; color: #FED7AA; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                ⚡ Entrega volando 20-30m
+              </span>
+              <button type="button" class="btn-hero-promo-cta" onclick="event.stopPropagation(); MarketplaceApp.openDailyOfferOrderModal()" style="background: #FFFFFF; color: #C2410C; border: none; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);">
+                <span>Aprovechar Oferta</span> <span>➔</span>
+              </button>
+            </div>
           </div>
-          <div id="daily-promotions-container" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;" class="premium-scroll">
-            <!-- Dynamically populated promo cards -->
+          <!-- Hidden container to keep backend compatibility for multiple promos if fetched -->
+          <div id="daily-promotions-container" style="display: none;"></div>
+        </section>
+
+        <!-- Section: ¿Qué te provoca hoy? (Burbujas Circulares de Comida) -->
+        <section class="cravings-section" style="margin-bottom: 22px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <h4 style="font-size: 15.5px; font-weight: 900; color: #FFFFFF; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 17px;">🔀</span> ¿Qué te provoca hoy?
+            </h4>
+            <a href="#" onclick="event.preventDefault(); MarketplaceApp.filterRestaurantsByFoodType('all')" style="font-size: 12px; font-weight: 800; color: #94A3B8; text-decoration: none;">
+              Ver todo
+            </a>
+          </div>
+
+          <!-- Dynamic Food Bubble Carousel with Real Images -->
+          <div id="food-type-filters-container" class="food-bubbles-circular-grid premium-scroll" style="display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch;">
+            <!-- Populated by renderFoodBubbleCarousel() -->
           </div>
         </section>
 
-        <!-- Featured Carousel Section (Destacados del Día - Espacio Patrocinado & Delivery) -->
+        <!-- Featured Carousel Section (Destacados del Día) -->
         <section id="featured-carousel-section" class="hidden" style="display: none; margin-bottom: 22px; background: linear-gradient(135deg, rgba(255, 107, 0, 0.09) 0%, rgba(22, 27, 40, 0.95) 100%); border: 1.5px solid rgba(255, 107, 0, 0.3); border-radius: 18px; padding: 14px 14px 12px 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);">
           <div class="section-header-flex" style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <h4 style="font-size: 14.5px; font-weight: 900; color: #FFFFFF; margin: 0; display: flex; align-items: center; gap: 6px;">
                 <span>✨</span> Destacados del Día
               </h4>
-              <span class="sponsored-tag" style="background: rgba(255, 107, 0, 0.18); border: 1px solid rgba(255, 107, 0, 0.45); color: #FF9F43; font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;" title="Espacio patrocinado con entrega prioritaria">
-                📢 Patrocinado
-              </span>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 11px; color: #94A3B8; font-weight: 600;">Despacho prioritario ⚡</span>
@@ -415,19 +430,133 @@
           <!-- Dynamically filled -->
         </div>
 
-        <!-- Banner Inferior: Inscribe tu Restaurante Gratis -->
-        <section class="merchant-onboarding-section" style="margin: 18px 0 14px 0;">
-          <div style="background: #FFFFFF; border: 1.5px solid #FED7AA; border-radius: 16px; padding: 16px 14px; text-align: center; box-shadow: 0 4px 14px rgba(0,0,0,0.08);">
-            <span style="display: inline-block; font-size: 26px; margin-bottom: 4px;">🏪🚀</span>
-            <h3 style="color: #0F172A; font-size: 15px; font-weight: 900; margin: 0 0 4px 0; letter-spacing: -0.2px;">¿Tienes un Restaurante o Negocio de Comida?</h3>
-            <p style="color: #475569; font-size: 11.5px; font-weight: 600; margin: 0 auto 12px auto; max-width: 420px; line-height: 1.4;">
-              Inscribe tu local hoy mismo totalmente <strong style="color: #EA580C; font-weight: 900;">GRATIS</strong>. Obtén tu catálogo digital y empieza a recibir pedidos a domicilio.
-            </p>
-            <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal()" class="btn-register-restaurant-cta" style="background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 10px; font-size: 12.5px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35); display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-              <span>📝</span> ¡Inscribe tu Restaurante Gratis!
+        <!-- GochoPoints Banner -->
+        <section class="gochopoints-reward-banner" style="margin: 20px 0 16px 0; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); border-radius: 18px; padding: 14px 16px; box-shadow: 0 6px 20px rgba(217, 119, 6, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0, 0, 0, 0.15); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+              ⭐
+            </div>
+            <div style="min-width: 0;">
+              <h4 style="margin: 0 0 2px 0; font-size: 14px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.2px;">
+                Acumula GochoPoints ⭐
+              </h4>
+              <p style="margin: 0; font-size: 11.5px; color: #FEF3C7; font-weight: 600; line-height: 1.3;">
+                Ganas <strong>10 pts</strong> por cada $1 en pedidos para envíos gratis.
+              </p>
+            </div>
+          </div>
+          <button type="button" onclick="MarketplaceApp.openGochoPointsModal()" style="background: #FFFFFF; color: #D97706; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 900; font-size: 12px; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.15); flex-shrink: 0;">
+            Canjear
+          </button>
+        </section>
+
+        <!-- Más Servicios en PediGochos (Grid 2x2) -->
+        <section class="more-services-section" style="margin: 16px 0 20px 0; background: #EEF2F6; border: 1.5px solid #E2E8F0; border-radius: 20px; padding: 16px 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px;">🛠️</span>
+              <h4 style="margin: 0; font-size: 15px; font-weight: 900; color: #0F172A;">Más Servicios en PediGochos</h4>
+            </div>
+            <span style="background: #E0E7FF; color: #4338CA; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">4 Servicios</span>
+          </div>
+          <p style="margin: 0 0 12px 0; font-size: 11.5px; color: #64748B; font-weight: 600;">
+            Auxilio vial, transporte y encargos a tu medida en la frontera.
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <!-- 1. PediGochos Movil -->
+            <div onclick="MarketplaceApp.openRideModal()" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 12px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: transform 0.2s;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #FEE2E2; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                  🛵
+                </div>
+                <span style="font-size: 9.5px; font-weight: 800; color: #059669;">Desde $4.000</span>
+              </div>
+              <div>
+                <strong style="font-size: 12.5px; font-weight: 900; color: #0F172A; display: block;">PediGochos Móvil</strong>
+                <span style="font-size: 10.5px; color: #64748B; font-weight: 500;">Moto Taxi & Auto GPS</span>
+              </div>
+            </div>
+
+            <!-- 2. Cauchera Cachu -->
+            <div onclick="MarketplaceApp.selectCategory('servicios')" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 12px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: transform 0.2s;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #FEE2E2; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                  🛞
+                </div>
+                <span style="font-size: 9.5px; font-weight: 800; color: #DC2626;">24 Horas</span>
+              </div>
+              <div>
+                <strong style="font-size: 12.5px; font-weight: 900; color: #0F172A; display: block;">Cauchera Cachu</strong>
+                <span style="font-size: 10.5px; color: #64748B; font-weight: 500;">Despacho y auxilio vial</span>
+              </div>
+            </div>
+
+            <!-- 3. Shelli Art & 3D -->
+            <div onclick="MarketplaceApp.selectCategory('personalizados')" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 12px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: transform 0.2s;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #EDE9FE; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                  ✨
+                </div>
+                <span style="font-size: 9.5px; font-weight: 800; color: #D97706;">100% Arte</span>
+              </div>
+              <div>
+                <strong style="font-size: 12.5px; font-weight: 900; color: #0F172A; display: block;">Shelli Art & 3D</strong>
+                <span style="font-size: 10.5px; color: #64748B; font-weight: 500;">Resina epóxica, piñata...</span>
+              </div>
+            </div>
+
+            <!-- 4. Farmacias 24/7 -->
+            <div onclick="MarketplaceApp.selectCategory('farmacias')" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 12px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: transform 0.2s;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #D1FAE5; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                  🏥
+                </div>
+                <span style="font-size: 9.5px; font-weight: 800; color: #059669;">Urgencias</span>
+              </div>
+              <div>
+                <strong style="font-size: 12.5px; font-weight: 900; color: #0F172A; display: block;">Farmacias 24/7</strong>
+                <span style="font-size: 10.5px; color: #64748B; font-weight: 500;">Fórmulas médicas y...</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Banner Inferior Dark: Inscribe tu Restaurante Gratis -->
+        <section class="merchant-onboarding-section" style="margin: 16px 0 14px 0;">
+          <div style="background: #1E2433; border: 1.5px solid rgba(255, 107, 0, 0.35); border-radius: 18px; padding: 18px 16px; text-align: left; box-shadow: 0 8px 24px rgba(0,0,0,0.25);">
+            <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 107, 0, 0.15); border: 1.5px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                🏪
+              </div>
+              <div>
+                <h3 style="color: #FFFFFF; font-size: 15px; font-weight: 900; margin: 0 0 4px 0; letter-spacing: -0.2px;">¿Tienes un restaurante o negocio de comida?</h3>
+                <p style="color: #94A3B8; font-size: 11.5px; font-weight: 500; margin: 0; line-height: 1.4;">
+                  Inscribe tu local hoy mismo totalmente <strong style="color: #FF6B00; font-weight: 900;">GRATIS</strong>. Obtén tu catálogo digital y empieza a recibir pedidos a domicilio.
+                </p>
+              </div>
+            </div>
+            <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal()" style="width: 100%; background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #FFFFFF; border: none; padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35); display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>📝</span> ¡Inscribe tu Restaurante Gratis! ➔
             </button>
           </div>
         </section>
+
+        <!-- Floating WhatsApp Central Support Bar -->
+        <div class="whatsapp-central-bar" style="margin: 12px 0 20px 0; background: #131A26; border: 1px solid rgba(34, 197, 94, 0.35); border-radius: 14px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.3);">
+          <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(34, 197, 94, 0.2); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+              💬
+            </div>
+            <div style="min-width: 0;">
+              <span style="font-size: 10px; color: #94A3B8; display: block; font-weight: 700;">Despacho Central PediGochos</span>
+              <strong style="font-size: 12px; color: #FFFFFF; font-weight: 800;">+57 322 794 9751</strong>
+            </div>
+          </div>
+          <button type="button" onclick="window.open('https://wa.me/573227949751?text=Hola%20PediGochos,%20necesito%20soporte%20con%20un%20pedido', '_blank')" style="background: #22C55E; color: #FFFFFF; border: none; padding: 7px 14px; border-radius: 10px; font-size: 11.5px; font-weight: 900; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
+            Soporte 💬
+          </button>
+        </div>
       </section>
     </section>
 
@@ -2273,6 +2402,30 @@
       </div>
     </div>
   </div>
+
+  <!-- Modern Bottom Tab Navigation Bar (5 Tabs) -->
+  <nav class="bottom-tab-bar" id="app-bottom-tab-bar" aria-label="Navegación principal">
+    <button type="button" class="tab-item active" data-tab="restaurantes" onclick="MarketplaceApp.switchBottomTab('restaurantes')">
+      <span class="tab-icon">🍴</span>
+      <span class="tab-label">Restaurantes</span>
+    </button>
+    <button type="button" class="tab-item" data-tab="explorar" onclick="MarketplaceApp.switchBottomTab('explorar')">
+      <span class="tab-icon">🔍</span>
+      <span class="tab-label">Explorar</span>
+    </button>
+    <button type="button" class="tab-item" data-tab="servicios" onclick="MarketplaceApp.switchBottomTab('servicios')">
+      <span class="tab-icon">🛵</span>
+      <span class="tab-label">Servicios</span>
+    </button>
+    <button type="button" class="tab-item" data-tab="pedidos" onclick="MarketplaceApp.switchBottomTab('pedidos')">
+      <span class="tab-icon">🧾</span>
+      <span class="tab-label">Mis Pedidos</span>
+    </button>
+    <button type="button" class="tab-item" data-tab="puntos" onclick="MarketplaceApp.switchBottomTab('puntos')">
+      <span class="tab-icon">⭐</span>
+      <span class="tab-label">Puntos</span>
+    </button>
+  </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/supabase-helper.js?v=217"></script>

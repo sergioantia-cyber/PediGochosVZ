@@ -263,6 +263,8 @@ class MarketplaceController {
         }
       }
     });
+
+    this.startDailyOffersCountdown();
   }
 
   checkFirstTimeWelcome() {
@@ -917,6 +919,17 @@ class MarketplaceController {
         }
 
       });
+
+      const heroTimer = document.getElementById('hero-promo-countdown');
+      if (heroTimer) {
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+        const heroDiff = Math.max(0, endOfDay.getTime() - now);
+        const hh = Math.floor(heroDiff / 3600000);
+        const mm = Math.floor((heroDiff % 3600000) / 60000);
+        const ss = Math.floor((heroDiff % 60000) / 1000);
+        heroTimer.textContent = `⏱️ ${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+      }
 
       const modalTimer = document.getElementById('offer-order-timer-badge');
 
@@ -1754,46 +1767,33 @@ ${mapsLink}
     }
 
     container.style.display = 'flex';
-    container.className = 'food-bubbles-wrapper premium-scroll';
 
     const foodCategories = [
-      { id: 'all', name: 'Todos', icon: '⭐' },
-      { id: 'hamburguesas', name: 'Burgers', icon: '🍔' },
-      { id: 'perros', name: 'Perros', icon: '🌭' },
-      { id: 'pizzas', name: 'Pizzas', icon: '🍕' },
-      { id: 'patacones', name: 'Patacones', icon: '🍌' },
-      { id: 'arepas', name: 'Arepas', icon: '🫓' },
-      { id: 'cachapas', name: 'Cachapas', icon: '🌽' },
-      { id: 'sushi', name: 'Sushi', icon: '🍣' },
-      { id: 'mariscos', name: 'Mariscos', icon: '🦐' },
-      { id: 'sandwiches', name: 'Sándwiches', icon: '🥪' },
-      { id: 'pepitos', name: 'Pepitos', icon: '🥖' },
-      { id: 'alitas', name: 'Alitas', icon: '🍗' },
-      { id: 'salchipapas', name: 'Salchipapas', icon: '🍟' },
-      { id: 'picadas', name: 'Parrillas', icon: '🍖' },
-      { id: 'bebidas', name: 'Bebidas', icon: '🥤' },
-      { id: 'postres', name: 'Postres', icon: '🍰' }
+      { id: 'hamburguesas', name: 'Burger', img: '/images/burger_royale.jpg', fallback: '🍔' },
+      { id: 'pizzas', name: 'Pizza', img: '/images/mak_pizza/pizza_artesanal.jpg', fallback: '🍕' },
+      { id: 'salchipapas', name: 'Salchipapas', img: 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=200&q=80', fallback: '🍟' },
+      { id: 'shawarma', name: 'Shawarma', img: 'https://images.unsplash.com/photo-1633321702518-7feccafb94d5?w=200&q=80', fallback: '🌯' },
+      { id: 'tequenos', name: 'Tequeños', img: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=200&q=80', fallback: '🧀' },
+      { id: 'perros', name: 'Perros', img: 'https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=200&q=80', fallback: '🌭' },
+      { id: 'arepas', name: 'Arepas', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=200&q=80', fallback: '🫓' },
+      { id: 'sandwiches', name: 'Sándwiches', img: '/images/mak_pizza/sandwich_gratinado.jpg', fallback: '🥪' },
+      { id: 'postres', name: 'Postres', img: '/images/cafe_plaza_menu_1.jpg', fallback: '🍰' },
+      { id: 'bebidas', name: 'Bebidas', img: '/images/mak_pizza/frappes.jpg', fallback: '🥤' }
     ];
 
-    const activeFilter = window.activeFoodTypeFilter || 'all';
+    const activeFilter = window.activeFoodTypeFilter || '';
 
-    container.innerHTML = `
-      <div class="food-bubbles-container">
-        ${foodCategories.map(cat => {
-          const isActive = activeFilter === cat.id;
-          return `
-            <div class="bubble-story-item ${isActive ? 'active' : ''}" onclick="MarketplaceApp.filterRestaurantsByFoodType('${cat.id}')">
-              <div class="bubble-ring">
-                <div class="bubble-inner">
-                  ${cat.icon}
-                </div>
-              </div>
-              <span class="bubble-label">${cat.name}</span>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `;
+    container.innerHTML = foodCategories.map(cat => {
+      const isActive = activeFilter === cat.id;
+      return `
+        <div class="cravings-bubble-item ${isActive ? 'active' : ''}" onclick="MarketplaceApp.filterRestaurantsByFoodType('${cat.id}')">
+          <div class="cravings-bubble-circle">
+            <img src="${cat.img}" alt="${cat.name}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-size: 26px;\\'>${cat.fallback}</span>';">
+          </div>
+          <span class="cravings-bubble-label">${cat.name}</span>
+        </div>
+      `;
+    }).join('');
   }
 
   // Legacy fallback grid
@@ -1825,119 +1825,69 @@ ${mapsLink}
     </div>`;
   }
 
-  // Create Establishment Card element with distinct open vs upcoming styling
+  // Create Establishment Card element with modern banner layout matching the new aesthetic
   createEstablishmentCard(est) {
     const card = document.createElement('div');
-    card.className = 'est-row-card est-brand-card';
+    card.className = 'est-card-banner-layout';
     const isOpen = this.isEstablishmentOpen(est);
-    const brand = this.getEstablishmentBrandTheme(est);
 
     if (!isOpen) {
-      card.style.opacity = '0.85';
-      card.style.filter = 'grayscale(0.18)';
+      card.style.opacity = '0.88';
+      card.style.filter = 'grayscale(0.15)';
     }
 
     card.onclick = () => this.openEstablishment(est.id);
 
-    // Set CSS custom variables for dynamic brand styling
-    card.style.setProperty('--card-brand-tint', brand.cardTint);
-    card.style.setProperty('--card-brand-border', brand.cardBorder);
-    card.style.setProperty('--card-brand-glow', brand.cardGlow);
-    card.style.background = brand.cardBg;
-    card.style.borderColor = isOpen ? brand.cardBorder : 'rgba(255, 255, 255, 0.12)';
-
-    // Determine representation photo
-    const photoUrl = est.logoImage || (est.products && est.products[0] ? est.products[0].image : null);
-    let imgHTML = '';
-    if (photoUrl) {
-      imgHTML = `<img src="${photoUrl}" alt="${est.name}" class="est-row-img" style="object-fit: contain; width: 100%; height: 100%; padding: 3px; box-sizing: border-box;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'">`;
-    }
-
+    // Determine banner image
+    const photoUrl = est.banner || est.bannerImage || (est.products && est.products[0] ? est.products[0].image : null) || est.image || est.logoImage || '/images/burger_royale.jpg';
     const deliveryTimeStr = this.getFormattedDeliveryTime(est);
 
-    const statusBadge = isOpen
-      ? `<span class="est-open-badge" style="background: rgba(16, 185, 129, 0.95); color: #FFF; padding: 2px 5px; border-radius: 6px; font-size: 8.5px; font-weight: 900; position: absolute; bottom: 3px; left: 3px; right: 3px; text-align: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4); z-index: 2; letter-spacing: 0.3px;">🟢 ABIERTO</span>`
-      : `<span class="est-closed-badge" style="background: rgba(30, 41, 59, 0.92); color: #E2E8F0; border: 1px solid rgba(255, 255, 255, 0.15); padding: 2px 3px; border-radius: 6px; font-size: 8px; font-weight: 800; position: absolute; bottom: 3px; left: 3px; right: 3px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); z-index: 2; backdrop-filter: blur(4px);">🌙 Abre ${this.formatTime12h(est.open_time)}</span>`;
+    const totalReviews = Number(est.totalReviews || est.reviewCount || 0);
+    const avgRating = Number(est.avgRating || est.rating || 0);
+    const ratingVal = avgRating > 0 ? avgRating.toFixed(1) : '4.9';
 
-    const highTrafficBadge = (isOpen && est.isHighTraffic)
-      ? `<span class="est-traffic-badge" style="background: #dc2626; color: #ffffff; padding: 2px 4px; border-radius: 6px; font-size: 8px; font-weight: 900; position: absolute; top: 3px; left: 3px; right: 3px; text-align: center; z-index: 2;">🚨 Tráfico Alto</span>` 
-      : '';
+    const ratingBadge = (totalReviews >= 3 && avgRating > 0)
+      ? `<span class="est-card-banner-rating">⭐ ${ratingVal} (${totalReviews})</span>`
+      : `<span style="background: #D1FAE5; color: #065F46; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px;">✨ Nuevo</span>`;
 
-    const descSnippet = (est.description || '').split('.')[0] || est.description || '';
+    const promoBadge = est.isHighTraffic
+      ? `<span style="background: #DC2626; color: #FFF; font-size: 9px; font-weight: 900; padding: 2.5px 7px; border-radius: 6px;">🚨 Tráfico Alto</span>`
+      : (isOpen ? `<span style="background: #EA580C; color: #FFF; font-size: 9px; font-weight: 900; padding: 2.5px 7px; border-radius: 6px;">🔥 Promo Activa</span>` : '');
+
+    const expressBadge = `<span style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 9px; font-weight: 800; padding: 2.5px 7px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);">⚡ Envío Express</span>`;
 
     const distanceBadge = (est._distanceKm !== undefined && est._distanceKm !== null && !isNaN(est._distanceKm))
-      ? `<span style="background: rgba(147, 51, 234, 0.15); color: #C084FC; border: 1px solid rgba(147, 51, 234, 0.35); padding: 2px 7px; border-radius: 6px; font-weight: 800; font-size: 10.5px; display: inline-flex; align-items: center; gap: 3px;">
-           📍 ${est._distanceKm < 1 ? Math.round(est._distanceKm * 1000) + ' m' : est._distanceKm.toFixed(1) + ' km'}
-         </span>`
+      ? `<span style="color: #6366F1; font-weight: 700; font-size: 11px;">• 📍 ${est._distanceKm < 1 ? Math.round(est._distanceKm * 1000) + ' m' : est._distanceKm.toFixed(1) + ' km'}</span>`
       : '';
 
-    const statusTimeMarkup = isOpen
-      ? `<span style="background: rgba(16, 185, 129, 0.16); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
-           🟢 Abierto · ${deliveryTimeStr}
-         </span>
-         <span class="free-delivery" style="background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 7px; border-radius: 6px; font-weight: 800; font-size: 10.5px;">
-           🛵 ${this.formatPesos(est.delivery_fee || 5000)}
-         </span>
-         ${distanceBadge}`
-      : `<span style="background: rgba(255, 255, 255, 0.05); color: #CBD5E1; border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 10.5px; display: inline-flex; align-items: center; gap: 4px;">
-           🕒 Abre a las ${this.formatTime12h(est.open_time)}
-         </span>
-         <span style="background: rgba(148, 163, 184, 0.1); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.2); padding: 2px 6px; border-radius: 6px; font-weight: 800; font-size: 10px;">
-           🌙 Próximamente
-         </span>
-         ${distanceBadge}`;
-
-    const ctaMarkup = isOpen
-      ? `<button type="button" class="btn-brand-menu-cta" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')" style="background: ${brand.btnGradient}; color: ${brand.btnTextColor || '#FFFFFF'}; border: 1px solid ${brand.btnBorder || 'rgba(255,255,255,0.25)'}; box-shadow: 0 3px 10px ${brand.btnShadow}; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.22s ease;">
-           <span style="font-size: 12px;">${brand.btnIcon}</span>
-           <span>${brand.btnText}</span>
-           <span class="cta-arrow" style="font-size: 10px; opacity: 0.9;">➔</span>
-         </button>`
-      : `<button type="button" class="btn-brand-menu-cta" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')" style="background: rgba(255, 255, 255, 0.06); color: #CBD5E1; border: 1px solid rgba(255, 255, 255, 0.15); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.22s ease;">
-           <span style="font-size: 12px;">📖</span>
-           <span>Ver Menú</span>
-           <span class="cta-arrow" style="font-size: 10px; opacity: 0.7;">➔</span>
-         </button>`;
+    const descSnippet = (est.description || '').split('.')[0] || est.description || 'Hamburguesas al carbón, tocineta ahumada, papas rústicas y bebidas.';
 
     card.innerHTML = `
-      <div class="est-row-img-wrapper" style="background: ${brand.logoBg}; border: 1.5px solid ${brand.logoBorder}; box-shadow: 0 4px 14px ${brand.logoShadow};">
-        ${imgHTML}
-        <div class="est-row-img-placeholder hidden">${est.logo || '🏪'}</div>
-        ${statusBadge}
-        ${highTrafficBadge}
+      <div class="est-banner-photo-wrapper">
+        <img src="${photoUrl}" alt="${est.name}" onerror="this.src='/images/burger_royale.jpg'">
+        <div class="est-banner-floating-badges">
+          ${promoBadge}
+          ${expressBadge}
+        </div>
+        <div class="est-banner-time-pill">
+          <span>🕒</span> <span>${deliveryTimeStr}</span>
+        </div>
       </div>
-      <div class="est-row-info">
-        <div class="est-row-header-flex">
-          <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; color: #FFFFFF; font-weight: 900; font-size: 14px;">${est.name}</h4>
-          ${this.getEstablishmentRatingMarkup(est, 'row')}
+      <div class="est-card-banner-body">
+        <div class="est-card-banner-header">
+          <h4 class="est-card-banner-title">${est.name}</h4>
+          ${ratingBadge}
         </div>
-        <div class="est-row-desc" style="color: #94A3B8; font-size: 11.5px; margin: 2px 0;">
-          <span class="est-pill-category" style="background: ${brand.pillBg}; color: ${brand.pillColor}; border: 1px solid ${brand.pillBorder}; padding: 1.5px 6px; border-radius: 5px; font-size: 10px; font-weight: 800; margin-right: 5px; display: inline-block;">
-            ${brand.categoryTag}
-          </span>
-          <span>${descSnippet}</span>
-        </div>
-        ${est._matchingProducts && est._matchingProducts.length > 0 ? `
-          <div class="est-matching-dishes" style="margin: 6px 0 5px 0; padding: 6px 8px; background: rgba(255, 107, 0, 0.08); border: 1px solid rgba(255, 107, 0, 0.28); border-radius: 8px;">
-            <div style="font-size: 10.5px; font-weight: 800; color: #FF8A00; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-              <span>🍽️ Platos encontrados (${est._matchingProducts.length}):</span>
-            </div>
-            <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;" class="no-scrollbar">
-              ${est._matchingProducts.slice(0, 4).map(p => `
-                <span style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.14); color: #F8FAFC; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
-                  <span>${p.name}</span>
-                  <strong style="color: #34D399; font-size: 10.5px;">$${parseFloat(p.price || 0).toFixed(2)}</strong>
-                </span>
-              `).join('')}
-              ${est._matchingProducts.length > 4 ? `<span style="font-size: 10.5px; color: #94A3B8; font-weight: 700; align-self: center; white-space: nowrap;">+${est._matchingProducts.length - 4} más</span>` : ''}
-            </div>
+        <p class="est-card-banner-desc">${descSnippet}</p>
+        <div class="est-card-banner-footer">
+          <div class="est-card-banner-fee-info">
+            <span class="fee-pill">🛵 Envío ${this.formatPesos(est.delivery_fee || 5000)}</span>
+            <span class="points-note">• Gana puntos GochoPoints ⭐</span>
+            ${distanceBadge}
           </div>
-        ` : ''}
-        <div class="est-row-details-row" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-            ${statusTimeMarkup}
-          </div>
-          ${ctaMarkup}
+          <button type="button" class="btn-card-pedir-action" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')">
+            <span>Pedir</span> <span>➔</span>
+          </button>
         </div>
       </div>
     `;
@@ -3473,7 +3423,7 @@ ${mapsLink}
           ${statusTag}
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9px; margin-top: 2px; gap: 4px;">
             <span style="color: #60A5FA; font-weight: 800; white-space: nowrap;">🛵 ${this.formatPesos(est.delivery_fee || 5000)}</span>
-            <span style="color: #F59E0B; font-weight: 800; background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.35); padding: 1px 5px; border-radius: 4px; font-size: 8px; white-space: nowrap;">📢 Patrocinado</span>
+            <span style="color: #10B981; font-weight: 800; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1px 6px; border-radius: 4px; font-size: 8px; white-space: nowrap;">⚡ Express</span>
           </div>
         </div>
       `;
@@ -7301,7 +7251,7 @@ ${mapsLink}
     if (receipt) {
       lines.push(`📎 *Comprobante Adjunto:* ${receipt}`);
     }
-    lines.push(`💰 *TOTAL A PAGAR:* *${this.formatPesos(grandTotal)}*`);
+    lines.push(`💰 *TOTAL A PAGAR:* *${this.formatPesos(grandTotal, true)}*`);
 
     try {
       if (this.copToUsdRate && this.copToUsdRate > 0) {
@@ -7412,10 +7362,75 @@ ${mapsLink}
     return Math.round(num);
   }
 
-  formatPesos(val) {
+  formatPesos(val, forceCop = false) {
     if (isNaN(val) || val === null || val === undefined) return '$0';
     let num = this.normalizeCopPrice(val);
+    if (!forceCop && this.selectedCurrency) {
+      if (this.selectedCurrency === 'USD') {
+        const rate = (this.copToUsdRate && this.copToUsdRate > 0) ? this.copToUsdRate : 4000;
+        const usdVal = (num / rate).toFixed(2);
+        return `$${usdVal} USD`;
+      } else if (this.selectedCurrency === 'VES') {
+        const rate = (this.copToVesRate && this.copToVesRate > 0) ? this.copToVesRate : 0.025;
+        const vesVal = (num * rate).toFixed(2);
+        return `${vesVal} Bs.`;
+      }
+    }
     return '$' + num.toLocaleString('de-DE');
+  }
+
+  setCurrency(curr) {
+    this.selectedCurrency = curr || 'COP';
+    const pills = document.querySelectorAll('.modern-currency-switch .curr-pill');
+    pills.forEach(p => {
+      if (p.getAttribute('data-curr') === curr) {
+        p.classList.add('active');
+      } else {
+        p.classList.remove('active');
+      }
+    });
+
+    if (this.selectedEstablishment) {
+      this.renderMenu(this.selectedEstablishment);
+    } else {
+      this.renderEstablishments();
+    }
+  }
+
+  switchBottomTab(tabKey) {
+    const tabs = document.querySelectorAll('.bottom-tab-bar .tab-item');
+    tabs.forEach(tab => {
+      if (tab.getAttribute('data-tab') === tabKey) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+
+    if (tabKey === 'restaurantes') {
+      this.closeAllModals();
+      this.selectCategory('comidas');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (tabKey === 'explorar') {
+      this.closeAllModals();
+      const searchInput = document.getElementById('marketplace-search-input');
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } else if (tabKey === 'servicios') {
+      this.closeAllModals();
+      const servicesSection = document.getElementById('more-services-grid-section');
+      if (servicesSection) {
+        servicesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        this.selectCategory('servicios');
+      }
+    } else if (tabKey === 'pedidos') {
+      this.openUserOrdersModal();
+    } else if (tabKey === 'puntos') {
+      this.openGochoPointsModal();
+    }
   }
 
   handleNavBack() {
