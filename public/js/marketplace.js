@@ -1880,6 +1880,22 @@ ${mapsLink}
           </span>
           <span>${descSnippet}</span>
         </div>
+        ${est._matchingProducts && est._matchingProducts.length > 0 ? `
+          <div class="est-matching-dishes" style="margin: 6px 0 5px 0; padding: 6px 8px; background: rgba(255, 107, 0, 0.08); border: 1px solid rgba(255, 107, 0, 0.28); border-radius: 8px;">
+            <div style="font-size: 10.5px; font-weight: 800; color: #FF8A00; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+              <span>🍽️ Platos encontrados (${est._matchingProducts.length}):</span>
+            </div>
+            <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;" class="no-scrollbar">
+              ${est._matchingProducts.slice(0, 4).map(p => `
+                <span style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.14); color: #F8FAFC; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+                  <span>${p.name}</span>
+                  <strong style="color: #34D399; font-size: 10.5px;">$${parseFloat(p.price || 0).toFixed(2)}</strong>
+                </span>
+              `).join('')}
+              ${est._matchingProducts.length > 4 ? `<span style="font-size: 10.5px; color: #94A3B8; font-weight: 700; align-self: center; white-space: nowrap;">+${est._matchingProducts.length - 4} más</span>` : ''}
+            </div>
+          </div>
+        ` : ''}
         <div class="est-row-details-row" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
             ${statusTimeMarkup}
@@ -1963,7 +1979,19 @@ ${mapsLink}
     };
 
     let displayTitle = '';
-    if (filtered || window.activeFoodTypeFilter) {
+    if (this.isSearchActive && this.searchQuery) {
+      displayTitle = `
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">🔍</span>
+            <span style="font-weight: 900; color: #FFFFFF; font-size: 15px;">Resultados para "${this.searchQuery}"</span>
+          </div>
+          <button type="button" onclick="MarketplaceApp.clearSearch()" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+            ✕ Limpiar Búsqueda
+          </button>
+        </div>
+      `;
+    } else if (filtered || window.activeFoodTypeFilter) {
       const activeLabel = categoryNames[window.activeFoodTypeFilter] || (window.activeFoodTypeFilter ? this.capitalize(window.activeFoodTypeFilter) : 'Resultados');
       displayTitle = `
         <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 10px;">
@@ -2572,6 +2600,9 @@ ${mapsLink}
     // Get session seed for fair play rotation (Strictly exclude disabled establishments from ANY list)
     const baseList = filtered ? filtered.filter(e => !e.disabled) : this.establishments;
     const rawList = baseList.filter(e => {
+      // When searching (filtered is present), do NOT constrain by currentCategory!
+      if (filtered) return true;
+
       if (this.currentCategory === 'comidas') {
         const estCat = (e.category || '').toLowerCase();
         if (estCat !== 'comidas' && estCat !== 'pizzas' && estCat !== 'pizza' && estCat !== 'hamburguesas' && estCat !== 'arepas' && estCat !== 'restaurantes') return false;
@@ -2595,21 +2626,56 @@ ${mapsLink}
       allRestHeader.style.display = 'none';
     }
 
-    // Hide daily promo section when filtering specific food type to avoid distraction
+    // Hide daily promo section when filtering specific food type or searching
     const promoSection = document.getElementById('daily-promotions-section');
     if (promoSection) {
-      if (this.currentCategory !== 'comidas' || (window.activeFoodTypeFilter && window.activeFoodTypeFilter !== 'all')) {
+      if (this.isSearchActive || this.currentCategory !== 'comidas' || (window.activeFoodTypeFilter && window.activeFoodTypeFilter !== 'all')) {
         promoSection.style.display = 'none';
         promoSection.classList.add('hidden');
       }
     }
 
     // Render Featured Horizontal Carousel (Prioritizes open stores first)
-    this.renderFeaturedCarousel();
+    if (!this.isSearchActive) {
+      this.renderFeaturedCarousel();
+    } else {
+      const featSection = document.getElementById('featured-carousel-section');
+      if (featSection) {
+        featSection.style.display = 'none';
+        featSection.classList.add('hidden');
+      }
+    }
 
     grid.innerHTML = '';
 
     if (rawList.length === 0) {
+      if (this.isSearchActive) {
+        grid.innerHTML = `
+          <div class="empty-search-card" style="grid-column: 1 / -1; padding: 32px 18px; text-align: center; background: #1C2333; border: 1.5px solid rgba(255, 107, 0, 0.35); border-radius: 20px; margin: 10px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+            <div style="font-size: 42px; margin-bottom: 8px;">🍽️🔍</div>
+            <h3 style="font-size: 17px; font-weight: 900; color: #FFFFFF; margin: 0 0 6px 0; letter-spacing: -0.2px;">
+              No encontramos negocios ni platos para "${this.searchQuery}"
+            </h3>
+            <p style="font-size: 13px; color: #CBD5E1; max-width: 440px; margin: 0 auto 16px auto; line-height: 1.45; font-weight: 500;">
+              Prueba buscando por platos populares o categorías de servicios:
+            </p>
+            <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; max-width: 520px; margin: 0 auto 16px auto;">
+              <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Hamburguesas')">🍔 Hamburguesas</button>
+              <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Pizzas')">🍕 Pizzas</button>
+              <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Salchipapas')">🍟 Salchipapas</button>
+              <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Perros calientes')">🌭 Perros</button>
+              <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Shawarma')">🌯 Shawarma</button>
+              <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Farmacia')">💊 Farmacias</button>
+              <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Llaveros')">🎁 Llaveros 3D</button>
+            </div>
+            <button type="button" onclick="MarketplaceApp.clearSearch()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #FFF; padding: 9px 18px; border-radius: 12px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
+              Ver Todos los Comercios
+            </button>
+          </div>
+        `;
+        return;
+      }
+
       const activeName = (window.activeFoodTypeFilter && categoryNames[window.activeFoodTypeFilter]) 
         ? categoryNames[window.activeFoodTypeFilter] 
         : (this.capitalize(this.currentCategory) || 'esta categoría');
@@ -2618,6 +2684,7 @@ ${mapsLink}
         'comidas': '🍔',
         'farmacias': '💊',
         'servicios': '🛵',
+        'personalizados': '🎁',
         'mercados': '🛒',
         'ferreterias': '🛠️'
       }[this.currentCategory] || '🏪';
@@ -2658,7 +2725,7 @@ ${mapsLink}
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 16px;">🟢</span>
           <div>
-            <h4 style="margin: 0; font-size: 13.5px; font-weight: 900; color: #FFFFFF; letter-spacing: 0.3px;">ABIERTOS AHORA (${openList.length})</h4>
+            <h4 style="margin: 0; font-size: 13.5px; font-weight: 900; color: #FFFFFF; letter-spacing: 0.3px;">ABIERTOS AHORA (${openList.length})${this.isSearchActive ? ' · Negocios encontrados' : ''}</h4>
             <p style="margin: 0; font-size: 11px; color: #6EE7B7; font-weight: 600;">Listos para preparar tu pedido y entregar volando ⚡</p>
           </div>
         </div>
@@ -2703,6 +2770,52 @@ ${mapsLink}
 
       closedList.forEach(est => {
         grid.appendChild(this.createEstablishmentCard(est));
+      });
+    }
+
+    // 3. SECCIÓN EXTRA DURANTE BÚSQUEDA: SERVICIOS & PERSONALIZADOS COINCIDENTES
+    if (this.isSearchActive && this._matchedServices && this._matchedServices.length > 0) {
+      const svcHeader = document.createElement('div');
+      svcHeader.style.cssText = 'grid-column: 1 / -1; margin: 20px 0 8px 0; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(90deg, rgba(236, 72, 153, 0.18), rgba(99, 102, 241, 0.06)); border-left: 4px solid #EC4899; padding: 10px 14px; border-radius: 12px; border-top: 1px solid rgba(236, 72, 153, 0.3); border-right: 1px solid rgba(236, 72, 153, 0.3); border-bottom: 1px solid rgba(236, 72, 153, 0.3);';
+      svcHeader.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 17px;">✨</span>
+          <div>
+            <h4 style="margin: 0; font-size: 13.5px; font-weight: 900; color: #FFFFFF; letter-spacing: 0.3px;">SERVICIOS & PERSONALIZADOS COINCIDENTES (${this._matchedServices.length})</h4>
+            <p style="margin: 0; font-size: 11px; color: #F472B6; font-weight: 600;">Servicios técnicos, auxilio vial y artesanías personalizadas</p>
+          </div>
+        </div>
+      `;
+      grid.appendChild(svcHeader);
+
+      this._matchedServices.forEach(est => {
+        const color = est.themeColor || '#EC4899';
+        const cleanPhone = (est.phone || '+573227949751').replace(/[^0-9]/g, '');
+        const svcCard = document.createElement('div');
+        svcCard.className = 'est-row-card service-row-card';
+        svcCard.style.cssText = `grid-column: 1 / -1; width: 100%; box-sizing: border-box; background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1.5px solid ${color}60; border-radius: 18px; padding: 14px; margin-bottom: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);`;
+        svcCard.innerHTML = `
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 46px; height: 46px; border-radius: 14px; background: #0B0F19; border: 1.5px solid ${color}; display: flex; align-items: center; justify-content: center; padding: 4px; flex-shrink: 0;">
+                <img src="${est.logo}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: contain;">
+              </div>
+              <div>
+                <h4 style="margin: 0; color: #FFF; font-size: 15px; font-weight: 900; letter-spacing: -0.2px;">${est.name}</h4>
+                <div style="font-size: 11.5px; color: ${color}; font-weight: 700; margin-top: 2px;">${est.categoryIcon || '✨'} ${est.categoryLabel} • <span style="color: #94A3B8;">${est.serviceName}</span></div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button type="button" onclick="MarketplaceApp.executeServiceAction('${est.actionType}')" style="background: linear-gradient(135deg, ${color} 0%, rgba(15,23,42,0.95) 160%); border: 1.5px solid ${color}; color: #FFF; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 8px ${color}35;">
+                ${est.ctaText}
+              </button>
+              <button type="button" onclick="window.open('https://wa.me/${cleanPhone}?text=Hola,%20quisiera%20consultar%20sobre%20${encodeURIComponent(est.name)}', '_blank')" style="background: rgba(37, 211, 102, 0.15); border: 1.5px solid #25D366; color: #25D366; padding: 7px 11px; border-radius: 10px; font-size: 14px; cursor: pointer;" title="WhatsApp">
+                💬
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(svcCard);
       });
     }
   }
@@ -7197,26 +7310,144 @@ ${mapsLink}
     }, 3000);
   }
 
+  normalizeSearchText(str) {
+    if (!str) return '';
+    return str.toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  setSearchQuery(term) {
+    const input = document.getElementById('global-search');
+    if (input) {
+      input.value = term;
+      input.focus();
+      this.handleSearch({ target: input });
+      setTimeout(() => {
+        const target = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 60);
+    }
+  }
+
+  clearSearch() {
+    const input = document.getElementById('global-search');
+    if (input) {
+      input.value = '';
+    }
+    const clearBtn = document.getElementById('search-clear-btn');
+    if (clearBtn) clearBtn.classList.add('hidden');
+    this.searchQuery = '';
+    this.isSearchActive = false;
+    this._matchedServices = [];
+    this.renderEstablishments();
+  }
+
   handleSearch(event) {
-    const query = event.target.value.toLowerCase().trim();
+    const rawVal = event && event.target ? event.target.value : '';
+    const clearBtn = document.getElementById('search-clear-btn');
+    if (clearBtn) {
+      if (rawVal.trim().length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+    }
+
+    const query = this.normalizeSearchText(rawVal);
     if (!query) {
+      this.searchQuery = '';
+      this.isSearchActive = false;
+      this._matchedServices = [];
       this.renderEstablishments();
       return;
     }
 
-    // Filter establishments that match query (or have matching products) and active location (excluding disabled)
-    const filtered = this.establishments.filter(est => {
+    this.searchQuery = rawVal.trim();
+    this.isSearchActive = true;
+
+    const terms = query.split(/\s+/).filter(Boolean);
+
+    // 1. Search in standard establishments (Restaurantes, Farmacias, etc.)
+    const filteredEsts = (this.establishments || []).filter(est => {
       if (est.disabled === true) return false;
-      const matchLoc = !this.currentLocation || this.currentLocation === 'all' || !est.location ||
-        (est.location || '').toLowerCase().includes(this.currentLocation.toLowerCase()) ||
-        this.currentLocation.toLowerCase().includes((est.location || '').toLowerCase());
-      if (!matchLoc) return false;
-      const matchEst = (est.name || '').toLowerCase().includes(query) || (est.description || '').toLowerCase().includes(query);
-      const matchProd = Array.isArray(est.products) && est.products.some(p => (p.name || '').toLowerCase().includes(query) || (p.description || '').toLowerCase().includes(query));
-      return matchEst || matchProd;
+
+      // Location match if user filtered location
+      if (this.currentLocation && this.currentLocation !== 'all' && est.location) {
+        const normEstLoc = this.normalizeSearchText(est.location);
+        const normUserLoc = this.normalizeSearchText(this.currentLocation);
+        if (!normEstLoc.includes(normUserLoc) && !normUserLoc.includes(normEstLoc)) {
+          return false;
+        }
+      }
+
+      const estName = this.normalizeSearchText(est.name);
+      const estCat = this.normalizeSearchText(est.category);
+      const estDesc = this.normalizeSearchText(est.description);
+      const estTags = this.normalizeSearchText((est.tags || []).join(' '));
+
+      // Match establishment identity
+      const matchEst = terms.every(term => 
+        estName.includes(term) || estCat.includes(term) || estDesc.includes(term) || estTags.includes(term)
+      );
+
+      // Match products / platos
+      const matchedProducts = [];
+      if (Array.isArray(est.products)) {
+        est.products.forEach(p => {
+          if (!p || p.disabled) return;
+          const pName = this.normalizeSearchText(p.name);
+          const pDesc = this.normalizeSearchText(p.description);
+          const pCat = this.normalizeSearchText(p.category);
+          const matchProduct = terms.every(term => 
+            pName.includes(term) || pDesc.includes(term) || pCat.includes(term)
+          );
+          if (matchProduct) {
+            matchedProducts.push(p);
+          }
+        });
+      }
+
+      est._matchingProducts = matchedProducts;
+      return matchEst || matchedProducts.length > 0;
     });
 
-    this.renderEstablishments(filtered);
+    // Sort: Businesses with matching dishes or matching names, open first
+    filteredEsts.sort((a, b) => {
+      const aOpen = this.isEstablishmentOpen(a) ? 1 : 0;
+      const bOpen = this.isEstablishmentOpen(b) ? 1 : 0;
+      if (aOpen !== bOpen) return bOpen - aOpen;
+
+      const aMatches = (a._matchingProducts || []).length;
+      const bMatches = (b._matchingProducts || []).length;
+      return bMatches - aMatches;
+    });
+
+    // 2. Search in service establishments (Shelli Art, Creaciones Lola, 3D Lab, Cauchera, Taller, Móvil)
+    const allServices = (this.serviceEstablishments && this.serviceEstablishments.length > 0)
+      ? this.serviceEstablishments
+      : this.getDefaultServiceEstablishments();
+
+    const matchedServices = allServices.filter(svc => {
+      const sName = this.normalizeSearchText(svc.name);
+      const sCat = this.normalizeSearchText(svc.category);
+      const sLabel = this.normalizeSearchText(svc.categoryLabel);
+      const sServName = this.normalizeSearchText(svc.serviceName);
+      const sSlogan = this.normalizeSearchText(svc.slogan);
+      const sBadges = this.normalizeSearchText((svc.badges || []).join(' '));
+
+      return terms.every(term => 
+        sName.includes(term) || sCat.includes(term) || sLabel.includes(term) || 
+        sServName.includes(term) || sSlogan.includes(term) || sBadges.includes(term)
+      );
+    });
+
+    this._matchedServices = matchedServices;
+    this.renderEstablishments(filteredEsts, true);
   }
 
   openTermsModal(e) {

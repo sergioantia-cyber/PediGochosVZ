@@ -118,11 +118,27 @@
       </div>
     </div>
     
-    <!-- Search Bar Section -->
-    <div class="search-section-wrapper">
-      <div class="search-bar-container">
+    <!-- Search Bar Section (Protagonista de Pedi Gochos) -->
+    <div class="search-section-wrapper protagonist-search-section">
+      <div class="search-bar-container protagonist-search-container">
         <span class="search-icon">🔍</span>
-        <input type="text" id="global-search" placeholder="¿Qué necesitas hoy?" oninput="MarketplaceApp.handleSearch(event)">
+        <input type="text" id="global-search" placeholder="¿Qué quieres pedir hoy? (ej. Hamburguesa, Pizza, Salchipapa...)" oninput="MarketplaceApp.handleSearch(event)" autocomplete="off">
+        <button type="button" id="search-clear-btn" class="search-clear-btn hidden" onclick="MarketplaceApp.clearSearch()" title="Limpiar búsqueda">✕</button>
+      </div>
+
+      <!-- Quick Discovery Chips (Restaurante + Plato + Categoría) -->
+      <div class="search-quick-chips" id="search-quick-chips">
+        <span class="chip-hint">🔥 Tendencias:</span>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Hamburguesas')">🍔 Hamburguesas</button>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Pizzas')">🍕 Pizzas</button>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Salchipapas')">🍟 Salchipapas</button>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Perros calientes')">🌭 Perros</button>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Shawarma')">🌯 Shawarma</button>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Tequeños')">🥟 Tequeños</button>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Postres')">🍰 Postres</button>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Farmacia')">💊 Farmacias</button>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Llaveros')">🎁 Llaveros 3D</button>
+        <button type="button" class="search-chip" onclick="MarketplaceApp.setSearchQuery('Cauchera')">🛠 Cauchera 24/7</button>
       </div>
     </div>
   </header>
