@@ -7,6 +7,15 @@
   <meta name="description" content="PediGochos - Tu guía gastronómica. Delivery y pedidos al instante en San Antonio del Táchira.">
   <meta name="theme-color" content="#1E222D">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- Open Graph & Social Meta Tags -->
+  <meta property="og:title" content="PediGochos - Tu Delivery y Servicios en San Antonio del Táchira">
+  <meta property="og:description" content="Pide comida, ofertas del día al 50%, impresiones 3D y arte en resina epóxica en San Antonio y frontera.">
+  <meta property="og:image" content="https://pedigochos.com/images/logo-pedigochos.png">
+  <meta property="og:url" content="https://pedigochos.com/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
   <link rel="icon" type="image/png" href="/images/logo-pedigochos.png">
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
   <link rel="stylesheet" href="/css/common.css?v=231">
@@ -2014,7 +2023,12 @@
             <span id="offer-order-timer-badge" style="font-size: 10.5px; color: #FCA5A5; font-weight: 700;">⏱️ Válida por 24 horas</span>
           </div>
         </div>
-        <button type="button" onclick="MarketplaceApp.closeDailyOfferOrderModal()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">✕</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" onclick="MarketplaceApp.shareDailyOffer()" title="Compartir Oferta" style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.45); color: #60A5FA; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+            <span>📲</span> Compartir
+          </button>
+          <button type="button" onclick="MarketplaceApp.closeDailyOfferOrderModal()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
       </div>
 
       <!-- Offer Summary Card -->
@@ -2157,16 +2171,16 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="/js/qrcode.min.js?v=231"></script>
   <script src="/js/sound.js?v=231"></script>
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-  <script src="/js/paint-service.js?v=252"></script>
-  <script src="/js/print3d-service.js?v=252"></script>
-  <script src="/js/resin-service.js?v=253"></script>
-  <script src="/js/pinata-service.js?v=252"></script>
-  <script src="/js/marketplace.js?v=253"></script>
+  <script src="/js/phone-utils.js?v=254"></script>
+  <script defer src="/js/paint-service.js?v=254"></script>
+  <script defer src="/js/print3d-service.js?v=254"></script>
+  <script defer src="/js/resin-service.js?v=254"></script>
+  <script defer src="/js/pinata-service.js?v=254"></script>
+  <script defer src="/js/marketplace.js?v=254"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=253').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=254').then((reg) => {
           reg.update();
         }).catch(() => {});
       });

@@ -2503,11 +2503,16 @@ const ResinServiceApp = {
       if (nameInput) nameInput.focus();
       return;
     }
-    if (!customerPhone || customerPhone.length < 7) {
-      alert('⚠️ Por favor ingresa tu número de Teléfono / WhatsApp.');
+
+    const phoneVal = (window.PhoneUtils && window.PhoneUtils.validateVECO)
+      ? window.PhoneUtils.validateVECO(customerPhone)
+      : { isValid: customerPhone.length >= 7 };
+    if (!phoneVal.isValid) {
+      alert(`⚠️ ${phoneVal.error || 'Por favor ingresa un número de teléfono válido (VE: 0414... / CO: 320...).'}`);
       if (phoneInput) phoneInput.focus();
       return;
     }
+
     if (!deliveryCity) {
       alert('⚠️ Por favor selecciona tu Ciudad o Municipio de entrega.');
       if (citySelect) citySelect.focus();
@@ -2517,6 +2522,14 @@ const ResinServiceApp = {
       alert('⚠️ Por favor indica la dirección exacta de entrega.');
       if (addressInput) addressInput.focus();
       return;
+    }
+
+    if (!this.state.gps || !this.state.gps.lat) {
+      const confirmNoGps = confirm('📍 No has fijado tu ubicación GPS satelital.\n\nEl GPS permite al repartidor ubicar tu casa con exactitud satelital.\n\n¿Deseas enviar el pedido sin GPS? (Presiona Cancelar para marcar GPS).');
+      if (!confirmNoGps) {
+        this.detectLiveGps();
+        return;
+      }
     }
 
     this.state.customerName = customerName;
@@ -2652,13 +2665,56 @@ _Hola Shelli Art, acabo de diseñar mi llavero personalizado en la app. ¿Podrí
         gpsMapUrl: this.state.gps?.mapUrl || ''
       };
 
-      await fetch('/api/resin-services/quotes', {
+      const res = await fetch('/api/resin-services/quotes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      const data = await res.json();
+      if (data && data.quote) {
+        this.saveUserQuoteToStorage(data.quote);
+      }
     } catch(e) {
       console.warn('Silent resin quote save error:', e);
+    }
+  },
+
+  saveUserQuoteToStorage(quote) {
+    if (!quote || !quote.id) return;
+    try {
+      let list = JSON.parse(localStorage.getItem('pg_my_resin_quotes') || '[]');
+      const idx = list.findIndex(q => q.id === quote.id);
+      const item = {
+        id: quote.id,
+        chatId: quote.chatId,
+        productTitle: quote.productTitle || 'Llavero en Resina',
+        createdAt: quote.createdAt || new Date().toISOString(),
+        status: quote.status || 'Solicitado',
+        agreedPriceUsd: quote.agreedPriceUsd || null,
+        photoShapeName: quote.photoShapeName || '',
+        photoFrontUrl: quote.photoFrontUrl || ''
+      };
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...item };
+      } else {
+        list.unshift(item);
+      }
+      localStorage.setItem('pg_my_resin_quotes', JSON.stringify(list.slice(0, 30)));
+    } catch(e) {}
+  },
+
+  async openChatModalById(quoteId) {
+    try {
+      const res = await fetch('/api/resin-services/quotes');
+      const quotes = await res.json();
+      const quote = Array.isArray(quotes) ? quotes.find(q => q.id === quoteId || q.chatId === quoteId) : null;
+      if (quote) {
+        this.openChatModal(quote);
+      } else {
+        this.openChatModal({ id: quoteId, chatId: 'chat-' + quoteId.toLowerCase(), status: 'Solicitado', productTitle: 'Llavero en Resina' });
+      }
+    } catch(e) {
+      console.warn('Error opening chat by id:', e);
     }
   },
 
@@ -2673,9 +2729,32 @@ _Hola Shelli Art, acabo de diseñar mi llavero personalizado en la app. ¿Podrí
     const deliveryCity = (citySelect?.value || '').trim();
     const deliveryAddress = (addressInput?.value || '').trim();
 
-    if (!customerName || !customerPhone || !deliveryAddress) {
-      alert('⚠️ Por favor completa tu nombre, teléfono y dirección antes de enviar.');
+    if (!customerName) {
+      alert('⚠️ Por favor ingresa tu nombre y apellido.');
       return;
+    }
+
+    const phoneVal = (window.PhoneUtils && window.PhoneUtils.validateVECO)
+      ? window.PhoneUtils.validateVECO(customerPhone)
+      : { isValid: customerPhone.length >= 7 };
+    if (!phoneVal.isValid) {
+      alert(`⚠️ ${phoneVal.error || 'Por favor ingresa un teléfono válido (VE: 0414... / CO: 320...).'}`);
+      if (phoneInput) phoneInput.focus();
+      return;
+    }
+
+    if (!deliveryAddress) {
+      alert('⚠️ Por favor indica la dirección de entrega.');
+      if (addressInput) addressInput.focus();
+      return;
+    }
+
+    if (!this.state.gps || !this.state.gps.lat) {
+      const confirmNoGps = confirm('📍 No has fijado tu ubicación GPS satelital.\n\nEl GPS permite al repartidor ubicar tu casa con exactitud satelital.\n\n¿Deseas enviar el pedido sin GPS? (Presiona Cancelar para marcar GPS).');
+      if (!confirmNoGps) {
+        this.detectLiveGps();
+        return;
+      }
     }
 
     const pricing = this.calculatePricing();
@@ -2724,6 +2803,7 @@ _Hola Shelli Art, acabo de diseñar mi llavero personalizado en la app. ¿Podrí
       const data = await res.json();
       if (data.quote) {
         this.activeQuote = data.quote;
+        this.saveUserQuoteToStorage(data.quote);
         this.closeDeliveryDrawer();
         this.openChatModal(data.quote);
       }

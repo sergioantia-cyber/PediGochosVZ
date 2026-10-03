@@ -844,11 +844,51 @@ const Print3DServiceApp = {
       const data = await res.json();
       if (data.quote) {
         this.activeQuote = data.quote;
+        this.saveUserQuoteToStorage(data.quote);
         this.openChatModal(data.quote);
       }
     } catch (e) {
       console.error('Error starting 3D chat:', e);
       alert('Error iniciando chat con el laboratorio 3D.');
+    }
+  },
+
+  saveUserQuoteToStorage(quote) {
+    if (!quote || !quote.id) return;
+    try {
+      let list = JSON.parse(localStorage.getItem('pg_my_print3d_quotes') || '[]');
+      const idx = list.findIndex(q => q.id === quote.id);
+      const item = {
+        id: quote.id,
+        chatId: quote.chatId,
+        productTitle: quote.productTitle || quote.modelName || 'Impresión 3D',
+        createdAt: quote.createdAt || new Date().toISOString(),
+        status: quote.status || 'Solicitado',
+        agreedPriceUsd: quote.agreedPriceUsd || null,
+        material: quote.materialName || quote.material || 'PLA',
+        color: quote.colorName || quote.filamentColor || 'Negro'
+      };
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...item };
+      } else {
+        list.unshift(item);
+      }
+      localStorage.setItem('pg_my_print3d_quotes', JSON.stringify(list.slice(0, 30)));
+    } catch(e) {}
+  },
+
+  async openChatModalById(quoteId) {
+    try {
+      const res = await fetch('/api/print3d-services/quotes');
+      const quotes = await res.json();
+      const quote = Array.isArray(quotes) ? quotes.find(q => q.id === quoteId || q.chatId === quoteId) : null;
+      if (quote) {
+        this.openChatModal(quote);
+      } else {
+        this.openChatModal({ id: quoteId, chatId: 'chat-' + quoteId.toLowerCase(), status: 'Solicitado', productTitle: 'Impresión 3D' });
+      }
+    } catch(e) {
+      console.warn('Error opening 3D chat by id:', e);
     }
   },
 
@@ -1415,6 +1455,7 @@ const Print3DServiceApp = {
         if (data.quote) {
           this.closeCustomUploadModal();
           this.activeQuote = data.quote;
+          this.saveUserQuoteToStorage(data.quote);
           this.openChatModal(data.quote);
         }
       }).catch(e => {

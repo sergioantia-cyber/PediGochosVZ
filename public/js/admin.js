@@ -4940,16 +4940,7 @@ class AdminController {
   }
 
   exportExecutiveReport() {
-    this.showToast('📄 Generando Reporte Ejecutivo Analytics Pro ($10/mes)...');
-    setTimeout(() => {
-      alert('📄 REPORTE EJECUTIVO ANALYTICS PRO ($10/MES)\n\n' +
-            '• Estado del Plan: ACTIVO ($10/mes)\n' +
-            '• Ventas Totales: ' + (document.getElementById('pro-kpi-sales-usd')?.innerText || '$0.00') + '\n' +
-            '• Pedidos Totales: ' + (document.getElementById('pro-kpi-total-orders')?.innerText || '0') + '\n' +
-            '• Ticket Promedio: ' + (document.getElementById('pro-kpi-avg-ticket')?.innerText || '$0.00') + '\n' +
-            '• Hora Pico: 7:00 PM - 9:30 PM\n\n' +
-            '¡Reporte generado con éxito!');
-    }, 600);
+    this.exportToCSV();
   }
 
   showToast(message, isError = false) {
@@ -5945,6 +5936,25 @@ class AdminController {
       displayedOrders = caucheraOrders;
     }
 
+    // Apply date range filter if active
+    const dateFromEl = document.getElementById('admin-orders-date-from');
+    const dateToEl = document.getElementById('admin-orders-date-to');
+    const fromVal = dateFromEl ? dateFromEl.value : '';
+    const toVal = dateToEl ? dateToEl.value : '';
+
+    if (fromVal || toVal) {
+      displayedOrders = displayedOrders.filter(o => {
+        const rawDate = o.createdAt || o.created_at || o.timestamp;
+        if (!rawDate) return true;
+        const d = new Date(rawDate);
+        if (isNaN(d.getTime())) return true;
+        const orderDateStr = d.toISOString().split('T')[0];
+        if (fromVal && orderDateStr < fromVal) return false;
+        if (toVal && orderDateStr > toVal) return false;
+        return true;
+      });
+    }
+
     // Apply search filter if active
     if (this.ordersSearchTerm) {
       const term = this.ordersSearchTerm;
@@ -6216,6 +6226,118 @@ class AdminController {
     }).join('');
 
     tbody.innerHTML = htmlRows;
+  }
+
+  clearDateFilter() {
+    const fromEl = document.getElementById('admin-orders-date-from');
+    const toEl = document.getElementById('admin-orders-date-to');
+    if (fromEl) fromEl.value = '';
+    if (toEl) toEl.value = '';
+    this.filterLiveOrdersList();
+  }
+
+  exportToCSV() {
+    try {
+      const orders = Array.isArray(this.orders) ? this.orders : [];
+      if (orders.length === 0) {
+        alert('No hay pedidos disponibles para exportar.');
+        return;
+      }
+
+      const fromVal = document.getElementById('admin-orders-date-from')?.value || '';
+      const toVal = document.getElementById('admin-orders-date-to')?.value || '';
+
+      let exportList = [...orders];
+      if (fromVal || toVal) {
+        exportList = exportList.filter(o => {
+          const raw = o.createdAt || o.created_at || o.timestamp;
+          if (!raw) return true;
+          const d = new Date(raw);
+          if (isNaN(d.getTime())) return true;
+          const dateStr = d.toISOString().split('T')[0];
+          if (fromVal && dateStr < fromVal) return false;
+          if (toVal && dateStr > toVal) return false;
+          return true;
+        });
+      }
+
+      const headers = [
+        'ID Pedido',
+        'Fecha y Hora',
+        'Tipo / Servicio',
+        'Establecimiento / Comercio',
+        'Cliente',
+        'Telefono WhatsApp',
+        'Direccion Entrega',
+        'Punto Referencia',
+        'Estado',
+        'Metodo Pago',
+        'Monto Total USD',
+        'Monto Total COP/VES',
+        'Detalle Articulos'
+      ];
+
+      const escapeCSV = (val) => {
+        const str = String(val === undefined || val === null ? '' : val).replace(/"/g, '""');
+        return `"${str}"`;
+      };
+
+      const rows = exportList.map(o => {
+        const rawDate = o.createdAt || o.created_at || o.timestamp;
+        const dateStr = rawDate ? new Date(rawDate).toLocaleString('es-VE') : 'N/A';
+        const isCauchera = this.isCaucheraOrder(o);
+        const isRide = !isCauchera && this.isRideOrder(o);
+        const type = isCauchera ? 'Cauchera' : isRide ? 'Vehículo' : 'Restaurante';
+        const est = o.establishmentName || (isCauchera ? 'Cauchera Cachu' : isRide ? 'Servicio Transporte' : 'Restaurante');
+        const client = o.customerName || o.deliveryDetails?.name || 'Cliente';
+        const phone = o.customerPhone || o.deliveryDetails?.phone || '';
+        const address = o.deliveryDetails?.address || o.deliveryDetails?.destination || o.deliveryAddress || '';
+        const ref = o.deliveryDetails?.reference || o.deliveryReference || '';
+        const status = o.status || 'Pendiente';
+        const payment = o.paymentMethod || 'Efectivo';
+        const usd = o.totalUSD !== undefined ? o.totalUSD : (o.estimatedPriceUsd || 0);
+        const cop = o.totalCOP !== undefined ? o.totalCOP : (o.totalPrice || 0);
+
+        let itemsSummary = '';
+        if (Array.isArray(o.items)) {
+          itemsSummary = o.items.map(it => `${it.quantity || 1}x ${it.name || it.title || 'Item'}`).join(' | ');
+        } else if (o.deliveryDetails?.summary) {
+          itemsSummary = o.deliveryDetails.summary;
+        }
+
+        return [
+          escapeCSV(o.id || o.deliveryDetails?.code || ''),
+          escapeCSV(dateStr),
+          escapeCSV(type),
+          escapeCSV(est),
+          escapeCSV(client),
+          escapeCSV(phone),
+          escapeCSV(address),
+          escapeCSV(ref),
+          escapeCSV(status),
+          escapeCSV(payment),
+          escapeCSV(usd),
+          escapeCSV(cop),
+          escapeCSV(itemsSummary)
+        ].join(',');
+      });
+
+      const csvContent = '\ufeff' + [headers.join(','), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const today = new Date().toISOString().split('T')[0];
+      a.href = url;
+      a.download = `PediGochos_Reporte_Pedidos_${today}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      this.showToast('✅ Reporte CSV descargado con éxito.');
+    } catch(err) {
+      console.error('Error exporting CSV:', err);
+      alert('Error generando reporte CSV.');
+    }
   }
 
   async updateOrderStatusFromSelect(orderId, newStatus) {

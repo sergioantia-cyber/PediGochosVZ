@@ -166,6 +166,14 @@ class MarketplaceController {
     await this.loadPromotions();
     this.initWebSocket();
     
+    // Check deep link ?promo=ID or ?oferta=ID
+    const promoParam = urlParams.get('promo') || urlParams.get('oferta');
+    if (promoParam) {
+      setTimeout(() => {
+        this.openDailyOfferOrderModal(promoParam);
+      }, 500);
+    }
+    
     // Auto-detect user's GPS coordinates immediately on startup
     this.requestAutomaticGPS(false);
 
@@ -312,6 +320,45 @@ class MarketplaceController {
               }
               this.handleCustomerOrderStatusUpdate(data.order, oldStatus);
             }
+          }
+          if (data.type === 'promotion_new') {
+            this.loadPromotions();
+            if (data.promotion && data.promotion.title) {
+              this.sendPushNotification('🔥 ¡Nueva Oferta del Día!', `${data.promotion.title} - Solo por 24 horas.`);
+            }
+          }
+          if (data.type === 'promotions_expired') {
+            this.loadPromotions();
+          }
+          if (data.type === 'RESIN_QUOTE_UPDATE' && data.quote) {
+            try {
+              let resinQuotes = JSON.parse(localStorage.getItem('pg_my_resin_quotes') || '[]');
+              const idx = resinQuotes.findIndex(q => q.id === data.quote.id);
+              if (idx >= 0) {
+                resinQuotes[idx] = { ...resinQuotes[idx], ...data.quote };
+                localStorage.setItem('pg_my_resin_quotes', JSON.stringify(resinQuotes));
+                this.sendPushNotification('✨ Shelli Art - Actualización', `Tu llavero de resina está ahora: ${data.quote.status}`);
+                const modal = document.getElementById('user-orders-modal');
+                if (modal && modal.classList.contains('active')) {
+                  this.renderUserOrdersList();
+                }
+              }
+            } catch(e) {}
+          }
+          if (data.type === 'PRINT3D_QUOTE_UPDATE' && data.quote) {
+            try {
+              let p3dQuotes = JSON.parse(localStorage.getItem('pg_my_print3d_quotes') || '[]');
+              const idx = p3dQuotes.findIndex(q => q.id === data.quote.id);
+              if (idx >= 0) {
+                p3dQuotes[idx] = { ...p3dQuotes[idx], ...data.quote };
+                localStorage.setItem('pg_my_print3d_quotes', JSON.stringify(p3dQuotes));
+                this.sendPushNotification('🖨️ 3D Lab - Actualización', `Tu pieza 3D está ahora: ${data.quote.status}`);
+                const modal = document.getElementById('user-orders-modal');
+                if (modal && modal.classList.contains('active')) {
+                  this.renderUserOrdersList();
+                }
+              }
+            } catch(e) {}
           }
         } catch (e) {
           console.error(e);
@@ -1153,7 +1200,11 @@ class MarketplaceController {
     const submitBtn = document.getElementById('btn-submit-offer-whatsapp');
     const hintEl = document.getElementById('offer-order-submit-hint');
 
-    const isValid = (whatsapp.length >= 7) && (address.length >= 4) && hasGps;
+    const phoneVal = (window.PhoneUtils && window.PhoneUtils.validateVECO)
+      ? window.PhoneUtils.validateVECO(whatsapp)
+      : { isValid: whatsapp.length >= 7 };
+
+    const isValid = phoneVal.isValid && (address.length >= 4) && hasGps;
 
     if (submitBtn) {
       submitBtn.disabled = !isValid;
@@ -1166,10 +1217,10 @@ class MarketplaceController {
         hintEl.style.display = 'block';
         hintEl.style.color = '#F87171';
         hintEl.textContent = '⚠️ Obligatorio: Se requiere la detección automática de tu GPS satelital.';
-      } else if (whatsapp.length < 7) {
+      } else if (!phoneVal.isValid) {
         hintEl.style.display = 'block';
         hintEl.style.color = '#FCD34D';
-        hintEl.textContent = 'ℹ️ Ingresa tu número de WhatsApp para despachar tu pedido.';
+        hintEl.textContent = `ℹ️ ${phoneVal.error || 'Ingresa un WhatsApp válido (VE: 0414... / CO: 320...).'}`;
       } else if (address.length < 4) {
         hintEl.style.display = 'block';
         hintEl.style.color = '#FCD34D';
@@ -1180,6 +1231,23 @@ class MarketplaceController {
     }
 
     return isValid;
+  }
+
+  shareDailyOffer(id) {
+    const promo = (this.promotions || []).find(p => p.id === id) || this.currentDailyOffer;
+    if (!promo) return;
+    const url = `${window.location.origin}/?promo=${encodeURIComponent(promo.id)}`;
+    const text = `🔥 ¡Mira esta Oferta del Día en PediGochos!\n*${promo.title}*\n💰 Precio especial: $${Math.round(promo.promoPrice).toLocaleString('de-DE')} ${promo.currency}\n⏱️ Válida solo por 24 horas.\n👉 Pide aquí con entrega a domicilio: ${url}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: `Oferta del Día: ${promo.title}`,
+        text: text,
+        url: url
+      }).catch(() => {});
+    } else {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
   }
 
   sendDailyOfferWhatsAppOrder() {
@@ -6139,11 +6207,21 @@ ${mapsLink}
         return;
       }
 
-      if (rawPhone.startsWith('+')) {
-        phone = rawPhone;
+      if (typeof PhoneUtils !== 'undefined' && PhoneUtils.validateVECO) {
+        const fullToValidate = rawPhone.startsWith('+') ? rawPhone : `${countryCode}${rawPhone}`;
+        const phoneValidation = PhoneUtils.validateVECO(fullToValidate);
+        if (!phoneValidation.isValid) {
+          alert(`Número de teléfono inválido: ${phoneValidation.error || 'Verifica que sea un número móvil válido de Venezuela (04xx) o Colombia (3xx).'}`);
+          return;
+        }
+        phone = phoneValidation.formatted || fullToValidate;
       } else {
-        rawPhone = rawPhone.replace(/^0+/, '');
-        phone = `${countryCode} ${rawPhone}`;
+        if (rawPhone.startsWith('+')) {
+          phone = rawPhone;
+        } else {
+          rawPhone = rawPhone.replace(/^0+/, '');
+          phone = `${countryCode} ${rawPhone}`;
+        }
       }
       if (this.selectedLatitude === null || this.selectedLongitude === null) {
         const cachedLat = localStorage.getItem('user_gps_lat');
@@ -8414,15 +8492,24 @@ ${mapsLink}
     let orders = this.getUserOrdersHistory();
     const userEmail = this.currentUser?.email || localStorage.getItem('pedigochos_user_email') || null;
 
-    const isFinished = (s) => s === 'Entregado' || s === 'completed' || s === 'Cancelado' || s === 'cancelled';
+    let customResin = [];
+    try { customResin = JSON.parse(localStorage.getItem('pg_my_resin_quotes') || '[]'); } catch(e){}
+    let custom3D = [];
+    try { custom3D = JSON.parse(localStorage.getItem('pg_my_print3d_quotes') || '[]'); } catch(e){}
+
+    const isFinished = (s) => s === 'Entregado' || s === 'completed' || s === 'Cancelado' || s === 'cancelled' || s === 'Listo' || s === 'Despachado';
 
     if (filterType === 'active') {
       orders = orders.filter(o => !isFinished(o.status));
+      customResin = customResin.filter(o => !isFinished(o.status));
+      custom3D = custom3D.filter(o => !isFinished(o.status));
     } else if (filterType === 'completed') {
       orders = orders.filter(o => isFinished(o.status));
+      customResin = customResin.filter(o => isFinished(o.status));
+      custom3D = custom3D.filter(o => isFinished(o.status));
     }
 
-    if (orders.length === 0) {
+    if (orders.length === 0 && customResin.length === 0 && custom3D.length === 0) {
       if (userEmail) {
         container.innerHTML = `
           <div style="padding: 36px 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 16px;">
@@ -8462,7 +8549,122 @@ ${mapsLink}
       `;
     }
 
-    container.innerHTML = headerHtml;
+    let customCardsHtml = '';
+    const allCustom = [
+      ...customResin.map(r => ({ ...r, serviceType: 'resin', brandName: 'Shelli Art Resina', brandIcon: '🎨', openChatFn: `if(window.ResinServiceApp){ ResinServiceApp.openChatModalById('${r.id}'); } else { window.location.hash='#servicios/resina'; }` })),
+      ...custom3D.map(p => ({ ...p, serviceType: 'print3d', brandName: '3D Lab PediGochos', brandIcon: '🖨️', openChatFn: `if(window.Print3DServiceApp){ Print3DServiceApp.openChatModalById('${p.id}'); } else { window.location.hash='#servicios/3d'; }` }))
+    ].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+    if (allCustom.length > 0) {
+      customCardsHtml += `
+        <div style="margin-bottom: 18px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <h4 style="margin: 0; font-size: 13.5px; font-weight: 900; color: #FFF; display: flex; align-items: center; gap: 6px;">
+              <span>🎨</span> Mis Encargos Personalizados (Taller & 3D)
+            </h4>
+            <span style="font-size: 11px; color: #A78BFA; font-weight: 700; background: rgba(167, 139, 250, 0.12); padding: 2px 8px; border-radius: 6px;">${allCustom.length} activo(s)</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+      `;
+
+      allCustom.forEach(item => {
+        const st = (item.status || '').toLowerCase();
+        let currentStep = 1;
+        let stepLabel = '1. Solicitud Recibida';
+        let progressPct = 20;
+
+        if (st.includes('listo') || st.includes('entregado') || st.includes('despachado') || st.includes('complet')) {
+          currentStep = 5;
+          stepLabel = '5. Listo para Entrega / Entregado';
+          progressPct = 100;
+        } else if (st.includes('curado') || st.includes('acabado') || st.includes('post')) {
+          currentStep = 4;
+          stepLabel = '4. Curado UV & Acabados Finales';
+          progressPct = 80;
+        } else if (st.includes('elaborac') || st.includes('producc') || st.includes('imprim')) {
+          currentStep = 3;
+          stepLabel = '3. En Elaboración en Taller';
+          progressPct = 60;
+        } else if (st.includes('presupuest') || st.includes('acordad') || item.agreedPriceUsd) {
+          currentStep = 2;
+          stepLabel = '2. Cotización y Presupuesto';
+          progressPct = 40;
+        }
+
+        const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Reciente';
+        const priceBadge = item.agreedPriceUsd ? `<span style="font-size: 13px; font-weight: 900; color: #34D399;">$${item.agreedPriceUsd} USD</span>` : `<span style="font-size: 11px; color: #F59E0B; font-weight: 700;">En Cotización</span>`;
+
+        const steps = [
+          { num: 1, name: 'Solicitud' },
+          { num: 2, name: 'Cotización' },
+          { num: 3, name: 'Taller' },
+          { num: 4, name: 'Curado' },
+          { num: 5, name: 'Listo' }
+        ];
+
+        const stepperDotsHtml = steps.map(s => {
+          const isDone = s.num <= currentStep;
+          const isCurrent = s.num === currentStep;
+          const bg = isDone ? '#10B981' : 'rgba(255,255,255,0.15)';
+          const color = isDone ? '#FFF' : '#64748B';
+          return `
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; z-index: 2; flex: 1;">
+              <div style="width: 20px; height: 20px; border-radius: 50%; background: ${bg}; color: ${color}; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; ${isCurrent ? 'box-shadow: 0 0 10px #10B981;' : ''}">
+                ${isDone ? (s.num < currentStep ? '✓' : s.num) : s.num}
+              </div>
+              <span style="font-size: 9.5px; font-weight: ${isCurrent ? '800' : '600'}; color: ${isCurrent ? '#34D399' : '#94A3B8'}; text-align: center;">${s.name}</span>
+            </div>
+          `;
+        }).join('');
+
+        customCardsHtml += `
+          <div style="background: rgba(22, 22, 28, 0.95); border: 1.5px solid rgba(167, 139, 250, 0.3); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <span style="font-size: 11px; font-weight: 800; color: #A78BFA; display: flex; align-items: center; gap: 5px;">
+                  <span>${item.brandIcon}</span> ${item.brandName} • #${item.id ? item.id.slice(0, 8) : '---'}
+                </span>
+                <h4 style="margin: 2px 0 0 0; font-size: 14px; font-weight: 900; color: #FFF;">${item.productTitle || item.modelName || 'Encargo Personalizado'}</h4>
+                <span style="font-size: 10.5px; color: #64748B;">${dateStr}</span>
+              </div>
+              <div style="text-align: right;">
+                ${priceBadge}
+                <div style="margin-top: 3px;">
+                  <span style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.35); padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 800;">${item.status || 'En Proceso'}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stepper Progress Bar -->
+            <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px 8px 8px 8px; border: 1px solid rgba(255,255,255,0.05); position: relative;">
+              <div style="position: absolute; top: 18px; left: 10%; right: 10%; height: 3px; background: rgba(255,255,255,0.1); z-index: 1;">
+                <div style="height: 100%; width: ${progressPct}%; background: linear-gradient(90deg, #10B981, #34D399); transition: width 0.3s ease;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative;">
+                ${stepperDotsHtml}
+              </div>
+              <div style="text-align: center; margin-top: 8px; font-size: 11px; color: #E2E8F0; font-weight: 700;">
+                Estado actual: <strong style="color: #34D399;">${stepLabel}</strong>
+              </div>
+            </div>
+
+            <!-- Actions: Chat con el taller -->
+            <div style="display: flex; justify-content: flex-end; gap: 8px; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+              <button type="button" onclick="MarketplaceApp.closeUserOrdersModal(); ${item.openChatFn};" style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: #FFF; border: none; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);">
+                <span>💬</span> Abrir Chat con el Taller
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      customCardsHtml += `
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = headerHtml + customCardsHtml;
 
     orders.forEach((ord, index) => {
       const est = this.establishments.find(e => e.id === ord.establishmentId || e.id === ord.establishment_id);

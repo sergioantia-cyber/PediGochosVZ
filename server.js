@@ -63,10 +63,12 @@ app.use('/api', (req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
+    if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
+    } else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=3600');
     }
   }
 }));
@@ -1350,12 +1352,42 @@ app.post('/api/promotions', (req, res) => {
     writeDB(db);
     triggerAutoCloudSave();
 
+    if (typeof broadcastWS === 'function') {
+      broadcastWS({ type: 'promotion_new', promotion: newPromo });
+    }
+
     res.status(201).json({ success: true, promotion: newPromo });
   } catch(err) {
     console.error('Error saving promotion:', err);
     res.status(500).json({ error: 'Error al guardar oferta del día' });
   }
 });
+
+// Periodic server-side cleanup of expired promotions (every 30 mins)
+setInterval(() => {
+  try {
+    const db = readDB();
+    if (Array.isArray(db.promotions) && db.promotions.length > 0) {
+      const now = Date.now();
+      let changed = false;
+      db.promotions.forEach(p => {
+        const exp = p.expiresAt ? new Date(p.expiresAt).getTime() : 0;
+        if (exp && exp < now && p.active !== false) {
+          p.active = false;
+          changed = true;
+        }
+      });
+      if (changed) {
+        writeDB(db);
+        if (typeof broadcastWS === 'function') {
+          broadcastWS({ type: 'promotions_expired' });
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('Periodic promo purge error:', e);
+  }
+}, 30 * 60 * 1000);
 
 // Delete promotion
 app.delete('/api/promotions/:id', (req, res) => {
@@ -3712,6 +3744,13 @@ app.put('/api/print3d-services/quotes/:id/action', (req, res) => {
   if (action === 'set_agreed_price' && agreedPriceUsd) {
     quote.agreedPriceUsd = parseFloat(agreedPriceUsd);
     quote.status = 'Presupuestado';
+    if (!quote.priceHistory) quote.priceHistory = [];
+    quote.priceHistory.push({
+      usd: quote.agreedPriceUsd,
+      at: new Date().toISOString(),
+      by: req.body.by || 'admin',
+      notes: notes || ''
+    });
     actionText = `💰 Presupuesto cerrado de impresión 3D: $${quote.agreedPriceUsd} USD.`;
   } else if (action === 'start_production') {
     quote.status = 'En Producción';
@@ -4094,6 +4133,10 @@ app.post('/api/resin-services/quotes', (req, res) => {
   if (!body.clientName) {
     return res.status(400).json({ error: 'Por favor ingresa tu nombre' });
   }
+  const cleanPhone = String(body.clientPhone || '').replace(/\D/g, '');
+  if (body.clientPhone && cleanPhone.length < 7) {
+    return res.status(400).json({ error: 'Por favor ingresa un número de teléfono válido' });
+  }
 
   const quotes = readResinQuotes();
   const newId = 'RES-' + Math.floor(8000 + Math.random() * 2000);
@@ -4246,6 +4289,13 @@ app.put('/api/resin-services/quotes/:id/action', (req, res) => {
   if (action === 'set_agreed_price' && agreedPriceUsd) {
     quote.agreedPriceUsd = parseFloat(agreedPriceUsd);
     quote.status = 'Precio Acordado';
+    if (!quote.priceHistory) quote.priceHistory = [];
+    quote.priceHistory.push({
+      usd: quote.agreedPriceUsd,
+      at: new Date().toISOString(),
+      by: req.body.by || 'admin',
+      notes: notes || ''
+    });
     actionText = `💰 Precio oficial fijado: $${quote.agreedPriceUsd} USD.`;
   } else if (action === 'start_casting') {
     quote.status = 'En Elaboración';
@@ -4255,7 +4305,7 @@ app.put('/api/resin-services/quotes/:id/action', (req, res) => {
     actionText = `⏳ Pieza en tiempo de curado UV (24 horas) para lograr máxima transparencia y dureza.`;
   } else if (action === 'ready_for_delivery') {
     quote.status = 'Listo para Entrega';
-    actionText = `🎀 ¡Llavero desmoldado, pulido y listo para entrega! Con borla y argolla instaladas.`;
+    actionText = `🎀 ¡Llavero desmoldado, pulido y listo para entrega con su acabado de resina brillante!`;
   } else if (action === 'delivered') {
     quote.status = 'Entregado';
     actionText = `✅ Llavero entregado con éxito al cliente. ¡Gracias por apoyar a ShelliArt!`;
