@@ -592,7 +592,8 @@ class MarketplaceController {
         id: 'serv-resin',
         name: 'SHELLI ART',
         displayName: 'Shelli Art',
-        category: 'resina',
+        category: 'personalizado',
+        subCategory: 'resina',
         categoryLabel: 'Arte & Recuerdos',
         categoryIcon: '✨',
         slogan: 'Diseño y arte exclusivo en resina epóxica, llaveros personalizados con fotos, chip NFC, hojilla de oro 24K y recuerdos',
@@ -612,7 +613,8 @@ class MarketplaceController {
         id: 'serv-pinatas',
         name: 'CREACIONES LOLA',
         displayName: 'Creaciones Lola',
-        category: 'pinatas',
+        category: 'personalizado',
+        subCategory: 'pinatas',
         categoryLabel: 'Fiestas & Piñatas',
         categoryIcon: '🎉',
         slogan: 'Piñatas artesanales 3D, números temáticos con flores, siluetas y modelos personalizados por encargo',
@@ -632,7 +634,8 @@ class MarketplaceController {
         id: 'serv-print3d',
         name: 'PEDIGOCHOS 3D LAB',
         displayName: 'PediGochos 3D Lab',
-        category: 'print3d',
+        category: 'personalizado',
+        subCategory: 'print3d',
         categoryLabel: 'Tecnología & 3D Lab',
         categoryIcon: '🖨️',
         slogan: 'Laboratorio de impresión 3D industrial, prototipado rápido, repuestos automotrices y piezas técnicas',
@@ -1333,6 +1336,7 @@ ${mapsLink}
 
   // Navigation
   selectCategory(category) {
+    if (category === 'personalizado') category = 'personalizados';
     this.currentCategory = category;
     if (category === 'servicios' || category === 'personalizados') {
       this.currentServiceCategory = null;
@@ -1341,7 +1345,8 @@ ${mapsLink}
     
     // Update active class in categories tabs (DeliverCity style)
     document.querySelectorAll('.category-card-delivercity').forEach(card => {
-      if (card.dataset.category === category) {
+      const c = card.dataset.category;
+      if (c === category || (category === 'personalizados' && c === 'personalizado')) {
         card.classList.add('active');
       } else {
         card.classList.remove('active');
@@ -1350,7 +1355,8 @@ ${mapsLink}
 
     // Update active class in marketplace switcher nav pills
     document.querySelectorAll('.mkt-nav-pill').forEach(pill => {
-      if (pill.dataset.mkt === category) {
+      const p = pill.dataset.mkt;
+      if (p === category || (category === 'personalizados' && p === 'personalizado')) {
         pill.classList.add('active');
       } else {
         pill.classList.remove('active');
@@ -2318,7 +2324,7 @@ ${mapsLink}
         ? this.serviceEstablishments
         : this.getDefaultServiceEstablishments();
 
-      const personalizedList = allServices.filter(e => ['resina', 'pinatas', 'print3d'].includes(e.category));
+      const personalizedList = allServices.filter(e => ['personalizado', 'personalizados', 'resina', 'pinatas', 'print3d'].includes(e.category) || ['resina', 'pinatas', 'print3d'].includes(e.subCategory) || ['resin', 'pinatas', 'print3d'].includes(e.actionType));
 
       // STAGE 1: Visual Grid of Personalized Categories (Hub)
       if (!this.currentServiceCategory) {
@@ -2445,7 +2451,7 @@ ${mapsLink}
       // STAGE 2: Establishments in Selected Category (or All)
       const targetCategory = this.currentServiceCategory;
       const targetEstablishments = (targetCategory && targetCategory !== 'all')
-        ? personalizedList.filter(e => e.category === targetCategory)
+        ? personalizedList.filter(e => e.category === targetCategory || e.subCategory === targetCategory || e.actionType === targetCategory)
         : personalizedList;
 
       if (allRestTitle) {

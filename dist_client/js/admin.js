@@ -54,7 +54,7 @@ const SPECIALIZED_SERVICES = [
     id: 'serv-resin',
     name: 'SHELLI ART (Llaveros Personalizados & Recuerdos)',
     logo: '/images/services/shelliart_logo.svg',
-    category: 'servicios',
+    category: 'personalizado',
     badge: 'Shelli Art',
     badgeColor: '#EC4899',
     badgeBg: 'rgba(236, 72, 153, 0.15)',
@@ -78,7 +78,7 @@ const SPECIALIZED_SERVICES = [
     id: 'serv-pinatas',
     name: 'Creaciones Lola (Piñatas Personalizadas)',
     logo: '/images/services/creaciones_lola_logo.svg',
-    category: 'servicios',
+    category: 'personalizado',
     badge: 'Taller Artesanal',
     badgeColor: '#F59E0B',
     badgeBg: 'rgba(245, 158, 11, 0.15)',
@@ -102,7 +102,7 @@ const SPECIALIZED_SERVICES = [
     id: 'serv-print3d',
     name: 'PediGochos 3D Lab (Laboratorio Maker & STL)',
     logo: '/images/services/print3d_logo.svg',
-    category: 'servicios',
+    category: 'personalizado',
     badge: 'Laboratorio 3D',
     badgeColor: '#8B5CF6',
     badgeBg: 'rgba(139, 92, 246, 0.15)',
@@ -1371,12 +1371,23 @@ class AdminController {
       farmacias: 0,
       mercados: 0,
       ferreterias: 0,
-      servicios: SPECIALIZED_SERVICES.length
+      servicios: 0,
+      personalizado: 0
     };
+    SPECIALIZED_SERVICES.forEach(s => {
+      const c = (s.category || '').toLowerCase();
+      if (c === 'personalizado' || c === 'personalizados') {
+        counts.personalizado++;
+      } else {
+        counts.servicios++;
+      }
+    });
     uniqueEsts.forEach(e => {
       const c = (e.category || '').toLowerCase();
-      if (counts[c] !== undefined && c !== 'servicios') {
+      if (counts[c] !== undefined && c !== 'servicios' && c !== 'personalizado') {
         counts[c]++;
+      } else if (c === 'personalizado' || c === 'personalizados') {
+        counts.personalizado++;
       } else {
         counts.servicios++;
       }
@@ -1392,6 +1403,7 @@ class AdminController {
     setBadgeCount('cat-count-mercados', counts.mercados);
     setBadgeCount('cat-count-ferreterias', counts.ferreterias);
     setBadgeCount('cat-count-servicios', counts.servicios);
+    setBadgeCount('cat-count-personalizado', counts.personalizado);
 
     // Filter by active category
     const activeFilter = this.activeCategoryFilter || 'all';
@@ -1400,7 +1412,10 @@ class AdminController {
       filteredEsts = filteredEsts.filter(e => {
         const c = (e.category || '').toLowerCase();
         if (activeFilter === 'servicios') {
-          return c === 'servicios' || !['comidas', 'farmacias', 'mercados', 'ferreterias'].includes(c);
+          return c === 'servicios';
+        }
+        if (activeFilter === 'personalizado' || activeFilter === 'personalizados') {
+          return c === 'personalizado' || c === 'personalizados';
         }
         return c === activeFilter;
       });
@@ -1417,7 +1432,14 @@ class AdminController {
     }
 
     // Filter specialized services
-    let filteredServices = (activeFilter === 'all' || activeFilter === 'servicios') ? [...SPECIALIZED_SERVICES] : [];
+    let filteredServices = [];
+    if (activeFilter === 'all') {
+      filteredServices = [...SPECIALIZED_SERVICES];
+    } else if (activeFilter === 'servicios') {
+      filteredServices = SPECIALIZED_SERVICES.filter(s => (s.category || '').toLowerCase() === 'servicios');
+    } else if (activeFilter === 'personalizado' || activeFilter === 'personalizados') {
+      filteredServices = SPECIALIZED_SERVICES.filter(s => (s.category || '').toLowerCase() === 'personalizado' || (s.category || '').toLowerCase() === 'personalizados');
+    }
     if (this.searchEstablishmentQuery && filteredServices.length > 0) {
       const q = this.searchEstablishmentQuery.toLowerCase();
       filteredServices = filteredServices.filter(s =>
