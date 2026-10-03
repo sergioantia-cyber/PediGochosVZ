@@ -902,6 +902,59 @@
   }
 }
 
+/* Marketplace Quick Filters (Abiertos | Más pedidos | Mejor valorados | Más rápidos | Cerca de mí) */
+.marketplace-filters-section {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.marketplace-quick-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 8px 2px;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  box-sizing: border-box;
+}
+.marketplace-quick-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-filter-pill {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: #CBD5E1;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.22s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+.quick-filter-pill:hover {
+  background: rgba(255, 107, 0, 0.15);
+  border-color: rgba(255, 107, 0, 0.4);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+.quick-filter-pill.active {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.3) 0%, rgba(234, 88, 12, 0.18) 100%);
+  border-color: #FF6B00;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(255, 107, 0, 0.3);
+  transform: translateY(-1px);
+}
+.quick-filter-pill .filter-icon {
+  font-size: 13px;
+}
+
 /* Asymmetrical Categories Grid (DeliverCity Style) - Sleek Compact Scale */
 .categories-section {
   margin-bottom: 20px;

@@ -73,6 +73,7 @@ class MarketplaceController {
     this.currentCategory = null; // Default to no category selected on home entry
     this.paymentMethod = 'Efectivo'; // Default payment method: 'Efectivo' or 'Transferencia'
     this.isTrackingMinimized = false; // Whether active order tracking is minimized
+    this.activeQuickFilter = 'all'; // Quick filter: 'all', 'abiertos', 'mas_pedidos', 'mejor_valorados', 'mas_rapidos', 'cerca'
 
     // Ride-hailing service state
     this.rideOrigin = { lat: null, lng: null, address: '' };
@@ -1368,6 +1369,34 @@ ${mapsLink}
     }, 60);
   }
 
+  setQuickFilter(filterKey) {
+    this.activeQuickFilter = filterKey;
+
+    // Update active class on quick filter pills
+    document.querySelectorAll('.quick-filter-pill').forEach(btn => {
+      if (btn.dataset.filter === filterKey) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    if (filterKey === 'cerca') {
+      if (!this.userGpsLat || !this.userGpsLng) {
+        this.requestAutomaticGPS(true);
+      }
+    }
+
+    this.renderEstablishments();
+
+    setTimeout(() => {
+      const target = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
+  }
+
   selectServiceCategory(categoryKey) {
     this.currentServiceCategory = categoryKey;
     this.renderEstablishments();
@@ -1774,8 +1803,8 @@ ${mapsLink}
 
   // Helper to render rating markup (shows 'Nuevo' if < 3 reviews, stars only with sufficient reviews)
   getEstablishmentRatingMarkup(est, variant = 'row') {
-    const totalReviews = Number(est.totalReviews || 0);
-    const avgRating = Number(est.avgRating || 0);
+    const totalReviews = Number(est.totalReviews || est.reviewCount || 0);
+    const avgRating = Number(est.avgRating || est.rating || 0);
     const hasEnough = totalReviews >= 3 && avgRating > 0;
 
     if (!hasEnough) {
@@ -1836,19 +1865,27 @@ ${mapsLink}
 
     const descSnippet = (est.description || '').split('.')[0] || est.description || '';
 
+    const distanceBadge = (est._distanceKm !== undefined && est._distanceKm !== null && !isNaN(est._distanceKm))
+      ? `<span style="background: rgba(147, 51, 234, 0.15); color: #C084FC; border: 1px solid rgba(147, 51, 234, 0.35); padding: 2px 7px; border-radius: 6px; font-weight: 800; font-size: 10.5px; display: inline-flex; align-items: center; gap: 3px;">
+           📍 ${est._distanceKm < 1 ? Math.round(est._distanceKm * 1000) + ' m' : est._distanceKm.toFixed(1) + ' km'}
+         </span>`
+      : '';
+
     const statusTimeMarkup = isOpen
       ? `<span style="background: rgba(16, 185, 129, 0.16); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
            🟢 Abierto · ${deliveryTimeStr}
          </span>
          <span class="free-delivery" style="background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 7px; border-radius: 6px; font-weight: 800; font-size: 10.5px;">
            🛵 ${this.formatPesos(est.delivery_fee || 5000)}
-         </span>`
+         </span>
+         ${distanceBadge}`
       : `<span style="background: rgba(255, 255, 255, 0.05); color: #CBD5E1; border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 10.5px; display: inline-flex; align-items: center; gap: 4px;">
            🕒 Abre a las ${this.formatTime12h(est.open_time)}
          </span>
          <span style="background: rgba(148, 163, 184, 0.1); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.2); padding: 2px 6px; border-radius: 6px; font-weight: 800; font-size: 10px;">
            🌙 Próximamente
-         </span>`;
+         </span>
+         ${distanceBadge}`;
 
     const ctaMarkup = isOpen
       ? `<button type="button" class="btn-brand-menu-cta" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')" style="background: ${brand.btnGradient}; color: ${brand.btnTextColor || '#FFFFFF'}; border: 1px solid ${brand.btnBorder || 'rgba(255,255,255,0.25)'}; box-shadow: 0 3px 10px ${brand.btnShadow}; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.22s ease;">
@@ -2615,16 +2652,120 @@ ${mapsLink}
       const normUserLoc = (this.currentLocation || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       return normEstLoc.includes(normUserLoc) || normUserLoc.includes(normEstLoc);
     });
+    // Calculate distance and sort metrics for every establishment in rawList
+    let userLat = this.userGpsLat;
+    let userLng = this.userGpsLng;
+    if (!userLat || !userLng) {
+      try {
+        const cLat = localStorage.getItem('user_gps_lat');
+        const cLng = localStorage.getItem('user_gps_lng');
+        if (cLat && cLng) {
+          userLat = parseFloat(cLat);
+          userLng = parseFloat(cLng);
+          this.userGpsLat = userLat;
+          this.userGpsLng = userLng;
+        }
+      } catch (e) {}
+    }
+    const refLat = userLat || 7.8145;
+    const refLng = userLng || -72.4430;
+
+    rawList.forEach(e => {
+      // Calculate geodesic distance if coordinates are present
+      const eLat = (e.location_lat !== undefined && e.location_lat !== null) ? e.location_lat : e.latitude;
+      const eLng = (e.location_lng !== undefined && e.location_lng !== null) ? e.location_lng : e.longitude;
+      if (eLat !== undefined && eLat !== null && eLng !== undefined && eLng !== null && !isNaN(parseFloat(eLat)) && !isNaN(parseFloat(eLng))) {
+        e._distanceKm = this.calculateGeodesicDistance(refLat, refLng, parseFloat(eLat), parseFloat(eLng));
+      } else {
+        e._distanceKm = null;
+      }
+
+      // Delivery time in minutes
+      const timeMatch = (String(e.delivery_time || e.deliveryTime || '30 min')).match(/\d+/);
+      e._minDeliveryTime = timeMatch ? parseInt(timeMatch[0], 10) : 35;
+
+      // Rating and reviews
+      e._ratingScore = Number(e.avgRating || e.rating || 0);
+      e._reviewCount = Number(e.totalReviews || e.reviewCount || 0);
+
+      // Popularity score (orders, reviews, high traffic)
+      e._popularityScore = (e._reviewCount * 3) + (e._ratingScore * 5) + (e.isHighTraffic ? 25 : 0) + (Number(e.ordersCount || 0));
+    });
+
     const openRaw = rawList.filter(e => this.isEstablishmentOpen(e));
     const closedRaw = rawList.filter(e => !this.isEstablishmentOpen(e));
-    const openList = this.shuffleWithSeed(openRaw, this.getSessionSeed());
-    const closedList = this.shuffleWithSeed(closedRaw, this.getSessionSeed());
 
-    // Hide outer all-restaurants-header as dedicated section headers will be rendered directly in grid
+    let openList = [];
+    let closedList = [];
+
+    const activeFilter = this.activeQuickFilter || 'all';
+
+    if (activeFilter === 'abiertos') {
+      // Filter only currently open establishments
+      openList = this.shuffleWithSeed(openRaw, this.getSessionSeed());
+      closedList = [];
+    } else if (activeFilter === 'mas_pedidos') {
+      // Sort open by popularity score descending, then closed by popularity score descending
+      openList = [...openRaw].sort((a, b) => b._popularityScore - a._popularityScore);
+      closedList = [...closedRaw].sort((a, b) => b._popularityScore - a._popularityScore);
+    } else if (activeFilter === 'mejor_valorados') {
+      // Sort by rating score descending, then review count
+      const sortRating = (a, b) => {
+        if (b._ratingScore !== a._ratingScore) return b._ratingScore - a._ratingScore;
+        return b._reviewCount - a._reviewCount;
+      };
+      openList = [...openRaw].sort(sortRating);
+      closedList = [...closedRaw].sort(sortRating);
+    } else if (activeFilter === 'mas_rapidos') {
+      // Sort by delivery time ascending (fastest first)
+      openList = [...openRaw].sort((a, b) => a._minDeliveryTime - b._minDeliveryTime);
+      closedList = [...closedRaw].sort((a, b) => a._minDeliveryTime - b._minDeliveryTime);
+    } else if (activeFilter === 'cerca') {
+      // Sort by distance ascending (closest first)
+      const sortDist = (a, b) => {
+        const dA = (a._distanceKm !== null && !isNaN(a._distanceKm)) ? a._distanceKm : 999;
+        const dB = (b._distanceKm !== null && !isNaN(b._distanceKm)) ? b._distanceKm : 999;
+        return dA - dB;
+      };
+      openList = [...openRaw].sort(sortDist);
+      closedList = [...closedRaw].sort(sortDist);
+    } else {
+      // 'all' / default
+      openList = this.shuffleWithSeed(openRaw, this.getSessionSeed());
+      closedList = this.shuffleWithSeed(closedRaw, this.getSessionSeed());
+    }
+
+    // Keep all-restaurants-header visible with title, counter and quick filter buttons
     const allRestHeader = document.getElementById('all-restaurants-header');
     if (allRestHeader) {
-      allRestHeader.style.display = 'none';
+      allRestHeader.style.display = 'block';
+      const allRestCounter = document.getElementById('all-restaurants-counter');
+      if (allRestCounter) {
+        const totalCount = openList.length + closedList.length;
+        allRestCounter.textContent = `${totalCount} disponible${totalCount !== 1 ? 's' : ''}`;
+      }
+      const allRestTitle = document.getElementById('all-restaurants-title-text');
+      if (allRestTitle) {
+        const filterTitleMap = {
+          'all': 'Comercios Disponibles',
+          'abiertos': 'Comercios Abiertos Ahora',
+          'mas_pedidos': 'Comercios Más Pedidos',
+          'mejor_valorados': 'Comercios Mejor Valorados',
+          'mas_rapidos': 'Comercios Más Rápidos (Delivery Express)',
+          'cerca': 'Comercios Cerca de Mí'
+        };
+        allRestTitle.textContent = filterTitleMap[activeFilter] || 'Comercios Disponibles';
+      }
     }
+
+    // Sync active state on quick filter pills
+    document.querySelectorAll('.quick-filter-pill').forEach(btn => {
+      if (btn.dataset.filter === activeFilter) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
 
     // Hide daily promo section when filtering specific food type or searching
     const promoSection = document.getElementById('daily-promotions-section');
@@ -2750,6 +2891,17 @@ ${mapsLink}
         </div>
       `;
       grid.appendChild(soonBanner);
+
+      if (this.activeQuickFilter === 'abiertos') {
+        const clearOpenFilterBtn = document.createElement('div');
+        clearOpenFilterBtn.style.cssText = 'grid-column: 1 / -1; text-align: center; margin: 6px 0 16px 0;';
+        clearOpenFilterBtn.innerHTML = `
+          <button type="button" onclick="MarketplaceApp.setQuickFilter('all')" style="background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #FFF; border: none; padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.4);">
+            🌟 Ver Todos los Comercios (${rawList.length})
+          </button>
+        `;
+        grid.appendChild(clearOpenFilterBtn);
+      }
     }
 
     // 2. SECCIÓN: PRÓXIMAMENTE / CERRADOS
@@ -3288,7 +3440,7 @@ ${mapsLink}
     featuredShuffled.forEach(est => {
       const isOpen = this.isEstablishmentOpen(est);
       const card = document.createElement('div');
-      card.style.cssText = `min-width: 200px; width: 200px; flex-shrink: 0; background: rgba(18, 18, 24, 0.95); border: 1px solid ${isOpen ? 'rgba(16, 185, 129, 0.35)' : 'rgba(255, 255, 255, 0.1)'}; border-radius: 14px; padding: 8px 10px; cursor: pointer; scroll-snap-align: start; transition: transform 0.2s, border-color 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);`;
+      card.style.cssText = `min-width: 215px; width: 215px; flex-shrink: 0; background: rgba(18, 18, 24, 0.95); border: 1px solid ${isOpen ? 'rgba(245, 158, 11, 0.45)' : 'rgba(255, 255, 255, 0.1)'}; border-radius: 14px; padding: 8px 10px; cursor: pointer; scroll-snap-align: start; transition: transform 0.2s, border-color 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.35); position: relative;`;
 
       if (!isOpen) {
         card.style.opacity = '0.85';
@@ -3308,7 +3460,7 @@ ${mapsLink}
         : `<div style="font-size: 9.5px; color: #CBD5E1; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">🕒 Abre ${this.formatTime12h(est.open_time)}</div>`;
 
       card.innerHTML = `
-        <div style="width: 54px; height: 54px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; border: 1px solid ${isOpen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.1)'};">
+        <div style="width: 54px; height: 54px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; border: 1px solid ${isOpen ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255,255,255,0.1)'};">
           ${imgHTML}
           <div class="hidden" style="font-size: 22px;">${est.logo || '🏪'}</div>
           ${isOpen ? '<span style="position: absolute; bottom: 2px; left: 2px; right: 2px; background: rgba(16,185,129,0.92); color: #fff; font-size: 7.5px; font-weight: 900; text-align: center; border-radius: 4px; padding: 1px 0;">ABIERTO</span>' : ''}
@@ -3319,9 +3471,9 @@ ${mapsLink}
             ${this.getEstablishmentRatingMarkup(est, 'mini')}
           </div>
           ${statusTag}
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; margin-top: 2px;">
-            <span style="color: #3B82F6; font-weight: 800;">🚲 ${this.formatPesos(est.delivery_fee || 5000)}</span>
-            <span style="color: ${isOpen ? '#FCD34D' : '#94A3B8'}; font-weight: 700;">${isOpen ? '✨ Destacado' : '📖 Menú'}</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9px; margin-top: 2px; gap: 4px;">
+            <span style="color: #60A5FA; font-weight: 800; white-space: nowrap;">🛵 ${this.formatPesos(est.delivery_fee || 5000)}</span>
+            <span style="color: #F59E0B; font-weight: 800; background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.35); padding: 1px 5px; border-radius: 4px; font-size: 8px; white-space: nowrap;">📢 Patrocinado</span>
           </div>
         </div>
       `;

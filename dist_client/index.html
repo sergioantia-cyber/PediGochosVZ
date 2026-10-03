@@ -358,24 +358,57 @@
           </div>
         </section>
 
-        <!-- Featured Carousel Section (Carrusel Horizontal de Destacados) -->
-        <section id="featured-carousel-section" class="hidden" style="display: none; margin-bottom: 24px; background: linear-gradient(135deg, rgba(255, 94, 58, 0.08), rgba(22, 22, 28, 0.95)); border: 1px solid rgba(255, 94, 58, 0.25); border-radius: 18px; padding: 14px 12px 10px 12px; box-shadow: 0 8px 24px rgba(255, 94, 58, 0.08);">
-          <div class="section-header-flex" style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-            <h4 style="font-size: 14px; font-weight: 800; color: #FFF; margin: 0; display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 16px;">✨</span> Destacados del Día
-            </h4>
-            <span style="font-size: 10px; color: var(--accent); background: rgba(255, 94, 58, 0.15); padding: 2px 8px; border-radius: 20px; font-weight: 800;">Desliza ➔</span>
+        <!-- Featured Carousel Section (Destacados del Día - Espacio Patrocinado & Delivery) -->
+        <section id="featured-carousel-section" class="hidden" style="display: none; margin-bottom: 22px; background: linear-gradient(135deg, rgba(255, 107, 0, 0.09) 0%, rgba(22, 27, 40, 0.95) 100%); border: 1.5px solid rgba(255, 107, 0, 0.3); border-radius: 18px; padding: 14px 14px 12px 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);">
+          <div class="section-header-flex" style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h4 style="font-size: 14.5px; font-weight: 900; color: #FFFFFF; margin: 0; display: flex; align-items: center; gap: 6px;">
+                <span>✨</span> Destacados del Día
+              </h4>
+              <span class="sponsored-tag" style="background: rgba(255, 107, 0, 0.18); border: 1px solid rgba(255, 107, 0, 0.45); color: #FF9F43; font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;" title="Espacio patrocinado con entrega prioritaria">
+                📢 Patrocinado
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11px; color: #94A3B8; font-weight: 600;">Despacho prioritario ⚡</span>
+              <span style="font-size: 10px; color: #CBD5E1; background: rgba(255, 255, 255, 0.06); padding: 2px 8px; border-radius: 12px; font-weight: 700;">Desliza ➔</span>
+            </div>
           </div>
           <div id="featured-carousel-container" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;" class="premium-scroll">
             <!-- Dynamically populated horizontal cards -->
           </div>
         </section>
 
-        <!-- Divider & Section Header for Main Establishments Grid -->
-        <div id="all-restaurants-header" style="margin: 12px 0 8px 0; padding-top: 6px; border-top: 1.5px dashed #CBD5E1;">
-          <h4 id="all-restaurants-title" style="font-size: 14px; font-weight: 900; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 6px;">
-            <span>🏪</span> <span id="all-restaurants-title-text">Todos los Comercios</span>
-          </h4>
+        <!-- Divider & Section Header with Quick Filters for Main Establishments Grid -->
+        <div id="all-restaurants-header" class="marketplace-filters-section" style="margin: 14px 0 10px 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+            <h4 id="all-restaurants-title" style="font-size: 15px; font-weight: 900; color: #FFFFFF; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span>🏪</span> <span id="all-restaurants-title-text">Comercios Disponibles</span>
+            </h4>
+            <span id="all-restaurants-counter" style="font-size: 11.5px; color: #94A3B8; font-weight: 700;"></span>
+          </div>
+
+          <!-- Quick Filters: Abiertos | Más pedidos | Mejor valorados | Más rápidos | Cerca de mí -->
+          <div class="marketplace-quick-filters" id="marketplace-quick-filters" aria-label="Filtros rápidos de comercios">
+            <button type="button" class="quick-filter-pill active" data-filter="all" onclick="MarketplaceApp.setQuickFilter('all')">
+              <span class="filter-icon">🌟</span> Todos
+            </button>
+            <button type="button" class="quick-filter-pill" data-filter="abiertos" onclick="MarketplaceApp.setQuickFilter('abiertos')">
+              <span class="filter-icon">🟢</span> Abiertos
+            </button>
+            <button type="button" class="quick-filter-pill" data-filter="mas_pedidos" onclick="MarketplaceApp.setQuickFilter('mas_pedidos')">
+              <span class="filter-icon">🔥</span> Más pedidos
+            </button>
+            <button type="button" class="quick-filter-pill" data-filter="mejor_valorados" onclick="MarketplaceApp.setQuickFilter('mejor_valorados')">
+              <span class="filter-icon">⭐</span> Mejor valorados
+            </button>
+            <button type="button" class="quick-filter-pill" data-filter="mas_rapidos" onclick="MarketplaceApp.setQuickFilter('mas_rapidos')">
+              <span class="filter-icon">⚡</span> Más rápidos
+            </button>
+            <button type="button" class="quick-filter-pill" data-filter="cerca" onclick="MarketplaceApp.setQuickFilter('cerca')">
+              <span class="filter-icon">📍</span> Cerca de mí
+            </button>
+          </div>
         </div>
 
         <div class="establishments-list-delivercity" id="establishments-grid">
