@@ -1320,7 +1320,7 @@ ${mapsLink}
   // Navigation
   selectCategory(category) {
     this.currentCategory = category;
-    if (category === 'servicios') {
+    if (category === 'servicios' || category === 'personalizados') {
       this.currentServiceCategory = null;
     }
     window.activeFoodTypeFilter = null; // Always reset filter so Food Categories Grid shows first for comidas
@@ -1331,6 +1331,15 @@ ${mapsLink}
         card.classList.add('active');
       } else {
         card.classList.remove('active');
+      }
+    });
+
+    // Update active class in marketplace switcher nav pills
+    document.querySelectorAll('.mkt-nav-pill').forEach(pill => {
+      if (pill.dataset.mkt === category) {
+        pill.classList.add('active');
+      } else {
+        pill.classList.remove('active');
       }
     });
 
@@ -1916,7 +1925,7 @@ ${mapsLink}
           <span style="font-size: 44px; display: block; margin-bottom: 8px;">👆</span>
           <h3 style="font-size: 18px; font-weight: 900; color: #0F172A; margin: 0 0 6px 0; letter-spacing: -0.2px;">¡Bienvenido a Pedi Gochos!</h3>
           <p style="font-size: 13.5px; color: #334155; font-weight: 600; margin: 0; line-height: 1.5;">
-            Presiona una de las categorías arriba (<strong style="color: #EA580C; font-weight: 800;">Restaurantes, Farmacias, Mercados o Ferreterías</strong>) para ver los comercios disponibles.
+            Elige el marketplace que deseas explorar arriba (<strong style="color: #EA580C; font-weight: 800;">🍔 Pedir comida, 💊 Farmacias, 🛠 Servicios o 🎁 Personalizados</strong>).
           </p>
         </div>
       `;
@@ -1932,6 +1941,10 @@ ${mapsLink}
 
     const categoryNames = {
       'all': '✨ Todos los Restaurantes',
+      'comidas': '🍔 Pedir Comida',
+      'farmacias': '💊 Farmacias & Salud 24/7',
+      'servicios': '🛠 Servicios & Auxilio 24/7',
+      'personalizados': '🎁 Personalizados & Artesanías',
       'hamburguesas': '🍔 Hamburguesas',
       'perros': '🌭 Perros Calientes',
       'pizzas': '🍕 Pizzas',
@@ -1961,12 +1974,12 @@ ${mapsLink}
         </div>
       `;
     } else {
-      displayTitle = this.capitalize(this.currentCategory);
+      displayTitle = categoryNames[this.currentCategory] || this.capitalize(this.currentCategory);
     }
     const titleEl = document.getElementById('establishments-title');
     if (titleEl) titleEl.innerHTML = displayTitle;
 
-    // Special dedicated rendering for Servicios category with 2-stage flow (Categories Hub & Company-Protagonist Establishments)
+    // Special dedicated rendering for Servicios category (Auxilio 24/7, Automotriz, Transporte)
     if (this.currentCategory === 'servicios' && !filtered) {
       grid.style.width = '100%';
       grid.style.maxWidth = '100%';
@@ -1991,15 +2004,312 @@ ${mapsLink}
         featSection.classList.add('hidden');
       }
 
-      const servicesList = (this.serviceEstablishments && this.serviceEstablishments.length > 0)
+      const allServices = (this.serviceEstablishments && this.serviceEstablishments.length > 0)
         ? this.serviceEstablishments
         : this.getDefaultServiceEstablishments();
 
+      const servicesList = allServices.filter(e => ['cauchera', 'paint', 'movil'].includes(e.category));
+
       // STAGE 1: Visual Grid of Service Categories (Hub)
       if (!this.currentServiceCategory) {
-        if (allRestTitle) allRestTitle.textContent = 'Categorías de Servicios Disponibles (6)';
+        if (allRestTitle) allRestTitle.textContent = 'Servicios Técnicos & Auxilio Disponibles (3)';
 
         const serviceCategories = [
+          {
+            key: 'cauchera',
+            name: 'Auxilio Vial & Montallantas 24/7',
+            iconImg: '/images/services/cat_cauchera.svg',
+            color: '#EF4444',
+            gradient: 'linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(239, 68, 68, 0.55)',
+            glow: 'rgba(239, 68, 68, 0.35)',
+            badge: '🔴 Guardia Activa 24/7',
+            items: [
+              'Montallantas a domicilio para motos, autos y camionetas 24H',
+              'Despinche express en ruta con parches vulcanizados de alta durabilidad',
+              'Asistencia y auxilio vial inmediato con geolocalización GPS'
+            ]
+          },
+          {
+            key: 'paint',
+            name: 'Automotriz & Latonería',
+            iconImg: '/images/services/cat_paint.svg',
+            color: '#EA580C',
+            gradient: 'linear-gradient(135deg, rgba(234, 88, 12, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(234, 88, 12, 0.55)',
+            glow: 'rgba(234, 88, 12, 0.35)',
+            badge: '🔥 Secado al Horno',
+            items: [
+              'Sacado de golpes en frío y desabollado profesional',
+              'Latonería general y enderezada de chasis automotriz',
+              'Pintura computarizada bicapa con secado al horno garantizado'
+            ]
+          },
+          {
+            key: 'movil',
+            name: 'Transporte & Movilidad',
+            iconImg: '/images/services/cat_movil.svg',
+            color: '#FF6B00',
+            gradient: 'linear-gradient(135deg, rgba(255, 107, 0, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(255, 107, 0, 0.55)',
+            glow: 'rgba(255, 107, 0, 0.35)',
+            badge: '⚡ Tarifa Automática GPS',
+            items: [
+              'Moto Taxi express para traslados urbanos rápidos y económicos',
+              'Carreras cómodas y seguras en autos estándar',
+              'Vehículos ejecutivos y de gama lujo con tarifa automática por GPS'
+            ]
+          }
+        ];
+
+        let html = `
+          <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-bottom: 6px; padding: 16px 20px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1.5px solid rgba(239, 68, 68, 0.3); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">🛠 Servicios Técnicos & Emergencia</h3>
+              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Auxilio vial en ruta 24/7, taller automotriz y movilidad express en San Antonio</p>
+            </div>
+            <button type="button" onclick="MarketplaceApp.selectServiceCategory('all')" style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.22); color: #FFF; padding: 9px 16px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+              <span>🌟</span> Ver Todos los Servicios (3)
+            </button>
+          </div>
+        `;
+
+        serviceCategories.forEach(cat => {
+          const itemsHtml = cat.items.map(item => `
+            <div style="display: flex; align-items: flex-start; gap: 7px; margin-bottom: 5px;">
+              <span style="color: ${cat.color}; font-size: 11px; margin-top: 1px; flex-shrink: 0;">✦</span>
+              <span style="font-size: 12px; color: #E2E8F0; font-weight: 600; line-height: 1.35;">${item}</span>
+            </div>
+          `).join('');
+
+          html += `
+            <div class="est-row-card service-row-card" onclick="MarketplaceApp.selectServiceCategory('${cat.key}')" style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; background: ${cat.gradient}; border: 1.5px solid ${cat.border}; cursor: pointer; padding: 18px; border-radius: 20px; transition: all 0.25s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+              <div class="service-card-main-flex" style="display: flex; gap: 14px; align-items: flex-start;">
+                <div class="service-card-icon-box" style="background: rgba(15, 23, 42, 0.75); border: 2px solid ${cat.color}; box-shadow: 0 0 20px ${cat.glow}; width: 68px; height: 68px; min-width: 68px; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 10px;">
+                  <img src="${cat.iconImg}" alt="${cat.name}" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                    <h4 style="font-size: 17.5px; font-weight: 900; color: #FFFFFF; margin: 0; letter-spacing: -0.2px;">
+                      ${cat.name}
+                    </h4>
+                    <span style="font-size: 11px; font-weight: 800; background: ${cat.color}; color: #FFF; padding: 3px 8px; border-radius: 7px; letter-spacing: 0.3px;">
+                      ${cat.badge}
+                    </span>
+                  </div>
+                  
+                  <div style="margin-bottom: 12px;">
+                    ${itemsHtml}
+                  </div>
+
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                    <span style="font-size: 11.5px; font-weight: 700; color: #94A3B8;">
+                      Servicios Disponibles
+                    </span>
+                    <span style="font-size: 12.5px; font-weight: 900; color: #FFF; background: linear-gradient(135deg, ${cat.color} 0%, rgba(15,23,42,0.95) 160%); border: 1px solid ${cat.color}; padding: 6px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 10px ${cat.glow};">
+                      Explorar Servicios ➔
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        // Add Merchant Registration Invite
+        html += `
+          <div style="grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
+            <p style="font-size: 12.5px; color: #94A3B8; margin: 0 0 10px 0;">
+              ¿Ofreces auxilio vial, grúa, taller mecánico, cerrajería o servicio técnico en San Antonio?
+            </p>
+            <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid #EF4444; padding: 8px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
+              ➕ Solicitar Registro de Servicio
+            </button>
+          </div>
+        `;
+
+        grid.innerHTML = html;
+        return;
+      }
+
+      // STAGE 2: Establishments in Selected Category (or All)
+      const targetCategory = this.currentServiceCategory;
+      const targetEstablishments = (targetCategory && targetCategory !== 'all')
+        ? servicesList.filter(e => e.category === targetCategory)
+        : servicesList;
+
+      if (allRestTitle) {
+        const catMap = {
+          'all': 'Todos los Servicios Técnicos',
+          'cauchera': 'Centros de Auxilio Vial & Montallantas',
+          'paint': 'Talleres Automotriz & Latonería',
+          'movil': 'Flotas de Transporte & Movilidad'
+        };
+        allRestTitle.textContent = `${catMap[targetCategory] || 'Empresas de Servicios'} (${targetEstablishments.length})`;
+      }
+
+      const catPills = [
+        { key: 'all', label: '🌟 Todos' },
+        { key: 'cauchera', label: '🔧 Auxilio & Montallantas 24/7' },
+        { key: 'paint', label: '🎨 Automotriz & Latonería' },
+        { key: 'movil', label: '🛵 Transporte Express' }
+      ];
+
+      let html = `
+        <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; width: 100%; box-sizing: border-box;">
+            <button type="button" onclick="MarketplaceApp.resetServiceCategory()" style="background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.22); color: #FFF; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;">
+              <span>⬅️</span> Volver a Categorías
+            </button>
+            <span style="font-size: 12px; color: #94A3B8; font-weight: 700;">
+              ${targetEstablishments.length} establecimiento${targetEstablishments.length !== 1 ? 's' : ''} disponible${targetEstablishments.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;" class="no-scrollbar">
+            ${catPills.map(p => `
+              <button type="button" onclick="MarketplaceApp.selectServiceCategory('${p.key}')" style="background: ${(this.currentServiceCategory || 'all') === p.key ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' : 'rgba(30, 41, 59, 0.7)'}; color: ${(this.currentServiceCategory || 'all') === p.key ? '#FFF' : '#CBD5E1'}; border: 1.5px solid ${(this.currentServiceCategory || 'all') === p.key ? '#EF4444' : 'rgba(255,255,255,0.1)'}; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: all 0.2s ease;">
+                ${p.label}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      if (targetEstablishments.length === 0) {
+        html += `
+          <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; padding: 36px 20px; text-align: center; background: rgba(30, 41, 59, 0.6); border: 1.5px solid rgba(255,255,255,0.08); border-radius: 18px;">
+            <span style="font-size: 40px; display: block; margin-bottom: 8px;">🔍</span>
+            <h4 style="font-size: 16px; font-weight: 800; color: #FFF; margin: 0 0 6px 0;">No hay empresas en esta categoría aún</h4>
+            <p style="font-size: 13px; color: #94A3B8; margin: 0 0 14px 0;">¿Conoces o tienes un negocio en este rubro?</p>
+            <button type="button" onclick="MarketplaceApp.resetServiceCategory()" style="background: #EF4444; color: #FFF; border: none; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer;">
+              Ver Otras Categorías
+            </button>
+          </div>
+        `;
+      } else {
+        targetEstablishments.forEach(est => {
+          const color = est.themeColor || '#EF4444';
+          const badgesHtml = (est.badges || []).map(b => `
+            <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #E2E8F0; padding: 3px 8px; border-radius: 7px; font-size: 11px; font-weight: 700;">
+              ${b}
+            </span>
+          `).join('');
+
+          const cleanPhone = (est.phone || '+573227949751').replace(/[^0-9]/g, '');
+
+          html += `
+            <div class="est-row-card service-row-card" style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1.5px solid ${color}60; border-radius: 20px; padding: 16px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden;">
+              
+              <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, ${color}, transparent);"></div>
+
+              <div style="display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box;">
+                <div style="width: 58px; height: 58px; border-radius: 16px; overflow: hidden; background: #0B0F19; border: 2px solid ${color}; box-shadow: 0 0 16px ${color}50; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 4px;">
+                  <img src="${est.logo}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src='/images/services/cauchera_logo.svg'">
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                    <h3 style="font-size: 19px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.2px; margin: 0; text-transform: uppercase;">
+                      ${est.name}
+                    </h3>
+                    <span style="font-size: 10.5px; font-weight: 800; background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.45); color: #34D399; padding: 3px 8px; border-radius: 6px;">
+                      🟢 OFICIAL
+                    </span>
+                  </div>
+                  <div style="font-size: 12.5px; color: ${color}; font-weight: 800; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${est.categoryIcon || '🛠️'} ${est.categoryLabel} • <span style="color: #94A3B8; font-weight: 600;">${est.serviceName}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="width: 100%; max-width: 100%; border-radius: 14px; overflow: hidden; background: #070B14; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 16px rgba(0,0,0,0.35); display: flex; flex-direction: column; box-sizing: border-box;">
+                <div style="width: 100%; max-width: 100%; height: 180px; overflow: hidden; position: relative; background: #0B0F19;">
+                  <img src="${est.image}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='/images/servicios.jpg'">
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(15, 23, 42, 0.92); border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 8px; flex-wrap: wrap; box-sizing: border-box;">
+                  <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; display: inline-flex; align-items: center; gap: 4px;">
+                    ⭐ ${Number(est.rating || 5.0).toFixed(1)} <span style="color: #94A3B8; font-weight: 600; font-size: 10.5px;">(${est.reviewCount || 45}+ opiniones)</span>
+                  </span>
+                  <span style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: inline-flex; align-items: center; gap: 4px;">
+                    📍 ${est.location || 'San Antonio'}
+                  </span>
+                </div>
+              </div>
+
+              <p style="font-size: 13px; color: #CBD5E1; margin: 0; line-height: 1.45; font-weight: 500; word-break: break-word; overflow-wrap: break-word;">
+                ${est.slogan}
+              </p>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; width: 100%; box-sizing: border-box;">
+                ${badgesHtml}
+              </div>
+
+              <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; width: 100%; box-sizing: border-box;">
+                <button type="button" onclick="MarketplaceApp.executeServiceAction('${est.actionType}')" style="flex: 1; min-width: 0; background: linear-gradient(135deg, ${color} 0%, rgba(15, 23, 42, 0.95) 160%); border: 1.5px solid ${color}; color: #FFF; padding: 11px 14px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px ${color}40; letter-spacing: -0.2px; overflow: hidden;">
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${est.ctaText}</span>
+                </button>
+                <button type="button" onclick="window.open('https://wa.me/${cleanPhone}?text=Hola,%20quisiera%20consultar%20sobre%20${encodeURIComponent(est.name)}', '_blank')" style="background: rgba(37, 211, 102, 0.15); border: 1.5px solid #25D366; color: #25D366; padding: 10px 14px; border-radius: 12px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Consultar por WhatsApp">
+                  💬
+                </button>
+              </div>
+
+            </div>
+          `;
+        });
+      }
+
+      // Add Merchant Registration Invite
+      html += `
+        <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
+          <p style="font-size: 12.5px; color: #94A3B8; margin: 0 0 10px 0;">
+            ¿Ofreces auxilio vial, grúa, taller mecánico, cerrajería o servicio técnico en San Antonio?
+          </p>
+          <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid #EF4444; padding: 8px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
+            ➕ Solicitar Registro de Servicio
+          </button>
+        </div>
+      `;
+
+      grid.innerHTML = html;
+      return;
+    }
+
+    // Special dedicated rendering for Personalizados category (Shelli Art Resina, Creaciones Lola Piñatas, PediGochos 3D Lab)
+    if (this.currentCategory === 'personalizados' && !filtered) {
+      grid.style.width = '100%';
+      grid.style.maxWidth = '100%';
+      grid.style.minWidth = '0';
+      grid.style.boxSizing = 'border-box';
+      const allRestHeader = document.getElementById('all-restaurants-header');
+      const allRestTitle = document.getElementById('all-restaurants-title-text');
+      if (allRestHeader) allRestHeader.style.display = 'block';
+
+      const promoSection = document.getElementById('daily-promotions-section');
+      if (promoSection) {
+        promoSection.style.display = 'none';
+        promoSection.classList.add('hidden');
+      }
+
+      const container = document.getElementById('food-type-filters-container');
+      if (container) container.style.display = 'none';
+
+      const featSection = document.getElementById('featured-carousel-section');
+      if (featSection) {
+        featSection.style.display = 'none';
+        featSection.classList.add('hidden');
+      }
+
+      const allServices = (this.serviceEstablishments && this.serviceEstablishments.length > 0)
+        ? this.serviceEstablishments
+        : this.getDefaultServiceEstablishments();
+
+      const personalizedList = allServices.filter(e => ['resina', 'pinatas', 'print3d'].includes(e.category));
+
+      // STAGE 1: Visual Grid of Personalized Categories (Hub)
+      if (!this.currentServiceCategory) {
+        if (allRestTitle) allRestTitle.textContent = 'Talleres de Creación & Personalizados (3)';
+
+        const craftCategories = [
           {
             key: 'resina',
             name: 'Arte & Resina Epóxica',
@@ -2011,7 +2321,7 @@ ${mapsLink}
             badge: '💎 Pan de Oro 24K',
             items: [
               'Llaveros letras A-Z personalizados en resina epóxica',
-              'Diseños con hojilla de oro 24K, borlas y dijes variados',
+              'Diseños con hojilla de oro 24K, borlas, fotos y chip NFC',
               'Recuerdos únicos para fiestas, aniversarios y eventos'
             ]
           },
@@ -2044,67 +2354,22 @@ ${mapsLink}
               'Repuestos automotrices descatalogados y soportes plásticos',
               'Coleccionables, modelos STL y visor interactivo 3D en vivo'
             ]
-          },
-          {
-            key: 'paint',
-            name: 'Automotriz & Latonería',
-            iconImg: '/images/services/cat_paint.svg',
-            color: '#EA580C',
-            gradient: 'linear-gradient(135deg, rgba(234, 88, 12, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
-            border: 'rgba(234, 88, 12, 0.55)',
-            glow: 'rgba(234, 88, 12, 0.35)',
-            badge: '🔥 Secado al Horno',
-            items: [
-              'Sacado de golpes en frío y desabollado profesional',
-              'Latonería general y enderezada de chasis automotriz',
-              'Pintura computarizada bicapa con secado al horno garantizado'
-            ]
-          },
-          {
-            key: 'cauchera',
-            name: 'Auxilio Vial & Montallantas 24/7',
-            iconImg: '/images/services/cat_cauchera.svg',
-            color: '#EF4444',
-            gradient: 'linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
-            border: 'rgba(239, 68, 68, 0.55)',
-            glow: 'rgba(239, 68, 68, 0.35)',
-            badge: '🔴 Guardia Activa 24/7',
-            items: [
-              'Montallantas a domicilio para motos, autos y camionetas 24H',
-              'Despinche express en ruta con parches vulcanizados de alta durabilidad',
-              'Asistencia y auxilio vial inmediato con geolocalización GPS'
-            ]
-          },
-          {
-            key: 'movil',
-            name: 'Transporte & Movilidad',
-            iconImg: '/images/services/cat_movil.svg',
-            color: '#FF6B00',
-            gradient: 'linear-gradient(135deg, rgba(255, 107, 0, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
-            border: 'rgba(255, 107, 0, 0.55)',
-            glow: 'rgba(255, 107, 0, 0.35)',
-            badge: '⚡ Tarifa Automática GPS',
-            items: [
-              'Moto Taxi express para traslados urbanos rápidos y económicos',
-              'Carreras cómodas y seguras en autos estándar',
-              'Vehículos ejecutivos y de gama lujo con tarifa automática por GPS'
-            ]
           }
         ];
 
         let html = `
-          <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-bottom: 6px; padding: 16px 20px; background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1.5px solid rgba(255, 107, 0, 0.3); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-bottom: 6px; padding: 16px 20px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1.5px solid rgba(236, 72, 153, 0.35); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
             <div>
-              <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">Explora Servicios Especializados</h3>
-              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Selecciona una categoría para ver los productos, servicios y cotizaciones disponibles</p>
+              <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">🎁 Personalizados, Arte & 3D Lab</h3>
+              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Crea piezas únicas: llaveros de resina epóxica, piñatas 3D temáticas o prototipos 3D</p>
             </div>
             <button type="button" onclick="MarketplaceApp.selectServiceCategory('all')" style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.22); color: #FFF; padding: 9px 16px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
-              <span>🌟</span> Ver Todos los Servicios (6)
+              <span>✨</span> Ver Todos los Talleres (3)
             </button>
           </div>
         `;
 
-        serviceCategories.forEach(cat => {
+        craftCategories.forEach(cat => {
           const itemsHtml = cat.items.map(item => `
             <div style="display: flex; align-items: flex-start; gap: 7px; margin-bottom: 5px;">
               <span style="color: ${cat.color}; font-size: 11px; margin-top: 1px; flex-shrink: 0;">✦</span>
@@ -2128,17 +2393,16 @@ ${mapsLink}
                     </span>
                   </div>
                   
-                  <!-- Lo que encuentras en esta categoría (sin nombres de negocios) -->
                   <div style="margin-bottom: 12px;">
                     ${itemsHtml}
                   </div>
 
                   <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                     <span style="font-size: 11.5px; font-weight: 700; color: #94A3B8;">
-                      Servicios Disponibles
+                      Opciones Disponibles
                     </span>
                     <span style="font-size: 12.5px; font-weight: 900; color: #FFF; background: linear-gradient(135deg, ${cat.color} 0%, rgba(15,23,42,0.95) 160%); border: 1px solid ${cat.color}; padding: 6px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 10px ${cat.glow};">
-                      Explorar Servicios ➔
+                      Ver Catálogo & Personalizar ➔
                     </span>
                   </div>
                 </div>
@@ -2151,10 +2415,10 @@ ${mapsLink}
         html += `
           <div style="grid-column: 1 / -1; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
             <p style="font-size: 12.5px; color: #94A3B8; margin: 0 0 10px 0;">
-              ¿Ofreces un servicio técnico, grúa, cerrajería o profesional en San Antonio?
+              ¿Creas artesanías, piñatas, regalos hechos a mano o diseño 3D en San Antonio?
             </p>
-            <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 8px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
-              ➕ Solicitar Registro de Servicio
+            <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('personalizados')" style="background: rgba(236, 72, 153, 0.15); color: #EC4899; border: 1px solid #EC4899; padding: 8px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
+              ➕ Solicitar Registro de Creador
             </button>
           </div>
         `;
@@ -2166,30 +2430,24 @@ ${mapsLink}
       // STAGE 2: Establishments in Selected Category (or All)
       const targetCategory = this.currentServiceCategory;
       const targetEstablishments = (targetCategory && targetCategory !== 'all')
-        ? servicesList.filter(e => e.category === targetCategory)
-        : servicesList;
+        ? personalizedList.filter(e => e.category === targetCategory)
+        : personalizedList;
 
       if (allRestTitle) {
         const catMap = {
-          'all': 'Todas las Empresas de Servicios',
-          'resina': 'Empresas de Arte & Resina',
-          'pinatas': 'Talleres de Piñatas & Fiestas',
-          'print3d': 'Laboratorios de Impresión 3D',
-          'paint': 'Talleres Automotriz & Latonería',
-          'cauchera': 'Centros de Auxilio Vial & Montallantas',
-          'movil': 'Flotas de Transporte & Movilidad'
+          'all': 'Todos los Talleres de Personalizados',
+          'resina': 'Shelli Art • Arte & Resina Epóxica',
+          'pinatas': 'Creaciones Lola • Piñatas & Fiestas',
+          'print3d': 'PediGochos 3D Lab • Impresión 3D'
         };
-        allRestTitle.textContent = `${catMap[targetCategory] || 'Empresas de Servicios'} (${targetEstablishments.length})`;
+        allRestTitle.textContent = `${catMap[targetCategory] || 'Talleres de Personalizados'} (${targetEstablishments.length})`;
       }
 
       const catPills = [
-        { key: 'all', label: '🌟 Todas' },
+        { key: 'all', label: '🌟 Todos' },
         { key: 'resina', label: '✨ Arte & Resina' },
-        { key: 'pinatas', label: '🎉 Piñatas' },
-        { key: 'print3d', label: '🖨️ 3D Lab' },
-        { key: 'paint', label: '🎨 Automotriz' },
-        { key: 'cauchera', label: '🔧 Auxilio 24/7' },
-        { key: 'movil', label: '🛵 Transporte' }
+        { key: 'pinatas', label: '🎉 Piñatas Creativas' },
+        { key: 'print3d', label: '🖨️ 3D Lab' }
       ];
 
       let html = `
@@ -2199,13 +2457,13 @@ ${mapsLink}
               <span>⬅️</span> Volver a Categorías
             </button>
             <span style="font-size: 12px; color: #94A3B8; font-weight: 700;">
-              ${targetEstablishments.length} establecimiento${targetEstablishments.length !== 1 ? 's' : ''} disponible${targetEstablishments.length !== 1 ? 's' : ''}
+              ${targetEstablishments.length} taller${targetEstablishments.length !== 1 ? 'es' : ''} disponible${targetEstablishments.length !== 1 ? 's' : ''}
             </span>
           </div>
 
           <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;" class="no-scrollbar">
             ${catPills.map(p => `
-              <button type="button" onclick="MarketplaceApp.selectServiceCategory('${p.key}')" style="background: ${(this.currentServiceCategory || 'all') === p.key ? 'linear-gradient(135deg, #FF6B00 0%, #EA580C 100%)' : 'rgba(30, 41, 59, 0.7)'}; color: ${(this.currentServiceCategory || 'all') === p.key ? '#FFF' : '#CBD5E1'}; border: 1.5px solid ${(this.currentServiceCategory || 'all') === p.key ? '#FF6B00' : 'rgba(255,255,255,0.1)'}; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: all 0.2s ease;">
+              <button type="button" onclick="MarketplaceApp.selectServiceCategory('${p.key}')" style="background: ${(this.currentServiceCategory || 'all') === p.key ? 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)' : 'rgba(30, 41, 59, 0.7)'}; color: ${(this.currentServiceCategory || 'all') === p.key ? '#FFF' : '#CBD5E1'}; border: 1.5px solid ${(this.currentServiceCategory || 'all') === p.key ? '#EC4899' : 'rgba(255,255,255,0.1)'}; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: all 0.2s ease;">
                 ${p.label}
               </button>
             `).join('')}
@@ -2217,16 +2475,16 @@ ${mapsLink}
         html += `
           <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; padding: 36px 20px; text-align: center; background: rgba(30, 41, 59, 0.6); border: 1.5px solid rgba(255,255,255,0.08); border-radius: 18px;">
             <span style="font-size: 40px; display: block; margin-bottom: 8px;">🔍</span>
-            <h4 style="font-size: 16px; font-weight: 800; color: #FFF; margin: 0 0 6px 0;">No hay empresas en esta categoría aún</h4>
-            <p style="font-size: 13px; color: #94A3B8; margin: 0 0 14px 0;">¿Conoces o tienes un negocio en este rubro?</p>
-            <button type="button" onclick="MarketplaceApp.resetServiceCategory()" style="background: #FF6B00; color: #FFF; border: none; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer;">
+            <h4 style="font-size: 16px; font-weight: 800; color: #FFF; margin: 0 0 6px 0;">No hay talleres en esta categoría aún</h4>
+            <p style="font-size: 13px; color: #94A3B8; margin: 0 0 14px 0;">¿Conoces o tienes un taller en este rubro?</p>
+            <button type="button" onclick="MarketplaceApp.resetServiceCategory()" style="background: #EC4899; color: #FFF; border: none; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer;">
               Ver Otras Categorías
             </button>
           </div>
         `;
       } else {
         targetEstablishments.forEach(est => {
-          const color = est.themeColor || '#FF6B00';
+          const color = est.themeColor || '#EC4899';
           const badgesHtml = (est.badges || []).map(b => `
             <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #E2E8F0; padding: 3px 8px; border-radius: 7px; font-size: 11px; font-weight: 700;">
               ${b}
@@ -2238,10 +2496,8 @@ ${mapsLink}
           html += `
             <div class="est-row-card service-row-card" style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1.5px solid ${color}60; border-radius: 20px; padding: 16px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden;">
               
-              <!-- Subtle Accent Glow Line at Top -->
               <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, ${color}, transparent);"></div>
 
-              <!-- Top: Business Identity Header (PROTAGONIST BUSINESS NAME) -->
               <div style="display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box;">
                 <div style="width: 58px; height: 58px; border-radius: 16px; overflow: hidden; background: #0B0F19; border: 2px solid ${color}; box-shadow: 0 0 16px ${color}50; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 4px;">
                   <img src="${est.logo}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src='/images/services/shelliart_logo.svg'">
@@ -2261,12 +2517,10 @@ ${mapsLink}
                 </div>
               </div>
 
-              <!-- Middle: Real Photo / Fallback Banner - 100% Visible & Aesthetic Frame -->
               <div style="width: 100%; max-width: 100%; border-radius: 14px; overflow: hidden; background: #070B14; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 16px rgba(0,0,0,0.35); display: flex; flex-direction: column; box-sizing: border-box;">
                 <div style="width: 100%; max-width: 100%; height: 180px; overflow: hidden; position: relative; background: #0B0F19;">
-                  <img src="${est.image}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='/images/servicios.jpg'">
+                  <img src="${est.image}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='/images/services/shelliart_banner.jpg'">
                 </div>
-                <!-- Clean Meta Sub-Bar (100% Unobstructed Artwork) -->
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(15, 23, 42, 0.92); border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 8px; flex-wrap: wrap; box-sizing: border-box;">
                   <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; display: inline-flex; align-items: center; gap: 4px;">
                     ⭐ ${Number(est.rating || 5.0).toFixed(1)} <span style="color: #94A3B8; font-weight: 600; font-size: 10.5px;">(${est.reviewCount || 45}+ opiniones)</span>
@@ -2277,17 +2531,14 @@ ${mapsLink}
                 </div>
               </div>
 
-              <!-- Slogan / Personality -->
               <p style="font-size: 13px; color: #CBD5E1; margin: 0; line-height: 1.45; font-weight: 500; word-break: break-word; overflow-wrap: break-word;">
                 ${est.slogan}
               </p>
 
-              <!-- Specialty Badges -->
               <div style="display: flex; flex-wrap: wrap; gap: 6px; width: 100%; box-sizing: border-box;">
                 ${badgesHtml}
               </div>
 
-              <!-- Footer CTA Buttons -->
               <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; width: 100%; box-sizing: border-box;">
                 <button type="button" onclick="MarketplaceApp.executeServiceAction('${est.actionType}')" style="flex: 1; min-width: 0; background: linear-gradient(135deg, ${color} 0%, rgba(15, 23, 42, 0.95) 160%); border: 1.5px solid ${color}; color: #FFF; padding: 11px 14px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px ${color}40; letter-spacing: -0.2px; overflow: hidden;">
                   <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${est.ctaText}</span>
@@ -2306,10 +2557,10 @@ ${mapsLink}
       html += `
         <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-top: 10px; padding: 18px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px;">
           <p style="font-size: 12.5px; color: #94A3B8; margin: 0 0 10px 0;">
-            ¿Ofreces un servicio técnico, grúa, cerrajería o profesional en San Antonio?
+            ¿Creas artesanías, piñatas, regalos hechos a mano o diseño 3D en San Antonio?
           </p>
-          <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('servicios')" style="background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid #FF6B00; padding: 8px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
-            ➕ Solicitar Registro de Servicio
+          <button type="button" onclick="MarketplaceApp.openMerchantRegistrationModal('personalizados')" style="background: rgba(236, 72, 153, 0.15); color: #EC4899; border: 1px solid #EC4899; padding: 8px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
+            ➕ Solicitar Registro de Creador
           </button>
         </div>
       `;
@@ -2806,8 +3057,8 @@ ${mapsLink}
 
     // Dynamic fallback for any other restaurant / shop based on themeColor or category
     const cat = (est.category || '').toLowerCase();
-    const primaryColor = est.themeColor || (cat === 'farmacias' ? '#059669' : (cat === 'mercados' ? '#10B981' : (cat === 'ferreterias' ? '#D97706' : (cat === 'servicios' ? '#8B5CF6' : '#FF6B00'))));
-    const icon = est.logo || (cat === 'farmacias' ? '💊' : (cat === 'mercados' ? '🛒' : (cat === 'ferreterias' ? '🛠️' : (cat === 'servicios' ? '🛵' : '🍔'))));
+    const primaryColor = est.themeColor || (cat === 'farmacias' ? '#059669' : (cat === 'personalizados' ? '#EC4899' : (cat === 'servicios' ? '#EF4444' : (cat === 'mercados' ? '#10B981' : (cat === 'ferreterias' ? '#D97706' : '#FF6B00')))));
+    const icon = est.logo || (cat === 'farmacias' ? '💊' : (cat === 'personalizados' ? '🎁' : (cat === 'servicios' ? '🛠️' : (cat === 'mercados' ? '🛒' : (cat === 'ferreterias' ? '🔧' : '🍔')))));
 
     return {
       cardBg: `linear-gradient(135deg, ${primaryColor}22 0%, #1E2330 45%, #151821 100%)`,

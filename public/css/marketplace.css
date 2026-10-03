@@ -697,6 +697,117 @@
   display: block;
 }
 
+/* ==========================================================================
+   Marketplaces Top Switcher Bar (Navegación 4 Marketplaces)
+   ========================================================================== */
+.marketplaces-nav-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 14px 2px;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 8px;
+}
+.marketplaces-nav-bar::-webkit-scrollbar {
+  display: none;
+}
+.mkt-nav-pill {
+  flex: 1;
+  min-width: 125px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(18, 22, 34, 0.88);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  color: #CBD5E1;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.22s ease;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.mkt-nav-pill:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  color: #FFF;
+}
+.mkt-nav-pill.active {
+  color: #FFF;
+  transform: translateY(-1px);
+}
+.mkt-nav-pill.active[data-mkt="comidas"] {
+  border-color: #FF6B00;
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.25) 0%, rgba(234, 88, 12, 0.12) 100%);
+  box-shadow: 0 4px 18px rgba(255, 107, 0, 0.35);
+}
+.mkt-nav-pill.active[data-mkt="farmacias"] {
+  border-color: #10B981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.12) 100%);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+}
+.mkt-nav-pill.active[data-mkt="servicios"] {
+  border-color: #EF4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.12) 100%);
+  box-shadow: 0 4px 18px rgba(239, 68, 68, 0.35);
+}
+.mkt-nav-pill.active[data-mkt="personalizados"] {
+  border-color: #EC4899;
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.25) 0%, rgba(139, 92, 246, 0.12) 100%);
+  box-shadow: 0 4px 18px rgba(236, 72, 153, 0.35);
+}
+.mkt-pill-icon {
+  font-size: 17px;
+}
+.mkt-pill-text {
+  letter-spacing: -0.2px;
+}
+
+.four-marketplaces-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: auto auto !important;
+  gap: 12px !important;
+}
+.four-marketplaces-grid .category-card-delivercity {
+  min-height: 150px !important;
+  height: 150px !important;
+  grid-row: auto !important;
+  grid-column: auto !important;
+}
+.four-marketplaces-grid .category-card-content {
+  bottom: 12px !important;
+  left: 14px !important;
+  right: 14px !important;
+}
+.four-marketplaces-grid .category-card-content h4 {
+  font-size: 15px !important;
+  margin-bottom: 2px !important;
+}
+@media (max-width: 640px) {
+  .four-marketplaces-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .four-marketplaces-grid .category-card-delivercity {
+    min-height: 135px !important;
+    height: 135px !important;
+  }
+  .four-marketplaces-grid .category-card-content {
+    bottom: 8px !important;
+    left: 10px !important;
+    right: 10px !important;
+  }
+  .four-marketplaces-grid .category-card-content h4 {
+    font-size: 13px !important;
+  }
+}
+
 /* Asymmetrical Categories Grid (DeliverCity Style) - Sleek Compact Scale */
 .categories-section {
   margin-bottom: 20px;
