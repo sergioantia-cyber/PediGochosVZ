@@ -70,7 +70,7 @@ class MarketplaceController {
 
     this.activeCoupon = null;
     this.gochoPoints = parseInt(localStorage.getItem('gocho_points') || '0', 10);
-    this.currentCategory = null; // Default to no category selected on home entry
+    this.currentCategory = 'comidas'; // Default to comidas on home entry
     this.paymentMethod = 'Efectivo'; // Default payment method: 'Efectivo' or 'Transferencia'
     this.isTrackingMinimized = false; // Whether active order tracking is minimized
     this.activeQuickFilter = 'all'; // Quick filter: 'all', 'abiertos', 'mas_pedidos', 'mejor_valorados', 'mas_rapidos', 'cerca'
@@ -738,8 +738,9 @@ class MarketplaceController {
       });
 
       if (validPromos.length === 0) {
-        promoSection.style.display = 'none';
-        promoSection.classList.add('hidden');
+        promoSection.style.display = 'block';
+        promoSection.classList.remove('hidden');
+        this.startDailyOffersCountdown();
         return;
       }
 
@@ -1394,9 +1395,11 @@ ${mapsLink}
     // Update active class on quick filter pills
     document.querySelectorAll('.quick-filter-pill').forEach(btn => {
       if (btn.dataset.filter === filterKey) {
-        btn.classList.add('active');
+        btn.classList.add('active', 'bg-primary-container', 'text-on-primary', 'font-bold');
+        btn.classList.remove('bg-surface-container', 'text-on-surface', 'font-semibold');
       } else {
-        btn.classList.remove('active');
+        btn.classList.remove('active', 'bg-primary-container', 'text-on-primary', 'font-bold');
+        btn.classList.add('bg-surface-container', 'text-on-surface', 'font-semibold');
       }
     });
 
@@ -1792,12 +1795,12 @@ ${mapsLink}
     container.innerHTML = foodCategories.map(cat => {
       const isActive = activeFilter === cat.id;
       return `
-        <div class="cravings-bubble-item ${isActive ? 'active' : ''}" onclick="MarketplaceApp.filterRestaurantsByFoodType('${cat.id}')">
-          <div class="cravings-bubble-circle">
-            <img src="${cat.img}" alt="${cat.name}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-size: 26px;\\'>${cat.fallback}</span>';">
+        <button type="button" class="flex flex-col items-center gap-1.5 shrink-0 group cravings-bubble-item ${isActive ? 'active' : ''}" onclick="MarketplaceApp.filterRestaurantsByFoodType('${cat.id}')">
+          <div class="w-16 h-16 rounded-full overflow-hidden p-0.5 bg-surface-container-high group-hover:scale-105 transition-transform shadow-sm ${isActive ? 'ring-2 ring-primary-container' : ''}">
+            <img class="w-full h-full object-cover rounded-full" src="${cat.img}" alt="${cat.name}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'flex items-center justify-center w-full h-full text-2xl\\'>${cat.fallback}</span>';">
           </div>
-          <span class="cravings-bubble-label">${cat.name}</span>
-        </div>
+          <span class="font-label-sm text-label-sm ${isActive ? 'text-primary-container font-bold' : 'text-on-surface font-semibold'} text-center w-16 truncate">${cat.name}</span>
+        </button>
       `;
     }).join('');
   }
@@ -1833,8 +1836,8 @@ ${mapsLink}
 
   // Create Establishment Card element with modern banner layout matching the new aesthetic
   createEstablishmentCard(est) {
-    const card = document.createElement('div');
-    card.className = 'est-card-banner-layout';
+    const card = document.createElement('article');
+    card.className = 'bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm flex flex-col active:scale-[0.99] transition-transform cursor-pointer border border-surface-container-high/40';
     const isOpen = this.isEstablishmentOpen(est);
 
     if (!isOpen) {
@@ -1853,46 +1856,56 @@ ${mapsLink}
     const ratingVal = avgRating > 0 ? avgRating.toFixed(1) : '4.9';
 
     const ratingBadge = (totalReviews >= 3 && avgRating > 0)
-      ? `<span class="est-card-banner-rating">⭐ ${ratingVal} (${totalReviews})</span>`
-      : `<span style="background: #D1FAE5; color: #065F46; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px;">✨ Nuevo</span>`;
+      ? `<div class="flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded-full shrink-0">
+          <span class="material-symbols-outlined text-[14px] text-badge-gold" style="font-variation-settings: 'FILL' 1;">star</span>
+          <span class="font-label-sm text-label-sm font-bold text-on-surface">${ratingVal}</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">(${totalReviews})</span>
+        </div>`
+      : `<div class="flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded-full shrink-0">
+          <span class="font-label-sm text-label-sm font-bold text-success-emerald">✨ Nuevo</span>
+        </div>`;
 
     const promoBadge = est.isHighTraffic
-      ? `<span style="background: #DC2626; color: #FFF; font-size: 9px; font-weight: 900; padding: 2.5px 7px; border-radius: 6px;">🚨 Tráfico Alto</span>`
-      : (isOpen ? `<span style="background: #EA580C; color: #FFF; font-size: 9px; font-weight: 900; padding: 2.5px 7px; border-radius: 6px;">🔥 Promo Activa</span>` : '');
+      ? `<span class="px-2 py-0.5 rounded-full bg-emergency-red text-on-error font-label-sm text-label-sm font-bold shadow-sm">🚨 Tráfico Alto</span>`
+      : (isOpen ? `<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-sm">🔥 Promo Activa</span>` : '');
 
-    const expressBadge = `<span style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #FFF; font-size: 9px; font-weight: 800; padding: 2.5px 7px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);">⚡ Envío Express</span>`;
+    const expressBadge = `<span class="px-2 py-0.5 rounded-full bg-dark-card/90 text-on-primary font-label-sm text-label-sm font-bold backdrop-blur-sm">⚡ Envío Express</span>`;
 
     const distanceBadge = (est._distanceKm !== undefined && est._distanceKm !== null && !isNaN(est._distanceKm))
-      ? `<span style="color: #6366F1; font-weight: 700; font-size: 11px;">• 📍 ${est._distanceKm < 1 ? Math.round(est._distanceKm * 1000) + ' m' : est._distanceKm.toFixed(1) + ' km'}</span>`
+      ? `<span class="text-on-surface-variant font-label-sm text-label-sm">• 📍 ${est._distanceKm < 1 ? Math.round(est._distanceKm * 1000) + ' m' : est._distanceKm.toFixed(1) + ' km'}</span>`
       : '';
 
-    const descSnippet = (est.description || '').split('.')[0] || est.description || 'Hamburguesas al carbón, tocineta ahumada, papas rústicas y bebidas.';
+    const descSnippet = (est.description || '').split('.')[0] || est.description || 'Especialidades culinarias y platos preparados al momento.';
+    const deliveryFeeFormatted = this.formatPesos(est.delivery_fee || 3500);
 
     card.innerHTML = `
-      <div class="est-banner-photo-wrapper">
-        <img src="${photoUrl}" alt="${est.name}" onerror="this.src='/images/burger_royale.jpg'">
-        <div class="est-banner-floating-badges">
+      <div class="relative w-full h-40">
+        <img class="w-full h-full object-cover" src="${photoUrl}" alt="${est.name}" onerror="this.src='/images/burger_royale.jpg'">
+        <div class="absolute top-2.5 left-2.5 flex items-center gap-1">
           ${promoBadge}
           ${expressBadge}
         </div>
-        <div class="est-banner-time-pill">
-          <span>🕒</span> <span>${deliveryTimeStr}</span>
+        <div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/95 backdrop-blur-sm text-on-surface font-label-sm text-label-sm font-bold flex items-center gap-1 shadow-sm">
+          <span class="material-symbols-outlined text-[13px] text-badge-gold">schedule</span>
+          <span>${deliveryTimeStr}</span>
         </div>
       </div>
-      <div class="est-card-banner-body">
-        <div class="est-card-banner-header">
-          <h4 class="est-card-banner-title">${est.name}</h4>
+      <div class="p-3.5 flex flex-col gap-1.5">
+        <div class="flex items-center justify-between gap-2">
+          <h4 class="font-title-md text-title-md text-on-surface font-bold truncate">${est.name}</h4>
           ${ratingBadge}
         </div>
-        <p class="est-card-banner-desc">${descSnippet}</p>
-        <div class="est-card-banner-footer">
-          <div class="est-card-banner-fee-info">
-            <span class="fee-pill">🛵 Envío ${this.formatPesos(est.delivery_fee || 5000)}</span>
-            <span class="points-note">• Gana puntos GochoPoints ⭐</span>
+        <p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">${descSnippet}</p>
+        <div class="flex items-center justify-between pt-2 mt-1 border-t border-surface-container-high/60">
+          <div class="flex items-center gap-1.5 text-on-surface font-label-sm text-label-sm flex-wrap">
+            <span class="material-symbols-outlined text-[16px] text-success-emerald">two_wheeler</span>
+            <span class="font-semibold text-success-emerald">Envío ${deliveryFeeFormatted}</span>
+            <span class="text-on-surface-variant hidden sm:inline">• ⭐ GochoPoints</span>
             ${distanceBadge}
           </div>
-          <button type="button" class="btn-card-pedir-action" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')">
-            <span>Pedir</span> <span>➔</span>
+          <button type="button" class="h-8 px-3 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-bold flex items-center gap-1 hover:bg-primary-container hover:text-on-primary transition-colors shrink-0" onclick="event.stopPropagation(); MarketplaceApp.openEstablishment('${est.id}')">
+            <span>Pedir</span>
+            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
           </button>
         </div>
       </div>
@@ -7387,12 +7400,14 @@ ${mapsLink}
 
   setCurrency(curr) {
     this.selectedCurrency = curr || 'COP';
-    const pills = document.querySelectorAll('.modern-currency-switch .curr-pill');
+    const pills = document.querySelectorAll('#search-currency-toggles .curr-pill, .modern-currency-switch .curr-pill');
     pills.forEach(p => {
-      if (p.getAttribute('data-curr') === curr) {
-        p.classList.add('active');
+      const pCurr = p.getAttribute('data-curr');
+      const isMatch = (pCurr === curr) || (curr === 'VES' && pCurr === 'BS');
+      if (isMatch) {
+        p.className = 'curr-pill px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-bold shadow-sm transition-all active';
       } else {
-        p.classList.remove('active');
+        p.className = 'curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all';
       }
     });
 
@@ -7407,9 +7422,9 @@ ${mapsLink}
     const tabs = document.querySelectorAll('.bottom-tab-bar .tab-item');
     tabs.forEach(tab => {
       if (tab.getAttribute('data-tab') === tabKey) {
-        tab.classList.add('active');
+        tab.className = 'tab-item flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full text-primary-container font-bold scale-105 active transition-transform';
       } else {
-        tab.classList.remove('active');
+        tab.className = 'tab-item flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full text-on-surface-variant transition-transform';
       }
     });
 
@@ -7419,7 +7434,7 @@ ${mapsLink}
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (tabKey === 'explorar') {
       this.closeAllModals();
-      const searchInput = document.getElementById('marketplace-search-input');
+      const searchInput = document.getElementById('global-search') || document.getElementById('marketplace-search-input');
       if (searchInput) {
         searchInput.focus();
         searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -12355,6 +12370,11 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
 
 const MarketplaceApp = new MarketplaceController();
 window.MarketplaceApp = MarketplaceApp;
+window.changeCurrency = function(button, type) {
+  if (window.MarketplaceApp) {
+    window.MarketplaceApp.setCurrency(type === 'BS' ? 'VES' : type);
+  }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   MarketplaceApp.init();
