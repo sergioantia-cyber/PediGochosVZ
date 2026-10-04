@@ -6026,13 +6026,16 @@ ${mapsLink}
       `;
       container.appendChild(row);
     });
-    let totalDeliveryFee = 0;
+    const hasFreeDeliveryReward = localStorage.getItem('gocho_free_delivery_active') === 'true';
     if (this.orderType === 'delivery') {
       shopIds.forEach(id => {
         const shopItems = this.cart.items.filter(item => item.restaurant_id === id);
         const shopSubtotal = shopItems.reduce((sum, item) => sum + this.normalizeCopPrice(item.subtotal_combined), 0);
 
-        const fee = this.calculateShopDeliveryFee(this.calculatedDistanceKm, uniqueShops[id].delivery_fee);
+        let fee = this.calculateShopDeliveryFee(this.calculatedDistanceKm, uniqueShops[id].delivery_fee);
+        if (hasFreeDeliveryReward) {
+          fee = 0;
+        }
         uniqueShops[id].delivery_fee = fee;
         totalDeliveryFee += fee;
       });
@@ -6115,7 +6118,9 @@ ${mapsLink}
     const deliveryRow = document.querySelector('.delivery-cost-row');
     if (this.orderType === 'delivery') {
       deliveryRow.classList.remove('hidden');
-      if (numShops === 1) {
+      if (hasFreeDeliveryReward) {
+        deliveryCostSpan.innerHTML = '<span style="color: #10B981; font-weight: 900;">GRATIS 🎉</span> <span style="font-size: 10px; color: #34D399; font-weight: 700;">(GochoPoints)</span>';
+      } else if (numShops === 1) {
         const singleShopId = shopIds[0];
         deliveryCostSpan.innerText = this.formatPesos(uniqueShops[singleShopId].delivery_fee);
       } else {
@@ -7280,13 +7285,23 @@ ${mapsLink}
 
       const createdOrders = await Promise.all(promises);
 
-      // Award GochoPoints (10 pts per $1 spent)
+      // Award GochoPoints (10 pts per $1 spent = 10 pts por cada $4.000 COP)
       const cartSubtotalCop = this.cart.items.reduce((sum, item) => sum + this.normalizeCopPrice(item.subtotal_combined), 0);
-      const estUsd = Math.max(1, Math.round(cartSubtotalCop / 4000));
-      const earnedPts = estUsd * 10;
+      const earnedPts = Math.max(1, Math.round((cartSubtotalCop / 4000) * 10));
       this.addGochoPoints(earnedPts);
 
-      this.sendPushNotification('¡Pedido Enviado! 🚀', `Tu pedido en ${shopIds.length} comercio(s) fue recibido. ¡Ganaste +${earnedPts} GochoPoints! ⭐`);
+      // Consume free delivery reward if it was applied
+      if (localStorage.getItem('gocho_free_delivery_active') === 'true') {
+        const remainingCount = parseInt(localStorage.getItem('gocho_free_delivery_count') || '1', 10) - 1;
+        if (remainingCount > 0) {
+          localStorage.setItem('gocho_free_delivery_count', remainingCount.toString());
+        } else {
+          localStorage.removeItem('gocho_free_delivery_active');
+          localStorage.removeItem('gocho_free_delivery_count');
+        }
+      }
+
+      this.sendPushNotification('¡Pedido Enviado! 🚀', `Tu pedido fue recibido. ¡Ganaste +${earnedPts} GochoPoints! ⭐ Acumula 100 para tu próximo Envío Gratis.`);
       this.showToast(`🔔 ¡Pedido enviado con éxito! ⭐ Ganaste +${earnedPts} GochoPoints`);
 
       // Build formatted WhatsApp order message and URL for official Central PediGochos (+57 322 794 9751)
@@ -8848,12 +8863,68 @@ ${mapsLink}
     this.trackingMap.fitBounds(bounds, { padding: [30, 30] });
   }
 
-  // GochoPoints & Coupon Methods
+  // GochoPoints & Coupon Methods (Compra → Acumula Puntos → Consigue Envíos Gratis)
   updateGochoPointsDisplay() {
     const valSpan = document.getElementById('header-gochopoints-val');
     if (valSpan) valSpan.innerText = this.gochoPoints;
     const modalSpan = document.getElementById('modal-gochopoints-total');
     if (modalSpan) modalSpan.innerText = `${this.gochoPoints} Pts`;
+
+    // Progress Bar to Next Free Delivery (100 Pts)
+    const progressBar = document.getElementById('gocho-progress-bar');
+    const progressText = document.getElementById('gocho-progress-text');
+    const nextGoal = 100;
+    const pct = Math.min(100, Math.round((this.gochoPoints / nextGoal) * 100));
+
+    if (progressBar) progressBar.style.width = `${pct}%`;
+    if (progressText) {
+      if (this.gochoPoints >= 100) {
+        const canRedeem = Math.floor(this.gochoPoints / 100);
+        progressText.innerText = `¡Tienes ${canRedeem} Envío(s) Gratis listo(s) para canjear! 🎉`;
+      } else {
+        const missing = nextGoal - this.gochoPoints;
+        progressText.innerText = `Te faltan ${missing} Pts para tu próximo Envío Gratis 🛵`;
+      }
+    }
+
+    // Active reward badge check
+    const activeBadge = document.getElementById('gocho-active-free-delivery-badge');
+    const activeCountText = document.getElementById('gocho-active-count-text');
+    const hasFreeDelivery = localStorage.getItem('gocho_free_delivery_active') === 'true';
+    const freeDeliveryCount = parseInt(localStorage.getItem('gocho_free_delivery_count') || '0', 10);
+
+    if (activeBadge) {
+      if (hasFreeDelivery && freeDeliveryCount > 0) {
+        activeBadge.style.display = 'flex';
+        if (activeCountText) {
+          activeCountText.innerText = freeDeliveryCount === 1 ? '¡1 Envío Gratis Activo!' : `¡${freeDeliveryCount} Envíos Gratis Activos!`;
+        }
+      } else {
+        activeBadge.style.display = 'none';
+      }
+    }
+
+    // Update redeem button states
+    const btnSingle = document.getElementById('btn-redeem-single');
+    const btnDouble = document.getElementById('btn-redeem-double');
+    if (btnSingle) {
+      if (this.gochoPoints < 100) {
+        btnSingle.style.opacity = '0.5';
+        btnSingle.style.cursor = 'not-allowed';
+      } else {
+        btnSingle.style.opacity = '1';
+        btnSingle.style.cursor = 'pointer';
+      }
+    }
+    if (btnDouble) {
+      if (this.gochoPoints < 180) {
+        btnDouble.style.opacity = '0.5';
+        btnDouble.style.cursor = 'not-allowed';
+      } else {
+        btnDouble.style.opacity = '1';
+        btnDouble.style.cursor = 'pointer';
+      }
+    }
   }
 
   openGochoPointsModal() {
@@ -8900,25 +8971,32 @@ ${mapsLink}
   }
 
   redeemReward(rewardType, pointsCost) {
-
     if (this.gochoPoints < pointsCost) {
-
-      alert("⚠️ Necesitas " + pointsCost + " Pts para canjear esta recompensa. Tu saldo actual es de " + this.gochoPoints + " Pts.");
-
+      alert("⚠️ Necesitas " + pointsCost + " Pts para conseguir esta recompensa. Tu saldo actual es de " + this.gochoPoints + " Pts.");
       return;
-
     }
 
     this.gochoPoints -= pointsCost;
-
     localStorage.setItem('gocho_points', this.gochoPoints.toString());
 
-    this.updateGochoPointsDisplay();
+    if (rewardType === 'envio_gratis') {
+      const currentCount = parseInt(localStorage.getItem('gocho_free_delivery_count') || '0', 10);
+      localStorage.setItem('gocho_free_delivery_count', (currentCount + 1).toString());
+      localStorage.setItem('gocho_free_delivery_active', 'true');
+      this.showToast('🎉 ¡1 Envío Gratis canjeado! Se descontará automáticamente en tu próximo pedido.');
+    } else if (rewardType === 'envio_gratis_pack2') {
+      const currentCount = parseInt(localStorage.getItem('gocho_free_delivery_count') || '0', 10);
+      localStorage.setItem('gocho_free_delivery_count', (currentCount + 2).toString());
+      localStorage.setItem('gocho_free_delivery_active', 'true');
+      this.showToast('🎉 ¡Pack de 2 Envíos Gratis canjeado! Se descontará en tus próximos pedidos.');
+    }
 
+    this.updateGochoPointsDisplay();
     this.closeGochoPointsModal();
 
-    this.showToast('🎉 ¡Recompensa canjeada con éxito!');
-
+    if (this.cart && this.cart.items && this.cart.items.length > 0) {
+      this.renderCart();
+    }
   }
 
   applyCouponCode() {

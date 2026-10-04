@@ -473,25 +473,43 @@
         </div>
       </section>
 
-      <!-- GochoPoints Banner -->
+      <!-- GochoPoints Banner: Compra → Acumula Puntos → Consigue Envíos Gratis -->
       <section class="mt-space-lg px-margin">
-        <div class="bg-gradient-to-r from-tertiary-fixed via-tertiary-fixed-dim to-tertiary-container/30 border border-tertiary-container/20 rounded-xl p-3.5 flex items-center justify-between gap-3 shadow-sm">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container shrink-0">
-              <span class="material-symbols-outlined text-[22px]">stars</span>
+        <div onclick="MarketplaceApp.openGochoPointsModal()" class="cursor-pointer bg-gradient-to-r from-tertiary-fixed via-tertiary-fixed-dim to-tertiary-container/30 border border-tertiary-container/30 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all">
+          <div class="flex items-center justify-between gap-3 mb-2.5">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container shrink-0 text-[20px] shadow-sm">
+                ⭐
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-title-md text-title-md font-extrabold text-on-tertiary-container leading-tight">
+                  Programa GochoPoints
+                </span>
+                <span class="font-body-sm text-body-sm text-on-tertiary-container font-semibold mt-0.5">
+                  Compra → acumula puntos → consigue envíos gratis
+                </span>
+              </div>
             </div>
-            <div class="flex flex-col min-w-0">
-              <span class="font-title-md text-title-md font-extrabold text-on-tertiary-container leading-tight">
-                Acumula GochoPoints ⭐
-              </span>
-              <span class="font-body-sm text-body-sm text-on-tertiary-container/90 mt-0.5">
-                Ganas <strong>10 pts por cada $1</strong> en pedidos para envíos gratis.
-              </span>
+            <button type="button" onclick="event.stopPropagation(); MarketplaceApp.openGochoPointsModal();" class="h-8 px-3 rounded-full bg-surface-container-lowest text-tertiary font-label-sm text-label-sm font-extrabold shadow-sm shrink-0 active:scale-95 transition-transform">
+              Ver Puntos
+            </button>
+          </div>
+          
+          <!-- Stepper Visual Simple -->
+          <div class="grid grid-cols-3 gap-1.5 pt-2 border-t border-tertiary-container/20 text-center">
+            <div class="bg-surface-container-lowest/70 backdrop-blur-sm rounded-lg py-1.5 px-1 flex items-center justify-center gap-1">
+              <span class="text-[13px]">🛍️</span>
+              <span class="font-label-sm text-[11px] font-bold text-on-tertiary-container">1. Compra</span>
+            </div>
+            <div class="bg-surface-container-lowest/70 backdrop-blur-sm rounded-lg py-1.5 px-1 flex items-center justify-center gap-1">
+              <span class="text-[13px]">⭐</span>
+              <span class="font-label-sm text-[11px] font-bold text-on-tertiary-container">2. Acumula</span>
+            </div>
+            <div class="bg-surface-container-lowest/70 backdrop-blur-sm rounded-lg py-1.5 px-1 flex items-center justify-center gap-1">
+              <span class="text-[13px]">🛵</span>
+              <span class="font-label-sm text-[11px] font-bold text-on-tertiary-container">3. Envío Gratis</span>
             </div>
           </div>
-          <button type="button" onclick="MarketplaceApp.openGochoPointsModal()" class="h-9 px-3 rounded-full bg-surface-container-lowest text-tertiary font-label-sm text-label-sm font-bold shadow-sm shrink-0 active:scale-95 transition-transform">
-            Canjear
-          </button>
         </div>
       </section>
 
@@ -1069,49 +1087,127 @@
   </div>
 
 
-  <!-- GochoPoints & Recompensas Modal -->
+  <!-- GochoPoints & Envíos Gratis Modal -->
   <div class="modal-overlay" id="gochopoints-modal" style="display: none; z-index: 999999;" onclick="if(event.target === this) MarketplaceApp.closeGochoPointsModal();">
-    <div class="modal-content" style="max-width: 440px; margin: auto; border-radius: 20px; background: #1E293B; color: #fff; box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 20px;">
+    <div class="modal-content" style="max-width: 460px; width: 94%; margin: auto; border-radius: 24px; background: #131722; border: 1.5px solid rgba(245, 158, 11, 0.4); color: #fff; box-shadow: 0 20px 60px rgba(0,0,0,0.7); padding: 20px 18px; max-height: 90vh; overflow-y: auto;">
+      
+      <!-- Modal Header -->
       <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #F59E0B; display: flex; align-items: center; gap: 8px;">
-          ⭐ GochoPoints & Recompensas
-        </h3>
-        <button class="btn-close" onclick="MarketplaceApp.closeGochoPointsModal()" style="background: none; border: none; font-size: 20px; color: #fff; cursor: pointer;">✕</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">⭐</span>
+          <div>
+            <h3 style="margin: 0; font-size: 17px; font-weight: 900; color: #F59E0B; letter-spacing: -0.2px;">
+              Programa GochoPoints
+            </h3>
+            <p style="margin: 0; font-size: 11px; color: #94A3B8; font-weight: 600;">Compra → Acumula Puntos → Consigue Envíos Gratis</p>
+          </div>
+        </div>
+        <button class="btn-close" onclick="MarketplaceApp.closeGochoPointsModal()" style="background: rgba(255,255,255,0.08); border: none; font-size: 16px; color: #CBD5E1; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;">✕</button>
       </div>
-      <div class="modal-body" style="padding: 16px 0;">
-        <div style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); padding: 18px; border-radius: 16px; text-align: center; color: #fff; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);">
-          <span style="font-size: 12px; font-weight: 700; opacity: 0.9; text-transform: uppercase;">Tu Saldo de Puntos</span>
-          <h2 id="modal-gochopoints-total" style="font-size: 36px; font-weight: 900; margin: 4px 0 0 0;">0 Pts</h2>
-          <p style="font-size: 11px; margin: 4px 0 0 0; opacity: 0.95;">Ganas 10 GochoPoints por cada $1 de compra en PediGochos 🚀</p>
-        </div>
 
-        <h4 style="color: #fff; font-size: 14px; font-weight: 800; margin: 0 0 10px 0;">🎁 Recompensas Disponibles:</h4>
+      <div class="modal-body" style="padding: 16px 0 6px 0;">
         
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #fff;">🚲 Envío Gratis en Próxima Orden</h5>
-              <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Costo de Delivery $0 en tu próxima orden</p>
-            </div>
-            <button type="button" onclick="MarketplaceApp.redeemReward('envio_gratis', 100)" style="background: #F59E0B; color: #1e293b; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;">Canjear (100 Pts)</button>
+        <!-- Saldo Card -->
+        <div style="background: linear-gradient(135deg, #FF6B00 0%, #D95300 100%); padding: 18px; border-radius: 18px; text-align: center; color: #fff; margin-bottom: 14px; box-shadow: 0 6px 20px rgba(255, 107, 0, 0.35); position: relative; overflow: hidden;">
+          <span style="font-size: 11px; font-weight: 800; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px;">Tu Saldo Acumulado</span>
+          <h2 id="modal-gochopoints-total" style="font-size: 38px; font-weight: 900; margin: 2px 0 4px 0; letter-spacing: -0.5px;">0 Pts</h2>
+          
+          <!-- Progress Bar to Next Free Delivery (100 Pts) -->
+          <div style="background: rgba(0,0,0,0.25); border-radius: 10px; padding: 3px; margin: 10px 0 6px 0;">
+            <div id="gocho-progress-bar" style="height: 8px; border-radius: 7px; background: #10B981; width: 0%; transition: width 0.4s ease; box-shadow: 0 0 8px #10B981;"></div>
           </div>
+          <p id="gocho-progress-text" style="font-size: 11px; font-weight: 700; margin: 0; opacity: 0.95;">
+            Te faltan 100 Pts para tu próximo Envío Gratis 🛵
+          </p>
+        </div>
 
-          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <!-- Active Reward Badge if already redeemed -->
+        <div id="gocho-active-free-delivery-badge" style="display: none; background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10B981; border-radius: 14px; padding: 10px 12px; margin-bottom: 14px; align-items: center; justify-content: space-between; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">🎉</span>
             <div>
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #fff;">⭐ Saldo de $2.00 USD para Pedidos</h5>
-              <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Abono automático a tu cuenta en PediGochos</p>
+              <div style="font-size: 12.5px; font-weight: 900; color: #34D399;" id="gocho-active-count-text">¡Envío Gratis Activo!</div>
+              <div style="font-size: 10.5px; color: #CBD5E1;">Se descontará automáticamente en tu próximo pedido</div>
             </div>
-            <button type="button" onclick="MarketplaceApp.redeemReward('saldo_2usd', 150)" style="background: #F59E0B; color: #1e293b; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;">Canjear (150 Pts)</button>
           </div>
+          <span style="font-size: 11px; font-weight: 900; color: #10B981; background: rgba(16, 185, 129, 0.2); padding: 3px 8px; border-radius: 8px;">Listo</span>
+        </div>
 
-          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #fff;">👑 Membresía Gocho VIP</h5>
-              <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Acceso exclusivo a promociones flash y prioridad</p>
+        <!-- Base de Cálculo Transparente Multi-Moneda (COP / USD / Bs.) -->
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <span style="font-size: 16px;">📐</span>
+            <h4 style="margin: 0; font-size: 13px; font-weight: 900; color: #FF9B42;">Base de Cálculo según tu Moneda</h4>
+          </div>
+          <p style="margin: 0 0 10px 0; font-size: 11px; color: #94A3B8; line-height: 1.35;">
+            La web te permite pagar en <strong>COP, USD o Bs.</strong> Tus puntos se calculan automáticamente sin importar la moneda elegida:
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 11.5px;">
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 8px 10px; border-radius: 10px; border-left: 3px solid #10B981; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: #34D399;">💵 En Dólares (USD):</strong>
+                <div style="font-size: 10.5px; color: #94A3B8;">Base estándar de cálculo</div>
+              </div>
+              <span style="font-weight: 900; color: #FFF; white-space: nowrap;">10 Pts por cada $1.00</span>
             </div>
-            <button type="button" onclick="MarketplaceApp.redeemReward('gocho_vip', 250)" style="background: #F59E0B; color: #1e293b; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;">Canjear (250 Pts)</button>
+
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 8px 10px; border-radius: 10px; border-left: 3px solid #3B82F6; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: #60A5FA;">🇨🇴 En Pesos (COP):</strong>
+                <div style="font-size: 10.5px; color: #94A3B8;">1 Pts por cada $400 COP</div>
+              </div>
+              <span style="font-weight: 900; color: #FFF; white-space: nowrap;">10 Pts por cada $4.000 COP</span>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 8px 10px; border-radius: 10px; border-left: 3px solid #F59E0B; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: #FCD34D;">🇻🇪 En Bolívares (Bs.):</strong>
+                <div style="font-size: 10.5px; color: #94A3B8;">Tasa oficial del día (~40 Bs./$)</div>
+              </div>
+              <span style="font-weight: 900; color: #FFF; white-space: nowrap;">10 Pts por cada ~40 Bs.</span>
+            </div>
+          </div>
+          
+          <div style="font-size: 10.5px; color: #6EE7B7; font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 4px;">
+            <span>⚡</span> <span>Ejemplo: Una compra de $40.000 COP ($10 USD) = ¡100 Puntos = 1 Envío Gratis!</span>
           </div>
         </div>
+
+        <!-- Canje Directo de Envíos Gratis -->
+        <h4 style="color: #fff; font-size: 13.5px; font-weight: 900; margin: 0 0 8px 0; display: flex; align-items: center; gap: 6px;">
+          <span>🎁</span> Canjea tus Envíos Gratis:
+        </h4>
+        
+        <div style="display: flex; flex-direction: column; gap: 9px;">
+          <!-- Opción 1: 1 Envío Gratis (100 Pts) -->
+          <div style="background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div style="flex: 1; min-width: 0;">
+              <h5 style="margin: 0; font-size: 13.5px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
+                <span>🛵</span> 1 Envío Gratis
+              </h5>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Delivery $0 COP en tu próxima orden en cualquier restaurante</p>
+            </div>
+            <button type="button" id="btn-redeem-single" onclick="MarketplaceApp.redeemReward('envio_gratis', 100)" style="background: linear-gradient(135deg, #FF6B00 0%, #D95300 100%); color: #FFF; border: none; padding: 9px 13px; border-radius: 12px; font-weight: 900; font-size: 12px; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 8px rgba(255,107,0,0.3); flex-shrink: 0;">
+              Canjear (100 Pts)
+            </button>
+          </div>
+
+          <!-- Opción 2: Pack Doble: 2 Envíos Gratis (180 Pts - Ahorras 20 Pts) -->
+          <div style="background: rgba(255,255,255,0.05); border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; position: relative;">
+            <span style="position: absolute; top: -8px; right: 12px; background: #10B981; color: #FFF; font-size: 9px; font-weight: 900; padding: 1px 7px; border-radius: 6px;">AHORRA 20 PTS</span>
+            <div style="flex: 1; min-width: 0;">
+              <h5 style="margin: 0; font-size: 13.5px; font-weight: 900; color: #FCD34D; display: flex; align-items: center; gap: 6px;">
+                <span>🛵🛵</span> Pack Doble: 2 Envíos Gratis
+              </h5>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: #94A3B8;">Delivery $0 para tus dos próximas órdenes</p>
+            </div>
+            <button type="button" id="btn-redeem-double" onclick="MarketplaceApp.redeemReward('envio_gratis_pack2', 180)" style="background: #F59E0B; color: #1e293b; border: none; padding: 9px 13px; border-radius: 12px; font-weight: 900; font-size: 12px; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 8px rgba(245,158,11,0.3); flex-shrink: 0;">
+              Canjear (180 Pts)
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -2874,7 +2970,7 @@
   <script defer src="/js/resin-service.js?v=254"></script>
   <script defer src="/js/pinata-service.js?v=254"></script>
   <script defer src="/js/pedigochos-drive.js?v=270"></script>
-  <script defer src="/js/marketplace.js?v=270"></script>
+  <script defer src="/js/marketplace.js?v=271"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
