@@ -1380,11 +1380,10 @@ ${mapsLink}
     // Update active class on quick filter pills
     document.querySelectorAll('.quick-filter-pill').forEach(btn => {
       if (btn.dataset.filter === filterKey) {
-        btn.classList.add('active', 'bg-primary-container', 'text-on-primary', 'font-bold');
-        btn.classList.remove('bg-surface-container', 'text-on-surface', 'font-semibold');
+        btn.classList.add('active');
+        btn.classList.remove('bg-surface-container', 'text-on-surface');
       } else {
-        btn.classList.remove('active', 'bg-primary-container', 'text-on-primary', 'font-bold');
-        btn.classList.add('bg-surface-container', 'text-on-surface', 'font-semibold');
+        btn.classList.remove('active', 'bg-primary-container', 'text-on-primary');
       }
     });
 
@@ -3568,9 +3567,9 @@ ${mapsLink}
     document.querySelectorAll('#quick-food-craving-chips .craving-chip').forEach(btn => {
       const bType = btn.dataset.foodType;
       if (bType === foodTypeId) {
-        btn.className = 'craving-chip h-8 px-3 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm flex items-center gap-1 shrink-0 shadow-sm active:scale-95 transition-all font-bold active';
+        btn.classList.add('active');
       } else {
-        btn.className = 'craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all font-semibold';
+        btn.classList.remove('active');
       }
     });
 

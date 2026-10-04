@@ -19,7 +19,7 @@
   <link rel="icon" type="image/png" href="/images/logo-pedigochos.png">
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
   <link rel="stylesheet" href="/css/common.css?v=231">
-  <link rel="stylesheet" href="/css/marketplace.css?v=255">
+  <link rel="stylesheet" href="/css/marketplace.css?v=260">
   <link rel="stylesheet" href="/css/paint-service.css?v=232">
   <link rel="stylesheet" href="/css/print3d-service.css?v=237">
   <link rel="stylesheet" href="/css/resin-service.css?v=253">
@@ -308,25 +308,25 @@
         </div>
         <!-- Quick Food Craving Filter Chips -->
         <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-margin px-margin py-1" id="quick-food-craving-chips">
-          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm flex items-center gap-1 shrink-0 shadow-sm active:scale-95 transition-all font-bold active" data-food-type="all" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">
+          <button type="button" class="craving-chip active" data-food-type="all" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">
             <span>🔥</span><span>Más Vendidos</span>
           </button>
-          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="hamburguesas" onclick="MarketplaceApp.filterRestaurantsByFoodType('hamburguesas')">
+          <button type="button" class="craving-chip" data-food-type="hamburguesas" onclick="MarketplaceApp.filterRestaurantsByFoodType('hamburguesas')">
             <span>🍔</span><span>Hamburguesas</span>
           </button>
-          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="pizzas" onclick="MarketplaceApp.filterRestaurantsByFoodType('pizzas')">
+          <button type="button" class="craving-chip" data-food-type="pizzas" onclick="MarketplaceApp.filterRestaurantsByFoodType('pizzas')">
             <span>🍕</span><span>Pizzas</span>
           </button>
-          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="salchipapas" onclick="MarketplaceApp.filterRestaurantsByFoodType('salchipapas')">
+          <button type="button" class="craving-chip" data-food-type="salchipapas" onclick="MarketplaceApp.filterRestaurantsByFoodType('salchipapas')">
             <span>🍟</span><span>Salchipapas</span>
           </button>
-          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="perros" onclick="MarketplaceApp.filterRestaurantsByFoodType('perros')">
+          <button type="button" class="craving-chip" data-food-type="perros" onclick="MarketplaceApp.filterRestaurantsByFoodType('perros')">
             <span>🌭</span><span>Perros</span>
           </button>
-          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="tequenos" onclick="MarketplaceApp.filterRestaurantsByFoodType('tequenos')">
+          <button type="button" class="craving-chip" data-food-type="tequenos" onclick="MarketplaceApp.filterRestaurantsByFoodType('tequenos')">
             <span>🥟</span><span>Tequeños</span>
           </button>
-          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="postres" onclick="MarketplaceApp.filterRestaurantsByFoodType('postres')">
+          <button type="button" class="craving-chip" data-food-type="postres" onclick="MarketplaceApp.filterRestaurantsByFoodType('postres')">
             <span>🍰</span><span>Postres</span>
           </button>
         </div>
@@ -427,22 +427,22 @@
 
         <!-- Quick Filters -->
         <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-margin px-margin py-1 marketplace-quick-filters" id="marketplace-quick-filters" aria-label="Filtros rápidos de comercios">
-          <button type="button" class="quick-filter-pill active h-7 px-2.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold flex items-center gap-1 shrink-0" data-filter="all" onclick="MarketplaceApp.setQuickFilter('all')">
+          <button type="button" class="quick-filter-pill active" data-filter="all" onclick="MarketplaceApp.setQuickFilter('all')">
             <span>🌟</span> Todos
           </button>
-          <button type="button" class="quick-filter-pill h-7 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1 shrink-0 hover:bg-surface-container-high" data-filter="abiertos" onclick="MarketplaceApp.setQuickFilter('abiertos')">
+          <button type="button" class="quick-filter-pill" data-filter="abiertos" onclick="MarketplaceApp.setQuickFilter('abiertos')">
             <span>🟢</span> Abiertos
           </button>
-          <button type="button" class="quick-filter-pill h-7 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1 shrink-0 hover:bg-surface-container-high" data-filter="mas_pedidos" onclick="MarketplaceApp.setQuickFilter('mas_pedidos')">
+          <button type="button" class="quick-filter-pill" data-filter="mas_pedidos" onclick="MarketplaceApp.setQuickFilter('mas_pedidos')">
             <span>🔥</span> Más pedidos
           </button>
-          <button type="button" class="quick-filter-pill h-7 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1 shrink-0 hover:bg-surface-container-high" data-filter="mejor_valorados" onclick="MarketplaceApp.setQuickFilter('mejor_valorados')">
+          <button type="button" class="quick-filter-pill" data-filter="mejor_valorados" onclick="MarketplaceApp.setQuickFilter('mejor_valorados')">
             <span>⭐</span> Mejor valorados
           </button>
-          <button type="button" class="quick-filter-pill h-7 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1 shrink-0 hover:bg-surface-container-high" data-filter="mas_rapidos" onclick="MarketplaceApp.setQuickFilter('mas_rapidos')">
+          <button type="button" class="quick-filter-pill" data-filter="mas_rapidos" onclick="MarketplaceApp.setQuickFilter('mas_rapidos')">
             <span>⚡</span> Más rápidos
           </button>
-          <button type="button" class="quick-filter-pill h-7 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1 shrink-0 hover:bg-surface-container-high" data-filter="cerca" onclick="MarketplaceApp.setQuickFilter('cerca')">
+          <button type="button" class="quick-filter-pill" data-filter="cerca" onclick="MarketplaceApp.setQuickFilter('cerca')">
             <span>📍</span> Cerca de mí
           </button>
         </div>
