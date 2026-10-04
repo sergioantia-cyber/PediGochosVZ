@@ -1696,8 +1696,9 @@ ${mapsLink}
 
       const logoDiv = document.getElementById('est-logo');
       if (logoDiv) {
-        if (est.logoImage) {
-          logoDiv.innerHTML = `<img src="${est.logoImage}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        const logoUrl = this.getEstablishmentLogoUrl(est);
+        if (logoUrl) {
+          logoDiv.innerHTML = `<img src="${logoUrl}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerText='${est.logo || '🏪'}';">`;
         } else {
           logoDiv.innerHTML = est.logo || '🏪';
         }
@@ -1929,6 +1930,58 @@ ${mapsLink}
     </div>`;
   }
 
+  // Helper to reliably retrieve the logo image URL for any establishment
+  getEstablishmentLogoUrl(est) {
+    if (!est) return null;
+    const isRealImg = (url) => {
+      if (!url || typeof url !== 'string') return false;
+      const t = url.trim();
+      return (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('/') || t.startsWith('data:')) && !t.startsWith('linear-gradient') && !t.startsWith('radial-gradient');
+    };
+    if (isRealImg(est.logoImage)) return est.logoImage.trim();
+    if (isRealImg(est.image)) return est.image.trim();
+    if (isRealImg(est.logo)) return est.logo.trim();
+    return null;
+  }
+
+  // Helper to reliably retrieve cover/banner image URL (never returns linear-gradient CSS)
+  getEstablishmentCoverUrl(est) {
+    if (!est) return '/images/burger_royale.jpg';
+    const isRealImg = (url) => {
+      if (!url || typeof url !== 'string') return false;
+      const t = url.trim();
+      return (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('/') || t.startsWith('data:')) && !t.startsWith('linear-gradient') && !t.startsWith('radial-gradient');
+    };
+
+    if (isRealImg(est.banner)) return est.banner.trim();
+    if (isRealImg(est.bannerImage)) return est.bannerImage.trim();
+
+    // Prefer product image with photo
+    if (Array.isArray(est.products)) {
+      const prodWithImg = est.products.find(p => isRealImg(p.image) && !p.image.includes('burger_royale.jpg'));
+      if (prodWithImg) return prodWithImg.image.trim();
+      const anyProd = est.products.find(p => isRealImg(p.image));
+      if (anyProd) return anyProd.image.trim();
+    }
+
+    if (isRealImg(est.logoImage)) return est.logoImage.trim();
+    if (isRealImg(est.image)) return est.image.trim();
+
+    // Contextual fallback by category / name
+    const cat = (est.category || '').toLowerCase();
+    const name = (est.name || '').toLowerCase();
+    if (name.includes('pizza') || cat.includes('pizza')) return '/images/mak_pizza/pizza_artesanal.jpg';
+    if (name.includes('cafe') || name.includes('café')) return '/images/cafe_plaza_menu_1.jpg';
+    if (name.includes('perro') || name.includes('hot dog')) return 'https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=600';
+    if (name.includes('arepa')) return 'https://images.unsplash.com/photo-1582234372722-50d7ccc30e5b?w=600';
+    if (name.includes('shawarma')) return 'https://images.unsplash.com/photo-1561651823-34fed0225408?w=600';
+    if (name.includes('patacon') || name.includes('patacón')) return 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=600';
+    if (name.includes('batido') || name.includes('jugo') || cat.includes('bebida')) return '/images/mak_pizza/frappes.jpg';
+    if (name.includes('helado') || name.includes('fruty') || cat.includes('postre')) return 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600';
+
+    return '/images/burger_royale.jpg';
+  }
+
   // Create Establishment Card element with modern banner layout matching the new aesthetic
   createEstablishmentCard(est) {
     const card = document.createElement('article');
@@ -1943,8 +1996,8 @@ ${mapsLink}
     card.onclick = () => MarketplaceApp.openEstablishment(est.id);
     card.setAttribute('onclick', `MarketplaceApp.openEstablishment('${est.id}')`);
 
-    // Determine banner image
-    const photoUrl = est.banner || est.bannerImage || (est.products && est.products[0] ? est.products[0].image : null) || est.image || est.logoImage || '/images/burger_royale.jpg';
+    const coverUrl = this.getEstablishmentCoverUrl(est);
+    const logoUrl = this.getEstablishmentLogoUrl(est);
     const deliveryTimeStr = this.getFormattedDeliveryTime(est);
 
     const adminRating = Number(est.adminRating || est.rating || 0);
@@ -1975,9 +2028,14 @@ ${mapsLink}
     const descSnippet = (est.description || '').split('.')[0] || est.description || 'Especialidades culinarias y platos preparados al momento.';
     const deliveryFeeFormatted = this.formatPesos(est.delivery_fee || 3500);
 
+    // Build logo badge HTML (prominently displayed on card)
+    const logoBadgeHTML = logoUrl
+      ? `<img src="${logoUrl}" alt="${est.name}" class="w-full h-full object-cover rounded-xl" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'text-2xl flex items-center justify-center w-full h-full\\'>${est.logo || '🏪'}</span>';">`
+      : `<span class="text-2xl flex items-center justify-center w-full h-full">${est.logo || '🏪'}</span>`;
+
     card.innerHTML = `
-      <div class="relative w-full h-40">
-        <img class="w-full h-full object-cover" src="${photoUrl}" alt="${est.name}" onerror="this.src='/images/burger_royale.jpg'">
+      <div class="relative w-full h-40 bg-surface-container-high overflow-hidden">
+        <img class="w-full h-full object-cover" src="${coverUrl}" alt="${est.name}" loading="lazy" onerror="this.onerror=null; this.src='/images/burger_royale.jpg'">
         <div class="absolute top-2.5 left-2.5 flex items-center gap-1">
           ${promoBadge}
           ${expressBadge}
@@ -1987,13 +2045,20 @@ ${mapsLink}
           <span>${deliveryTimeStr}</span>
         </div>
       </div>
-      <div class="p-3.5 flex flex-col gap-1.5">
-        <div class="flex items-center justify-between gap-2">
-          <h4 class="font-title-md text-title-md text-on-surface font-bold truncate">${est.name}</h4>
-          ${ratingBadge}
+      <div class="p-3.5 flex flex-col gap-2">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl border border-surface-container-high bg-white shadow-xs flex items-center justify-center shrink-0 p-0.5 overflow-hidden">
+            ${logoBadgeHTML}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="font-title-md text-title-md text-on-surface font-bold truncate">${est.name}</h4>
+              ${ratingBadge}
+            </div>
+            <p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">${descSnippet}</p>
+          </div>
         </div>
-        <p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">${descSnippet}</p>
-        <div class="flex items-center justify-between pt-2 mt-1 border-t border-surface-container-high/60">
+        <div class="flex items-center justify-between pt-2 border-t border-surface-container-high/60">
           <div class="flex items-center gap-1.5 text-on-surface font-label-sm text-label-sm flex-wrap">
             <span class="material-symbols-outlined text-[16px] text-success-emerald">two_wheeler</span>
             <span class="font-semibold text-success-emerald">Envío ${deliveryFeeFormatted}</span>
@@ -3520,10 +3585,12 @@ ${mapsLink}
         MarketplaceApp.openEstablishment(est.id);
       };
 
-      const photoUrl = est.logoImage || (est.products && est.products[0] ? est.products[0].image : null);
-      let imgHTML = '';
-      if (photoUrl) {
-        imgHTML = `<img src="${photoUrl}" alt="${est.name}" loading="lazy" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'">`;
+      const logoUrl = this.getEstablishmentLogoUrl(est);
+      let thumbHTML = '';
+      if (logoUrl) {
+        thumbHTML = `<img src="${logoUrl}" alt="${est.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-size: 22px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;\\'>${est.logo || '🏪'}</span>';">`;
+      } else {
+        thumbHTML = `<span style="font-size: 22px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">${est.logo || '🏪'}</span>`;
       }
 
       const statusTag = isOpen
@@ -3533,8 +3600,7 @@ ${mapsLink}
       card.innerHTML = `
         <div class="featured-est-card-top">
           <div class="featured-est-thumb-wrap">
-            ${imgHTML}
-            <div class="hidden" style="font-size: 22px;">${est.logo || '🏪'}</div>
+            ${thumbHTML}
             ${isOpen ? '<span style="position: absolute; bottom: 2px; left: 2px; right: 2px; background: rgba(16,185,129,0.95); color: #fff; font-size: 7.5px; font-weight: 900; text-align: center; border-radius: 4px; padding: 1px 0;">ABIERTO</span>' : ''}
           </div>
           <div class="featured-est-details">
@@ -8077,7 +8143,7 @@ ${mapsLink}
 
   createStoreMarkerIcon(est) {
     if (typeof L === 'undefined') return null;
-    const photoUrl = est ? (est.logoImage || est.map_pin_image || null) : null;
+    const photoUrl = est ? (this.getEstablishmentLogoUrl(est) || est.map_pin_image || null) : null;
     
     if (photoUrl) {
       return L.divIcon({
@@ -9779,7 +9845,7 @@ ${mapsLink}
       const est = this.establishments.find(e => e.id === ord.establishmentId || e.id === ord.establishment_id);
       const estName = est ? est.name : (ord.establishmentName || 'Restaurante');
       const estLogo = est ? (est.logo || '🏪') : '🏪';
-      const estPhoto = est ? (est.logoImage || null) : null;
+      const estPhoto = est ? this.getEstablishmentLogoUrl(est) : null;
 
       const rawDate = ord.createdAt || ord.timestamp || ord.created_at;
       const dateObj = rawDate ? new Date(rawDate) : new Date();
