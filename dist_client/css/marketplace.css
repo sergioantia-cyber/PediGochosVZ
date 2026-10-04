@@ -5605,3 +5605,92 @@ body:has(#ride-modal.active) .floating-left-actions-container {
 body {
   padding-bottom: 72px !important;
 }
+
+/* ==========================================================================
+   METALLIC "PediGochos" TYPOGRAPHY WITH ANIMATED SHINE & CART BOUNCE
+   ========================================================================== */
+
+.brand-metallic-title {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  user-select: none;
+}
+
+/* "Pedi": Silver / Chrome Metal with specular reflections */
+.brand-metallic-pedi {
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f8fafc 18%,
+    #cbd5e1 35%,
+    #ffffff 50%,
+    #94a3b8 68%,
+    #f1f5f9 85%,
+    #ffffff 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
+  animation: metallicChromeShine 3.2s ease-in-out infinite;
+}
+
+/* "Gochos": Vibrant Metallic Orange / Copper-Gold with warm luster */
+.brand-metallic-gochos {
+  background: linear-gradient(
+    135deg,
+    #fff5eb 0%,
+    #ffb076 20%,
+    #ff6b00 40%,
+    #ffffff 52%,
+    #ea580c 68%,
+    #fed7aa 84%,
+    #ff5500 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 6px rgba(120, 30, 0, 0.65));
+  animation: metallicChromeShine 3.2s ease-in-out infinite;
+  animation-delay: 0.35s;
+}
+
+@keyframes metallicChromeShine {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Tactile bouncing pulse for cart buttons upon adding an item */
+@keyframes cartBouncePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.3) rotate(-8deg);
+  }
+  45% {
+    transform: scale(0.9) rotate(5deg);
+  }
+  70% {
+    transform: scale(1.15) rotate(-3deg);
+  }
+  85% {
+    transform: scale(0.97);
+  }
+}
+
+.cart-bounce-pop {
+  animation: cartBouncePulse 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+

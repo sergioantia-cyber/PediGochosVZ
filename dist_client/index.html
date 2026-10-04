@@ -184,7 +184,9 @@
         </div>
         <div class="flex flex-col min-w-0">
           <div class="flex items-center gap-space-xs cursor-pointer" onclick="MarketplaceApp.goHome()">
-            <span class="font-headline-sm text-headline-sm text-white leading-none font-black tracking-tight">PediGochos</span>
+            <span class="font-headline-sm text-headline-sm leading-none brand-metallic-title">
+              <span class="brand-metallic-pedi">Pedi</span><span class="brand-metallic-gochos">Gochos</span>
+            </span>
             <span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-white/20 text-white font-bold backdrop-blur-md border border-white/25">Restaurantes</span>
           </div>
           <button type="button" class="flex items-center gap-1 text-left min-w-0 focus:outline-none mt-0.5 group" onclick="MarketplaceApp.openLocationModal()" title="Toca para cambiar tu dirección o ver mapa">
@@ -381,6 +383,20 @@
           </div>
         </div>
         <div id="daily-promotions-container" style="display: none;"></div>
+      </section>
+
+      <!-- Featured Top Rated Stores Carousel Section -->
+      <section class="mt-space-lg" id="featured-carousel-section" style="display: none;">
+        <div class="px-margin flex items-center justify-between mb-space-xs">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-badge-gold text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Locales Mejor Valorados</h3>
+          </div>
+          <span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">⭐ Top Favoritos</span>
+        </div>
+        <div class="flex gap-3 overflow-x-auto no-scrollbar -mx-margin px-margin py-2" id="featured-carousel-container" style="scroll-snap-type: x mandatory;">
+          <!-- Dynamically populated by MarketplaceApp.renderFeaturedCarousel() -->
+        </div>
       </section>
 
       <!-- Categorías Gastronómicas (Carrusel) -->

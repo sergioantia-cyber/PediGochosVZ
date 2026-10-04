@@ -5601,11 +5601,19 @@ ${mapsLink}
     setTimeout(() => {
       dot.remove();
       
-      // Trigger Cart Bounce animation with glow
-      cartBtn.classList.remove('cart-bounce-effect');
+      // Trigger Cart Bounce animation with tactile pop
+      cartBtn.classList.remove('cart-bounce-effect', 'cart-bounce-pop');
       void cartBtn.offsetWidth;
-      cartBtn.classList.add('cart-bounce-effect');
-      setTimeout(() => cartBtn.classList.remove('cart-bounce-effect'), 700);
+      cartBtn.classList.add('cart-bounce-effect', 'cart-bounce-pop');
+      setTimeout(() => cartBtn.classList.remove('cart-bounce-effect', 'cart-bounce-pop'), 700);
+
+      const headerCartBadge = document.getElementById('header-cart-badge-count');
+      if (headerCartBadge) {
+        headerCartBadge.classList.remove('cart-bounce-pop');
+        void headerCartBadge.offsetWidth;
+        headerCartBadge.classList.add('cart-bounce-pop');
+        setTimeout(() => headerCartBadge.classList.remove('cart-bounce-pop'), 700);
+      }
 
       const badgeCount = document.getElementById('cart-badge-count');
       if (badgeCount) {
@@ -5696,6 +5704,22 @@ ${mapsLink}
       document.querySelectorAll('.btn-cash-chip').forEach(btn => btn.classList.remove('active'));
       const previewEl = document.getElementById('cash-change-preview');
       if (previewEl) previewEl.style.display = 'none';
+    }
+
+    // Prefill customer name and phone if available
+    try {
+      const nameInput = document.getElementById('order-customer-name');
+      const phoneInput = document.getElementById('order-phone');
+      if (nameInput && !nameInput.value.trim()) {
+        const savedName = localStorage.getItem('customer_name') || localStorage.getItem('pedigochos_user_name') || this.currentUser?.displayName || this.currentUser?.name || '';
+        if (savedName) nameInput.value = savedName;
+      }
+      if (phoneInput && !phoneInput.value.trim()) {
+        const savedPhone = localStorage.getItem('customer_phone') || localStorage.getItem('pedigochos_user_phone') || this.currentUser?.phoneNumber || this.currentUser?.phone || '';
+        if (savedPhone) phoneInput.value = savedPhone;
+      }
+    } catch (e) {
+      console.warn('Could not prefill customer details:', e);
     }
 
     if (this.tableLockedByQR && this.currentTableNumber) {
@@ -6876,6 +6900,11 @@ ${mapsLink}
         return;
       }
 
+      try {
+        localStorage.setItem('customer_name', customerName);
+        localStorage.setItem('customer_phone', rawPhone);
+      } catch (_) {}
+
       if (typeof PhoneUtils !== 'undefined' && PhoneUtils.validateVECO) {
         const fullToValidate = rawPhone.startsWith('+') ? rawPhone : `${countryCode}${rawPhone}`;
         const phoneValidation = PhoneUtils.validateVECO(fullToValidate);
@@ -7469,10 +7498,38 @@ ${mapsLink}
       }
     });
 
+    this.updateHeroPromoCurrency(this.selectedCurrency);
+
     if (this.selectedEstablishment) {
       this.renderMenu(this.selectedEstablishment);
     } else {
       this.renderEstablishments();
+    }
+  }
+
+  updateHeroPromoCurrency(curr) {
+    const mainPriceEl = document.getElementById('hero-promo-price-cop');
+    const origPriceEl = document.getElementById('hero-promo-orig-price');
+    const usdPriceEl = document.getElementById('hero-promo-price-usd');
+    if (!mainPriceEl) return;
+
+    const basePromoCop = 18000;
+    const baseOrigCop = 26000;
+    const rateUsd = (this.copToUsdRate && this.copToUsdRate > 0) ? this.copToUsdRate : 4000;
+    const rateVes = (this.copToVesRate && this.copToVesRate > 0) ? this.copToVesRate : 0.025;
+
+    if (curr === 'USD') {
+      mainPriceEl.innerText = `$${(basePromoCop / rateUsd).toFixed(2)} USD`;
+      if (origPriceEl) origPriceEl.innerText = `$${(baseOrigCop / rateUsd).toFixed(2)}`;
+      if (usdPriceEl) usdPriceEl.innerText = `($${basePromoCop.toLocaleString('de-DE')} COP)`;
+    } else if (curr === 'VES') {
+      mainPriceEl.innerText = `${(basePromoCop * rateVes).toFixed(1)} Bs.`;
+      if (origPriceEl) origPriceEl.innerText = `${(baseOrigCop * rateVes).toFixed(1)} Bs.`;
+      if (usdPriceEl) usdPriceEl.innerText = `($${(basePromoCop / rateUsd).toFixed(2)} USD)`;
+    } else {
+      mainPriceEl.innerText = `$${basePromoCop.toLocaleString('de-DE')} COP`;
+      if (origPriceEl) origPriceEl.innerText = `$${baseOrigCop.toLocaleString('de-DE')}`;
+      if (usdPriceEl) usdPriceEl.innerText = `($${(basePromoCop / rateUsd).toFixed(2)} USD)`;
     }
   }
 
@@ -7517,8 +7574,14 @@ ${mapsLink}
 
   handleNavBack() {
     // 1. If any modal is open, close all modals
-    const openModal = document.querySelector('.modal-overlay.open');
-    if (openModal) {
+    const openModals = document.querySelectorAll('.modal-overlay.open, .modal-overlay.active, [id$="-modal"].open, [id$="-modal"].active, .modal-overlay[style*="display: flex"], .modal-overlay[style*="display: block"]');
+    let hasOpenModal = false;
+    openModals.forEach(el => {
+      if (el && window.getComputedStyle(el).display !== 'none') {
+        hasOpenModal = true;
+      }
+    });
+    if (hasOpenModal) {
       this.closeAllModals();
       return;
     }
@@ -7807,18 +7870,34 @@ ${mapsLink}
   }
 
   closeAllModals() {
-    ['cart-modal', 'location-modal', 'terms-modal', 'customizer-modal', 'services-menu-modal', 'sos-menu-modal', 'merchant-register-modal', 'user-orders-modal', 'gochopoints-modal', 'ride-modal', 'cauchera-modal', 'emergency-numbers-modal'].forEach(id => {
+    const modalIds = [
+      'cart-modal', 'location-modal', 'terms-modal', 'customizer-modal', 'services-menu-modal',
+      'sos-menu-modal', 'merchant-register-modal', 'user-orders-modal', 'gochopoints-modal',
+      'ride-modal', 'cauchera-modal', 'emergency-numbers-modal', 'payment-qr-zoom-modal',
+      'order-beverages-upsell-modal', 'chat-modal', 'product-details-modal'
+    ];
+    modalIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.classList.remove('open');
-        el.classList.remove('active');
+        el.classList.remove('open', 'active');
         el.style.display = 'none';
-        // Reset properties in case they were set inline
         el.style.opacity = '';
         el.style.visibility = '';
         el.style.pointerEvents = '';
       }
     });
+
+    // Universal sweep for all overlay / modal elements
+    document.querySelectorAll('.modal-overlay, .modal-overlay-custom, [id$="-modal"]').forEach(el => {
+      if (el.classList.contains('open') || el.classList.contains('active') || el.style.display !== 'none') {
+        el.classList.remove('open', 'active');
+        el.style.display = 'none';
+        el.style.opacity = '';
+        el.style.visibility = '';
+        el.style.pointerEvents = '';
+      }
+    });
+    document.body.classList.remove('modal-open');
   }
 
   handlePopState(event) {
