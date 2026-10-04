@@ -1,0 +1,887 @@
+/* ==========================================================================
+   PediGochosDrive - Next-Gen Ride Hailing & Mobility App Stylesheet
+   Designed as an immersive, standalone-like application inside PediGochos
+   ========================================================================== */
+
+:root {
+  --drive-bg-main: #0B0E14;
+  --drive-bg-card: #151A24;
+  --drive-bg-elevated: #1E2534;
+  --drive-border: rgba(255, 255, 255, 0.10);
+  --drive-border-active: #FF6B00;
+  --drive-orange: #FF6B00;
+  --drive-orange-light: #FF8833;
+  --drive-orange-glow: rgba(255, 107, 0, 0.35);
+  --drive-green: #10B981;
+  --drive-green-glow: rgba(16, 185, 129, 0.35);
+  --drive-blue: #3B82F6;
+  --drive-gold: #F59E0B;
+  --drive-text-main: #FFFFFF;
+  --drive-text-muted: #94A3B8;
+  --drive-text-sub: #64748B;
+}
+
+/* Full App Container Overlay */
+.pedigochos-drive-app {
+  position: fixed;
+  inset: 0;
+  z-index: 9999999;
+  background-color: var(--drive-bg-main);
+  color: var(--drive-text-main);
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pedigochos-drive-app.hidden {
+  display: none !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Top App Bar */
+.drive-app-header {
+  position: relative;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(11, 14, 20, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--drive-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.drive-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drive-btn-back {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.drive-btn-back:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateX(-2px);
+}
+
+.drive-brand-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drive-brand-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FF6B00 0%, #D95300 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 0 16px var(--drive-orange-glow);
+  flex-shrink: 0;
+}
+
+.drive-brand-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, #FFFFFF 40%, #FF9B42 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.15;
+}
+
+.drive-brand-status {
+  font-size: 10.5px;
+  color: #34D399;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.drive-brand-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+}
+
+.drive-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drive-header-btn-sos {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #F87171;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.drive-header-btn-sos:hover {
+  background: #EF4444;
+  color: #FFFFFF;
+}
+
+.drive-header-btn-history {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #E2E8F0;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* App Main Body Layout: Map + Bottom Sheet Panels */
+.drive-app-body {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Map Canvas */
+.drive-map-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: #0B0E14;
+}
+
+#drive-leaflet-map {
+  width: 100%;
+  height: 100%;
+  background: #0D1117;
+}
+
+/* Floating Controls over Map */
+.drive-map-floating-bar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.drive-route-pill {
+  pointer-events: auto;
+  background: rgba(17, 24, 39, 0.90);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 107, 0, 0.4);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.drive-btn-gps-recenter {
+  pointer-events: auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  color: #38BDF8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.drive-btn-gps-recenter:hover {
+  transform: scale(1.08);
+  border-color: #38BDF8;
+}
+
+/* Bottom Sheet / Interactive Panels Deck */
+.drive-bottom-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  max-height: 82vh;
+  background: linear-gradient(180deg, rgba(21, 26, 36, 0.98) 0%, rgba(11, 14, 20, 1) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1.5px solid rgba(255, 107, 0, 0.35);
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Grab Bar / Sheet Header */
+.drive-sheet-handle-wrap {
+  width: 100%;
+  padding: 10px 0 6px 0;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.drive-sheet-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.drive-sheet-content {
+  padding: 6px 16px 20px 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tab/Step indicator in Sheet */
+.drive-steps-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 12px;
+}
+
+.drive-step-tab {
+  flex: 1;
+  text-align: center;
+  padding: 7px 4px;
+  font-size: 11.5px;
+  font-weight: 800;
+  border-radius: 8px;
+  color: var(--drive-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+}
+
+.drive-step-tab.active {
+  background: var(--drive-orange);
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px var(--drive-orange-glow);
+}
+
+/* ========================================================
+   PANEL 1: RUTAS & DESTINOS
+   ======================================================== */
+.drive-route-box {
+  background: var(--drive-bg-card);
+  border: 1px solid var(--drive-border);
+  border-radius: 18px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.drive-inputs-track {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  padding-left: 26px;
+}
+
+.drive-track-line {
+  position: absolute;
+  left: 8px;
+  top: 18px;
+  bottom: 22px;
+  width: 2px;
+  background: linear-gradient(180deg, #10B981 0%, #FF6B00 100%);
+  border-radius: 1px;
+}
+
+.drive-track-dot-origin {
+  position: absolute;
+  left: 4px;
+  top: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+}
+
+.drive-track-dot-dest {
+  position: absolute;
+  left: 4px;
+  bottom: 16px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: #FF6B00;
+  box-shadow: 0 0 8px #FF6B00;
+}
+
+.drive-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drive-field {
+  flex: 1;
+  background: #0F131D;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.drive-field:focus {
+  border-color: var(--drive-orange);
+  box-shadow: 0 0 10px var(--drive-orange-glow);
+}
+
+.drive-btn-mini {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34D399;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Quick Border / City Destinations Chips */
+.drive-quick-places-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--drive-text-muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drive-quick-places-scroll {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.drive-quick-places-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.drive-place-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  padding: 7px 11px;
+  border-radius: 18px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #E2E8F0;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.drive-place-chip:hover, .drive-place-chip.active {
+  background: rgba(255, 107, 0, 0.18);
+  border-color: var(--drive-orange);
+  color: #FFFFFF;
+}
+
+/* ========================================================
+   PANEL 2: SELECCIÓN DE FLOTA DE VEHÍCULOS
+   ======================================================== */
+.drive-fleet-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.drive-vehicle-card {
+  background: var(--drive-bg-card);
+  border: 1.5px solid var(--drive-border);
+  border-radius: 18px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.drive-vehicle-card:hover {
+  background: var(--drive-bg-elevated);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.drive-vehicle-card.active {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.18) 0%, rgba(30, 41, 59, 0.95) 100%);
+  border-color: var(--drive-orange);
+  box-shadow: 0 4px 20px var(--drive-orange-glow);
+}
+
+.drive-vehicle-badge-pill {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 9.5px;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.badge-fast { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
+.badge-popular { background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.4); }
+.badge-vip { background: rgba(245, 158, 11, 0.2); color: #FCD34D; border: 1px solid rgba(245, 158, 11, 0.4); }
+.badge-express { background: rgba(236, 72, 153, 0.2); color: #F472B6; border: 1px solid rgba(236, 72, 153, 0.4); }
+.badge-group { background: rgba(168, 85, 247, 0.2); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.4); }
+
+.drive-vehicle-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.drive-vehicle-thumb {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: #0B0E14;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.drive-vehicle-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drive-vehicle-thumb-emoji {
+  font-size: 28px;
+}
+
+.drive-vehicle-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.drive-vehicle-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.drive-vehicle-name {
+  font-size: 14.5px;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.drive-vehicle-specs {
+  font-size: 11px;
+  color: var(--drive-text-muted);
+  line-height: 1.25;
+}
+
+.drive-vehicle-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.drive-vehicle-eta {
+  color: #38BDF8;
+}
+
+.drive-vehicle-capacity {
+  color: #94A3B8;
+}
+
+.drive-vehicle-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.drive-price-cop {
+  font-size: 16px;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.drive-vehicle-card.active .drive-price-cop {
+  color: #FF9B42;
+}
+
+.drive-price-usd {
+  font-size: 11px;
+  color: #34D399;
+  font-weight: 800;
+}
+
+.drive-price-ves {
+  font-size: 10px;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+/* ========================================================
+   PANEL 3: DETALLES DE PAGO & CONTACTO
+   ======================================================== */
+.drive-payment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.drive-pay-chip {
+  background: var(--drive-bg-card);
+  border: 1px solid var(--drive-border);
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #CBD5E1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drive-pay-chip.active {
+  background: rgba(255, 107, 0, 0.15);
+  border-color: var(--drive-orange);
+  color: #FFFFFF;
+}
+
+.drive-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* CTA Main Button */
+.drive-btn-cta-main {
+  width: 100%;
+  background: linear-gradient(135deg, #FF6B00 0%, #D95300 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 15px 18px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 6px 24px var(--drive-orange-glow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.drive-btn-cta-main:active {
+  transform: scale(0.98);
+}
+
+/* ========================================================
+   PANEL 4: RADAR DE BÚSQUEDA EN VIVO
+   ======================================================== */
+.drive-radar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 14px;
+}
+
+.drive-radar-sphere {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 107, 0, 0.25) 0%, rgba(11, 14, 20, 0.9) 70%);
+  border: 1.5px solid var(--drive-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  box-shadow: 0 0 30px var(--drive-orange-glow);
+}
+
+.drive-radar-wave {
+  position: absolute;
+  inset: -15px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 107, 0, 0.45);
+  animation: radarPulse 2s infinite ease-out;
+}
+
+.drive-radar-wave-2 {
+  position: absolute;
+  inset: -30px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 107, 0, 0.25);
+  animation: radarPulse 2s infinite ease-out 0.6s;
+}
+
+@keyframes radarPulse {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.drive-radar-icon {
+  font-size: 40px;
+  position: relative;
+  z-index: 2;
+  animation: vehicleBob 2s infinite ease-in-out;
+}
+
+@keyframes vehicleBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.drive-radar-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin: 0 0 6px 0;
+}
+
+.drive-radar-desc {
+  font-size: 12.5px;
+  color: var(--drive-text-muted);
+  max-width: 320px;
+  margin: 0 0 18px 0;
+  line-height: 1.4;
+}
+
+.drive-radar-trip-summary {
+  background: var(--drive-bg-card);
+  border: 1px solid var(--drive-border);
+  border-radius: 16px;
+  padding: 12px 16px;
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.drive-radar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.drive-btn-wa-direct {
+  width: 100%;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 13px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 18px rgba(37, 211, 102, 0.4);
+}
+
+.drive-btn-cancel-search {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94A3B8;
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ========================================================
+   MODAL: TARIFARIO & TRANSPARENCIA
+   ======================================================== */
+.drive-fares-modal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2500;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.drive-fares-card {
+  width: 100%;
+  max-width: 500px;
+  background: #151A24;
+  border-top: 1.5px solid var(--drive-orange);
+  border-radius: 24px 24px 0 0;
+  padding: 20px 18px 28px 18px;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Map Markers Styling */
+.drive-passenger-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drive-pulse-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #10B981;
+  border: 3px solid #FFFFFF;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.9);
+  animation: passengerPulse 2s infinite;
+}
+
+@keyframes passengerPulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.drive-car-marker-icon {
+  background: #FFFFFF;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border: 2px solid #FF6B00;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.4s ease;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 480px) {
+  .drive-bottom-sheet {
+    max-height: 86vh;
+  }
+  .drive-vehicle-thumb {
+    width: 48px;
+    height: 48px;
+  }
+  .drive-vehicle-name {
+    font-size: 13.5px;
+  }
+  .drive-price-cop {
+    font-size: 15px;
+  }
+}

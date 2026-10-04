@@ -194,11 +194,11 @@ class MarketplaceController {
     // Initialize floating bubbles (visible on home) and header SOS (hidden on home)
     this.updateFloatingAndHeaderSos(false);
 
-    // Register resilient click & touch listeners on floating action buttons
+    // Register resilient click & touch listeners on floating action buttons (TAXI/MOTO -> PediGochosDrive)
     const servicesBtn = document.getElementById('floating-services-btn');
     if (servicesBtn) {
-      servicesBtn.addEventListener('click', (e) => this.toggleServicesMenu(null, e));
-      servicesBtn.addEventListener('touchend', (e) => this.toggleServicesMenu(null, e), { passive: false });
+      servicesBtn.addEventListener('click', (e) => this.openPediGochosDrive(e));
+      servicesBtn.addEventListener('touchend', (e) => this.openPediGochosDrive(e), { passive: false });
     }
     const sosBtn = document.getElementById('floating-sos-btn');
     if (sosBtn) {
@@ -1517,7 +1517,7 @@ ${mapsLink}
         this.openCaucheraModal();
         break;
       case 'ride':
-        this.openRideModal();
+        this.openPediGochosDrive(null, 'moto');
         break;
       default:
         console.warn('Tipo de servicio no reconocido:', actionType);
@@ -9327,7 +9327,7 @@ ${mapsLink}
 
   onRidePromoCardClick(event) {
     if (this._isRidePromoSwiping) return;
-    this.openRideModal();
+    this.openPediGochosDrive(event);
   }
 
   // Active Orders Polling Fallback
@@ -11285,7 +11285,24 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
   // RIDE HAILING (MOTO TAXI, AUTO, LUJO) LOGIC
   // ==========================================
 
+  openPediGochosDrive(event = null, vehicleType = 'moto') {
+    if (event) {
+      if (typeof event.stopPropagation === 'function') event.stopPropagation();
+      if (typeof event.preventDefault === 'function') event.preventDefault();
+    }
+    this.triggerHaptic('light');
+    if (window.PediGochosDriveApp) {
+      window.PediGochosDriveApp.open(vehicleType || 'moto');
+    } else {
+      this.openRideModal(vehicleType);
+    }
+  }
+
   openRideModal(vehicleType = null) {
+    if (window.PediGochosDriveApp) {
+      this.openPediGochosDrive(null, vehicleType);
+      return;
+    }
     const modal = document.getElementById('ride-modal');
     if (!modal) return;
 
