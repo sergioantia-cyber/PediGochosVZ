@@ -1478,5 +1478,44 @@ body.modal-open {
   box-shadow: 0 4px 14px rgba(255, 107, 0, 0.35);
 }
 
+/* ==================== OFERTAS DEL DÍA: ALERTA PARPADEANTE EN ADMIN ==================== */
+@keyframes offerAlertBlink {
+  0%, 100% {
+    border-color: #EF4444;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.65), inset 0 0 16px rgba(239, 68, 68, 0.25);
+    transform: scale(1);
+  }
+  50% {
+    border-color: #F59E0B;
+    box-shadow: 0 0 25px 6px rgba(239, 68, 68, 0.55), inset 0 0 28px rgba(245, 158, 11, 0.4);
+    transform: scale(1.006);
+  }
+}
+
+@keyframes sirenFlash {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  25% { transform: scale(1.25) rotate(-14deg); opacity: 0.85; }
+  75% { transform: scale(1.25) rotate(14deg); opacity: 0.85; }
+}
+
+@keyframes badgeBlinkFast {
+  0%, 100% { opacity: 1; background-color: #EF4444; box-shadow: 0 0 8px rgba(239,68,68,0.8); }
+  50% { opacity: 0.35; background-color: #DC2626; box-shadow: none; }
+}
+
+.blink-alert-container {
+  animation: offerAlertBlink 1.8s infinite ease-in-out !important;
+}
+
+.blink-siren {
+  display: inline-block;
+  animation: sirenFlash 1.2s infinite ease-in-out !important;
+}
+
+.blink-badge-fast {
+  animation: badgeBlinkFast 1s infinite ease-in-out !important;
+}
+
+
 
 

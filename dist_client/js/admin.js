@@ -408,6 +408,7 @@ class AdminController {
     this.login(savedPass, true);
     const savedWs = localStorage.getItem('pedigochos_admin_active_workspace') || 'orders';
     this.switchWorkspace(savedWs);
+    this.loadAdminOffers();
 
     // Check if Google OAuth session is active in background (non-blocking)
     this.checkSupabaseSession().catch(e => console.warn('Supabase session check notice:', e));
@@ -596,6 +597,7 @@ class AdminController {
         this.renderTable();
         const savedWs = localStorage.getItem('pedigochos_admin_active_workspace') || 'orders';
         this.switchWorkspace(savedWs);
+        this.loadAdminOffers();
         await this.loadCentralSedeSettings();
         this.initWebSocket();
         this.requestNotificationPermission();
@@ -5570,6 +5572,11 @@ class AdminController {
         if (data.type === 'MERCHANT_LEAD_NEW') {
           this.handleMerchantLeadWs(data);
         }
+
+        // Real-time Daily Offers (24H)
+        if (data.type === 'promotion_new' || data.type === 'promotions_expired') {
+          this.loadAdminOffers();
+        }
       } catch (err) {
         console.error('Error parsing WS message in admin:', err);
       }
@@ -10377,18 +10384,151 @@ class AdminController {
   }
 
   // ==================== OFERTAS DEL DÍA (FLASH 24H) ====================
+  renderDailyOffersAlertBanner() {
+    const banner = document.getElementById('admin-daily-offers-alert-banner');
+    const dockBadge = document.getElementById('dock-offers-badge');
+
+    const now = Date.now();
+    const activeOffers = (this.adminOffersList || []).filter(p => {
+      const exp = new Date(p.expiresAt || (new Date(p.createdAt).getTime() + 24 * 3600000)).getTime();
+      return p.active !== false && exp > now;
+    });
+
+    if (activeOffers.length === 0) {
+      // Alerta Parpadeante si NO hay ofertas del día activas
+      if (dockBadge) {
+        dockBadge.style.display = 'inline-flex';
+        dockBadge.className = 'dock-tab-badge blink-badge-fast';
+        dockBadge.style.background = '#EF4444';
+        dockBadge.style.color = '#FFF';
+        dockBadge.textContent = '🚨 0 ACTIVAS';
+      }
+
+      if (banner) {
+        banner.innerHTML = `
+          <div class="admin-card blink-alert-container" style="background: linear-gradient(135deg, rgba(88, 15, 15, 0.95) 0%, rgba(28, 16, 25, 0.95) 100%); border: 2px solid #EF4444; border-radius: 18px; padding: 18px 22px; color: #FFF; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 280px;">
+                <span class="blink-siren" style="font-size: 32px; line-height: 1;">🚨</span>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <h3 style="margin: 0; color: #FCA5A5; font-size: 16.5px; font-weight: 900; letter-spacing: -0.3px;">
+                      ¡ALERTA: NO HAY OFERTAS DEL DÍA ACTIVAS (24H)!
+                    </h3>
+                    <span style="background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 6px; letter-spacing: 0.5px;">
+                      VACÍO EN LA APP
+                    </span>
+                  </div>
+                  <p style="margin: 4px 0 0 0; font-size: 12px; color: #E2E8F0; line-height: 1.4;">
+                    La sección <strong>"Promo del Día 24h"</strong> se encuentra oculta para los clientes porque no has colocado ninguna oferta real. Configura una oferta de 24 horas para destacar un restaurante y generar pedidos rápidos.
+                  </p>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn-3d" onclick="AdminApp.openNewOfferModal()" style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); border: 1.5px solid #F87171; color: #FFF; padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.5);">
+                  <span>🔥</span> Colocar Oferta Real Ahora
+                </button>
+                <button type="button" class="btn-3d" onclick="AdminApp.switchWorkspace('offers')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #CBD5E1; padding: 10px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer;">
+                  Ver Módulo Ofertas
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    } else {
+      // Hay ofertas del día activas
+      if (dockBadge) {
+        dockBadge.style.display = 'inline-flex';
+        dockBadge.className = 'dock-tab-badge';
+        dockBadge.style.background = 'rgba(52, 211, 153, 0.25)';
+        dockBadge.style.color = '#34D399';
+        dockBadge.style.borderColor = 'rgba(52, 211, 153, 0.4)';
+        dockBadge.textContent = `● ${activeOffers.length} Activa(s)`;
+      }
+
+      const primary = activeOffers[0];
+      const pExp = new Date(primary.expiresAt || (new Date(primary.createdAt).getTime() + 24 * 3600000)).getTime();
+      const pDiff = Math.max(0, pExp - now);
+      const pHours = Math.floor(pDiff / 3600000);
+      const pMins = Math.floor((pDiff % 3600000) / 60000);
+      const pCurrency = primary.currency || 'COP';
+      const pSymbol = pCurrency === 'VES' ? 'Bs.' : '$';
+
+      if (banner) {
+        banner.innerHTML = `
+          <div class="admin-card" style="background: linear-gradient(135deg, rgba(6, 78, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid rgba(52, 211, 153, 0.5); border-radius: 18px; padding: 16px 20px; color: #FFF; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px;">
+                <span style="font-size: 28px; line-height: 1;">🔥</span>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <h3 style="margin: 0; color: #34D399; font-size: 15.5px; font-weight: 900; letter-spacing: -0.2px;">
+                      Oferta del Día Activa (24h): ${primary.title}
+                    </h3>
+                    <span style="background: rgba(52, 211, 153, 0.2); color: #34D399; border: 1px solid rgba(52, 211, 153, 0.4); font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px;">
+                      ● EN VIVO (24H)
+                    </span>
+                    ${activeOffers.length > 1 ? `<span style="background: rgba(255,255,255,0.1); color: #CBD5E1; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">+${activeOffers.length - 1} más</span>` : ''}
+                  </div>
+                  <div style="margin-top: 3px; font-size: 12px; color: #CBD5E1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span>🏪 Restaurante: <b style="color: #FFF;">${primary.establishmentName || 'Restaurante'}</b></span>
+                    <span>💰 Precio: <b style="color: #34D399;">${pSymbol}${Math.round(primary.promoPrice).toLocaleString('de-DE')} ${pCurrency}</b></span>
+                    <span>⏱️ Válida: <b style="color: #FCD34D;">Quedan ${pHours}h ${pMins}m</b></span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                ${primary.establishmentId ? `
+                  <button type="button" class="btn-3d" onclick="AdminApp.goToOfferRestaurant('${primary.establishmentId}')" style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.45); color: #93C5FD; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>🏪</span> Ir al Restaurante
+                  </button>
+                  <button type="button" class="btn-3d" onclick="AdminApp.openRestaurantMenu('${primary.establishmentId}')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.45); color: #6EE7B7; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="Ver cómo se ve en la app">
+                    <span>🌐</span> Menú Cliente
+                  </button>
+                ` : ''}
+                <button type="button" class="btn-3d" onclick="AdminApp.editOffer('${primary.id}')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #FFF; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                  ✏️ Editar
+                </button>
+                <button type="button" class="btn-3d" onclick="AdminApp.openNewOfferModal()" style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: #FFF; border: none; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer;">
+                  + Nueva
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+
+  goToOfferRestaurant(establishmentId) {
+    if (!establishmentId) {
+      alert('Esta oferta no tiene un restaurante registrado.');
+      return;
+    }
+    this.switchWorkspace('restaurants');
+    setTimeout(() => {
+      this.focusEstablishment(establishmentId);
+    }, 120);
+  }
+
+  openRestaurantMenu(establishmentId) {
+    if (!establishmentId) {
+      alert('No hay restaurante vinculado a esta oferta.');
+      return;
+    }
+    const isApp = window.Capacitor !== undefined || window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const baseUrl = isApp ? 'https://pedigochos.onrender.com' : window.location.origin;
+    const url = `${baseUrl}/?store=${encodeURIComponent(establishmentId)}`;
+    window.open(url, '_blank') || (window.location.href = url);
+  }
+
   async loadAdminOffers() {
     const container = document.getElementById('admin-offers-container');
     const activeCountEl = document.getElementById('offers-count-active');
     const expiredCountEl = document.getElementById('offers-count-expired');
-    if (!container) return;
-
-    container.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94A3B8;">
-        <div class="spinner" style="margin: 0 auto 12px auto;"></div>
-        <p style="margin: 0; font-size: 13px;">Cargando ofertas del día...</p>
-      </div>
-    `;
 
     try {
       const res = await fetch('/api/promotions?all=true');
@@ -10409,6 +10549,10 @@ class AdminController {
 
       if (activeCountEl) activeCountEl.textContent = activeCount;
       if (expiredCountEl) expiredCountEl.textContent = expiredCount;
+
+      this.renderDailyOffersAlertBanner();
+
+      if (!container) return;
 
       if (this.adminOffersList.length === 0) {
         container.innerHTML = `
@@ -10481,20 +10625,28 @@ class AdminController {
                     </span>
                   ` : ''}
                 </div>
-                ${p.vendorWhatsapp ? `
+                ${(p.vendorWhatsapp || p.whatsapp) ? `
                   <div style="margin-top: 4px; font-size: 11px; color: #38BDF8; font-weight: 700; display: flex; align-items: center; gap: 4px;">
-                    <span>💬 WhatsApp:</span> <span>${p.vendorWhatsapp}</span>
+                    <span>💬 WhatsApp:</span> <span>${p.vendorWhatsapp || p.whatsapp}</span>
                   </div>
                 ` : ''}
               </div>
 
               <!-- Action Buttons -->
-              <div style="margin-top: auto; display: flex; gap: 6px;">
-                <button type="button" onclick="AdminApp.editOffer('${p.id}')" style="flex: 1; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); color: #93C5FD; padding: 7px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              <div style="margin-top: auto; display: flex; gap: 6px; flex-wrap: wrap;">
+                ${p.establishmentId ? `
+                  <button type="button" onclick="AdminApp.goToOfferRestaurant('${p.establishmentId}')" style="flex: 1.2; background: rgba(59, 130, 246, 0.18); border: 1px solid rgba(59, 130, 246, 0.4); color: #93C5FD; padding: 7px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    🏪 Ir al Restaurante
+                  </button>
+                  <button type="button" onclick="AdminApp.openRestaurantMenu('${p.establishmentId}')" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #6EE7B7; padding: 7px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;" title="Ver en carta del cliente">
+                    🌐 Menú
+                  </button>
+                ` : ''}
+                <button type="button" onclick="AdminApp.editOffer('${p.id}')" style="flex: 1; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #FFF; padding: 7px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
                   ✏️ Editar
                 </button>
-                <button type="button" onclick="AdminApp.renewOffer('${p.id}')" title="Reiniciar reloj a 24 horas a partir de ahora" style="flex: 1.2; background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.4); color: #FCA5A5; padding: 7px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                  🔄 Renovar 24h
+                <button type="button" onclick="AdminApp.renewOffer('${p.id}')" title="Reiniciar reloj a 24 horas a partir de ahora" style="flex: 1.1; background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.4); color: #FCA5A5; padding: 7px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                  🔄 24h
                 </button>
                 <button type="button" onclick="AdminApp.deleteOffer('${p.id}')" title="Eliminar oferta" style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.25); color: #F87171; padding: 7px 10px; border-radius: 8px; font-size: 11.5px; cursor: pointer;">
                   🗑️
@@ -10506,11 +10658,13 @@ class AdminController {
       }).join('');
     } catch(err) {
       console.error('Error in loadAdminOffers:', err);
-      container.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: #F87171;">
-          Error al cargar las ofertas del día.
-        </div>
-      `;
+      if (container) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: #F87171;">
+            Error al cargar las ofertas del día.
+          </div>
+        `;
+      }
     }
   }
 
@@ -10533,6 +10687,7 @@ class AdminController {
     if (stockInput) stockInput.value = 10;
 
     this.populateOfferRestaurantSelect();
+    this.populateOfferProductSelect(null);
     modal.style.display = 'flex';
     modal.classList.remove('hidden');
   }
@@ -10547,35 +10702,85 @@ class AdminController {
   populateOfferRestaurantSelect(selectedRestaurantId = '') {
     const select = document.getElementById('admin-offer-restaurant');
     if (!select) return;
-    const rests = this.restaurants || [];
+    const rests = (this.establishments && this.establishments.length > 0) ? this.establishments : (this.restaurants || []);
     select.innerHTML = `<option value="">-- Seleccionar Restaurante Registrado --</option>` +
       rests.map(r => `<option value="${r.id}" ${r.id === selectedRestaurantId ? 'selected' : ''}>${r.name} (${r.category || 'comidas'})</option>`).join('');
   }
 
+  populateOfferProductSelect(rest, selectedProductId = '') {
+    const prodSelect = document.getElementById('admin-offer-product-select');
+    if (!prodSelect) return;
+    if (!rest || !Array.isArray(rest.products) || rest.products.length === 0) {
+      prodSelect.innerHTML = `<option value="">-- Sin platos en carta (Escribe los datos manualmente abajo) --</option>`;
+      return;
+    }
+    prodSelect.innerHTML = `<option value="">-- Seleccionar Plato del Menú (Relleno Automático) --</option>` +
+      rest.products.map(p => {
+        const priceStr = p.price ? `$${Math.round(p.price).toLocaleString('de-DE')}` : '';
+        return `<option value="${p.id}" ${p.id === selectedProductId ? 'selected' : ''}>${p.name} (${priceStr})</option>`;
+      }).join('');
+  }
+
   onOfferRestaurantSelectChange(restId) {
-    if (!restId) return;
-    const rest = (this.restaurants || []).find(r => r.id === restId);
+    if (!restId) {
+      this.populateOfferProductSelect(null);
+      return;
+    }
+    const rests = (this.establishments && this.establishments.length > 0) ? this.establishments : (this.restaurants || []);
+    const rest = rests.find(r => String(r.id) === String(restId));
     if (!rest) return;
 
     const vendorNameInput = document.getElementById('admin-offer-vendor-name');
     const whatsappInput = document.getElementById('admin-offer-whatsapp');
     const imageInput = document.getElementById('admin-offer-image-url');
     const previewImg = document.getElementById('admin-offer-img-preview');
+    const currencySelect = document.getElementById('admin-offer-currency');
 
-    if (vendorNameInput && !vendorNameInput.value.trim()) {
+    if (vendorNameInput) {
       vendorNameInput.value = rest.name || '';
     }
-    if (whatsappInput && (!whatsappInput.value.trim() || whatsappInput.value.length < 5)) {
+    if (whatsappInput) {
       whatsappInput.value = rest.phone || rest.whatsapp || rest.ownerPhone || '';
     }
-    if (imageInput && (!imageInput.value.trim() || imageInput.value === '/images/burger_royale.jpg')) {
-      if (rest.banner) {
-        imageInput.value = rest.banner;
-        if (previewImg) previewImg.src = rest.banner;
-      } else if (rest.image) {
-        imageInput.value = rest.image;
-        if (previewImg) previewImg.src = rest.image;
-      }
+    if (imageInput) {
+      const bestImg = rest.banner || rest.image || rest.logo || '/images/burger_royale.jpg';
+      imageInput.value = bestImg;
+      if (previewImg) previewImg.src = bestImg;
+    }
+    if (currencySelect && rest.currency) {
+      currencySelect.value = rest.currency;
+    }
+
+    this.populateOfferProductSelect(rest);
+  }
+
+  onOfferProductSelectChange(prodId) {
+    if (!prodId) return;
+    const restId = document.getElementById('admin-offer-restaurant')?.value;
+    const rests = (this.establishments && this.establishments.length > 0) ? this.establishments : (this.restaurants || []);
+    const rest = rests.find(r => String(r.id) === String(restId));
+    if (!rest || !Array.isArray(rest.products)) return;
+
+    const prod = rest.products.find(p => String(p.id) === String(prodId));
+    if (!prod) return;
+
+    const titleInput = document.getElementById('admin-offer-title');
+    const descInput = document.getElementById('admin-offer-desc');
+    const promoPriceInput = document.getElementById('admin-offer-promo-price');
+    const origPriceInput = document.getElementById('admin-offer-orig-price');
+    const imageInput = document.getElementById('admin-offer-image-url');
+    const previewImg = document.getElementById('admin-offer-img-preview');
+
+    if (titleInput) titleInput.value = prod.name || '';
+    if (descInput) descInput.value = prod.description || '';
+    if (origPriceInput) origPriceInput.value = prod.price || '';
+    if (promoPriceInput && prod.price) {
+      promoPriceInput.value = Math.round(prod.price * 0.7);
+    }
+    if (imageInput && (prod.image || rest.image)) {
+      const pic = prod.image || rest.image;
+      imageInput.value = pic;
+      if (previewImg) previewImg.src = pic;
     }
   }
 
@@ -10606,8 +10811,11 @@ class AdminController {
     document.getElementById('modal-admin-offer-header').textContent = 'Editar Oferta del Día (24 Horas)';
     document.getElementById('admin-offer-id').value = promo.id;
     this.populateOfferRestaurantSelect(promo.establishmentId || '');
+    const rests = (this.establishments && this.establishments.length > 0) ? this.establishments : (this.restaurants || []);
+    const rest = rests.find(r => String(r.id) === String(promo.establishmentId));
+    this.populateOfferProductSelect(rest);
     document.getElementById('admin-offer-vendor-name').value = promo.establishmentName || '';
-    document.getElementById('admin-offer-whatsapp').value = promo.vendorWhatsapp || '';
+    document.getElementById('admin-offer-whatsapp').value = promo.vendorWhatsapp || promo.whatsapp || '';
     document.getElementById('admin-offer-title').value = promo.title || '';
     document.getElementById('admin-offer-desc').value = promo.description || '';
     document.getElementById('admin-offer-promo-price').value = promo.promoPrice || '';
@@ -10650,6 +10858,7 @@ class AdminController {
       id: id || undefined,
       establishmentId: restId || 'custom_vendor',
       establishmentName: vendorName,
+      whatsapp: vendorWhatsapp,
       vendorWhatsapp: vendorWhatsapp,
       title: title,
       description: description,
@@ -10673,15 +10882,15 @@ class AdminController {
       });
       const data = await res.json();
       if (data && data.success) {
-        alert(id ? '✅ Oferta actualizada correctamente.' : '🔥 ¡Oferta del día publicada con vigencia de 24 horas!');
         this.closeAdminOfferModal();
+        this.showToast('✅ ¡Oferta del día publicada con éxito por 24 horas!');
         this.loadAdminOffers();
       } else {
-        alert('Error al guardar la oferta: ' + (data.error || 'Respuesta inválida'));
+        alert(data.error || 'Error al guardar oferta.');
       }
     } catch(err) {
       console.error('Error saving admin offer:', err);
-      alert('Error de conexión al guardar la oferta.');
+      alert('Error de conexión al guardar oferta.');
     } finally {
       const btn = document.getElementById('btn-save-admin-offer');
       if (btn) btn.disabled = false;

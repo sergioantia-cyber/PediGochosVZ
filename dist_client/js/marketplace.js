@@ -772,57 +772,135 @@ class MarketplaceController {
         return p.active !== false && now < expiresMs;
       });
 
+      // Strict requirement: If there are NO real daily offers, HIDE section completely (NO fake promos)
       if (validPromos.length === 0) {
-        promoSection.style.display = 'block';
-        promoSection.classList.remove('hidden');
-        this.startDailyOffersCountdown();
+        promoSection.style.display = 'none';
+        promoSection.classList.add('hidden');
+        container.innerHTML = '';
+        this.currentDailyOffer = null;
         return;
       }
 
-      container.innerHTML = validPromos.map(p => {
+      promoSection.style.display = 'block';
+      promoSection.classList.remove('hidden');
+
+      const primary = validPromos[0];
+      this.currentDailyOffer = primary;
+
+      const renderHeroPromo = (p) => {
         const expiresMs = new Date(p.expiresAt || (new Date(p.createdAt).getTime() + 24 * 60 * 60 * 1000)).getTime();
         const diffMs = Math.max(0, expiresMs - now);
         const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
         const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const secsLeft = Math.floor((diffMs % (1000 * 60)) / 1000);
+        const timeStr = `${hoursLeft.toString().padStart(2, '0')}:${minsLeft.toString().padStart(2, '0')}:${secsLeft.toString().padStart(2, '0')}`;
 
         const origPrice = p.originalPrice || p.promoPrice;
         const discountPct = origPrice > p.promoPrice ? Math.round(((origPrice - p.promoPrice) / origPrice) * 100) : 0;
-        const discountBadge = discountPct > 0 ? `<span style="background: #EF4444; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 8px; position: absolute; top: 8px; left: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">- ${discountPct}% OFF</span>` : '';
-        const currency = p.currency || 'COP';
-        const symbol = (currency === 'VES') ? 'Bs.' : '$';
-        const stockRem = p.stockRemaining !== undefined ? p.stockRemaining : (p.stockTotal || 8);
-        const stockBadge = `<span style="position: absolute; top: 8px; right: 8px; background: rgba(245, 158, 11, 0.92); color: #0F172A; font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.4);">⚡ Quedan ${stockRem}</span>`;
+        const stockRem = p.stockRemaining !== undefined ? p.stockRemaining : (p.stockTotal || 10);
+        const promoPriceStr = this.formatPesos(p.promoPrice);
+        const origPriceStr = origPrice > p.promoPrice ? this.formatPesos(origPrice) : '';
 
         return `
-          <div onclick="MarketplaceApp.openDailyOfferOrderModal('${p.id}')" style="min-width: 220px; max-width: 220px; background: rgba(30, 41, 59, 0.95); border: 1.5px solid rgba(239, 68, 68, 0.45); border-radius: 14px; overflow: hidden; cursor: pointer; flex-shrink: 0; position: relative; scroll-snap-align: start; box-shadow: 0 4px 14px rgba(0,0,0,0.35); transition: transform 0.2s ease;">
-            <div style="width: 100%; height: 110px; position: relative; background: #000;">
-              <img src="${p.image || '/images/burger_royale.jpg'}" alt="${p.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
-              ${discountBadge}
-              ${stockBadge}
-              <span class="offer-countdown-timer" data-expires="${expiresMs}" style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.92); color: #FCA5A5; font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
-                ⏱️ ${hoursLeft}h ${minsLeft}m
+          <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary-container via-primary to-dark-card p-4 text-on-primary shadow-lg cursor-pointer" onclick="MarketplaceApp.openDailyOfferOrderModal('${p.id}')">
+            <!-- Glow & Badge -->
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container-lowest/20 backdrop-blur-md text-on-primary font-label-sm text-label-sm font-bold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-emergency-red animate-pulse"></span>
+                🔥 Promo del Día 24h
               </span>
+              <div class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-inverse-surface/60 px-2 py-0.5 rounded-full backdrop-blur-md offer-countdown-timer" data-expires="${expiresMs}" id="hero-promo-countdown">
+                <span class="material-symbols-outlined text-[13px] text-badge-gold">timer</span>
+                <span class="tracking-tight font-mono text-badge-gold font-bold" id="countdown-timer">${timeStr}</span>
+              </div>
             </div>
-            <div style="padding: 10px;">
-              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                <span style="font-size: 13px;">🏪</span>
-                <span style="font-size: 11px; font-weight: 700; color: #94A3B8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.establishmentName || 'Restaurante'}</span>
-              </div>
-              <h5 style="margin: 0 0 4px 0; font-size: 13px; font-weight: 800; color: #FFF; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</h5>
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
-                <div>
-                  ${origPrice > p.promoPrice ? `<span style="font-size: 10px; color: #64748B; text-decoration: line-through; display: block;">${symbol}${Math.round(origPrice).toLocaleString('de-DE')}</span>` : ''}
-                  <span style="font-size: 13.5px; font-weight: 900; color: #10B981;">${symbol}${Math.round(p.promoPrice).toLocaleString('de-DE')} ${currency}</span>
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex-1 min-w-0 z-10">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap;">
+                  ${discountPct > 0 ? `<span class="inline-block px-1.5 py-0.5 rounded bg-badge-gold text-on-tertiary-fixed font-label-sm text-label-sm font-extrabold" id="hero-promo-badge">${discountPct}% OFF</span>` : ''}
+                  <span class="inline-block px-2 py-0.5 rounded-full bg-black/40 text-white font-label-sm text-label-sm font-bold" style="border: 1px solid rgba(255,255,255,0.15);">
+                    🏪 ${p.establishmentName || 'Restaurante Aliado'}
+                  </span>
+                  <span class="inline-block px-1.5 py-0.5 rounded bg-amber-500/80 text-white font-label-sm text-label-sm font-bold">
+                    ⚡ Quedan ${stockRem}
+                  </span>
                 </div>
-                <span style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: #FFF; border-radius: 20px; font-size: 10px; font-weight: 800; padding: 4px 9px; box-shadow: 0 2px 6px rgba(239,68,68,0.4);">🔥 Pedir</span>
+                <h2 class="font-headline-md text-headline-md text-on-primary leading-tight font-extrabold" id="hero-promo-title">
+                  ${p.title}
+                </h2>
+                ${p.description ? `
+                  <p class="font-body-sm text-body-sm text-on-primary/90 mt-0.5 line-clamp-1" id="hero-promo-desc">
+                    ${p.description}
+                  </p>
+                ` : ''}
+                <div class="flex items-baseline gap-2 mt-2">
+                  <span class="font-headline-md text-headline-md font-bold text-on-primary" id="hero-promo-price-cop">${promoPriceStr}</span>
+                  ${origPriceStr ? `<span class="font-body-sm text-body-sm line-through text-on-primary/60" id="hero-promo-orig-price">${origPriceStr}</span>` : ''}
+                </div>
               </div>
+              <div class="relative w-28 h-28 shrink-0">
+                <div class="w-full h-full rounded-xl overflow-hidden shadow-md bg-black">
+                  <img id="hero-promo-img" class="w-full h-full object-cover transform scale-105" src="${p.image || '/images/burger_royale.jpg'}" alt="${p.title}" onerror="this.src='/images/burger_royale.jpg'"/>
+                </div>
+                <span class="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full bg-success-emerald text-on-primary font-label-sm text-label-sm font-bold flex items-center gap-0.5 shadow-sm">
+                  <span class="material-symbols-outlined text-[12px]">satellite_alt</span> GPS OK
+                </span>
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 flex items-center justify-between gap-2 border-t border-on-primary/15">
+              ${p.establishmentId ? `
+                <button type="button" class="h-8 px-3 rounded-full bg-white/15 hover:bg-white/25 text-white font-label-sm text-label-sm font-bold flex items-center gap-1 border border-white/20 active:scale-95 transition-all" onclick="event.stopPropagation(); MarketplaceApp.goToOfferRestaurant('${p.establishmentId}')">
+                  <span>🏪</span>
+                  <span>Ir al Restaurante</span>
+                </button>
+              ` : `
+                <span class="font-label-sm text-label-sm text-on-primary/90 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">bolt</span> Entrega volando 20-30m
+                </span>
+              `}
+              <button type="button" class="h-9 px-4 rounded-full bg-surface-container-lowest text-primary-container font-label-md text-label-md font-extrabold flex items-center gap-1 shadow-md active:scale-95 transition-all" onclick="event.stopPropagation(); MarketplaceApp.openDailyOfferOrderModal('${p.id}')">
+                <span>Aprovechar Oferta</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </button>
             </div>
           </div>
         `;
-      }).join('');
+      };
 
-      promoSection.style.display = 'block';
-      promoSection.classList.remove('hidden');
+      let html = renderHeroPromo(primary);
+
+      if (validPromos.length > 1) {
+        html += `
+          <div class="mt-3 flex gap-3 overflow-x-auto no-scrollbar py-1" style="scroll-snap-type: x mandatory;">
+            ${validPromos.slice(1).map(p => {
+              const pExpiresMs = new Date(p.expiresAt || (new Date(p.createdAt).getTime() + 24 * 60 * 60 * 1000)).getTime();
+              const pOrigPrice = p.originalPrice || p.promoPrice;
+              const pDiscountPct = pOrigPrice > p.promoPrice ? Math.round(((pOrigPrice - p.promoPrice) / pOrigPrice) * 100) : 0;
+              return `
+                <div onclick="MarketplaceApp.openDailyOfferOrderModal('${p.id}')" style="min-width: 200px; max-width: 200px; background: rgba(30, 41, 59, 0.95); border: 1.5px solid rgba(239, 68, 68, 0.45); border-radius: 14px; overflow: hidden; cursor: pointer; flex-shrink: 0; position: relative; scroll-snap-align: start;">
+                  <div style="width: 100%; height: 95px; position: relative; background: #000;">
+                    <img src="${p.image || '/images/burger_royale.jpg'}" alt="${p.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/burger_royale.jpg'">
+                    ${pDiscountPct > 0 ? `<span style="position: absolute; top: 4px; left: 4px; background: #EF4444; color: #FFF; font-size: 9.5px; font-weight: 900; padding: 2px 6px; border-radius: 6px;">-${pDiscountPct}%</span>` : ''}
+                    <span class="offer-countdown-timer" data-expires="${pExpiresMs}" style="position: absolute; bottom: 4px; right: 4px; background: rgba(15, 23, 42, 0.92); color: #FCA5A5; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 8px;">
+                      ⏱️ 24h
+                    </span>
+                  </div>
+                  <div style="padding: 8px;">
+                    <div style="font-size: 10.5px; color: #94A3B8; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🏪 ${p.establishmentName || 'Restaurante'}</div>
+                    <h5 style="margin: 2px 0 4px 0; font-size: 12px; font-weight: 800; color: #FFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.title}</h5>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                      <span style="font-size: 12.5px; font-weight: 900; color: #10B981;">${this.formatPesos(p.promoPrice)}</span>
+                      <button type="button" onclick="event.stopPropagation(); MarketplaceApp.goToOfferRestaurant('${p.establishmentId}')" style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #93C5FD; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 6px; cursor: pointer;">🏪 Ir</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
       this.startDailyOffersCountdown();
     } catch(e) {
       console.warn('Error loading daily promos:', e);
@@ -1000,9 +1078,19 @@ class MarketplaceController {
 
 
 
+  goToOfferRestaurant(estId) {
+    if (!estId) return;
+    this.closeDailyOfferOrderModal();
+    const est = (this.establishments || []).find(e => String(e.id) === String(estId));
+    if (est && est.category && est.category !== this.currentCategory) {
+      this.selectCategory(est.category);
+    }
+    this.openEstablishment(estId);
+  }
+
   // ==================== OFERTAS DEL DÍA: EXPRESS ORDER & MANDATORY FIXED GPS ====================
   openDailyOfferOrderModal(promoId) {
-    const promo = (this.dailyPromotionsList || []).find(p => p.id === promoId);
+    const promo = (this.dailyPromotionsList || []).find(p => p.id === promoId) || this.currentDailyOffer || (this.dailyPromotionsList && this.dailyPromotionsList[0]);
     if (!promo) {
       alert('Oferta no disponible.');
       return;
@@ -1028,9 +1116,19 @@ class MarketplaceController {
     const notesInput = document.getElementById('offer-order-client-notes');
 
     if (imgEl) imgEl.src = promo.image || '/images/burger_royale.jpg';
-    if (vendorEl) vendorEl.textContent = `🏪 ${promo.establishmentName || 'Restaurante'}`;
+    if (vendorEl) {
+      vendorEl.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <span>🏪 ${promo.establishmentName || 'Restaurante'}</span>
+          ${promo.establishmentId ? `
+            <button type="button" onclick="MarketplaceApp.goToOfferRestaurant('${promo.establishmentId}')" style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.45); color: #93C5FD; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; cursor: pointer;">
+              Ver Restaurante ↗
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }
     if (titleEl) titleEl.textContent = promo.title;
-
     const currency = promo.currency || 'COP';
     const symbol = (currency === 'VES') ? 'Bs.' : '$';
     if (priceEl) priceEl.textContent = `${symbol}${Math.round(promo.promoPrice).toLocaleString('de-DE')} ${currency}`;
@@ -1331,7 +1429,7 @@ class MarketplaceController {
     const mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
 
     // Target vendor WhatsApp
-    let targetPhone = promo.vendorWhatsapp || '';
+    let targetPhone = promo.vendorWhatsapp || promo.whatsapp || '';
     let cleanPhone = targetPhone.replace(/\D/g, '');
     if (cleanPhone.startsWith('0')) {
       cleanPhone = '58' + cleanPhone.substring(1);
@@ -7990,26 +8088,15 @@ ${mapsLink}
   updateHeroPromoCurrency(curr) {
     const mainPriceEl = document.getElementById('hero-promo-price-cop');
     const origPriceEl = document.getElementById('hero-promo-orig-price');
-    const usdPriceEl = document.getElementById('hero-promo-price-usd');
     if (!mainPriceEl) return;
 
-    const basePromoCop = 18000;
-    const baseOrigCop = 26000;
-    const rateUsd = (this.copToUsdRate && this.copToUsdRate > 0) ? this.copToUsdRate : 4000;
-    const rateVes = (this.copToVesRate && this.copToVesRate > 0) ? this.copToVesRate : 0.025;
+    const promo = this.currentDailyOffer || (this.dailyPromotionsList && this.dailyPromotionsList[0]);
+    if (!promo) return;
 
-    if (curr === 'USD') {
-      mainPriceEl.innerText = `$${(basePromoCop / rateUsd).toFixed(2)} USD`;
-      if (origPriceEl) origPriceEl.innerText = `$${(baseOrigCop / rateUsd).toFixed(2)}`;
-      if (usdPriceEl) usdPriceEl.innerText = `($${basePromoCop.toLocaleString('de-DE')} COP)`;
-    } else if (curr === 'VES') {
-      mainPriceEl.innerText = `${(basePromoCop * rateVes).toFixed(1)} Bs.`;
-      if (origPriceEl) origPriceEl.innerText = `${(baseOrigCop * rateVes).toFixed(1)} Bs.`;
-      if (usdPriceEl) usdPriceEl.innerText = `($${(basePromoCop / rateUsd).toFixed(2)} USD)`;
-    } else {
-      mainPriceEl.innerText = `$${basePromoCop.toLocaleString('de-DE')} COP`;
-      if (origPriceEl) origPriceEl.innerText = `$${baseOrigCop.toLocaleString('de-DE')}`;
-      if (usdPriceEl) usdPriceEl.innerText = `($${(basePromoCop / rateUsd).toFixed(2)} USD)`;
+    mainPriceEl.innerText = this.formatPesos(promo.promoPrice);
+    if (origPriceEl) {
+      const orig = promo.originalPrice || promo.promoPrice;
+      origPriceEl.innerText = orig > promo.promoPrice ? this.formatPesos(orig) : '';
     }
   }
 
