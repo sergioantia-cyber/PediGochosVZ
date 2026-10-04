@@ -1679,6 +1679,11 @@ class AdminController {
             <div style="font-size: 11px; color: #64748B;">
               🛵 Envío: <b style="color: #0F172A;">${this.formatPesos(est.delivery_fee || 0)}</b>
             </div>
+            <div style="display: flex; align-items: center; gap: 4px; margin: 1px 0;">
+              ${Number(est.adminRating || est.rating || 0) > 0 
+                ? `<span style="background: rgba(245, 158, 11, 0.15); color: #B45309; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">⭐ ${Number(est.adminRating || est.rating).toFixed(1)}${est.reviewCount || est.totalReviews ? ` (${est.reviewCount || est.totalReviews})` : ''}</span>`
+                : `<span style="background: rgba(16, 185, 129, 0.15); color: #047857; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">🟢 Nuevo</span>`}
+            </div>
             <button type="button" class="btn-goto-kitchen" onclick="event.stopPropagation(); AdminApp.openEditShopModalFor('${est.id}')" style="background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%); color: #FFF; border: none; font-size: 11.5px; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(15,118,110,0.35);" title="Modificar nombre, logo, portada, horarios, costos y ubicación GPS">
               <span>⚙️</span> Modificar Info
             </button>
@@ -2027,6 +2032,19 @@ class AdminController {
       const disabledInp = document.getElementById('edit-shop-disabled');
       if (disabledInp) disabledInp.checked = Boolean(est.disabled);
 
+      // Populate rating & review count (Admin exclusive)
+      const ratingInp = document.getElementById('edit-shop-rating');
+      const curRating = (est.adminRating !== undefined && est.adminRating !== null) ? est.adminRating : (est.rating !== undefined && est.rating !== null ? est.rating : '');
+      if (ratingInp) {
+        ratingInp.value = curRating !== '' && Number(curRating) > 0 ? Number(curRating) : '';
+        this.handleEditShopRatingInput(ratingInp.value);
+      }
+      const revInp = document.getElementById('edit-shop-review-count');
+      const curRevCount = est.reviewCount !== undefined ? est.reviewCount : (est.totalReviews !== undefined ? est.totalReviews : '');
+      if (revInp) {
+        revInp.value = curRevCount !== '' && Number(curRevCount) > 0 ? Number(curRevCount) : '';
+      }
+
       // Initialize GPS map for editing establishment
       setTimeout(() => {
         this.initEditShopGPSMap(est);
@@ -2185,6 +2203,21 @@ class AdminController {
         close_time: close_time,
         working_days: Array.from(document.querySelectorAll('input[name="edit-working-day"]:checked')).map(c => c.value)
       };
+
+      // Rating & Reviews (Admin exclusive)
+      const ratingRaw = document.getElementById('edit-shop-rating')?.value.trim();
+      const reviewCountRaw = document.getElementById('edit-shop-review-count')?.value.trim();
+      const ratingVal = (ratingRaw !== '' && ratingRaw !== null && !isNaN(parseFloat(ratingRaw)) && parseFloat(ratingRaw) > 0)
+        ? Math.min(5.0, Math.max(0, parseFloat(ratingRaw)))
+        : null;
+      const reviewCountVal = (reviewCountRaw !== '' && reviewCountRaw !== null && !isNaN(parseInt(reviewCountRaw)))
+        ? Math.max(0, parseInt(reviewCountRaw))
+        : 0;
+
+      payload.adminRating = ratingVal;
+      payload.rating = ratingVal;
+      payload.reviewCount = reviewCountVal;
+      payload.totalReviews = reviewCountVal;
 
       const newLinkKey = document.getElementById('edit-shop-link-key')?.value.trim().toUpperCase();
       if (newLinkKey) {
@@ -3764,6 +3797,40 @@ class AdminController {
   }
 
   // Form helpers
+  handleEditShopRatingInput(val) {
+    const badge = document.getElementById('edit-shop-rating-badge');
+    if (!badge) return;
+    const num = parseFloat(val);
+    if (!isNaN(num) && num > 0) {
+      badge.textContent = `⭐ ${num.toFixed(1)}`;
+      badge.style.color = '#F59E0B';
+      badge.style.background = 'rgba(245, 158, 11, 0.18)';
+      badge.style.borderColor = 'rgba(245, 158, 11, 0.45)';
+    } else {
+      badge.textContent = '🟢 Nuevo';
+      badge.style.color = '#10B981';
+      badge.style.background = 'rgba(16, 185, 129, 0.15)';
+      badge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+    }
+  }
+
+  handleRegRatingInput(val) {
+    const badge = document.getElementById('reg-rating-badge');
+    if (!badge) return;
+    const num = parseFloat(val);
+    if (!isNaN(num) && num > 0) {
+      badge.textContent = `⭐ ${num.toFixed(1)}`;
+      badge.style.color = '#F59E0B';
+      badge.style.background = 'rgba(245, 158, 11, 0.18)';
+      badge.style.borderColor = 'rgba(245, 158, 11, 0.45)';
+    } else {
+      badge.textContent = '🟢 Nuevo';
+      badge.style.color = '#10B981';
+      badge.style.background = 'rgba(16, 185, 129, 0.15)';
+      badge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+    }
+  }
+
   handleCategoryChange(category) {
     this.populateLogoSelect(category);
   }
@@ -3905,6 +3972,15 @@ class AdminController {
         }
       });
 
+      const regRatingRaw = document.getElementById('reg-rating')?.value.trim();
+      const regReviewCountRaw = document.getElementById('reg-review-count')?.value.trim();
+      const regRatingVal = (regRatingRaw !== '' && regRatingRaw !== null && !isNaN(parseFloat(regRatingRaw)) && parseFloat(regRatingRaw) > 0)
+        ? Math.min(5.0, Math.max(0, parseFloat(regRatingRaw)))
+        : null;
+      const regReviewCountVal = (regReviewCountRaw !== '' && regReviewCountRaw !== null && !isNaN(parseInt(regReviewCountRaw)))
+        ? Math.max(0, parseInt(regReviewCountRaw))
+        : 0;
+
       const payload = {
         name,
         category,
@@ -3915,7 +3991,11 @@ class AdminController {
         banner,
         linkKey,
         products,
-        logoImage
+        logoImage,
+        adminRating: regRatingVal,
+        rating: regRatingVal,
+        reviewCount: regReviewCountVal,
+        totalReviews: regReviewCountVal
       };
 
       const response = await fetch('/api/establishments', {

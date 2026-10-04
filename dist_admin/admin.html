@@ -379,6 +379,27 @@
               </div>
             </div>
 
+            <!-- Calificación & Estrellas Inicial (Opcional - Exclusivo Admin) -->
+            <div class="form-group" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 12px; border-radius: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label for="reg-rating" style="color: #F59E0B; font-weight: 800; font-size: 12.5px; margin: 0;">
+                  ⭐ Calificación / Estrellas Inicial (Opcional)
+                </label>
+                <span id="reg-rating-badge" style="font-size: 11px; font-weight: 800; color: #10B981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 7px; border-radius: 6px;">
+                  🟢 Nuevo
+                </span>
+              </div>
+              <p style="font-size: 11px; color: #94A3B8; margin: 0 0 6px 0;">Dejar vacío o en 0 para que inicie mostrando "🟢 Nuevo".</p>
+              <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                  <input type="number" id="reg-rating" min="0" max="5" step="0.1" placeholder="Ej. 4.8" oninput="AdminApp.handleRegRatingInput(this.value)" style="width: 100%; padding: 7px 10px; border-radius: 8px; background: rgba(18, 18, 22, 0.9); color: #FFF; border: 1px solid rgba(255,255,255,0.15); font-size: 12.5px; font-weight: 800;">
+                </div>
+                <div>
+                  <input type="number" id="reg-review-count" min="0" placeholder="N° Reseñas (ej. 15)" style="width: 100%; padding: 7px 10px; border-radius: 8px; background: rgba(18, 18, 22, 0.9); color: #FFF; border: 1px solid rgba(255,255,255,0.15); font-size: 12.5px;">
+                </div>
+              </div>
+            </div>
+
             <!-- Upload Custom Logo Photo File (Optional) -->
             <div class="form-group">
               <label for="reg-logo-file">Foto de Logo de Empresa (Opcional - Reemplaza Emoji)</label>
@@ -1250,6 +1271,31 @@
             </button>
           </div>
           <p style="font-size: 11px; color: #94A3B8; margin: 6px 0 0 0;">Esta es la clave secreta con la que el dueño o personal del comercio ingresa a gestionar su cocina en <code>/kitchen.html</code>.</p>
+        </div>
+
+        <!-- Calificación & Estrellas (Exclusivo Admin) -->
+        <div class="form-group" style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid rgba(245, 158, 11, 0.35); padding: 12px; border-radius: 12px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label for="edit-shop-rating" style="color: #F59E0B; font-weight: 800; font-size: 13px; margin: 0; display: flex; align-items: center; gap: 6px;">
+              ⭐ Calificación / Estrellas (Exclusivo Admin)
+            </label>
+            <span id="edit-shop-rating-badge" style="font-size: 11.5px; font-weight: 800; color: #10B981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 6px;">
+              🟢 Nuevo
+            </span>
+          </div>
+          <p style="font-size: 11px; color: #94A3B8; margin: 0 0 8px 0; line-height: 1.35;">
+            Si se deja en 0 o vacío, el local mostrará automáticamente <strong>"🟢 Nuevo"</strong> en toda la app. Al ingresar un valor (ej: 4.8 o 5.0), mostrará sus estrellas doradas.
+          </p>
+          <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0;">
+            <div>
+              <label for="edit-shop-rating" style="font-size: 11px; color: #CBD5E1; font-weight: 700;">Estrellas (0.0 a 5.0)</label>
+              <input type="number" id="edit-shop-rating" min="0" max="5" step="0.1" placeholder="Ej. 4.9 (o vacío)" oninput="AdminApp.handleEditShopRatingInput(this.value)" style="width: 100%; padding: 8px 10px; border-radius: 8px; background: rgba(18, 18, 22, 0.9); color: #FFF; border: 1px solid rgba(255,255,255,0.15); font-size: 13px; font-weight: 800;">
+            </div>
+            <div>
+              <label for="edit-shop-review-count" style="font-size: 11px; color: #CBD5E1; font-weight: 700;">N° de Reseñas (Opcional)</label>
+              <input type="number" id="edit-shop-review-count" min="0" placeholder="Ej. 32" style="width: 100%; padding: 8px 10px; border-radius: 8px; background: rgba(18, 18, 22, 0.9); color: #FFF; border: 1px solid rgba(255,255,255,0.15); font-size: 13px;">
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -4211,7 +4257,7 @@
 
   <script src="/js/sound.js?v=226"></script>
   <script src="/js/qrcode.min.js?v=226"></script>
-  <script src="/js/admin.js?v=252"></script>
+  <script src="/js/admin.js?v=253"></script>
   <script src="/js/menu-builder.js?v=226"></script>
   <script>
     if ('serviceWorker' in navigator) {

@@ -269,6 +269,10 @@ async function syncFromSupabase() {
             if (!Array.isArray(cloudEst.products) || cloudEst.products.length === 0 || (Array.isArray(localEst.products) && localEst.products.length > cloudEst.products.length)) {
               cloudEst.products = localEst.products || [];
             }
+            if (localEst.rating !== undefined) cloudEst.rating = localEst.rating;
+            if (localEst.adminRating !== undefined) cloudEst.adminRating = localEst.adminRating;
+            if (localEst.reviewCount !== undefined) cloudEst.reviewCount = localEst.reviewCount;
+            if (localEst.totalReviews !== undefined) cloudEst.totalReviews = localEst.totalReviews;
           }
         });
         cloudData.establishments = deduplicateEstablishments(cloudData.establishments);
@@ -517,6 +521,10 @@ async function syncFromPostgres() {
             if (localMatch.isHighTraffic !== undefined) est.isHighTraffic = localMatch.isHighTraffic;
             if (localMatch.extraPrepTime !== undefined) est.extraPrepTime = localMatch.extraPrepTime;
             if (localMatch.working_days && localMatch.working_days.length > 0) est.working_days = localMatch.working_days;
+            if (localMatch.rating !== undefined) est.rating = localMatch.rating;
+            if (localMatch.adminRating !== undefined) est.adminRating = localMatch.adminRating;
+            if (localMatch.reviewCount !== undefined) est.reviewCount = localMatch.reviewCount;
+            if (localMatch.totalReviews !== undefined) est.totalReviews = localMatch.totalReviews;
           }
 
           // Normalize food sub-categories to main 'comidas' category
@@ -1289,6 +1297,18 @@ app.post('/api/establishments', (req, res) => {
     writeStoreGps(storeGpsMap);
   }
 
+  const rawRating = newEstablishment.adminRating !== undefined ? newEstablishment.adminRating : newEstablishment.rating;
+  if (rawRating !== undefined && rawRating !== null && rawRating !== '' && !isNaN(parseFloat(rawRating)) && parseFloat(rawRating) > 0) {
+    const parsedRating = Math.min(5.0, Math.max(0, parseFloat(rawRating)));
+    newEstablishment.adminRating = parsedRating;
+    newEstablishment.rating = parsedRating;
+  } else {
+    newEstablishment.adminRating = null;
+    newEstablishment.rating = null;
+  }
+  newEstablishment.reviewCount = newEstablishment.reviewCount ? parseInt(newEstablishment.reviewCount) : 0;
+  newEstablishment.totalReviews = newEstablishment.reviewCount;
+
   db.establishments.push(newEstablishment);
   writeDB(db);
 
@@ -1945,6 +1965,18 @@ app.put('/api/establishments/:id', (req, res) => {
   }
   if (req.body.extraPrepTime !== undefined) {
     est.extraPrepTime = req.body.extraPrepTime ? parseInt(req.body.extraPrepTime) : 20;
+  }
+  if (req.body.rating !== undefined || req.body.adminRating !== undefined) {
+    const rVal = req.body.adminRating !== undefined ? req.body.adminRating : req.body.rating;
+    const parsedRating = (rVal !== null && rVal !== '' && !isNaN(parseFloat(rVal))) ? Math.min(5.0, Math.max(0, parseFloat(rVal))) : null;
+    est.adminRating = parsedRating && parsedRating > 0 ? parsedRating : null;
+    est.rating = parsedRating && parsedRating > 0 ? parsedRating : null;
+  }
+  if (req.body.reviewCount !== undefined || req.body.totalReviews !== undefined) {
+    const cVal = req.body.reviewCount !== undefined ? req.body.reviewCount : req.body.totalReviews;
+    const parsedCount = (cVal !== null && cVal !== '' && !isNaN(parseInt(cVal))) ? Math.max(0, parseInt(cVal)) : 0;
+    est.reviewCount = parsedCount;
+    est.totalReviews = parsedCount;
   }
   if (req.body.newLinkKey || req.body.linkKey) {
     const candidateKey = String(req.body.newLinkKey || req.body.linkKey).trim().toUpperCase();

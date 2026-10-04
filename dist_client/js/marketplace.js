@@ -1739,21 +1739,20 @@ ${mapsLink}
         }
       }
 
-      // Dynamic rating badge
+      // Dynamic rating badge (only shows stars if explicitly assigned by Admin, otherwise shows 🟢 Nuevo)
       const ratingEl = document.querySelector('#establishment-view .est-rating');
       if (ratingEl) {
-        const totalReviews = Number(est.totalReviews || 0);
-        const avgRating = Number(est.avgRating || 0);
-        const hasEnough = totalReviews >= 3 && avgRating > 0;
-        if (hasEnough) {
-          ratingEl.innerHTML = `⭐ ${avgRating.toFixed(1)} <span style="opacity: 0.85; font-size: 10px;">(${totalReviews})</span>`;
+        const adminRating = Number(est.adminRating || est.rating || 0);
+        const revCount = Number(est.reviewCount || est.totalReviews || 0);
+        if (adminRating > 0) {
+          const revCountStr = revCount > 0 ? ` <span style="opacity: 0.85; font-size: 10px;">(${revCount})</span>` : '';
+          ratingEl.innerHTML = `⭐ ${adminRating.toFixed(1)}${revCountStr}`;
           ratingEl.style.background = 'rgba(255, 170, 0, 0.16)';
           ratingEl.style.border = '1px solid rgba(255, 170, 0, 0.35)';
           ratingEl.style.color = '#FFAA00';
-          ratingEl.style.cursor = 'pointer';
-          ratingEl.onclick = () => MarketplaceApp.openReviewsListModal(est.id);
+          ratingEl.style.cursor = 'default';
         } else {
-          ratingEl.innerHTML = `✨ Nuevo`;
+          ratingEl.innerHTML = `🟢 Nuevo`;
           ratingEl.style.background = 'rgba(16, 185, 129, 0.15)';
           ratingEl.style.border = '1px solid rgba(16, 185, 129, 0.35)';
           ratingEl.style.color = '#34D399';
@@ -1905,27 +1904,28 @@ ${mapsLink}
     this.renderFoodBubbleCarousel();
   }
 
-  // Helper to render rating markup (shows 'Nuevo' if < 3 reviews, stars only with sufficient reviews)
+  // Helper to render rating markup (shows '🟢 Nuevo' unless stars are explicitly assigned from Admin)
   getEstablishmentRatingMarkup(est, variant = 'row') {
-    const totalReviews = Number(est.totalReviews || est.reviewCount || 0);
-    const avgRating = Number(est.avgRating || est.rating || 0);
-    const hasEnough = totalReviews >= 3 && avgRating > 0;
+    const adminRating = Number(est.adminRating || est.rating || 0);
+    const hasAdminStars = adminRating > 0;
+    const revCount = Number(est.reviewCount || est.totalReviews || 0);
 
-    if (!hasEnough) {
+    if (!hasAdminStars) {
       if (variant === 'mini') {
-        return `<span style="font-size: 9px; font-weight: 800; color: #10B981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.5px 5px; border-radius: 5px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px;">✨ Nuevo</span>`;
+        return `<span style="font-size: 9px; font-weight: 800; color: #10B981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.5px 5px; border-radius: 5px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px;">🟢 Nuevo</span>`;
       }
-      return `<div class="est-row-rating" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; font-weight: 800; padding: 2px 7px; border-radius: 6px; font-size: 10.5px; display: inline-flex; align-items: center; gap: 2px;">
-        ✨ Nuevo
+      return `<div class="est-row-rating" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; font-weight: 800; padding: 2px 7px; border-radius: 6px; font-size: 10.5px; display: inline-flex; align-items: center; gap: 3px;">
+        🟢 Nuevo
       </div>`;
     }
 
-    const ratingVal = avgRating.toFixed(1);
+    const ratingVal = adminRating.toFixed(1);
+    const revCountStr = revCount > 0 ? ` <span style="opacity: 0.85; font-size: 9.5px;">(${revCount})</span>` : '';
     if (variant === 'mini') {
       return `<span style="font-size: 9.5px; color: #FFCC00; font-weight: 800; flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px;">⭐ ${ratingVal}</span>`;
     }
-    return `<div class="est-row-rating" onclick="event.stopPropagation(); MarketplaceApp.openReviewsListModal('${est.id}')" style="cursor: pointer; background: rgba(255, 170, 0, 0.16); border: 1px solid rgba(255, 170, 0, 0.35); color: #FFAA00;">
-      ⭐ ${ratingVal} <span style="opacity: 0.85; font-size: 9.5px;">(${totalReviews})</span>
+    return `<div class="est-row-rating" style="background: rgba(255, 170, 0, 0.16); border: 1px solid rgba(255, 170, 0, 0.35); color: #FFAA00; font-weight: 800; padding: 2px 7px; border-radius: 6px; font-size: 10.5px; display: inline-flex; align-items: center; gap: 3px;">
+      ⭐ ${ratingVal}${revCountStr}
     </div>`;
   }
 
@@ -1947,18 +1947,19 @@ ${mapsLink}
     const photoUrl = est.banner || est.bannerImage || (est.products && est.products[0] ? est.products[0].image : null) || est.image || est.logoImage || '/images/burger_royale.jpg';
     const deliveryTimeStr = this.getFormattedDeliveryTime(est);
 
-    const totalReviews = Number(est.totalReviews || est.reviewCount || 0);
-    const avgRating = Number(est.avgRating || est.rating || 0);
-    const ratingVal = avgRating > 0 ? avgRating.toFixed(1) : '4.9';
+    const adminRating = Number(est.adminRating || est.rating || 0);
+    const revCount = Number(est.reviewCount || est.totalReviews || 0);
+    const hasAdminStars = adminRating > 0;
+    const ratingVal = adminRating.toFixed(1);
 
-    const ratingBadge = (totalReviews >= 3 && avgRating > 0)
+    const ratingBadge = hasAdminStars
       ? `<div class="flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded-full shrink-0">
           <span class="material-symbols-outlined text-[14px] text-badge-gold" style="font-variation-settings: 'FILL' 1;">star</span>
           <span class="font-label-sm text-label-sm font-bold text-on-surface">${ratingVal}</span>
-          <span class="font-label-sm text-label-sm text-on-surface-variant">(${totalReviews})</span>
+          ${revCount > 0 ? `<span class="font-label-sm text-label-sm text-on-surface-variant">(${revCount})</span>` : ''}
         </div>`
       : `<div class="flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded-full shrink-0">
-          <span class="font-label-sm text-label-sm font-bold text-success-emerald">✨ Nuevo</span>
+          <span class="font-label-sm text-label-sm font-bold text-success-emerald">🟢 Nuevo</span>
         </div>`;
 
     const promoBadge = est.isHighTraffic
@@ -3537,7 +3538,10 @@ ${mapsLink}
             ${isOpen ? '<span style="position: absolute; bottom: 2px; left: 2px; right: 2px; background: rgba(16,185,129,0.95); color: #fff; font-size: 7.5px; font-weight: 900; text-align: center; border-radius: 4px; padding: 1px 0;">ABIERTO</span>' : ''}
           </div>
           <div class="featured-est-details">
-            <h5 class="featured-est-name">${est.name}</h5>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
+              <h5 class="featured-est-name" style="margin: 0;">${est.name}</h5>
+              ${this.getEstablishmentRatingMarkup(est, 'mini')}
+            </div>
             ${statusTag}
           </div>
         </div>
