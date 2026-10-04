@@ -2499,13 +2499,13 @@ const ResinServiceApp = {
     const statusBox = document.getElementById('resin-gps-status-box');
 
     if (!navigator.geolocation) {
-      alert('Tu navegador no soporta geolocalización satelital.');
+      alert('Tu navegador no soporta geolocalización.');
       return;
     }
 
     if (btn) btn.disabled = true;
     if (icon) icon.textContent = '⏳';
-    if (btnText) btnText.textContent = 'Detectando satélites GPS...';
+    if (btnText) btnText.textContent = 'Detectando Ubicación GPS precisa...';
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -2524,7 +2524,7 @@ const ResinServiceApp = {
           statusBox.style.display = 'block';
           statusBox.innerHTML = `
             <div style="color: #34D399; font-weight: 800; margin-bottom: 2px;">
-              📍 Ubicación satelital detectada (±${acc}m)
+              📍 Ubicación GPS precisa detectada (±${acc}m)
             </div>
             <div style="font-size: 11px; color: #CBD5E1;">
               Coords: <code>${lat.toFixed(5)}, ${lng.toFixed(5)}</code> &nbsp;•&nbsp;
@@ -2593,7 +2593,7 @@ const ResinServiceApp = {
     }
 
     if (!this.state.gps || !this.state.gps.lat) {
-      const confirmNoGps = confirm('📍 No has fijado tu ubicación GPS satelital.\n\nEl GPS permite al repartidor ubicar tu casa con exactitud satelital.\n\n¿Deseas enviar el pedido sin GPS? (Presiona Cancelar para marcar GPS).');
+      const confirmNoGps = confirm('📍 No has fijado tu Ubicación GPS precisa.\n\nEl GPS permite al repartidor ubicar tu casa con exactitud.\n\n¿Deseas enviar el pedido sin GPS? (Presiona Cancelar para marcar GPS).');
       if (!confirmNoGps) {
         this.detectLiveGps();
         return;
@@ -2673,7 +2673,7 @@ const ResinServiceApp = {
     deliveryBlock += `💳 *Método de Pago:* ${this.state.paymentMethod}\n`;
 
     if (this.state.gps && this.state.gps.mapUrl) {
-      deliveryBlock += `📍 *Ubicación GPS Satelital:* ${this.state.gps.mapUrl}\n`;
+      deliveryBlock += `📍 *Ubicación GPS precisa:* ${this.state.gps.mapUrl}\n`;
     }
 
     const text =
@@ -2818,7 +2818,7 @@ _Hola Shelli Art, acabo de diseñar mi llavero personalizado en la app. ¿Podrí
     }
 
     if (!this.state.gps || !this.state.gps.lat) {
-      const confirmNoGps = confirm('📍 No has fijado tu ubicación GPS satelital.\n\nEl GPS permite al repartidor ubicar tu casa con exactitud satelital.\n\n¿Deseas enviar el pedido sin GPS? (Presiona Cancelar para marcar GPS).');
+      const confirmNoGps = confirm('📍 No has fijado tu Ubicación GPS precisa.\n\nEl GPS permite al repartidor ubicar tu casa con exactitud.\n\n¿Deseas enviar el pedido sin GPS? (Presiona Cancelar para marcar GPS).');
       if (!confirmNoGps) {
         this.detectLiveGps();
         return;

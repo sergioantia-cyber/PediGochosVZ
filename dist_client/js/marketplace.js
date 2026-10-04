@@ -1130,7 +1130,7 @@ class MarketplaceController {
       statusEl.style.color = '#FCD34D';
       statusEl.innerHTML = `
         <span class="spinner-small" style="display: inline-block;"></span>
-        <span>${userInitiated ? 'Reintentando señal satelital obligatoria...' : 'Detectando ubicación satelital fija obligatoria...'}</span>
+        <span>${userInitiated ? 'Reintentando Ubicación GPS precisa...' : 'Detectando Ubicación GPS precisa obligatoria...'}</span>
       `;
     }
 
@@ -1164,7 +1164,7 @@ class MarketplaceController {
           statusEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
           statusEl.style.color = '#34D399';
           statusEl.innerHTML = `
-            <span>✅ Ubicación satelital fija confirmada (±${accuracy}m)</span>
+            <span>✅ Ubicación GPS precisa confirmada (±${accuracy}m)</span>
           `;
         }
 
@@ -1186,7 +1186,7 @@ class MarketplaceController {
           statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
           statusEl.style.borderColor = 'rgba(239, 68, 68, 0.35)';
           statusEl.style.color = '#FCA5A5';
-          statusEl.innerHTML = '<span>⚠️ GPS Requerido: Por favor activa la ubicación satelital de tu teléfono y permite el permiso para pedir.</span>';
+          statusEl.innerHTML = '<span>⚠️ GPS Requerido: Por favor activa la Ubicación GPS precisa de tu teléfono y permite el permiso para pedir.</span>';
         }
         this.validateDailyOfferForm();
       },
@@ -1275,7 +1275,7 @@ class MarketplaceController {
       if (!hasGps) {
         hintEl.style.display = 'block';
         hintEl.style.color = '#F87171';
-        hintEl.textContent = '⚠️ Obligatorio: Se requiere la detección automática de tu GPS satelital.';
+        hintEl.textContent = '⚠️ Obligatorio: Se requiere la detección de tu Ubicación GPS precisa.';
       } else if (!phoneVal.isValid) {
         hintEl.style.display = 'block';
         hintEl.style.color = '#FCD34D';
@@ -1362,7 +1362,7 @@ class MarketplaceController {
 ━━━━━━━━━━━━━━━━━━━━
 👤 *WhatsApp Cliente:* ${whatsapp}
 🏠 *Dirección de Entrega:* ${address}
-${notes ? `📝 *Notas:* ${notes}\n` : ''}📍 *UBICACIÓN GPS FIJA SATELITAL (OBLIGATORIA):*
+${notes ? `📝 *Notas:* ${notes}\n` : ''}📍 *UBICACIÓN GPS PRECISA (OBLIGATORIA):*
 ${mapsLink}
 ━━━━━━━━━━━━━━━━━━━━
 🚀 *Generado vía PediGochos*`;
@@ -1372,7 +1372,7 @@ ${mapsLink}
 
     this.closeDailyOfferOrderModal();
     if (typeof this.showToast === 'function') {
-      this.showToast('🎉 ¡Redirigiendo a WhatsApp con tu pedido y ubicación satelital!');
+      this.showToast('🎉 ¡Redirigiendo a WhatsApp con tu pedido y Ubicación GPS precisa!');
     }
   }
 
@@ -12793,7 +12793,7 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
     const gpsIcon = document.getElementById('cauchera-gps-icon');
 
     if (gpsIcon) gpsIcon.innerText = '⏳';
-    if (coordsText) coordsText.innerHTML = '<span style="color:#FBBF24;">📡 Buscando señal satelital GPS...</span>';
+    if (coordsText) coordsText.innerHTML = '<span style="color:#FBBF24;">📡 Buscando Ubicación GPS precisa...</span>';
 
     const applyCoords = (lat, lng, acc = 0) => {
       if (gpsIcon) gpsIcon.innerText = '✅';
