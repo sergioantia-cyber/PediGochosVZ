@@ -176,22 +176,26 @@
   </div>
 
   <!-- App Header -->
-  <header class="fixed top-0 inset-x-0 z-50 bg-gradient-to-r from-[#FF6B00] via-[#FF5E3A] to-[#EA580C] text-white shadow-[0_4px_20px_rgba(234,88,12,0.25)] pt-safe">
-    <div class="h-20 px-margin flex items-center justify-between gap-space-sm max-w-xl mx-auto">
-      <div class="flex items-center gap-2.5 min-w-0 flex-1">
-        <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 shadow-md ring-2 ring-white/50 bg-[#1E222D] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onclick="MarketplaceApp.goHome()" title="Ir al Inicio">
-          <img alt="Logo PediGochos" class="w-full h-full object-cover" src="/images/logo-pedigochos.png"/>
+  <header class="app-header-textured text-white pt-safe">
+    <div class="h-20 px-margin flex items-center justify-between gap-space-sm max-w-xl mx-auto relative z-10">
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <!-- Hero Logo Podium -->
+        <div class="header-logo-hero-podium" onclick="MarketplaceApp.goHome()" title="Ir al Inicio">
+          <div class="header-logo-halo"></div>
+          <div class="header-logo-disc">
+            <img alt="Logo PediGochos" class="header-logo-img" src="/images/logo-pedigochos.png"/>
+          </div>
         </div>
         <div class="flex flex-col min-w-0">
           <div class="flex items-center gap-space-xs cursor-pointer" onclick="MarketplaceApp.goHome()">
             <span class="font-headline-sm text-headline-sm leading-none brand-metallic-title">
               <span class="brand-metallic-pedi">Pedi</span><span class="brand-metallic-gochos">Gochos</span>
             </span>
-            <span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-white/20 text-white font-bold backdrop-blur-md border border-white/25">Restaurantes</span>
+            <span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-white/20 text-white font-bold backdrop-blur-md border border-white/30 shadow-sm">Restaurantes</span>
           </div>
-          <button type="button" class="flex items-center gap-1 text-left min-w-0 focus:outline-none mt-0.5 group" onclick="MarketplaceApp.openLocationModal()" title="Toca para cambiar tu dirección o ver mapa">
-            <span class="material-symbols-outlined text-white text-[15px] shrink-0">location_on</span>
-            <span class="font-label-sm text-label-sm text-white/95 font-semibold truncate max-w-[140px]" id="header-selected-address">San Antonio del Táchira</span>
+          <button type="button" class="flex items-center gap-1 text-left min-w-0 focus:outline-none mt-1 group" onclick="MarketplaceApp.openLocationModal()" title="Toca para cambiar tu dirección o ver mapa">
+            <span class="material-symbols-outlined text-amber-200 text-[15px] shrink-0 drop-shadow-sm">location_on</span>
+            <span class="font-label-sm text-label-sm text-white/95 font-semibold truncate max-w-[140px] drop-shadow-sm" id="header-selected-address">San Antonio del Táchira</span>
             <span class="material-symbols-outlined text-white/80 group-hover:text-white text-[15px] shrink-0">expand_more</span>
           </button>
         </div>

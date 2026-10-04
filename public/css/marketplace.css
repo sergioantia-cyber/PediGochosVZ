@@ -5694,3 +5694,183 @@ body {
   animation: cartBouncePulse 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
+/* ==========================================================================
+   CABECERA TEXTURIZADA CON PROFUNDIDAD Y LOGO PROTAGONISTA
+   ========================================================================== */
+
+.app-header-textured {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: #ff6000;
+  background-image:
+    /* 1. Spotlight cálido / aureola radiante centrado exactamente detrás del logo (x: 48px) */
+    radial-gradient(circle 180px at 48px 50%, rgba(255, 240, 180, 0.5) 0%, rgba(255, 140, 0, 0.35) 45%, transparent 75%),
+    /* 2. Iluminación cenital cálida que baña toda la parte superior */
+    radial-gradient(ellipse 80% 120% at 50% -20%, rgba(255, 205, 110, 0.38) 0%, transparent 70%),
+    /* 3. Textura táctil micro-puntillada / micro-malla luxury */
+    radial-gradient(rgba(255, 255, 255, 0.16) 1.2px, transparent 1.2px),
+    /* 4. Trama sutil diagonal de relieve táctil */
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.025) 0px, rgba(0, 0, 0, 0.025) 2px, transparent 2px, transparent 6px),
+    /* 5. Gradiente maestro de profundidad: naranja vivo a naranja quemado sunset */
+    linear-gradient(135deg, #ff7a00 0%, #ff5e18 30%, #eb4d00 70%, #c43800 100%);
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
+  background-size:
+    auto,
+    auto,
+    10px 10px,
+    auto,
+    100% 100%;
+  
+  /* Profundidad volumétrica 3D */
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+  border-bottom: 1px solid rgba(130, 35, 0, 0.45);
+  box-shadow:
+    0 12px 32px -4px rgba(217, 78, 0, 0.55),
+    0 4px 14px rgba(0, 0, 0, 0.22),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -3px 8px rgba(124, 45, 18, 0.35);
+  isolation: isolate;
+}
+
+/* Destello superior de cristal / línea reflectante */
+.app-header-textured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.85) 15%,
+    rgba(255, 255, 255, 1) 25%,
+    rgba(255, 255, 255, 0.5) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Velo de reflexión angular con efecto de profundidad vítrea */
+.app-header-textured::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0) 45%,
+    rgba(0, 0, 0, 0.05) 75%,
+    rgba(0, 0, 0, 0.16) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   LOGO COMO PROTAGONISTA: PODIUM ESCULTURAL Y AURA ILUMINADA
+   ========================================================================== */
+
+.header-logo-hero-podium {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+}
+
+.header-logo-hero-podium:hover {
+  transform: scale(1.08) rotate(-2deg);
+}
+
+.header-logo-hero-podium:active {
+  transform: scale(0.93) rotate(1deg);
+}
+
+/* Aura de luz cálida pulsante concéntrica detrás del logo */
+.header-logo-halo {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 240, 180, 0.85) 0%,
+    rgba(255, 150, 0, 0.5) 45%,
+    rgba(255, 90, 0, 0) 75%
+  );
+  filter: blur(5px);
+  animation: logoHeroAuraPulse 3.6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes logoHeroAuraPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.22);
+    opacity: 1;
+    filter: blur(6px);
+  }
+}
+
+/* Disco con bisel 3D, aro dorado/blanco y pedestal */
+.header-logo-disc {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    #ffffff 0%,
+    #fff5ea 35%,
+    #ffdfb8 65%,
+    #ffa333 100%
+  );
+  border: 2px solid #ffffff;
+  box-shadow:
+    0 0 16px rgba(255, 235, 150, 0.8),
+    0 5px 12px rgba(0, 0, 0, 0.3),
+    inset 0 2px 3px rgba(255, 255, 255, 0.95),
+    inset 0 -2px 5px rgba(180, 50, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 3px;
+}
+
+/* La imagen del logo con máxima nitidez y protagonismo */
+.header-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) contrast(1.08) brightness(1.02);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.header-logo-hero-podium:hover .header-logo-img {
+  transform: scale(1.06);
+}
+
+
