@@ -19,7 +19,7 @@
   <link rel="icon" type="image/png" href="/images/logo-pedigochos.png">
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
   <link rel="stylesheet" href="/css/common.css?v=231">
-  <link rel="stylesheet" href="/css/marketplace.css?v=260">
+  <link rel="stylesheet" href="/css/marketplace.css?v=265">
   <link rel="stylesheet" href="/css/paint-service.css?v=232">
   <link rel="stylesheet" href="/css/print3d-service.css?v=237">
   <link rel="stylesheet" href="/css/resin-service.css?v=253">
@@ -235,6 +235,29 @@
         <p id="active-order-info-text" style="font-size: 13px; color: #cbd5e1; margin: 0 0 10px 0; font-weight: 500;">
           El restaurante está recibiendo tu pedido...
         </p>
+
+        <!-- Order Progress Stepper Timeline -->
+        <div class="order-stepper-container" id="active-order-stepper">
+          <div class="stepper-progress-track">
+            <div class="stepper-progress-fill" id="order-stepper-fill" style="width: 20%;"></div>
+          </div>
+          <div class="stepper-step active" id="step-recibido">
+            <div class="step-circle"><span>📝</span></div>
+            <span class="step-label">Recibido</span>
+          </div>
+          <div class="stepper-step" id="step-cocina">
+            <div class="step-circle"><span>👨‍🍳</span></div>
+            <span class="step-label">En Cocina</span>
+          </div>
+          <div class="stepper-step" id="step-camino">
+            <div class="step-circle"><span>🛵</span></div>
+            <span class="step-label">En Camino</span>
+          </div>
+          <div class="stepper-step" id="step-entregado">
+            <div class="step-circle"><span>🎉</span></div>
+            <span class="step-label">Entregado</span>
+          </div>
+        </div>
 
         <!-- Mini Real-Time Tracking Map -->
         <div id="active-order-map-wrapper" style="width: 100%; height: 200px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: #0f172a; position: relative; z-index: 1; isolation: isolate; transform: translateZ(0);">
@@ -2471,7 +2494,7 @@
   <script defer src="/js/print3d-service.js?v=254"></script>
   <script defer src="/js/resin-service.js?v=254"></script>
   <script defer src="/js/pinata-service.js?v=254"></script>
-  <script defer src="/js/marketplace.js?v=254"></script>
+  <script defer src="/js/marketplace.js?v=265"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

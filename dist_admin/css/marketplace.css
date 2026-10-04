@@ -5966,3 +5966,282 @@ body {
   transform: translateY(-1px) scale(1.04) !important;
 }
 
+/* ==========================================================================
+   1. MEJORA: REDISEÑO DE LOCALES MEJOR VALORADOS (CARRUSEL)
+   ========================================================================== */
+.featured-est-card-modern {
+  min-width: 220px;
+  width: 220px;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, #1E222D 0%, #161922 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 10px;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.featured-est-card-modern:hover,
+.featured-est-card-modern:active {
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(255, 107, 0, 0.55);
+  box-shadow: 0 8px 22px rgba(255, 107, 0, 0.25);
+}
+
+.featured-est-card-modern.is-open {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.featured-est-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.featured-est-thumb-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.featured-est-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.featured-est-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.featured-est-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.featured-est-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   2. MEJORA: REORDENAMIENTO ERGONÓMICO DE BOTONES FLOTANTES
+   ========================================================================== */
+.floating-left-actions-container {
+  bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+  left: 14px !important;
+  gap: 8px !important;
+  z-index: 9999 !important;
+}
+
+.floating-fab-btn {
+  width: 44px !important;
+  height: 44px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+}
+
+.floating-fab-btn.fab-sos {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+.floating-fab-btn.fab-services {
+  background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.7) !important;
+}
+
+.floating-fab-btn .fab-icon {
+  font-size: 17px !important;
+}
+
+.floating-fab-btn .fab-label {
+  font-size: 7px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.3px !important;
+}
+
+.floating-cart-btn {
+  bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+  right: 14px !important;
+  width: 46px !important;
+  height: 46px !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 4px 16px rgba(255, 107, 0, 0.5) !important;
+  z-index: 9999 !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease !important;
+}
+
+.floating-cart-btn.empty-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.6) translateY(20px) !important;
+}
+
+/* ==========================================================================
+   3. MEJORA: EFECTO SKELETON SHIMMER DE CARGA
+   ========================================================================== */
+@keyframes skeletonSweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeletonSweep 1.6s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+.skeleton-card-item {
+  background: #1E222D;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.skeleton-thumb {
+  width: 100%;
+  height: 120px;
+  border-radius: 12px;
+}
+
+.skeleton-text-title {
+  width: 65%;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.skeleton-text-sub {
+  width: 45%;
+  height: 12px;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   4. MEJORA: STEPPER TIMELINE ANIMADA DE SEGUIMIENTO DE PEDIDOS
+   ========================================================================== */
+.order-stepper-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin: 14px 0 16px 0;
+  padding: 0 6px;
+}
+
+.stepper-progress-track {
+  position: absolute;
+  top: 18px;
+  left: 24px;
+  right: 24px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.stepper-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B00 0%, #10B981 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+  transition: width 0.4s ease;
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.25s ease;
+}
+
+.step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1E293B;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.step-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94A3B8;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.stepper-step.active .step-circle {
+  background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%);
+  border-color: #FFFFFF;
+  box-shadow: 0 0 12px rgba(255, 107, 0, 0.7);
+  transform: scale(1.1);
+}
+
+.stepper-step.active .step-label {
+  color: #FFFFFF;
+  font-weight: 800;
+}
+
+.stepper-step.completed .step-circle {
+  background: #10B981;
+  border-color: #A7F3D0;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.stepper-step.completed .step-label {
+  color: #34D399;
+}
+
+@keyframes stepPulseAnim {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.6); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 107, 0, 0); }
+}
+
+.stepper-step.pulse .step-circle {
+  animation: stepPulseAnim 1.8s infinite;
+}
+
+

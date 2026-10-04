@@ -525,8 +525,42 @@ class MarketplaceController {
     window.location.reload();
   }
 
+  triggerHaptic(type = 'light') {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        if (type === 'light') navigator.vibrate(14);
+        else if (type === 'medium') navigator.vibrate(22);
+        else if (type === 'success') navigator.vibrate([15, 30, 20]);
+        else if (type === 'warning') navigator.vibrate([35, 45, 35]);
+      }
+    } catch (_) {}
+  }
+
+  renderSkeletonGrid() {
+    const grid = document.getElementById('establishments-grid');
+    if (!grid) return;
+    grid.innerHTML = `
+      <div class="skeleton-card-item">
+        <div class="skeleton-shimmer skeleton-thumb"></div>
+        <div class="skeleton-shimmer skeleton-text-title"></div>
+        <div class="skeleton-shimmer skeleton-text-sub"></div>
+      </div>
+      <div class="skeleton-card-item">
+        <div class="skeleton-shimmer skeleton-thumb"></div>
+        <div class="skeleton-shimmer skeleton-text-title"></div>
+        <div class="skeleton-shimmer skeleton-text-sub"></div>
+      </div>
+      <div class="skeleton-card-item">
+        <div class="skeleton-shimmer skeleton-thumb"></div>
+        <div class="skeleton-shimmer skeleton-text-title"></div>
+        <div class="skeleton-shimmer skeleton-text-sub"></div>
+      </div>
+    `;
+  }
+
   async loadEstablishments() {
     try {
+      this.renderSkeletonGrid();
       // Clear any stale localStorage disabled state - server disabled_stores.json is authoritative
       try { localStorage.removeItem('pedigochos_disabled_stores'); } catch(e) {}
 
@@ -917,7 +951,13 @@ class MarketplaceController {
         const hh = Math.floor(heroDiff / 3600000);
         const mm = Math.floor((heroDiff % 3600000) / 60000);
         const ss = Math.floor((heroDiff % 60000) / 1000);
-        heroTimer.textContent = `⏱️ ${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+        const cdSpan = document.getElementById('countdown-timer');
+        const timeStr = `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+        if (cdSpan) {
+          cdSpan.textContent = timeStr;
+        } else {
+          heroTimer.textContent = `⏱️ ${timeStr}`;
+        }
       }
 
       const modalTimer = document.getElementById('offer-order-timer-badge');
@@ -1375,6 +1415,7 @@ ${mapsLink}
   }
 
   setQuickFilter(filterKey) {
+    this.triggerHaptic('light');
     this.activeQuickFilter = filterKey;
 
     // Update active class on quick filter pills
@@ -3449,42 +3490,43 @@ ${mapsLink}
     featuredShuffled.forEach(est => {
       const isOpen = this.isEstablishmentOpen(est);
       const card = document.createElement('div');
-      card.style.cssText = `min-width: 215px; width: 215px; flex-shrink: 0; background: rgba(18, 18, 24, 0.95); border: 1px solid ${isOpen ? 'rgba(245, 158, 11, 0.45)' : 'rgba(255, 255, 255, 0.1)'}; border-radius: 14px; padding: 8px 10px; cursor: pointer; scroll-snap-align: start; transition: transform 0.2s, border-color 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.35); position: relative;`;
+      card.className = `featured-est-card-modern ${isOpen ? 'is-open' : 'is-closed'}`;
 
       if (!isOpen) {
         card.style.opacity = '0.85';
         card.style.filter = 'grayscale(0.18)';
       }
 
-      card.onclick = () => MarketplaceApp.openEstablishment(est.id);
-      card.setAttribute('onclick', `MarketplaceApp.openEstablishment('${est.id}')`);
+      card.onclick = () => {
+        this.triggerHaptic('light');
+        MarketplaceApp.openEstablishment(est.id);
+      };
 
       const photoUrl = est.logoImage || (est.products && est.products[0] ? est.products[0].image : null);
       let imgHTML = '';
       if (photoUrl) {
-        imgHTML = `<img src="${photoUrl}" alt="${est.name}" style="object-fit: contain; width: 100%; height: 100%; padding: 2px; box-sizing: border-box;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'">`;
+        imgHTML = `<img src="${photoUrl}" alt="${est.name}" loading="lazy" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'">`;
       }
 
       const statusTag = isOpen
-        ? `<div style="font-size: 9.5px; color: #34D399; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;">🟢 Abierto · ${this.getFormattedDeliveryTime(est)}</div>`
-        : `<div style="font-size: 9.5px; color: #CBD5E1; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">🕒 Abre ${this.formatTime12h(est.open_time)}</div>`;
+        ? `<span style="font-size: 10px; color: #34D399; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;">🟢 Abierto · ${this.getFormattedDeliveryTime(est)}</span>`
+        : `<span style="font-size: 10px; color: #94A3B8; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">🕒 Abre ${this.formatTime12h(est.open_time)}</span>`;
 
       card.innerHTML = `
-        <div style="width: 54px; height: 54px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; border: 1px solid ${isOpen ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255,255,255,0.1)'};">
-          ${imgHTML}
-          <div class="hidden" style="font-size: 22px;">${est.logo || '🏪'}</div>
-          ${isOpen ? '<span style="position: absolute; bottom: 2px; left: 2px; right: 2px; background: rgba(16,185,129,0.92); color: #fff; font-size: 7.5px; font-weight: 900; text-align: center; border-radius: 4px; padding: 1px 0;">ABIERTO</span>' : ''}
+        <div class="featured-est-card-top">
+          <div class="featured-est-thumb-wrap">
+            ${imgHTML}
+            <div class="hidden" style="font-size: 22px;">${est.logo || '🏪'}</div>
+            ${isOpen ? '<span style="position: absolute; bottom: 2px; left: 2px; right: 2px; background: rgba(16,185,129,0.95); color: #fff; font-size: 7.5px; font-weight: 900; text-align: center; border-radius: 4px; padding: 1px 0;">ABIERTO</span>' : ''}
+          </div>
+          <div class="featured-est-details">
+            <h5 class="featured-est-name">${est.name}</h5>
+            ${statusTag}
+          </div>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
-            <h5 style="margin: 0; font-size: 12px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">${est.name}</h5>
-            ${this.getEstablishmentRatingMarkup(est, 'mini')}
-          </div>
-          ${statusTag}
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9px; margin-top: 2px; gap: 4px;">
-            <span style="color: #60A5FA; font-weight: 800; white-space: nowrap;">🛵 ${this.formatPesos(est.delivery_fee || 5000)}</span>
-            <span style="color: #10B981; font-weight: 800; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1px 6px; border-radius: 4px; font-size: 8px; white-space: nowrap;">⚡ Express</span>
-          </div>
+        <div class="featured-est-card-bottom">
+          <span style="color: #60A5FA; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;">🛵 ${this.formatPesos(est.delivery_fee || 5000)}</span>
+          <span style="color: #10B981; font-weight: 800; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); padding: 1.5px 7px; border-radius: 6px; font-size: 8.5px;">⚡ Express</span>
         </div>
       `;
       container.appendChild(card);
@@ -3555,6 +3597,7 @@ ${mapsLink}
   }
 
   filterRestaurantsByFoodType(foodTypeId) {
+    this.triggerHaptic('light');
     if (!foodTypeId) {
       this.showFoodCategoriesGrid();
       return;
@@ -4017,6 +4060,7 @@ ${mapsLink}
       this.cart.items.push(cartItem);
     }
 
+    this.triggerHaptic('success');
     this.updateCartBadge();
     this.showToast(`Agregado: ${product.name}`);
     this.animateFlyToCart(window.event);
@@ -5549,6 +5593,7 @@ ${mapsLink}
     
     this.cart.items.push(cartItem);
     
+    this.triggerHaptic('success');
     this.updateCartBadge();
     this.closeCustomizerModal();
     this.showToast(`Agregado: ${product.name}`);
@@ -5672,8 +5717,13 @@ ${mapsLink}
     }
 
     if (badge) {
-      badge.style.display = 'flex';
-      badge.classList.add('visible');
+      if (totalCount > 0) {
+        badge.classList.remove('empty-hidden');
+        badge.classList.add('visible');
+      } else {
+        badge.classList.add('empty-hidden');
+        badge.classList.remove('visible');
+      }
     }
   }
 
@@ -5688,6 +5738,7 @@ ${mapsLink}
   }
 
   openCartModal() {
+    this.triggerHaptic('medium');
     this.closeAllModals();
     const modal = document.getElementById('cart-modal');
     if (modal) {
@@ -7533,6 +7584,7 @@ ${mapsLink}
   }
 
   switchBottomTab(tabKey) {
+    this.triggerHaptic('light');
     const tabs = document.querySelectorAll('.bottom-tab-bar .tab-item');
     tabs.forEach(tab => {
       if (tab.getAttribute('data-tab') === tabKey) {
@@ -8557,6 +8609,9 @@ ${mapsLink}
         pillStatus.style.color = badge.style.color;
       }
 
+      // Update Visual Stepper Timeline
+      this.updateOrderStepper(status);
+
       // Render Tracking Map for Active Order
       this.renderTrackingMap(order);
 
@@ -8567,6 +8622,40 @@ ${mapsLink}
       }
     } catch (e) {
       console.warn('Error polling active order:', e);
+    }
+  }
+
+  updateOrderStepper(status) {
+    const fill = document.getElementById('order-stepper-fill');
+    const stepRecibido = document.getElementById('step-recibido');
+    const stepCocina = document.getElementById('step-cocina');
+    const stepCamino = document.getElementById('step-camino');
+    const stepEntregado = document.getElementById('step-entregado');
+    if (!fill) return;
+
+    [stepRecibido, stepCocina, stepCamino, stepEntregado].forEach(s => {
+      if (s) s.classList.remove('active', 'completed', 'pulse');
+    });
+
+    const norm = (status || '').toLowerCase();
+    if (norm.includes('pendiente') || norm.includes('recibido')) {
+      fill.style.width = '20%';
+      if (stepRecibido) stepRecibido.classList.add('active', 'pulse');
+    } else if (norm.includes('cocina') || norm.includes('prepar') || norm.includes('listo') || norm.includes('tienda')) {
+      fill.style.width = '50%';
+      if (stepRecibido) stepRecibido.classList.add('completed');
+      if (stepCocina) stepCocina.classList.add('active', 'pulse');
+    } else if (norm.includes('camino') || norm.includes('reparto') || norm.includes('despachado')) {
+      fill.style.width = '78%';
+      if (stepRecibido) stepRecibido.classList.add('completed');
+      if (stepCocina) stepCocina.classList.add('completed');
+      if (stepCamino) stepCamino.classList.add('active', 'pulse');
+    } else if (norm.includes('entregado')) {
+      fill.style.width = '100%';
+      if (stepRecibido) stepRecibido.classList.add('completed');
+      if (stepCocina) stepCocina.classList.add('completed');
+      if (stepCamino) stepCamino.classList.add('completed');
+      if (stepEntregado) stepEntregado.classList.add('completed');
     }
   }
 
@@ -11796,6 +11885,7 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
   // ========================================================
 
   toggleSosMenu(force = null, event = null) {
+    this.triggerHaptic('warning');
     if (event) {
       if (typeof event.stopPropagation === 'function') event.stopPropagation();
       if (typeof event.preventDefault === 'function') event.preventDefault();
