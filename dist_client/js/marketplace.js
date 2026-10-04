@@ -434,38 +434,23 @@ class MarketplaceController {
       const displayName = user.user_metadata?.full_name || user.email.split('@')[0];
       const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
       container.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); padding: 3px 8px 3px 6px; border-radius: 20px;">
-          ${avatarUrl ? `<img src="${avatarUrl}" alt="Avatar" style="width: 18px; height: 18px; border-radius: 50%; object-fit: cover;">` : '<span style="font-size: 12px;">👤</span>'}
-          <span style="font-size: 11px; color: #FFFFFF; font-weight: 700; max-width: 85px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            ${displayName}
-          </span>
-          <button type="button" onclick="MarketplaceApp.logout()" title="Cerrar Sesión" style="background: none; border: none; font-size: 13px; cursor: pointer; padding: 0 2px; color: #94A3B8; display: flex; align-items: center; justify-content: center; line-height: 1;">
-            ✕
-          </button>
+        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; cursor: pointer;" onclick="MarketplaceApp.promptUserLogout('${displayName}')" title="${displayName} · Toca para ver opciones o cerrar sesión">
+          ${avatarUrl ? `<img src="${avatarUrl}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">` : '<span class="material-symbols-outlined text-[19px] text-white">account_circle</span>'}
         </div>
       `;
     } else {
-      const isDismissed = sessionStorage.getItem('pedigochos_login_prompt_dismissed') === 'true';
-      container.style.position = 'relative';
       container.innerHTML = `
-        <button class="btn-notification btn-login-pulse" onclick="MarketplaceApp.loginWithGoogle()" onmouseenter="MarketplaceApp.showLoginPrompt()" title="Iniciar Sesión con Google">
-          <span class="login-pulse-badge"></span>
-          <span>🔑</span> <span>Ingresar</span>
+        <button type="button" onclick="MarketplaceApp.loginWithGoogle()" title="Perfil / Ingresar con Google" class="w-full h-full flex items-center justify-center text-white focus:outline-none">
+          <span class="material-symbols-outlined text-[19px]">person</span>
         </button>
-        <div id="login-reward-prompt" class="login-prompt-bubble ${isDismissed ? 'hidden' : ''}" onclick="MarketplaceApp.loginWithGoogle()">
-          <div class="login-prompt-arrow"></div>
-          <div class="login-prompt-header">
-            <span class="login-prompt-tag">⚠️ ¡Inicia Sesión!</span>
-            <button type="button" class="login-prompt-close-btn" onclick="event.stopPropagation(); MarketplaceApp.dismissLoginPrompt()" title="Cerrar aviso">✕</button>
-          </div>
-          <div class="login-prompt-body">
-            Si no ingresas, <strong>no se guardarán tus datos</strong> de perfil ni <strong>acumularás GochoPoints ⭐</strong> en tus pedidos.
-          </div>
-          <div class="login-prompt-action">
-            <span>Toca para ingresar con Google 🚀</span>
-          </div>
-        </div>
       `;
+    }
+  }
+
+  promptUserLogout(name) {
+    const cleanName = (name && name !== 'null' && name !== 'undefined') ? name : 'Usuario';
+    if (confirm(`Hola ${cleanName},\n¿Deseas cerrar tu sesión en PediGochos?`)) {
+      this.logout();
     }
   }
 
@@ -2064,8 +2049,10 @@ ${mapsLink}
     } else {
       displayTitle = categoryNames[this.currentCategory] || this.capitalize(this.currentCategory);
     }
-    const titleEl = document.getElementById('establishments-title');
+    const titleEl = document.getElementById('establishments-title') || document.getElementById('all-restaurants-title-text');
     if (titleEl) titleEl.innerHTML = displayTitle;
+    const allRestTitle = document.getElementById('all-restaurants-title-text');
+    if (allRestTitle && allRestTitle !== titleEl) allRestTitle.innerHTML = displayTitle;
 
     // Special dedicated rendering for Servicios category (Auxilio 24/7, Automotriz, Transporte)
     if (this.currentCategory === 'servicios' && !filtered) {
@@ -3577,6 +3564,16 @@ ${mapsLink}
     this.currentCategory = 'comidas';
     window.activeFoodTypeFilter = foodTypeId;
 
+    // 1. Update quick craving chips styles
+    document.querySelectorAll('#quick-food-craving-chips .craving-chip').forEach(btn => {
+      const bType = btn.dataset.foodType;
+      if (bType === foodTypeId) {
+        btn.className = 'craving-chip h-8 px-3 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm flex items-center gap-1 shrink-0 shadow-sm active:scale-95 transition-all font-bold active';
+      } else {
+        btn.className = 'craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all font-semibold';
+      }
+    });
+
     document.querySelectorAll('.category-card-delivercity').forEach(card => {
       if (card.dataset.category === 'comidas') {
         card.classList.add('active');
@@ -3598,12 +3595,18 @@ ${mapsLink}
 
     if (foodTypeId === 'all') {
       this.renderEstablishments(allEsts, true);
-      return;
+    } else {
+      const filtered = allEsts.filter(est => this.doesEstMatchFoodType(est, foodTypeId));
+      this.renderEstablishments(filtered, true);
     }
 
-    const filtered = allEsts.filter(est => this.doesEstMatchFoodType(est, foodTypeId));
-
-    this.renderEstablishments(filtered, true);
+    // Smooth scroll down to restaurants so user immediately sees results
+    setTimeout(() => {
+      const target = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 60);
   }
 
   doesEstMatchFoodType(est, foodTypeId) {
@@ -7485,10 +7488,12 @@ ${mapsLink}
 
     if (tabKey === 'restaurantes') {
       this.closeAllModals();
+      if (this.selectedEstablishment) this.goHome(false);
       this.selectCategory('comidas');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (tabKey === 'explorar') {
       this.closeAllModals();
+      if (this.selectedEstablishment) this.goHome(false);
       const searchInput = document.getElementById('global-search') || document.getElementById('marketplace-search-input');
       if (searchInput) {
         searchInput.focus();
@@ -7496,6 +7501,7 @@ ${mapsLink}
       }
     } else if (tabKey === 'servicios') {
       this.closeAllModals();
+      if (this.selectedEstablishment) this.goHome(false);
       const servicesSection = document.getElementById('more-services-grid-section');
       if (servicesSection) {
         servicesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -7801,7 +7807,7 @@ ${mapsLink}
   }
 
   closeAllModals() {
-    ['cart-modal', 'location-modal', 'terms-modal', 'customizer-modal', 'services-menu-modal', 'sos-menu-modal', 'merchant-register-modal'].forEach(id => {
+    ['cart-modal', 'location-modal', 'terms-modal', 'customizer-modal', 'services-menu-modal', 'sos-menu-modal', 'merchant-register-modal', 'user-orders-modal', 'gochopoints-modal', 'ride-modal', 'cauchera-modal', 'emergency-numbers-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.classList.remove('open');
@@ -11740,6 +11746,14 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
     } else {
       this.closeSosMenu(event);
     }
+  }
+
+  openSosEmergencyModal(event = null) {
+    this.toggleSosMenu(true, event);
+  }
+
+  openSosMenu(event = null) {
+    this.toggleSosMenu(true, event);
   }
 
   closeSosMenu(event = null) {

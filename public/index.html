@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>PediGochos | Pide lo que quieras. Lo tenemos en tu puerta ⚡</title>
   <meta name="description" content="PediGochos: Cero filas, cero demoras, cero excusas. Pide lo que quieras de los mejores restaurantes de San Antonio del Táchira con delivery express y GPS satelital en vivo.">
-  <meta name="theme-color" content="#1E222D">
+  <meta name="theme-color" content="#FF6B00">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <!-- Open Graph & Social Meta Tags -->
@@ -176,34 +176,36 @@
   </div>
 
   <!-- App Header -->
-  <header class="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_2px_12px_rgba(25,28,35,0.06)] pt-safe">
+  <header class="fixed top-0 inset-x-0 z-50 bg-gradient-to-r from-[#FF6B00] via-[#FF5E3A] to-[#EA580C] text-white shadow-[0_4px_20px_rgba(234,88,12,0.25)] pt-safe">
     <div class="h-20 px-margin flex items-center justify-between gap-space-sm max-w-xl mx-auto">
-      <div class="flex items-center gap-space-sm min-w-0 flex-1">
-        <img alt="Logo PediGochos" class="h-8 w-auto object-contain shrink-0 cursor-pointer" src="/images/logo-pedigochos.png" onclick="MarketplaceApp.goHome()"/>
+      <div class="flex items-center gap-2.5 min-w-0 flex-1">
+        <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 shadow-md ring-2 ring-white/50 bg-[#1E222D] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onclick="MarketplaceApp.goHome()" title="Ir al Inicio">
+          <img alt="Logo PediGochos" class="w-full h-full object-cover" src="/images/logo-pedigochos.png"/>
+        </div>
         <div class="flex flex-col min-w-0">
           <div class="flex items-center gap-space-xs cursor-pointer" onclick="MarketplaceApp.goHome()">
-            <span class="font-headline-sm text-headline-sm text-primary-container leading-none font-extrabold">PediGochos</span>
-            <span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-bold">Restaurantes</span>
+            <span class="font-headline-sm text-headline-sm text-white leading-none font-black tracking-tight">PediGochos</span>
+            <span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-white/20 text-white font-bold backdrop-blur-md border border-white/25">Restaurantes</span>
           </div>
-          <button type="button" class="flex items-center gap-1 text-left min-w-0 focus:outline-none" onclick="MarketplaceApp.requestAutomaticGPS(true)" title="Toca para actualizar tu ubicación GPS en vivo">
-            <span class="material-symbols-outlined text-primary text-[14px] shrink-0">location_on</span>
-            <span class="font-label-sm text-label-sm text-on-surface font-semibold truncate max-w-[140px]" id="header-selected-address">San Antonio del Táchira</span>
-            <span class="material-symbols-outlined text-on-surface-variant text-[14px] shrink-0">expand_more</span>
+          <button type="button" class="flex items-center gap-1 text-left min-w-0 focus:outline-none mt-0.5 group" onclick="MarketplaceApp.openLocationModal()" title="Toca para cambiar tu dirección o ver mapa">
+            <span class="material-symbols-outlined text-white text-[15px] shrink-0">location_on</span>
+            <span class="font-label-sm text-label-sm text-white/95 font-semibold truncate max-w-[140px]" id="header-selected-address">San Antonio del Táchira</span>
+            <span class="material-symbols-outlined text-white/80 group-hover:text-white text-[15px] shrink-0">expand_more</span>
           </button>
         </div>
       </div>
-      <div class="flex items-center gap-space-xs shrink-0">
-        <button type="button" aria-label="Auxilio Rápido SOS" onclick="MarketplaceApp.openSosEmergencyModal()" class="h-9 px-2.5 rounded-full bg-emergency-red text-on-error flex items-center gap-1 shadow-[0_4px_12px_rgba(239,68,68,0.35)] active:scale-95 transition-all">
-          <span class="material-symbols-outlined text-[16px]">e911_emergency</span>
-          <span class="font-label-sm text-label-sm font-bold tracking-wider">S.O.S</span>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" id="header-sos-btn" aria-label="Auxilio Rápido SOS" onclick="MarketplaceApp.toggleSosMenu(true)" class="h-9 px-3 rounded-full bg-white text-emergency-red flex items-center gap-1 shadow-md border border-white/40 active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[16px] font-bold">e911_emergency</span>
+          <span class="font-label-sm text-label-sm font-black tracking-wider">S.O.S</span>
         </button>
-        <button type="button" aria-label="Ver carrito" onclick="MarketplaceApp.openCartModal()" class="relative w-11 h-11 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:text-primary transition-colors">
+        <button type="button" aria-label="Ver carrito" onclick="MarketplaceApp.openCartModal()" class="relative w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md flex items-center justify-center transition-colors">
           <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
-          <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-primary-container text-on-primary rounded-full font-label-sm text-label-sm flex items-center justify-center leading-none ring-2 ring-surface font-bold" id="header-cart-badge-count">0</span>
+          <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-white text-[#EA580C] rounded-full font-label-sm text-label-sm flex items-center justify-center leading-none ring-2 ring-[#FF6B00] font-black shadow-sm" id="header-cart-badge-count">0</span>
         </button>
-        <div id="auth-status-container" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 cursor-pointer overflow-hidden">
-          <button type="button" onclick="MarketplaceApp.loginWithGoogle()" title="Perfil / Ingresar" class="w-full h-full flex items-center justify-center text-on-primary focus:outline-none">
-            <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+        <div id="auth-status-container" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 border border-white/30 text-white backdrop-blur-md flex items-center justify-center shrink-0 cursor-pointer overflow-hidden transition-colors">
+          <button type="button" onclick="MarketplaceApp.loginWithGoogle()" title="Perfil / Ingresar" class="w-full h-full flex items-center justify-center text-white focus:outline-none">
+            <span class="material-symbols-outlined text-[19px]">person</span>
           </button>
         </div>
       </div>
@@ -303,26 +305,26 @@
           </div>
         </div>
         <!-- Quick Food Craving Filter Chips -->
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-margin px-margin py-1">
-          <button type="button" class="h-8 px-3 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm flex items-center gap-1 shrink-0 shadow-sm active:scale-95 transition-all" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-margin px-margin py-1" id="quick-food-craving-chips">
+          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm flex items-center gap-1 shrink-0 shadow-sm active:scale-95 transition-all font-bold active" data-food-type="all" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">
             <span>🔥</span><span>Más Vendidos</span>
           </button>
-          <button type="button" class="h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" onclick="MarketplaceApp.filterRestaurantsByFoodType('hamburguesas')">
+          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="hamburguesas" onclick="MarketplaceApp.filterRestaurantsByFoodType('hamburguesas')">
             <span>🍔</span><span>Hamburguesas</span>
           </button>
-          <button type="button" class="h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" onclick="MarketplaceApp.filterRestaurantsByFoodType('pizzas')">
+          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="pizzas" onclick="MarketplaceApp.filterRestaurantsByFoodType('pizzas')">
             <span>🍕</span><span>Pizzas</span>
           </button>
-          <button type="button" class="h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" onclick="MarketplaceApp.filterRestaurantsByFoodType('salchipapas')">
+          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="salchipapas" onclick="MarketplaceApp.filterRestaurantsByFoodType('salchipapas')">
             <span>🍟</span><span>Salchipapas</span>
           </button>
-          <button type="button" class="h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" onclick="MarketplaceApp.filterRestaurantsByFoodType('perros')">
+          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="perros" onclick="MarketplaceApp.filterRestaurantsByFoodType('perros')">
             <span>🌭</span><span>Perros</span>
           </button>
-          <button type="button" class="h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" onclick="MarketplaceApp.filterRestaurantsByFoodType('tequenos')">
+          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="tequenos" onclick="MarketplaceApp.filterRestaurantsByFoodType('tequenos')">
             <span>🥟</span><span>Tequeños</span>
           </button>
-          <button type="button" class="h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" onclick="MarketplaceApp.filterRestaurantsByFoodType('postres')">
+          <button type="button" class="craving-chip h-8 px-3 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shrink-0 hover:bg-surface-container-high active:scale-95 transition-all" data-food-type="postres" onclick="MarketplaceApp.filterRestaurantsByFoodType('postres')">
             <span>🍰</span><span>Postres</span>
           </button>
         </div>
