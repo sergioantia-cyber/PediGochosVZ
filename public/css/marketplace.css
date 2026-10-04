@@ -5770,3 +5770,75 @@ body {
     0 0 16px rgba(255, 107, 0, 0.55);
 }
 
+/* ==========================================================================
+   APARTADO "¿QUÉ TE PROVOCA HOY?": TEXTURA Y PROFUNDIDAD NARANJA
+   ========================================================================== */
+.pedigochos-cravings-section {
+  position: relative;
+  background-color: #FF6B00 !important;
+  background-image:
+    /* Reflejo de luz cenital / brillo especular superior */
+    radial-gradient(ellipse 130% 90% at 50% -20%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.08) 45%, transparent 75%),
+    /* Sombreado volumétrico de profundidad (curvatura 3D) */
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.32) 100%),
+    /* Patrón táctil micro-textura de alta definición */
+    radial-gradient(rgba(0, 0, 0, 0.14) 15%, transparent 16%),
+    radial-gradient(rgba(0, 0, 0, 0.14) 15%, transparent 16%),
+    /* Gradiente base naranja rico de alta densidad */
+    linear-gradient(90deg, #FF6F00 0%, #FF5A00 30%, #EA580C 65%, #C2410C 100%) !important;
+  background-size:
+    100% 100%,
+    100% 100%,
+    8px 8px,
+    8px 8px,
+    100% 100% !important;
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    4px 4px,
+    0 0 !important;
+  /* Relieve y profundidad: bisel superior, sombra interna y sombra de proyección */
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.35),
+    0 8px 24px -4px rgba(234, 88, 12, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 20px !important;
+}
+
+/* Burbujas y textos dentro del apartado naranja */
+.pedigochos-cravings-section .cravings-bubble-item span,
+.pedigochos-cravings-section .cravings-bubble-label {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+}
+
+.pedigochos-cravings-section .cravings-bubble-item .w-16,
+.pedigochos-cravings-section .cravings-bubble-circle {
+  background: #FFFFFF !important;
+  border: 2px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.pedigochos-cravings-section .cravings-bubble-item:hover .w-16,
+.pedigochos-cravings-section .cravings-bubble-item:hover .cravings-bubble-circle {
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+.pedigochos-cravings-section .cravings-bubble-item.active .w-16,
+.pedigochos-cravings-section .cravings-bubble-item.active .cravings-bubble-circle {
+  border-color: #FFFFFF !important;
+  box-shadow: 0 0 0 3px #FFFFFF, 0 6px 18px rgba(0, 0, 0, 0.4) !important;
+  transform: translateY(-3px) scale(1.06) !important;
+}
+
+.pedigochos-cravings-section .cravings-bubble-item.active span {
+  color: #FFE600 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8) !important;
+}
+

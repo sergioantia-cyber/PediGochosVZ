@@ -400,15 +400,15 @@
       </section>
 
       <!-- Categorías Gastronómicas (Carrusel) -->
-      <section class="mt-space-lg">
-        <div class="px-margin flex items-center justify-between mb-space-xs">
-          <div class="flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-primary-container text-[20px]">restaurant_menu</span>
-            <h3 class="font-headline-sm text-headline-sm text-on-surface">¿Qué te provoca hoy?</h3>
+      <section class="mt-space-lg mx-margin p-4 rounded-2xl pedigochos-cravings-section text-white relative overflow-hidden" style="background-color: #FF6B00; background-image: radial-gradient(ellipse 130% 90% at 50% -20%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.08) 45%, transparent 75%), linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.32) 100%), radial-gradient(rgba(0, 0, 0, 0.14) 15%, transparent 16%), radial-gradient(rgba(0, 0, 0, 0.14) 15%, transparent 16%), linear-gradient(90deg, #FF6F00 0%, #FF5A00 30%, #EA580C 65%, #C2410C 100%); background-size: 100% 100%, 100% 100%, 8px 8px, 8px 8px, 100% 100%; background-position: 0 0, 0 0, 0 0, 4px 4px, 0 0; box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45), inset 0 -2px 5px rgba(0, 0, 0, 0.35), 0 8px 24px -4px rgba(234, 88, 12, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.25);">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-200 text-[22px] drop-shadow-sm">restaurant_menu</span>
+            <h3 class="font-headline-sm text-headline-sm text-white font-bold drop-shadow-sm">¿Qué te provoca hoy?</h3>
           </div>
-          <button type="button" class="font-label-sm text-label-sm text-primary font-bold" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">Ver todo</button>
+          <button type="button" class="font-label-sm text-label-sm text-white font-bold bg-white/20 hover:bg-white/30 border border-white/30 px-3 py-1 rounded-full backdrop-blur-md transition-all shadow-sm active:scale-95" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">Ver todo</button>
         </div>
-        <div class="flex gap-3 overflow-x-auto no-scrollbar -mx-margin px-margin py-2" id="food-type-filters-container">
+        <div class="flex gap-3 overflow-x-auto no-scrollbar py-1" id="food-type-filters-container">
           <!-- Populated by MarketplaceApp.renderFoodBubbleCarousel() -->
         </div>
       </section>
