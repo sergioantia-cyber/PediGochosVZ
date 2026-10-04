@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pedigochos-v254';
+const CACHE_NAME = 'pedigochos-v256';
 const ASSETS = [
   '/',
   '/index.html',
@@ -12,8 +12,12 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS).catch(err => console.warn('Cache addAll partial fail:', err));
+    caches.keys().then((keys) => {
+      return Promise.all(keys.map(k => caches.delete(k)));
+    }).then(() => {
+      return caches.open(CACHE_NAME).then((cache) => {
+        return cache.addAll(ASSETS).catch(err => console.warn('Cache addAll partial fail:', err));
+      });
     })
   );
 });

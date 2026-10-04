@@ -273,7 +273,7 @@ class AdminController {
 
   async init() {
     // Auto-detect version update and clear stale caches
-    const APP_VER = '190';
+    const APP_VER = '191';
     try {
       const cachedVer = localStorage.getItem('pedigochos_app_ver');
       if (cachedVer && cachedVer !== APP_VER) {

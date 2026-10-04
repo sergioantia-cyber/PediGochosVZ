@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>PediGochos | Pide lo que quieras. Lo tenemos en tu puerta ⚡</title>
-  <meta name="description" content="PediGochos: Cero filas, cero demoras, cero excusas. Pide lo que quieras de los mejores restaurantes de San Antonio del Táchira con delivery express y GPS satelital en vivo.">
+  <meta name="description" content="PediGochos: Cero filas, cero demoras, cero excusas. Pide lo que quieras de los mejores restaurantes de San Antonio del Táchira con delivery express y Ubicación GPS precisa en vivo.">
   <meta name="theme-color" content="#FF6B00">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <!-- Open Graph & Social Meta Tags -->
   <meta property="og:title" content="PediGochos | Pide lo que quieras. Lo tenemos en tu puerta ⚡">
-  <meta property="og:description" content="Cero filas, cero demoras, cero excusas. Elige entre los mejores restaurantes, ofertas del día al 50% y recibe tu comida volando con GPS satelital.">
+  <meta property="og:description" content="Cero filas, cero demoras, cero excusas. Elige entre los mejores restaurantes, ofertas del día y recibe tu comida volando con Ubicación GPS precisa.">
   <meta property="og:image" content="https://pedigochos.com/images/logo-pedigochos.png">
   <meta property="og:url" content="https://pedigochos.com/">
   <meta property="og:type" content="website">
@@ -354,7 +354,7 @@
       </section>
 
       <!-- Promociones del Día (Flash 24 Horas) - Carga Dinámica Real -->
-      <section class="px-margin mt-space-sm" id="daily-promotions-section" style="display: none;">
+      <section class="px-margin mt-space-sm" id="daily-promotions-section" style="display: none !important;">
         <div id="daily-promotions-container">
           <!-- Se puebla dinámicamente solo cuando existan ofertas reales activas -->
         </div>
@@ -1398,13 +1398,13 @@
       <h2 style="font-size: 22px; font-weight: 900; color: #FFF; margin: 0 0 4px 0;">¡Bienvenido a <span style="color: #FF6B00;">PediGochos</span>!</h2>
       <p style="font-size: 11px; font-weight: 800; color: #FF6B00; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 10px 0;">⚡ Pide lo que quieras. Lo tenemos en tu puerta.</p>
       <p style="font-size: 13px; color: #E2E8F0; margin: 0 0 18px 0; line-height: 1.5; font-weight: 500;">
-        Cero filas, cero demoras, cero excusas. Elige entre los mejores restaurantes, asegura tu entrega con GPS satelital en vivo y recíbelo volando en tu casa.
+        Cero filas, cero demoras, cero excusas. Elige entre los mejores restaurantes, asegura tu entrega con Ubicación GPS precisa en vivo y recíbelo volando en tu casa.
       </p>
 
       <div class="welcome-feature-row">
         <span style="font-size: 22px;">⚡</span>
         <div>
-          <strong style="color: #FF6B00; font-size: 13px; display: block;">Delivery Express con Rastreo Satelital</strong>
+          <strong style="color: #FF6B00; font-size: 13px; display: block;">Delivery Express con Ubicación GPS precisa</strong>
           <span style="font-size: 11.5px; color: #94A3B8;">Ubicación GPS precisa para que tu comida llegue volando y caliente a tu dirección exacta.</span>
         </div>
       </div>
@@ -1412,8 +1412,8 @@
       <div class="welcome-feature-row">
         <span style="font-size: 22px;">🔥</span>
         <div>
-          <strong style="color: #F59E0B; font-size: 13px; display: block;">Ofertas del Día al 50% OFF</strong>
-          <span style="font-size: 11.5px; color: #94A3B8;">Promos relámpago 24 horas y menús personalizables con precios directos de cocina.</span>
+          <strong style="color: #F59E0B; font-size: 13px; display: block;">Ofertas del Día Verificadas</strong>
+          <span style="font-size: 11.5px; color: #94A3B8;">Promociones 24 horas publicadas directamente por restaurantes aliados.</span>
         </div>
       </div>
 
@@ -3084,11 +3084,11 @@
   <script defer src="/js/resin-service.js?v=254"></script>
   <script defer src="/js/pinata-service.js?v=254"></script>
   <script defer src="/js/pedigochos-drive.js?v=270"></script>
-  <script defer src="/js/marketplace.js?v=271"></script>
+  <script defer src="/js/marketplace.js?v=273"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=254').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=256').then((reg) => {
           reg.update();
         }).catch(() => {});
       });

@@ -112,8 +112,20 @@ class MarketplaceController {
   }
 
   async init() {
+    // Immediately obliterate any stale cached promo element if found in DOM
+    try {
+      const staleSec = document.getElementById('daily-promotions-section');
+      if (staleSec) {
+        if (staleSec.innerText && (staleSec.innerText.includes('Doble Gocha') || staleSec.innerText.includes('Malta'))) {
+          staleSec.innerHTML = '<div id="daily-promotions-container"></div>';
+        }
+        staleSec.style.setProperty('display', 'none', 'important');
+        staleSec.classList.add('hidden');
+      }
+    } catch(e) {}
+
     // Auto-detect version update and clear stale caches
-    const APP_VER = '190';
+    const APP_VER = '191';
     try {
       const cachedVer = localStorage.getItem('pedigochos_app_ver');
       if (cachedVer && cachedVer !== APP_VER) {
@@ -753,15 +765,20 @@ class MarketplaceController {
     try {
       const promoSection = document.getElementById('daily-promotions-section');
       const container = document.getElementById('daily-promotions-container');
-      if (!container || !promoSection) return;
+      if (!promoSection) return;
+
+      // Anti-stale DOM purge
+      if (promoSection.innerText && (promoSection.innerText.includes('Doble Gocha') || promoSection.innerText.includes('Malta'))) {
+        promoSection.innerHTML = '<div id="daily-promotions-container"></div>';
+      }
 
       if (this.currentCategory !== 'comidas') {
-        promoSection.style.display = 'none';
+        promoSection.style.setProperty('display', 'none', 'important');
         promoSection.classList.add('hidden');
         return;
       }
 
-      const res = await fetch('/api/promotions');
+      const res = await fetch('/api/promotions?t=' + Date.now(), { cache: 'no-store' });
       const promos = await res.json();
       this.dailyPromotionsList = Array.isArray(promos) ? promos : [];
 
@@ -774,13 +791,14 @@ class MarketplaceController {
 
       // Strict requirement: If there are NO real daily offers, HIDE section completely (NO fake promos)
       if (validPromos.length === 0) {
-        promoSection.style.display = 'none';
+        promoSection.style.setProperty('display', 'none', 'important');
         promoSection.classList.add('hidden');
-        container.innerHTML = '';
+        if (container) container.innerHTML = '';
         this.currentDailyOffer = null;
         return;
       }
 
+      promoSection.style.removeProperty('display');
       promoSection.style.display = 'block';
       promoSection.classList.remove('hidden');
 
@@ -904,6 +922,14 @@ class MarketplaceController {
       this.startDailyOffersCountdown();
     } catch(e) {
       console.warn('Error loading daily promos:', e);
+      const promoSection = document.getElementById('daily-promotions-section');
+      const container = document.getElementById('daily-promotions-container');
+      if (promoSection) {
+        promoSection.style.setProperty('display', 'none', 'important');
+        promoSection.classList.add('hidden');
+      }
+      if (container) container.innerHTML = '';
+      this.currentDailyOffer = null;
     }
   }
 
@@ -2113,9 +2139,10 @@ ${mapsLink}
           <span class="font-label-sm text-label-sm font-bold text-success-emerald">🟢 Nuevo</span>
         </div>`;
 
+    const hasRealPromo = (this.dailyPromotionsList || []).some(p => p.establishmentId === est.id && p.active !== false) || Boolean(est.hasActivePromo);
     const promoBadge = est.isHighTraffic
       ? `<span class="px-2 py-0.5 rounded-full bg-emergency-red text-on-error font-label-sm text-label-sm font-bold shadow-sm">🚨 Tráfico Alto</span>`
-      : (isOpen ? `<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-sm">🔥 Promo Activa</span>` : '');
+      : (hasRealPromo ? `<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-sm">🔥 Promo Activa</span>` : (isOpen ? `<span class="px-2 py-0.5 rounded-full bg-success-emerald/20 text-success-emerald font-label-sm text-label-sm font-bold shadow-sm">🟢 Abierto</span>` : ''));
 
     const expressBadge = `<span class="px-2 py-0.5 rounded-full bg-dark-card/90 text-on-primary font-label-sm text-label-sm font-bold backdrop-blur-sm">⚡ Envío Express</span>`;
 
