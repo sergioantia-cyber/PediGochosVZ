@@ -5853,35 +5853,53 @@ body {
 /* Burbujas y textos dentro del apartado naranja */
 .pedigochos-cravings-section .cravings-bubble-item span,
 .pedigochos-cravings-section .cravings-bubble-label {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   color: #FFFFFF !important;
   font-weight: 800 !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+  font-size: 11.5px !important;
+  letter-spacing: -0.2px !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 64px !important;
+  max-width: 64px !important;
+  text-align: center !important;
+  display: block !important;
 }
 
-.pedigochos-cravings-section .cravings-bubble-item .w-16,
+.pedigochos-cravings-section .cravings-bubble-item div.w-16,
 .pedigochos-cravings-section .cravings-bubble-circle {
   background: #FFFFFF !important;
-  border: 2px solid rgba(255, 255, 255, 0.7) !important;
+  border: 2px solid rgba(255, 255, 255, 0.8) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
-.pedigochos-cravings-section .cravings-bubble-item:hover .w-16,
+.pedigochos-cravings-section .cravings-bubble-item:hover div.w-16,
 .pedigochos-cravings-section .cravings-bubble-item:hover .cravings-bubble-circle {
   transform: translateY(-2px) scale(1.05) !important;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35) !important;
 }
 
-.pedigochos-cravings-section .cravings-bubble-item.active .w-16,
+.pedigochos-cravings-section .cravings-bubble-item.active div.w-16,
 .pedigochos-cravings-section .cravings-bubble-item.active .cravings-bubble-circle {
   border-color: #FFFFFF !important;
   box-shadow: 0 0 0 3px #FFFFFF, 0 6px 18px rgba(0, 0, 0, 0.4) !important;
   transform: translateY(-3px) scale(1.06) !important;
 }
 
-.pedigochos-cravings-section .cravings-bubble-item.active span {
+.pedigochos-cravings-section .cravings-bubble-item.active span,
+.pedigochos-cravings-section .cravings-bubble-item.active .cravings-bubble-label {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   color: #FFE600 !important;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8) !important;
+  font-weight: 900 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(255, 230, 0, 0.6) !important;
 }
 
 /* ==========================================================================

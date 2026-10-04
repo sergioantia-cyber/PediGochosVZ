@@ -1890,10 +1890,10 @@ ${mapsLink}
       const isActive = activeFilter === cat.id;
       return `
         <button type="button" class="flex flex-col items-center gap-1.5 shrink-0 group cravings-bubble-item ${isActive ? 'active' : ''}" onclick="MarketplaceApp.filterRestaurantsByFoodType('${cat.id}')">
-          <div class="w-16 h-16 rounded-full overflow-hidden p-0.5 bg-surface-container-high group-hover:scale-105 transition-transform shadow-sm ${isActive ? 'ring-2 ring-primary-container' : ''}">
+          <div class="cravings-bubble-circle w-16 h-16 rounded-full overflow-hidden p-0.5 bg-surface-container-high group-hover:scale-105 transition-transform shadow-sm ${isActive ? 'ring-2 ring-primary-container' : ''}">
             <img class="w-full h-full object-cover rounded-full" src="${cat.img}" alt="${cat.name}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'flex items-center justify-center w-full h-full text-2xl\\'>${cat.fallback}</span>';">
           </div>
-          <span class="font-label-sm text-label-sm ${isActive ? 'text-primary-container font-bold' : 'text-on-surface font-semibold'} text-center w-16 truncate">${cat.name}</span>
+          <span class="cravings-bubble-label font-label-sm text-label-sm ${isActive ? 'text-primary-container font-bold' : 'text-on-surface font-semibold'} text-center truncate">${cat.name}</span>
         </button>
       `;
     }).join('');
