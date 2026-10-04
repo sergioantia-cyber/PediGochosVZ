@@ -19,7 +19,7 @@
   <link rel="icon" type="image/png" href="/images/logo-pedigochos.png">
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
   <link rel="stylesheet" href="/css/common.css?v=231">
-  <link rel="stylesheet" href="/css/marketplace.css?v=265">
+  <link rel="stylesheet" href="/css/marketplace.css?v=266">
   <link rel="stylesheet" href="/css/paint-service.css?v=232">
   <link rel="stylesheet" href="/css/print3d-service.css?v=237">
   <link rel="stylesheet" href="/css/resin-service.css?v=253">
@@ -1072,7 +1072,7 @@
 
 
   <!-- GochoPoints & Recompensas Modal -->
-  <div class="modal-overlay" id="gochopoints-modal">
+  <div class="modal-overlay" id="gochopoints-modal" style="display: none; z-index: 999999;" onclick="if(event.target === this) MarketplaceApp.closeGochoPointsModal();">
     <div class="modal-content" style="max-width: 440px; margin: auto; border-radius: 20px; background: #1E293B; color: #fff; box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 20px;">
       <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
         <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #F59E0B; display: flex; align-items: center; gap: 8px;">
@@ -1253,7 +1253,7 @@
   </div>
 
   <!-- User Orders History Modal -->
-  <div class="modal-overlay" id="user-orders-modal" style="z-index: 3500; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+  <div class="modal-overlay" id="user-orders-modal" style="display: none; z-index: 999999; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);" onclick="if(event.target === this) MarketplaceApp.closeUserOrdersModal();">
     <div class="modal-content" style="max-width: 600px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; padding: 20px; border-radius: 20px; background: rgba(18, 18, 24, 0.96); border: 1px solid rgba(255, 255, 255, 0.1); margin: auto;">
       
       <!-- Modal Header -->
@@ -2459,25 +2459,25 @@
   </div>
 
   <!-- Modern Bottom Tab Navigation Bar (5 Tabs) -->
-  <nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-2px_16px_rgba(25,28,35,0.06)] bottom-tab-bar" id="app-bottom-tab-bar" aria-label="Navegación principal">
-    <div class="flex justify-between items-center h-16 px-gutter max-w-md mx-auto">
-      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full text-primary-container font-bold scale-105 active transition-transform" data-tab="restaurantes" onclick="MarketplaceApp.switchBottomTab('restaurantes')">
+  <nav class="bottom-tab-bar fixed bottom-0 inset-x-0 z-[99990] pb-safe" id="app-bottom-tab-bar" role="navigation" aria-label="Navegación principal">
+    <div class="bottom-nav-inner flex justify-around items-center w-full max-w-md mx-auto h-full px-1">
+      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[52px] h-full text-primary-container font-bold scale-105 active transition-transform" data-tab="restaurantes" onclick="MarketplaceApp.switchBottomTab('restaurantes')" role="tab" aria-label="Restaurantes">
         <span class="material-symbols-outlined text-[22px]">restaurant</span>
         <span class="font-label-sm text-label-sm tracking-tight tab-label">Restaurantes</span>
       </button>
-      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full text-on-surface-variant transition-transform" data-tab="explorar" onclick="MarketplaceApp.switchBottomTab('explorar')">
+      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[52px] h-full text-on-surface-variant transition-transform" data-tab="explorar" onclick="MarketplaceApp.switchBottomTab('explorar')" role="tab" aria-label="Explorar">
         <span class="material-symbols-outlined text-[22px]">search</span>
         <span class="font-label-sm text-label-sm tracking-tight tab-label">Explorar</span>
       </button>
-      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full text-on-surface-variant transition-transform" data-tab="servicios" onclick="MarketplaceApp.switchBottomTab('servicios')">
+      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[52px] h-full text-on-surface-variant transition-transform" data-tab="servicios" onclick="MarketplaceApp.switchBottomTab('servicios')" role="tab" aria-label="Servicios">
         <span class="material-symbols-outlined text-[22px]">two_wheeler</span>
         <span class="font-label-sm text-label-sm tracking-tight tab-label">Servicios+</span>
       </button>
-      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full text-on-surface-variant transition-transform" data-tab="pedidos" onclick="MarketplaceApp.switchBottomTab('pedidos')">
+      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[52px] h-full text-on-surface-variant transition-transform" data-tab="pedidos" onclick="MarketplaceApp.switchBottomTab('pedidos')" role="tab" aria-label="Mis Pedidos">
         <span class="material-symbols-outlined text-[22px]">receipt_long</span>
         <span class="font-label-sm text-label-sm tracking-tight tab-label">Mis Pedidos</span>
       </button>
-      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full text-on-surface-variant transition-transform" data-tab="puntos" onclick="MarketplaceApp.switchBottomTab('puntos')">
+      <button type="button" class="tab-item flex flex-col items-center justify-center gap-0.5 min-w-[52px] h-full text-on-surface-variant transition-transform" data-tab="puntos" onclick="MarketplaceApp.switchBottomTab('puntos')" role="tab" aria-label="Puntos">
         <span class="material-symbols-outlined text-[22px] text-badge-gold">stars</span>
         <span class="font-label-sm text-label-sm tracking-tight tab-label">Puntos ⭐</span>
       </button>
@@ -2494,7 +2494,7 @@
   <script defer src="/js/print3d-service.js?v=254"></script>
   <script defer src="/js/resin-service.js?v=254"></script>
   <script defer src="/js/pinata-service.js?v=254"></script>
-  <script defer src="/js/marketplace.js?v=265"></script>
+  <script defer src="/js/marketplace.js?v=266"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

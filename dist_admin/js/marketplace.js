@@ -206,6 +206,22 @@ class MarketplaceController {
       sosBtn.addEventListener('touchend', (e) => this.toggleSosMenu(null, e), { passive: false });
     }
 
+    // Setup robust Bottom Navigation Bar listeners (supporting both click and touchend)
+    const bottomNav = document.getElementById('app-bottom-tab-bar');
+    if (bottomNav) {
+      bottomNav.querySelectorAll('.tab-item').forEach(btn => {
+        const tabKey = btn.getAttribute('data-tab');
+        if (tabKey) {
+          const handler = (e) => {
+            if (e && e.type === 'touchend') e.preventDefault();
+            this.switchBottomTab(tabKey);
+          };
+          btn.addEventListener('click', handler);
+          btn.addEventListener('touchend', handler, { passive: false });
+        }
+      });
+    }
+
     this.renderEstablishments();
     this.updateCartBadge();
     await this.checkSupabaseSession();
@@ -1597,6 +1613,7 @@ ${mapsLink}
 
     this.renderEstablishments();
     this.setActiveMobileTab('home');
+    this.highlightBottomTab('restaurantes');
     this.closeAllModals();
 
     try {
@@ -7584,43 +7601,65 @@ ${mapsLink}
   }
 
   switchBottomTab(tabKey) {
-    this.triggerHaptic('light');
+    try {
+      this.triggerHaptic('light');
+      this.highlightBottomTab(tabKey);
+
+      if (tabKey === 'restaurantes') {
+        this.closeAllModals();
+        if (this.selectedEstablishment) this.goHome(false);
+        this.selectCategory('comidas');
+        setTimeout(() => {
+          const header = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
+          if (header) {
+            header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 80);
+      } else if (tabKey === 'explorar') {
+        this.closeAllModals();
+        if (this.selectedEstablishment) this.goHome(false);
+        const searchInput = document.getElementById('global-search') || document.getElementById('marketplace-search-input');
+        if (searchInput) {
+          searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => {
+            try { searchInput.focus(); } catch(_) {}
+            searchInput.classList.add('ring-4', 'ring-[#FF6B00]', 'ring-offset-2');
+            setTimeout(() => {
+              searchInput.classList.remove('ring-4', 'ring-[#FF6B00]', 'ring-offset-2');
+            }, 1800);
+          }, 250);
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else if (tabKey === 'servicios') {
+        this.closeAllModals();
+        if (this.selectedEstablishment) this.goHome(false);
+        this.selectCategory('servicios');
+        this.toggleServicesMenu(true);
+      } else if (tabKey === 'pedidos') {
+        this.openUserOrdersModal();
+      } else if (tabKey === 'puntos') {
+        this.openGochoPointsModal();
+      }
+    } catch (err) {
+      console.error('Error in switchBottomTab:', err);
+    }
+  }
+
+  highlightBottomTab(tabKey) {
     const tabs = document.querySelectorAll('.bottom-tab-bar .tab-item');
     tabs.forEach(tab => {
-      if (tab.getAttribute('data-tab') === tabKey) {
-        tab.className = 'tab-item flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full text-primary-container font-bold scale-105 active transition-transform';
+      const isMatch = tab.getAttribute('data-tab') === tabKey;
+      if (isMatch) {
+        tab.classList.add('active', 'scale-105');
+        tab.classList.remove('text-on-surface-variant');
       } else {
-        tab.className = 'tab-item flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full text-on-surface-variant transition-transform';
+        tab.classList.remove('active', 'scale-105');
+        tab.classList.add('text-on-surface-variant');
       }
     });
-
-    if (tabKey === 'restaurantes') {
-      this.closeAllModals();
-      if (this.selectedEstablishment) this.goHome(false);
-      this.selectCategory('comidas');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (tabKey === 'explorar') {
-      this.closeAllModals();
-      if (this.selectedEstablishment) this.goHome(false);
-      const searchInput = document.getElementById('global-search') || document.getElementById('marketplace-search-input');
-      if (searchInput) {
-        searchInput.focus();
-        searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    } else if (tabKey === 'servicios') {
-      this.closeAllModals();
-      if (this.selectedEstablishment) this.goHome(false);
-      const servicesSection = document.getElementById('more-services-grid-section');
-      if (servicesSection) {
-        servicesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        this.selectCategory('servicios');
-      }
-    } else if (tabKey === 'pedidos') {
-      this.openUserOrdersModal();
-    } else if (tabKey === 'puntos') {
-      this.openGochoPointsModal();
-    }
   }
 
   handleNavBack() {
@@ -8748,14 +8787,40 @@ ${mapsLink}
   }
 
   openGochoPointsModal() {
+    this.triggerHaptic('light');
+    this.highlightBottomTab('puntos');
     this.updateGochoPointsDisplay();
     const modal = document.getElementById('gochopoints-modal');
-    if (modal) modal.classList.add('active');
+    if (modal) {
+      modal.classList.add('open', 'active');
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('z-index', '999999', 'important');
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+      modal.style.pointerEvents = 'auto';
+      document.body.classList.add('modal-open');
+      const content = modal.querySelector('.modal-content');
+      if (content) {
+        content.classList.remove('smooth-modal-entry');
+        void content.offsetWidth;
+        content.classList.add('smooth-modal-entry');
+      }
+    }
   }
 
   closeGochoPointsModal() {
     const modal = document.getElementById('gochopoints-modal');
-    if (modal) modal.classList.remove('active');
+    if (modal) {
+      modal.classList.remove('open', 'active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
+    document.body.classList.remove('modal-open');
+    if (!this.selectedEstablishment && this.currentCategory === 'comidas') {
+      this.highlightBottomTab('restaurantes');
+    }
   }
 
   addGochoPoints(amount) {
@@ -9440,9 +9505,16 @@ ${mapsLink}
   }
 
   async openUserOrdersModal(options = {}) {
+    this.triggerHaptic('light');
+    this.highlightBottomTab('pedidos');
     const modal = document.getElementById('user-orders-modal');
     if (modal) {
-      modal.classList.add('active');
+      modal.classList.add('open', 'active');
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('z-index', '999999', 'important');
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+      modal.style.pointerEvents = 'auto';
       const content = modal.querySelector('.modal-content');
       if (content) {
         content.classList.remove('smooth-modal-entry');
@@ -9486,8 +9558,17 @@ ${mapsLink}
 
   closeUserOrdersModal() {
     const modal = document.getElementById('user-orders-modal');
-    if (modal) modal.classList.remove('active');
+    if (modal) {
+      modal.classList.remove('open', 'active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+    }
     document.body.classList.remove('modal-open');
+    if (!this.selectedEstablishment && this.currentCategory === 'comidas') {
+      this.highlightBottomTab('restaurantes');
+    }
   }
 
   filterUserOrders(filterType) {
@@ -11832,6 +11913,7 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
       modal.style.opacity = '1';
       modal.style.visibility = 'visible';
       modal.style.pointerEvents = 'auto';
+      this.highlightBottomTab('servicios');
 
       const content = modal.querySelector('.services-drawer-content');
       if (content) {
@@ -11866,6 +11948,9 @@ ${activeAttrs.map(a => `  • ✅ ${a}`).join('\n')}
           modal.style.pointerEvents = '';
         }
       }, 250);
+    }
+    if (!this.selectedEstablishment && this.currentCategory === 'comidas') {
+      this.highlightBottomTab('restaurantes');
     }
   }
 
