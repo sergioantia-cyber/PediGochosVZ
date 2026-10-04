@@ -5832,6 +5832,8 @@ ${mapsLink}
       modal.classList.add('open');
       modal.style.setProperty('display', 'flex', 'important');
     }
+    this.checkoutStep = 1;
+    this.updateCheckoutStepUI();
     this.renderCartItems();
     this.setActiveMobileTab('cart');
     window.history.pushState({ view: 'modal', modalId: 'cart-modal' }, '');
@@ -5936,20 +5938,22 @@ ${mapsLink}
 
   renderCartItems() {
     const container = document.getElementById('cart-items-container');
-    container.innerHTML = '';
+    const emptyEl = document.getElementById('cart-empty-state');
+    const wizardBar = document.getElementById('checkout-wizard-bar');
+    const formEl = document.getElementById('checkout-form');
 
     if (this.cart.items.length === 0) {
-      container.innerHTML = `
-        <div class="cart-empty-state">
-          <span>🛒</span>
-          <p>Tu carrito está vacío. Agrega productos del comercio activo.</p>
-        </div>
-      `;
-      document.getElementById('checkout-form').style.display = 'none';
+      if (container) container.innerHTML = '';
+      if (emptyEl) emptyEl.style.display = 'flex';
+      if (wizardBar) wizardBar.style.display = 'none';
+      if (formEl) formEl.style.display = 'none';
       return;
     }
 
-    document.getElementById('checkout-form').style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (wizardBar) wizardBar.style.display = 'flex';
+    if (formEl) formEl.style.display = 'block';
+    if (container) container.innerHTML = '';
     
     // Group unique establishments
     const uniqueShops = {};
@@ -6026,7 +6030,9 @@ ${mapsLink}
       `;
       container.appendChild(row);
     });
+
     const hasFreeDeliveryReward = localStorage.getItem('gocho_free_delivery_active') === 'true';
+    let totalDeliveryFee = 0;
     if (this.orderType === 'delivery') {
       shopIds.forEach(id => {
         const shopItems = this.cart.items.filter(item => item.restaurant_id === id);
@@ -6129,6 +6135,307 @@ ${mapsLink}
     } else {
       deliveryRow.classList.add('hidden');
     }
+
+    // Update quick banner and review badges
+    const quickCountEl = document.getElementById('quick-cart-items-count');
+    if (quickCountEl) {
+      quickCountEl.innerText = `${this.cart.items.length} ${this.cart.items.length === 1 ? 'producto' : 'productos'}`;
+    }
+    const quickTotalEl = document.getElementById('quick-cart-total-badge');
+    if (quickTotalEl) {
+      quickTotalEl.innerText = this.formatPesos(grandTotal);
+    }
+    const reviewCountEl = document.getElementById('review-items-count');
+    if (reviewCountEl) {
+      reviewCountEl.innerText = `${this.cart.items.length} ${this.cart.items.length === 1 ? 'ítem' : 'ítems'}`;
+    }
+
+    if (this.checkoutStep === 3) {
+      this.updateDeliverySummaryInStep3();
+    }
+  }
+
+  goToCheckoutStep(step) {
+    if (step < 1 || step > 3) return;
+
+    if (step === 2) {
+      if (!this.validateCheckoutStep1()) return;
+    } else if (step === 3) {
+      if (!this.validateCheckoutStep1()) {
+        this.goToCheckoutStep(1);
+        return;
+      }
+      if (!this.validateCheckoutStep2()) {
+        this.goToCheckoutStep(2);
+        return;
+      }
+    }
+
+    this.checkoutStep = step;
+    this.updateCheckoutStepUI();
+  }
+
+  validateAndGoToStep(targetStep) {
+    this.goToCheckoutStep(targetStep);
+  }
+
+  validateCheckoutStep1() {
+    if (!this.cart || !this.cart.items || this.cart.items.length === 0) {
+      alert('Tu carrito está vacío. Agrega productos para continuar.');
+      return false;
+    }
+
+    const nameInput = document.getElementById('order-customer-name');
+    const customerName = nameInput ? nameInput.value.trim() : '';
+    if (!customerName) {
+      alert('Por favor, indica tu nombre.');
+      if (nameInput) {
+        nameInput.focus();
+        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return false;
+    }
+    try { localStorage.setItem('customer_name', customerName); } catch (_) {}
+
+    if (this.orderType === 'mesa') {
+      const tableInput = document.getElementById('order-table-number');
+      const tableNumber = tableInput ? tableInput.value.trim() : '';
+      if (!tableNumber) {
+        alert('Por favor, indica tu número de mesa o elígela en el mapa de mesas.');
+        if (tableInput) {
+          tableInput.focus();
+          tableInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return false;
+      }
+      return true;
+    }
+
+    // Delivery validations
+    const phoneInput = document.getElementById('order-phone');
+    const countryCode = document.getElementById('order-phone-country')?.value || '+58';
+    let rawPhone = phoneInput ? phoneInput.value.trim() : '';
+    if (!rawPhone) {
+      alert('Por favor, ingresa tu número de WhatsApp para contactarte con la entrega.');
+      if (phoneInput) {
+        phoneInput.focus();
+        phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return false;
+    }
+
+    if (typeof PhoneUtils !== 'undefined' && PhoneUtils.validateVECO) {
+      const fullToValidate = rawPhone.startsWith('+') ? rawPhone : `${countryCode}${rawPhone}`;
+      const phoneValidation = PhoneUtils.validateVECO(fullToValidate);
+      if (!phoneValidation.isValid) {
+        alert(`Número de teléfono inválido: ${phoneValidation.error || 'Verifica que sea un número móvil válido de Venezuela (04xx) o Colombia (3xx).'}`);
+        if (phoneInput) {
+          phoneInput.focus();
+          phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return false;
+      }
+    }
+    try { localStorage.setItem('customer_phone', rawPhone); } catch (_) {}
+
+    const addressInput = document.getElementById('order-address');
+    const address = addressInput ? addressInput.value.trim() : '';
+    if (!address) {
+      alert('Por favor, ingresa la dirección de entrega.');
+      if (addressInput) {
+        addressInput.focus();
+        addressInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return false;
+    }
+
+    if (this.selectedLatitude === null || this.selectedLongitude === null) {
+      const cachedLat = localStorage.getItem('user_gps_lat');
+      const cachedLng = localStorage.getItem('user_gps_lng');
+      if (cachedLat && cachedLng) {
+        this.selectedLatitude = parseFloat(cachedLat);
+        this.selectedLongitude = parseFloat(cachedLng);
+      } else {
+        alert('📍 Por favor, toca el botón "🎯 Mi Ubicación Actual (GPS)" o marca tu casa en el mapa para que el repartidor llegue directo.');
+        this.requestAutomaticGPS(true);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  validateCheckoutStep2() {
+    const paymentMethod = this.paymentMethod || 'Efectivo';
+    if (paymentMethod === 'Efectivo') {
+      const cashAmtInp = document.getElementById('order-cash-amount');
+      const cashVal = cashAmtInp ? cashAmtInp.value.trim() : '';
+      if (!cashVal) {
+        const cashBox = document.getElementById('payment-cash-details');
+        if (cashBox) {
+          cashBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          cashBox.style.borderColor = '#EF4444';
+          cashBox.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.9)';
+          setTimeout(() => {
+            cashBox.style.borderColor = '';
+            cashBox.style.boxShadow = '';
+          }, 3500);
+        }
+        alert('💵 Por favor, indica tu billete o selecciona "Pago Exacto" para que el repartidor lleve tu vuelto.');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  updateCheckoutStepUI() {
+    const currentStep = this.checkoutStep || 1;
+
+    // Panels
+    const p1 = document.getElementById('checkout-step-1-panel');
+    const p2 = document.getElementById('checkout-step-2-panel');
+    const p3 = document.getElementById('checkout-step-3-panel');
+
+    if (p1) p1.classList.toggle('hidden', currentStep !== 1);
+    if (p2) p2.classList.toggle('hidden', currentStep !== 2);
+    if (p3) p3.classList.toggle('hidden', currentStep !== 3);
+
+    // Quick banner: visible only in steps 1 and 2, hidden in step 3
+    const quickBanner = document.getElementById('checkout-cart-quick-banner');
+    if (quickBanner) {
+      quickBanner.style.display = currentStep === 3 ? 'none' : 'flex';
+    }
+
+    // Stepper Tabs
+    const t1 = document.getElementById('wizard-step-tab-1');
+    const t2 = document.getElementById('wizard-step-tab-2');
+    const t3 = document.getElementById('wizard-step-tab-3');
+    const l1 = document.getElementById('wizard-line-1');
+    const l2 = document.getElementById('wizard-line-2');
+
+    if (t1) {
+      t1.classList.toggle('active', currentStep === 1);
+      t1.classList.toggle('completed', currentStep > 1);
+      const b1 = t1.querySelector('.step-icon-bubble');
+      if (b1) b1.innerHTML = currentStep > 1 ? '✓' : '📍';
+    }
+    if (l1) l1.classList.toggle('active', currentStep >= 2);
+
+    if (t2) {
+      t2.classList.toggle('active', currentStep === 2);
+      t2.classList.toggle('completed', currentStep > 2);
+      const b2 = t2.querySelector('.step-icon-bubble');
+      if (b2) b2.innerHTML = currentStep > 2 ? '✓' : '💳';
+    }
+    if (l2) l2.classList.toggle('active', currentStep >= 3);
+
+    if (t3) {
+      t3.classList.toggle('active', currentStep === 3);
+      t3.classList.toggle('completed', false);
+      const b3 = t3.querySelector('.step-icon-bubble');
+      if (b3) b3.innerHTML = '✅';
+    }
+
+    // Modal title update
+    const titleEl = document.getElementById('cart-modal-title');
+    if (titleEl) {
+      if (currentStep === 1) titleEl.innerText = 'Paso 1: ¿Dónde entregamos?';
+      else if (currentStep === 2) titleEl.innerText = 'Paso 2: ¿Cómo pagas?';
+      else titleEl.innerText = 'Paso 3: Confirmar pedido';
+    }
+
+    // Scroll to top
+    const modalBody = document.querySelector('#cart-modal .modal-body');
+    if (modalBody) modalBody.scrollTop = 0;
+
+    // Step-specific handlers
+    if (currentStep === 1) {
+      if (this.orderType === 'delivery') {
+        setTimeout(() => {
+          if (this.leafMap) this.leafMap.invalidateSize();
+          else this.initLeafletMap();
+        }, 150);
+      }
+    } else if (currentStep === 2) {
+      if (this.paymentMethod === 'Transferencia') {
+        this.loadCheckoutPaymentMethods();
+      }
+    } else if (currentStep === 3) {
+      this.updateDeliverySummaryInStep3();
+    }
+  }
+
+  updateDeliverySummaryInStep3() {
+    const summaryEl = document.getElementById('checkout-delivery-summary');
+    if (!summaryEl) return;
+
+    const customerName = document.getElementById('order-customer-name')?.value.trim() || 'Cliente';
+    const rawPhone = document.getElementById('order-phone')?.value.trim() || '';
+    const countryCode = document.getElementById('order-phone-country')?.value || '+58';
+    const phone = rawPhone ? (rawPhone.startsWith('+') ? rawPhone : `${countryCode} ${rawPhone}`) : 'No indicado';
+
+    if (this.orderType === 'mesa') {
+      const tableNumber = document.getElementById('order-table-number')?.value.trim() || '1';
+      summaryEl.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 7px; font-size: 12.5px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-muted);">🍽️ Modalidad:</span>
+            <strong style="color: #10B981; font-size: 13px;">Consumo en Mesa #${tableNumber}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-muted);">👤 Cliente:</span>
+            <strong style="color: #FFF;">${customerName}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-muted);">💳 Pago:</span>
+            <strong style="color: #FDE047;">${this.paymentMethod === 'Transferencia' ? '📲 Transferencia / Pago Móvil' : '💵 Efectivo en restaurante'}</strong>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const address = document.getElementById('order-address')?.value.trim() || 'Dirección no indicada';
+    const reference = document.getElementById('order-reference')?.value.trim() || '';
+    const hasFreeDelivery = localStorage.getItem('gocho_free_delivery_active') === 'true';
+    const distanceStr = this.calculatedDistanceKm ? `${Number(this.calculatedDistanceKm).toFixed(1)} km` : 'En cálculo';
+    const cashVal = document.getElementById('order-cash-amount')?.value.trim() || '';
+    const changeEl = document.getElementById('cash-change-preview');
+    const changeInfo = (changeEl && changeEl.style.display !== 'none') ? ` (${changeEl.innerText.replace(/^[^\w]+/, '')})` : '';
+
+    let paymentBadge = '';
+    if (this.paymentMethod === 'Transferencia') {
+      const receiptAttached = !!this.attachedReceiptBase64;
+      const refNum = document.getElementById('order-payment-ref-number')?.value.trim();
+      paymentBadge = `📲 Transferencia / Pago Móvil ${receiptAttached ? '<span style="color:#10B981;">(Foto ✅)</span>' : ''} ${refNum ? `(Ref: ${refNum})` : ''}`;
+    } else {
+      paymentBadge = `💵 Efectivo ${cashVal ? `<span style="color:#FDE047;">(${cashVal}${changeInfo})</span>` : ''}`;
+    }
+
+    summaryEl.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px;">
+        <div style="display: flex; align-items: flex-start; gap: 8px;">
+          <span style="font-size: 18px;">📍</span>
+          <div style="flex: 1;">
+            <div style="font-weight: 800; color: #FFF; font-size: 13px; line-height: 1.3;">${address}</div>
+            ${reference ? `<div style="color: #94A3B8; font-size: 12px; margin-top: 2px;">🏢 <em>Ref: ${reference}</em></div>` : ''}
+            <div style="color: #38BDF8; font-size: 11.5px; margin-top: 3px; font-weight: 700;">🗺️ GPS confirmado • 📏 Distancia: ${distanceStr}</div>
+          </div>
+        </div>
+        <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-muted);">👤 Contacto:</span>
+          <span style="font-weight: 700; color: #FFF;">${customerName} (${phone})</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-muted);">💳 Método de Pago:</span>
+          <span style="font-weight: 800; color: #FDE047;">${paymentBadge}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-muted);">🛵 Envío a Domicilio:</span>
+          <span style="font-weight: 800; color: #10B981;">${hasFreeDelivery ? '🎉 GRATIS (GochoPoints)' : (document.getElementById('cart-delivery-cost')?.innerText || '$2.000')}</span>
+        </div>
+      </div>
+    `;
   }
 
   setOrderType(type) {
@@ -6513,7 +6820,7 @@ ${mapsLink}
 
     const paidNum = parseFloat(numMatch[0]);
     let totalCop = 0;
-    const totalEl = document.getElementById('cart-total');
+    const totalEl = document.getElementById('cart-grand-total') || document.getElementById('cart-total');
     if (totalEl) {
       const match = totalEl.innerText.replace(/\./g, '').replace(/,/g, '').match(/\d+/);
       if (match) totalCop = parseFloat(match[0]);
@@ -7036,6 +7343,7 @@ ${mapsLink}
       const countryCode = document.getElementById('order-phone-country') ? document.getElementById('order-phone-country').value : '+58';
       let rawPhone = document.getElementById('order-phone').value.trim();
       address = document.getElementById('order-address').value.trim();
+      const reference = document.getElementById('order-reference') ? document.getElementById('order-reference').value.trim() : '';
 
       if (!customerName || !rawPhone || !address) {
         alert('Por favor, completa todos los campos de entrega.');
@@ -7205,7 +7513,8 @@ ${mapsLink}
           tableNumber: tableNumber ? parseInt(tableNumber, 10) : null,
           deliveryDetails: this.orderType === 'delivery' ? { 
             phone, 
-            address, 
+            address: reference ? `${address} (Ref: ${reference})` : address,
+            reference: reference || null,
             code: deliverySecurityCode,
             latitude: this.selectedLatitude,
             longitude: this.selectedLongitude,
@@ -7251,7 +7560,14 @@ ${mapsLink}
             paymentNotes,
             customerName,
             tableNumber,
-            deliveryDetails: { phone, address, code: deliverySecurityCode, latitude: this.selectedLatitude, longitude: this.selectedLongitude }
+            deliveryDetails: { 
+              phone, 
+              address: reference ? `${address} (Ref: ${reference})` : address, 
+              reference: reference || null,
+              code: deliverySecurityCode, 
+              latitude: this.selectedLatitude, 
+              longitude: this.selectedLongitude 
+            }
           });
         });
         localStorage.setItem('pending_offline_orders', JSON.stringify(queue));
@@ -7264,6 +7580,7 @@ ${mapsLink}
           phone,
           orderType: this.orderType,
           address,
+          reference,
           tableNumber,
           paymentMethod,
           paymentNotes,
@@ -7279,6 +7596,8 @@ ${mapsLink}
 
         this.clearCart();
         this.closeCartModal();
+        this.checkoutStep = 1;
+        this.updateCheckoutStepUI();
         this.goHome();
         return;
       }
@@ -7310,6 +7629,7 @@ ${mapsLink}
         phone,
         orderType: this.orderType,
         address,
+        reference,
         tableNumber,
         paymentMethod,
         paymentNotes,
@@ -7338,10 +7658,14 @@ ${mapsLink}
       if (phoneInp) phoneInp.value = '';
       const addrInp = document.getElementById('order-address');
       if (addrInp) addrInp.value = '';
+      const refInp = document.getElementById('order-reference');
+      if (refInp) refInp.value = '';
       const cashAmtInp = document.getElementById('order-cash-amount');
       if (cashAmtInp) cashAmtInp.value = '';
       const termsInp = document.getElementById('checkout-accept-terms');
       if (termsInp) termsInp.checked = false;
+      this.checkoutStep = 1;
+      this.updateCheckoutStepUI();
       
       // Reset map fields safely
       this.selectedLatitude = null;
@@ -7445,8 +7769,12 @@ ${mapsLink}
     if (orderType === 'delivery') {
       const deliv = firstOrder.deliveryDetails || {};
       const address = deliv.address || context.address || 'Dirección acordada';
+      const reference = context.reference || deliv.reference;
       const securityCode = context.code || deliv.code || 'N/A';
       lines.push(`📍 *Dirección de Entrega:* ${address}`);
+      if (reference && !address.includes(`(Ref: ${reference})`)) {
+        lines.push(`🏢 *Referencia:* ${reference}`);
+      }
       lines.push(`🔐 *Código de Seguridad:* *${securityCode}*`);
       if (deliv.distanceKm || context.distanceKm) {
         const dist = Number(deliv.distanceKm || context.distanceKm).toFixed(1);
