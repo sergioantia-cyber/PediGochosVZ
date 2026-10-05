@@ -1354,17 +1354,17 @@
     <div class="modal-content" style="max-width: 520px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; padding: 18px; border-radius: 24px; background: rgba(18, 18, 24, 0.98); border: 1px solid rgba(255, 255, 255, 0.12); margin: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.8);">
       <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span id="upsell-modal-icon" style="font-size: 26px;">🍰🥤🧀</span>
+          <span id="upsell-modal-icon" style="font-size: 26px;">🥤✨</span>
           <div>
-            <h3 id="upsell-modal-title" style="margin: 0; color: #FFF; font-size: 16px; font-weight: 900;">Sugerencias y Personalización</h3>
-            <p id="upsell-modal-subtitle" style="margin: 2px 0 0 0; font-size: 11.5px; color: var(--text-muted);">Completa tu orden con bordes rellenos, bebidas frías o un postre delicioso.</p>
+            <h3 id="upsell-modal-title" style="margin: 0; color: #FFF; font-size: 16px; font-weight: 900;">Bebidas & Sugerencias</h3>
+            <p id="upsell-modal-subtitle" style="margin: 2px 0 0 0; font-size: 11.5px; color: var(--text-muted);">Completa tu pedido antes de continuar.</p>
           </div>
         </div>
         <button class="modal-close" onclick="MarketplaceApp.closeBeverageModalAndProceed()" style="font-size: 18px; color: #fff; background: rgba(255,255,255,0.08); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</button>
       </div>
 
       <!-- Segmented Tabs for Upselling -->
-      <div id="upsell-tabs-bar" style="display: flex; gap: 6px; margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+      <div id="upsell-tabs-bar" style="display: none; gap: 6px; margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
         <button type="button" id="tab-btn-upsell-all" onclick="MarketplaceApp.switchUpsellTab('all')" class="upsell-tab-btn active" style="flex: 1; padding: 8px 6px; border: none; border-radius: 9px; font-size: 11.5px; font-weight: 800; cursor: pointer; transition: all 0.2s; background: var(--primary); color: #fff;">✨ Todo</button>
         <button type="button" id="tab-btn-upsell-crusts" onclick="MarketplaceApp.switchUpsellTab('crusts')" class="upsell-tab-btn" style="flex: 1; padding: 8px 6px; border: none; border-radius: 9px; font-size: 11.5px; font-weight: 800; cursor: pointer; transition: all 0.2s; background: transparent; color: #94A3B8;">🧀 Bordes</button>
         <button type="button" id="tab-btn-upsell-drinks" onclick="MarketplaceApp.switchUpsellTab('drinks')" class="upsell-tab-btn" style="flex: 1; padding: 8px 6px; border: none; border-radius: 9px; font-size: 11.5px; font-weight: 800; cursor: pointer; transition: all 0.2s; background: transparent; color: #94A3B8;">🥤 Bebidas</button>

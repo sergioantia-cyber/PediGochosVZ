@@ -4446,19 +4446,47 @@ ${mapsLink}
 
   isPizzaProduct(prod) {
     if (!prod) return false;
-    const pName = (prod.name || '').toLowerCase();
+    const pName = (prod.name || prod.product_name || '').toLowerCase();
     const pCat = (prod.category || prod.category_id || '').toLowerCase();
-    const rName = (prod.restaurant_name || (this.selectedEstablishment ? this.selectedEstablishment.name : '')).toLowerCase();
     const isDrink = this.isDrinkOrBeverage(prod);
     if (isDrink) return false;
 
+    // Explicit non-pizza meals must NEVER be treated as pizza (hamburgers, pastas, etc.)
+    const nonPizzaExclusions = [
+      'lasaña', 'lasagna', 'pasticho', 'pastiche', 'pasta', 'espagueti', 'spaghetti',
+      'ensalada', 'papas', 'nugget', 'alita', 'postre', 'torta', 'helado', 'dulce',
+      'hamburguesa', 'burger', 'perro', 'hotdog', 'hot dog', 'salchipapa', 'shawarma',
+      'arepa', 'empanada', 'patacon', 'patacón', 'taco', 'burrito', 'sandwich', 'sándwich'
+    ];
+    if (nonPizzaExclusions.some(w => pName.includes(w) || pCat.includes(w))) {
+      return false;
+    }
+
+    // Must be genuinely a pizza or pizza format (panzerotti, medio metro, un metro)
     return (
       pCat.includes('pizza') ||
       pName.includes('pizza') ||
       pName.includes('panzerotti') ||
-      pName.includes('metro') ||
-      (rName.includes('pizza') && !pCat.includes('bebida') && !pCat.includes('frappe') && !pCat.includes('plato') && !pCat.includes('postre'))
+      pName.includes('medio metro') ||
+      pName.includes('un metro') ||
+      pName.includes('metro y medio')
     );
+  }
+
+  restaurantAllowsCustomCrusts(est, product) {
+    if (!est) return false;
+    // 1. Establishment has configured pizza_crusts with at least one extra/custom option
+    if (Array.isArray(est.pizza_crusts) && est.pizza_crusts.some(c => (c.price || 0) > 0)) {
+      return true;
+    }
+    // 2. Product has a modifier group explicitly for "borde"
+    if (product && Array.isArray(product.modifiers)) {
+      const crustGroup = product.modifiers.find(g => (g.group_name || '').toLowerCase().includes('borde'));
+      if (crustGroup && Array.isArray(crustGroup.options) && crustGroup.options.some(opt => (opt.extra_price || opt.price || 0) > 0)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   openCustomizerModal(product) {
@@ -4708,9 +4736,11 @@ ${mapsLink}
 
     // Pizza Crust / Bordes Selector (for whole or halves)
     const isPizza = this.isPizzaProduct(product);
+    const store = (this.establishments || []).find(e => e.id === product.restaurant_id) || this.selectedEstablishment;
+    const allowsCrusts = this.restaurantAllowsCustomCrusts(store, product);
     const crustSection = document.getElementById('pizza-crust-section');
     if (crustSection) {
-      if (isPizza) {
+      if (isPizza && allowsCrusts) {
         crustSection.classList.remove('hidden');
         crustSection.style.display = 'block';
         
@@ -4826,6 +4856,13 @@ ${mapsLink}
       { id: 'bocadillo_queso', name: 'Borde de Queso y Bocadillo', icon: '🍯', description: 'Queso fundido con dulce de guayaba', price: 6000 }
     ];
 
+    const storeId = product?.restaurant_id || this.customizerState?.product?.restaurant_id || (this.selectedEstablishment ? this.selectedEstablishment.id : null);
+    const est = (this.establishments || []).find(e => String(e.id) === String(storeId)) || this.selectedEstablishment;
+
+    if (!this.restaurantAllowsCustomCrusts(est, product)) {
+      return [];
+    }
+
     let isGrande = false;
     if (product && product.modifiers && this.customizerState && this.customizerState.quantities && this.customizerState.quantities.whole) {
       const sizeGroup = product.modifiers.find(g => (g.group_name || '').toLowerCase() === 'tamaño');
@@ -4846,8 +4883,6 @@ ${mapsLink}
       return norm;
     };
 
-    const storeId = product?.restaurant_id || this.customizerState?.product?.restaurant_id;
-    const est = (this.establishments || []).find(e => e.id === storeId);
     if (est && Array.isArray(est.pizza_crusts) && est.pizza_crusts.length > 0) {
       const list = est.pizza_crusts.map(c => ({
         id: c.id || ('crust-' + c.name.toLowerCase().replace(/\s+/g, '-')),
@@ -4877,7 +4912,7 @@ ${mapsLink}
       }
     }
 
-    return defaultCrusts.map(c => ({ ...c, price: calcPrice(c.price) }));
+    return [];
   }
 
   selectPizzaCrust(id, name, price) {
@@ -7124,8 +7159,8 @@ ${mapsLink}
 
   isDrinkOrBeverage(item) {
     if (!item) return false;
-    const cat = (item.category || '').toLowerCase().trim();
-    const name = (item.name || '').toLowerCase().trim();
+    const cat = (item.category || item.product?.category || '').toLowerCase().trim();
+    const name = (item.name || item.product_name || item.product?.name || '').toLowerCase().trim();
 
     // 1. Definitively exclude all solid foods, pizzas, meals and snacks
     const nonDrinkKeywords = [
@@ -7134,7 +7169,7 @@ ${mapsLink}
       'pollo', 'carne', 'sandwich', 'sándwich', 'panzerotti', 'pasticho', 'pastiche',
       'gratinado', 'plato', 'entrada', 'almuerzo', 'sopa', 'caldo', 'arroz',
       'pasta', 'lasagna', 'postre', 'tequeño', 'croqueta', 'nugget', 'costilla',
-      'alitas', 'papas', 'porcion', 'porción', 'torta', 'helado'
+      'alitas', 'papas', 'porcion', 'porción', 'torta', 'helado', 'waffle', 'dulce'
     ];
     if (nonDrinkKeywords.some(w => cat.includes(w) || name.includes(w))) {
       return false;
@@ -7157,23 +7192,35 @@ ${mapsLink}
       'hit ', 'postobon', 'sprite', 'fanta', 'quatro', 'cuatro', 'nestea', 'lipton',
       'monster', 'red bull', 'redbull', 'cerveza', 'polar', 'solera', 'heineken', 'corona',
       'aguila', 'pilsen', 'poker', 'costeña', 'club colombia', 'malta', 'maltin',
-      'limonada', 'smoothie', 'batido', 'malteada', 'te frio', 'té frío', 'iced tea',
+      'limonada', 'smoothie', 'batido', 'te frio', 'té frío', 'iced tea',
       'mocaccino', 'capuccino', 'cappuccino', 'espresso', 'latte', 'milo'
     ];
     return drinkNames.some(d => name.includes(d));
   }
 
-
   getAvailableBeveragesFromCartStores() {
-    const storeIds = [...new Set(this.cart.items.map(i => i.restaurant_id || i.restaurantId || i.establishmentId || i.establishment_id || (this.selectedEstablishment ? this.selectedEstablishment.id : null)).filter(Boolean))];
-    const drinks = [];
+    const storeMap = new Map();
 
-    storeIds.forEach(sId => {
-      const est = (this.establishments || []).find(e => String(e.id) === String(sId));
-      if (est && Array.isArray(est.products)) {
+    (this.cart.items || []).forEach(item => {
+      const sId = item.restaurant_id || item.restaurantId || item.establishmentId || item.establishment_id || (this.selectedEstablishment ? this.selectedEstablishment.id : null);
+      if (sId && !storeMap.has(String(sId))) {
+        const est = (this.establishments || []).find(e => String(e.id) === String(sId)) || (this.selectedEstablishment && String(this.selectedEstablishment.id) === String(sId) ? this.selectedEstablishment : null);
+        if (est) {
+          storeMap.set(String(sId), { establishment: est, drinks: [] });
+        }
+      }
+    });
+
+    if (storeMap.size === 0 && this.selectedEstablishment) {
+      storeMap.set(String(this.selectedEstablishment.id), { establishment: this.selectedEstablishment, drinks: [] });
+    }
+
+    storeMap.forEach((entry) => {
+      const est = entry.establishment;
+      if (Array.isArray(est.products)) {
         est.products.forEach(p => {
-          if (p && this.isDrinkOrBeverage(p) && !p.is_paused) {
-            drinks.push({
+          if (p && !p.is_paused && !p.out_of_stock && !p.agotado && this.isDrinkOrBeverage(p)) {
+            entry.drinks.push({
               ...p,
               restaurant_id: est.id,
               restaurant_name: est.name
@@ -7181,39 +7228,50 @@ ${mapsLink}
           }
         });
       }
+
+      // If the establishment does not have drinks configured in its catalog, provide standard cold drinks for this establishment
+      if (entry.drinks.length === 0) {
+        entry.drinks.push(
+          {
+            id: `drink_${est.id}_cola`,
+            name: 'Coca-Cola Personal 400ml',
+            price: 5000,
+            image: '/images/burger_royale.jpg',
+            restaurant_id: est.id,
+            restaurant_name: est.name,
+            is_virtual: true
+          },
+          {
+            id: `drink_${est.id}_agua`,
+            name: 'Agua Mineral Manantial 500ml',
+            price: 3500,
+            image: '/images/burger_royale.jpg',
+            restaurant_id: est.id,
+            restaurant_name: est.name,
+            is_virtual: true
+          }
+        );
+      }
     });
 
-    if (drinks.length === 0 && this.selectedEstablishment && Array.isArray(this.selectedEstablishment.products)) {
-      this.selectedEstablishment.products.forEach(p => {
-        if (p && this.isDrinkOrBeverage(p) && !p.is_paused) {
-          drinks.push({
-            ...p,
-            restaurant_id: this.selectedEstablishment.id,
-            restaurant_name: this.selectedEstablishment.name
-          });
-        }
-      });
-    }
-
-    return drinks;
+    return Array.from(storeMap.values());
   }
 
   getPizzasWithoutSpecialCrustInCart() {
+    if (!this.cart || !Array.isArray(this.cart.items)) return [];
     return this.cart.items.filter(item => {
-      const pName = (item.product_name || item.product?.name || item.name || '').toLowerCase();
-      const pCat = (item.product?.category || item.category || '').toLowerCase();
-      const rName = (item.restaurant_name || (this.selectedEstablishment ? this.selectedEstablishment.name : '')).toLowerCase();
-      const isDrink = this.isDrinkOrBeverage(item);
-      const isPizza = !isDrink && (
-        pCat.includes('pizza') || 
-        pName.includes('pizza') || 
-        pName.includes('medio metro') || 
-        pName.includes('un metro') || 
-        pName.includes('metro y medio') || 
-        pName.includes('panzerotti') ||
-        (rName.includes('pizza') && !pCat.includes('bebida') && !pCat.includes('frappe') && !pCat.includes('plato'))
-      );
-      if (!isPizza) return false;
+      // Must be genuinely a pizza
+      if (!this.isPizzaProduct(item)) return false;
+
+      // Find the establishment
+      const rId = item.restaurant_id || item.restaurantId || item.establishmentId || item.establishment_id || (this.selectedEstablishment ? this.selectedEstablishment.id : null);
+      const est = (this.establishments || []).find(e => String(e.id) === String(rId)) || this.selectedEstablishment;
+      if (!est) return false;
+
+      // Must explicitly allow crust customization!
+      if (!this.restaurantAllowsCustomCrusts(est, item)) return false;
+
+      // Check if it already has a special crust selected
       const hasSpecialCrust = item.selected_specifications?.single_selections?.some(s => 
         (s.group_name || '').toLowerCase().includes('borde') && 
         !s.chosen_option.toLowerCase().includes('tradicional')
@@ -7253,24 +7311,24 @@ ${mapsLink}
     this.updateCartBadge();
     this.showToast(`🧀 ${crustName} agregado a tu pizza`);
 
-    // Re-render upsell modal list so user sees updated status
-    this.checkBeveragesAndPrompt();
+    // Re-render upsell modal list so user sees updated status and live subtotal
+    this.renderUpsellContent();
   }
 
   getAvailableDessertsFromStores() {
     const desserts = [];
     const seenIds = new Set();
-    const cartStoreIds = new Set(this.cart.items.map(i => i.restaurant_id || i.restaurantId || (this.selectedEstablishment ? this.selectedEstablishment.id : null)).filter(Boolean));
+    const cartStoreIds = new Set(this.cart.items.map(i => i.restaurant_id || i.restaurantId || i.establishmentId || i.establishment_id || (this.selectedEstablishment ? this.selectedEstablishment.id : null)).filter(Boolean));
 
     (this.establishments || []).forEach(est => {
       if (est.disabled) return;
+      // ONLY include desserts from establishments that are already in the cart
       const isCartStore = cartStoreIds.has(est.id);
-      const isDessertShop = (est.name || '').toLowerCase().match(/fruty|helado|batido|dulce|postre|waffle/i) !== null;
-      if (!isCartStore && !isDessertShop) return;
+      if (!isCartStore) return;
 
       if (Array.isArray(est.products)) {
         est.products.forEach(p => {
-          if (p.out_of_stock || p.agotado) return;
+          if (p.out_of_stock || p.agotado || p.is_paused) return;
           const pName = (p.name || '').toLowerCase();
           const pCat = (p.category || '').toLowerCase();
           const isDessert = pCat.includes('postre') || pCat.includes('helado') || pCat.includes('waffle') || pCat.includes('fresas') || pCat.includes('ensalada') || pName.includes('helado') || pName.includes('waffle') || pName.includes('fresas con crema') || pName.includes('dulce') || pName.includes('marquesa') || pName.includes('brownie');
@@ -7280,7 +7338,7 @@ ${mapsLink}
               ...p,
               restaurant_id: est.id,
               restaurant_name: est.name,
-              isFromSameStore: isCartStore
+              isFromSameStore: true
             });
           }
         });
@@ -7310,32 +7368,84 @@ ${mapsLink}
     const listContainer = document.getElementById('beverage-upsell-list');
     if (!listContainer) return;
 
-    const activeTab = this.activeUpsellTab || 'all';
     const pizzasWithoutCrust = this.getPizzasWithoutSpecialCrustInCart();
-    const availableDrinks = this.getAvailableBeveragesFromCartStores();
+    const storeDrinksGroups = this.getAvailableBeveragesFromCartStores();
+    const totalDrinks = storeDrinksGroups.reduce((acc, g) => acc + g.drinks.length, 0);
     const availableDesserts = this.getAvailableDessertsFromStores();
+
+    const hasCrusts = pizzasWithoutCrust.length > 0;
+    const hasDrinks = totalDrinks > 0;
+    const hasDesserts = availableDesserts.length > 0;
+
+    // Dynamically adjust modal Title, Subtitle, and Icon
+    const modalIconEl = document.getElementById('upsell-modal-icon');
+    const modalTitleEl = document.getElementById('upsell-modal-title');
+    const modalSubtitleEl = document.getElementById('upsell-modal-subtitle');
+    const tabsBarEl = document.getElementById('upsell-tabs-bar');
+    const tabCrustsBtn = document.getElementById('tab-btn-upsell-crusts');
+    const tabDrinksBtn = document.getElementById('tab-btn-upsell-drinks');
+    const tabDessertsBtn = document.getElementById('tab-btn-upsell-desserts');
+
+    // Count categories
+    let activeCategories = 0;
+    if (hasCrusts) activeCategories++;
+    if (hasDrinks) activeCategories++;
+    if (hasDesserts) activeCategories++;
+
+    // Adjust title, subtitle and icon dynamically
+    if (hasCrusts) {
+      if (modalIconEl) modalIconEl.textContent = '🍕🥤';
+      if (modalTitleEl) modalTitleEl.textContent = 'Sugerencias y Personalización';
+      if (modalSubtitleEl) modalSubtitleEl.textContent = 'Completa tu orden con bordes rellenos o bebidas frías para tu pedido.';
+    } else if (hasDrinks && !hasDesserts) {
+      if (modalIconEl) modalIconEl.textContent = '🥤';
+      if (modalTitleEl) modalTitleEl.textContent = 'Bebidas para tu Pedido';
+      if (modalSubtitleEl) modalSubtitleEl.textContent = 'Acompaña tu comida con bebidas frías de tus restaurantes seleccionados.';
+    } else if (hasDrinks && hasDesserts) {
+      if (modalIconEl) modalIconEl.textContent = '🥤🍨';
+      if (modalTitleEl) modalTitleEl.textContent = 'Bebidas y Postres';
+      if (modalSubtitleEl) modalSubtitleEl.textContent = 'Acompaña tu comida con bebidas frías o un postre de tus restaurantes.';
+    } else if (hasDesserts) {
+      if (modalIconEl) modalIconEl.textContent = '🍨';
+      if (modalTitleEl) modalTitleEl.textContent = 'Postres y Antojos';
+      if (modalSubtitleEl) modalSubtitleEl.textContent = 'Endulza tu orden antes de confirmar el pedido.';
+    }
+
+    // Adjust tabs visibility: if only 1 category or 0, hide tabs bar so modal is clean and simple!
+    if (tabsBarEl) {
+      if (activeCategories <= 1) {
+        tabsBarEl.style.display = 'none';
+        this.activeUpsellTab = 'all';
+      } else {
+        tabsBarEl.style.display = 'flex';
+        if (tabCrustsBtn) tabCrustsBtn.style.display = hasCrusts ? 'block' : 'none';
+        if (tabDrinksBtn) tabDrinksBtn.style.display = hasDrinks ? 'block' : 'none';
+        if (tabDessertsBtn) tabDessertsBtn.style.display = hasDesserts ? 'block' : 'none';
+      }
+    }
+
+    // Ensure active tab is valid
+    if (this.activeUpsellTab === 'crusts' && !hasCrusts) this.activeUpsellTab = 'all';
+    if (this.activeUpsellTab === 'drinks' && !hasDrinks) this.activeUpsellTab = 'all';
+    if (this.activeUpsellTab === 'desserts' && !hasDesserts) this.activeUpsellTab = 'all';
+
+    const activeTab = this.activeUpsellTab || 'all';
 
     let html = '';
 
-    // 1. Pizza Crust Section
-    if ((activeTab === 'all' || activeTab === 'crusts') && pizzasWithoutCrust.length > 0) {
+    // 1. Pizza Crust Section (ONLY shown if hasCrusts is true and allows custom crusts)
+    if ((activeTab === 'all' || activeTab === 'crusts') && hasCrusts) {
       html += `
-        <div style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: 16px; padding: 14px;">
+        <div style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: 16px; padding: 14px; margin-bottom: 8px;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
             <span style="font-size: 20px;">🧀</span>
             <h4 style="margin: 0; color: #FCD34D; font-size: 14px; font-weight: 800;">Bordes Rellenos para tus Pizzas</h4>
           </div>
           <div style="display: flex; flex-direction: column; gap: 10px;">
             ${pizzasWithoutCrust.map(pizza => {
-              const restId = pizza.restaurant_id || pizza.restaurantId || pizza.establishmentId;
-              let availCrusts = this.getPizzaCrustOptions({ restaurant_id: restId }).filter(c => (c.price || 0) > 0);
-              if (availCrusts.length === 0) {
-                availCrusts = [
-                  { id: 'queso', name: 'Borde de Queso', icon: '🧀', price: 6000 },
-                  { id: 'salchicha', name: 'Borde de Salchicha', icon: '🌭', price: 6000 },
-                  { id: 'bocadillo_queso', name: 'Borde Queso y Bocadillo', icon: '🍯', price: 6000 }
-                ];
-              }
+              const restId = pizza.restaurant_id || pizza.restaurantId || pizza.establishmentId || (this.selectedEstablishment ? this.selectedEstablishment.id : null);
+              const availCrusts = this.getPizzaCrustOptions({ ...pizza, restaurant_id: restId }).filter(c => (c.price || 0) > 0);
+              if (availCrusts.length === 0) return '';
               return `
                 <div style="background: rgba(0,0,0,0.35); border-radius: 12px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.08);">
                   <div style="font-weight: 800; font-size: 13px; color: #FFF; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
@@ -7357,47 +7467,60 @@ ${mapsLink}
       `;
     }
 
-    // 2. Drinks Section
-    if ((activeTab === 'all' || activeTab === 'drinks') && availableDrinks.length > 0) {
-      html += `
-        <div style="background: rgba(59, 130, 246, 0.08); border: 1.5px solid rgba(59, 130, 246, 0.35); border-radius: 16px; padding: 14px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 20px;">🥤</span>
-              <h4 style="margin: 0; color: #93C5FD; font-size: 14px; font-weight: 800;">Bebidas Frías y Refrescos</h4>
-            </div>
-            <span style="font-size: 11px; color: #93C5FD; font-weight: 700; background: rgba(59,130,246,0.2); padding: 2px 8px; border-radius: 8px;">${availableDrinks.length} opciones</span>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            ${availableDrinks.map(drink => {
-              const rawPrice = drink.price || 0;
-              const priceCop = rawPrice < 1000 ? rawPrice * 1000 : rawPrice;
-              const imgUrl = drink.image || '/images/burger_royale.jpg';
-              return `
-                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); padding: 9px 12px; border-radius: 12px; gap: 10px;">
-                  <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
-                    <img src="${imgUrl}" alt="${drink.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;">
-                    <div style="min-width: 0; flex: 1;">
-                      <div style="font-weight: 800; font-size: 13px; color: #FFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${drink.name}</div>
-                      <div style="font-size: 11px; color: var(--text-muted);">${drink.restaurant_name}</div>
-                      <div style="font-size: 12px; font-weight: 800; color: var(--primary); margin-top: 1px;">${this.formatPesos(priceCop)}</div>
-                    </div>
-                  </div>
-                  <button type="button" onclick="MarketplaceApp.addUpsellProductAndRefresh('${drink.id}', '${drink.restaurant_id}', '🥤')" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; padding: 7px 12px; border-radius: 9px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 10px rgba(16,185,129,0.3); white-space: nowrap; flex-shrink: 0;">
-                    ➕ Agregar
-                  </button>
+    // 2. Drinks Section - Grouped by Establishment from Cart
+    if ((activeTab === 'all' || activeTab === 'drinks') && hasDrinks) {
+      const isMultipleStores = storeDrinksGroups.length > 1;
+
+      storeDrinksGroups.forEach(group => {
+        const est = group.establishment;
+        const drinks = group.drinks;
+        if (!drinks || drinks.length === 0) return;
+
+        html += `
+          <div style="background: rgba(59, 130, 246, 0.08); border: 1.5px solid rgba(59, 130, 246, 0.35); border-radius: 16px; padding: 14px; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 20px;">${isMultipleStores ? '🏪' : '🥤'}</span>
+                <div>
+                  <h4 style="margin: 0; color: #93C5FD; font-size: 14px; font-weight: 800;">
+                    ${isMultipleStores ? `Bebidas de ${est.name}` : 'Bebidas Frías y Refrescos'}
+                  </h4>
+                  ${isMultipleStores ? `<span style="font-size: 11px; color: var(--text-muted);">${est.name}</span>` : ''}
                 </div>
-              `;
-            }).join('')}
+              </div>
+              <span style="font-size: 11px; color: #93C5FD; font-weight: 700; background: rgba(59,130,246,0.2); padding: 2px 8px; border-radius: 8px;">${drinks.length} opciones</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${drinks.map(drink => {
+                const rawPrice = drink.price || 0;
+                const priceCop = rawPrice < 1000 ? rawPrice * 1000 : rawPrice;
+                const imgUrl = drink.image || '/images/burger_royale.jpg';
+                return `
+                  <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); padding: 9px 12px; border-radius: 12px; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+                      <img src="${imgUrl}" alt="${drink.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;">
+                      <div style="min-width: 0; flex: 1;">
+                        <div style="font-weight: 800; font-size: 13px; color: #FFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${drink.name}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">${est.name}</div>
+                        <div style="font-size: 12px; font-weight: 800; color: var(--primary); margin-top: 1px;">${this.formatPesos(priceCop)}</div>
+                      </div>
+                    </div>
+                    <button type="button" onclick="MarketplaceApp.addUpsellProductAndRefresh('${drink.id}', '${est.id}', '🥤')" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFF; border: none; padding: 7px 12px; border-radius: 9px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 10px rgba(16,185,129,0.3); white-space: nowrap; flex-shrink: 0;">
+                      ➕ Agregar
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      });
     }
 
-    // 3. Desserts Section
-    if ((activeTab === 'all' || activeTab === 'desserts') && availableDesserts.length > 0) {
+    // 3. Desserts Section (Strictly from Cart Stores)
+    if ((activeTab === 'all' || activeTab === 'desserts') && hasDesserts) {
       html += `
-        <div style="background: rgba(236, 72, 153, 0.08); border: 1.5px solid rgba(236, 72, 153, 0.35); border-radius: 16px; padding: 14px;">
+        <div style="background: rgba(236, 72, 153, 0.08); border: 1.5px solid rgba(236, 72, 153, 0.35); border-radius: 16px; padding: 14px; margin-bottom: 8px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 20px;">🍨</span>
@@ -7467,12 +7590,18 @@ ${mapsLink}
 
   checkBeveragesAndPrompt() {
     const pizzasWithoutCrust = this.getPizzasWithoutSpecialCrustInCart();
-    const hasBeverages = this.cart.items.some(i => this.isDrinkOrBeverage(i));
-    const availableDrinks = this.getAvailableBeveragesFromCartStores();
+    const hasBeverages = (this.cart.items || []).some(i => this.isDrinkOrBeverage(i));
+    const storeDrinksGroups = this.getAvailableBeveragesFromCartStores();
+    const totalDrinks = storeDrinksGroups.reduce((acc, g) => acc + g.drinks.length, 0);
     const availableDesserts = this.getAvailableDessertsFromStores();
 
-    // If no pizzas need crusts AND already has drinks AND no desserts available, skip
+    // If no pizzas need crusts AND already has drinks AND no desserts from cart stores, skip
     if (pizzasWithoutCrust.length === 0 && hasBeverages && availableDesserts.length === 0) {
+      return false;
+    }
+
+    // If no pizzas need crusts, and there are NO drinks available and NO desserts, skip
+    if (pizzasWithoutCrust.length === 0 && totalDrinks === 0 && availableDesserts.length === 0) {
       return false;
     }
 
@@ -7490,15 +7619,78 @@ ${mapsLink}
   }
 
   addUpsellProductAndRefresh(prodId, restId, emoji) {
-    const est = (this.establishments || []).find(e => e.id === restId);
-    if (!est) return;
-    const prod = (est.products || []).find(p => p.id === prodId);
+    const est = (this.establishments || []).find(e => String(e.id) === String(restId)) || this.selectedEstablishment;
+    let prod = null;
+    if (est && Array.isArray(est.products)) {
+      prod = est.products.find(p => String(p.id) === String(prodId));
+    }
+
+    // Fallback if virtual drink
+    if (!prod) {
+      if (prodId.includes('cola')) {
+        prod = {
+          id: prodId,
+          name: 'Coca-Cola Personal 400ml',
+          price: 5000,
+          restaurant_id: est?.id || restId,
+          restaurant_name: est?.name || 'Restaurante',
+          category: 'bebidas'
+        };
+      } else if (prodId.includes('agua')) {
+        prod = {
+          id: prodId,
+          name: 'Agua Mineral Manantial 500ml',
+          price: 3500,
+          restaurant_id: est?.id || restId,
+          restaurant_name: est?.name || 'Restaurante',
+          category: 'bebidas'
+        };
+      }
+    }
+
     if (!prod) return;
 
-    this.addDirectToCart(prod);
+    const rawPrice = this.normalizeCopPrice(prod.price || 0);
+    const cartItemId = 'item-' + Date.now() + '-' + Math.floor(Math.random() * 100000);
+    const cartItem = {
+      cart_item_id: cartItemId,
+      product_id: prod.id,
+      product_name: prod.name,
+      restaurant_id: est?.id || restId,
+      restaurant_name: est?.name || prod.restaurant_name || 'Restaurante',
+      delivery_fee: est?.delivery_fee || 0,
+      quantity: 1,
+      selected_specifications: {
+        single_selections: [],
+        add_ons: [],
+        exclusions: [],
+        special_notes: ""
+      },
+      unit_total_calculated: rawPrice,
+      subtotal_combined: rawPrice,
+      product: prod
+    };
+
+    // Check if identical item already in cart
+    const existing = this.cart.items.find(item => 
+      String(item.product_id) === String(prod.id) &&
+      String(item.restaurant_id) === String(cartItem.restaurant_id) &&
+      (!item.selected_specifications?.single_selections || item.selected_specifications.single_selections.length === 0) &&
+      (!item.selected_specifications?.add_ons || item.selected_specifications.add_ons.length === 0)
+    );
+
+    if (existing) {
+      existing.quantity += 1;
+      existing.subtotal_combined = existing.unit_total_calculated * existing.quantity;
+    } else {
+      this.cart.items.push(cartItem);
+    }
+
+    this.triggerHaptic('success');
+    this.updateCartBadge();
     this.showToast(`${emoji || '✨'} ${prod.name} agregado al carrito`);
 
-    // Re-render upsell content with updated subtotal
+    // Re-render upsell modal content and update subtotal live
     this.renderUpsellContent();
   }
 
