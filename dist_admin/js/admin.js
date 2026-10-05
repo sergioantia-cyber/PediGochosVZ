@@ -10823,35 +10823,71 @@ class AdminController {
     }
   }
 
-  openNewOfferModal() {
+  async openNewOfferModal() {
     const modal = document.getElementById('modal-admin-offer');
-    if (!modal) return;
-    document.getElementById('modal-admin-offer-header').textContent = 'Publicar Oferta del Día (24 Horas)';
-    document.getElementById('admin-offer-id').value = '';
-    document.getElementById('admin-offer-vendor-name').value = '';
-    document.getElementById('admin-offer-whatsapp').value = '';
-    document.getElementById('admin-offer-title').value = '';
-    document.getElementById('admin-offer-desc').value = '';
-    document.getElementById('admin-offer-promo-price').value = '';
-    document.getElementById('admin-offer-orig-price').value = '';
-    document.getElementById('admin-offer-currency').value = 'COP';
-    document.getElementById('admin-offer-image-url').value = '';
-    document.getElementById('admin-offer-img-preview').src = '/images/burger_royale.jpg';
-    document.getElementById('admin-offer-active').checked = true;
+    if (!modal) {
+      console.warn('Modal #modal-admin-offer not found in DOM');
+      return;
+    }
+
+    // Ensure establishments are available if empty
+    if (!this.establishments || this.establishments.length === 0) {
+      try {
+        const res = await fetch('/api/owner/establishments');
+        if (res.ok) {
+          const list = await res.json();
+          this.establishments = this.enforceVerifiedGps(list);
+        }
+      } catch (e) {
+        console.warn('Could not fetch establishments for offer modal:', e);
+      }
+    }
+
+    const safeSetText = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+    const safeSetValue = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
+
+    safeSetText('modal-admin-offer-header', 'Publicar Oferta del Día (24 Horas)');
+    safeSetValue('admin-offer-id', '');
+    safeSetValue('admin-offer-vendor-name', '');
+    safeSetValue('admin-offer-whatsapp', '');
+    safeSetValue('admin-offer-title', '');
+    safeSetValue('admin-offer-desc', '');
+    safeSetValue('admin-offer-promo-price', '');
+    safeSetValue('admin-offer-orig-price', '');
+    safeSetValue('admin-offer-currency', 'COP');
+    safeSetValue('admin-offer-image-url', '');
+
+    const imgPreview = document.getElementById('admin-offer-img-preview');
+    if (imgPreview) imgPreview.src = '/images/burger_royale.jpg';
+
+    const activeCheck = document.getElementById('admin-offer-active');
+    if (activeCheck) activeCheck.checked = true;
+
     const stockInput = document.getElementById('admin-offer-stock');
     if (stockInput) stockInput.value = 10;
 
     this.populateOfferRestaurantSelect();
     this.populateOfferProductSelect(null);
-    modal.style.display = 'flex';
+
     modal.classList.remove('hidden');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    this.checkModalOpenState();
   }
 
   closeAdminOfferModal() {
     const modal = document.getElementById('modal-admin-offer');
     if (!modal) return;
-    modal.style.display = 'none';
+    modal.classList.remove('active');
     modal.classList.add('hidden');
+    modal.style.display = 'none';
+    this.checkModalOpenState();
   }
 
   populateOfferRestaurantSelect(selectedRestaurantId = '') {
@@ -10859,7 +10895,7 @@ class AdminController {
     if (!select) return;
     const rests = (this.establishments && this.establishments.length > 0) ? this.establishments : (this.restaurants || []);
     select.innerHTML = `<option value="">-- Seleccionar Restaurante Registrado --</option>` +
-      rests.map(r => `<option value="${r.id}" ${r.id === selectedRestaurantId ? 'selected' : ''}>${r.name} (${r.category || 'comidas'})</option>`).join('');
+      rests.filter(Boolean).map(r => `<option value="${r.id}" ${r.id === selectedRestaurantId ? 'selected' : ''}>${r.name || r.id} (${r.category || 'comidas'})</option>`).join('');
   }
 
   populateOfferProductSelect(rest, selectedProductId = '') {
@@ -10870,9 +10906,9 @@ class AdminController {
       return;
     }
     prodSelect.innerHTML = `<option value="">-- Seleccionar Plato del Menú (Relleno Automático) --</option>` +
-      rest.products.map(p => {
+      rest.products.filter(Boolean).map(p => {
         const priceStr = p.price ? `$${Math.round(p.price).toLocaleString('de-DE')}` : '';
-        return `<option value="${p.id}" ${p.id === selectedProductId ? 'selected' : ''}>${p.name} (${priceStr})</option>`;
+        return `<option value="${p.id}" ${p.id === selectedProductId ? 'selected' : ''}>${p.name || 'Plato'} (${priceStr})</option>`;
       }).join('');
   }
 
@@ -10882,7 +10918,7 @@ class AdminController {
       return;
     }
     const rests = (this.establishments && this.establishments.length > 0) ? this.establishments : (this.restaurants || []);
-    const rest = rests.find(r => String(r.id) === String(restId));
+    const rest = rests.find(r => r && String(r.id) === String(restId));
     if (!rest) return;
 
     const vendorNameInput = document.getElementById('admin-offer-vendor-name');
@@ -10913,10 +10949,10 @@ class AdminController {
     if (!prodId) return;
     const restId = document.getElementById('admin-offer-restaurant')?.value;
     const rests = (this.establishments && this.establishments.length > 0) ? this.establishments : (this.restaurants || []);
-    const rest = rests.find(r => String(r.id) === String(restId));
+    const rest = rests.find(r => r && String(r.id) === String(restId));
     if (!rest || !Array.isArray(rest.products)) return;
 
-    const prod = rest.products.find(p => String(p.id) === String(prodId));
+    const prod = rest.products.find(p => p && String(p.id) === String(prodId));
     if (!prod) return;
 
     const titleInput = document.getElementById('admin-offer-title');
@@ -10953,8 +10989,8 @@ class AdminController {
     reader.readAsDataURL(file);
   }
 
-  editOffer(offerId) {
-    const promo = (this.adminOffersList || []).find(x => x.id === offerId);
+  async editOffer(offerId) {
+    const promo = (this.adminOffersList || []).find(x => x && x.id === offerId);
     if (!promo) {
       alert('Oferta no encontrada');
       return;
@@ -10963,41 +10999,68 @@ class AdminController {
     const modal = document.getElementById('modal-admin-offer');
     if (!modal) return;
 
-    document.getElementById('modal-admin-offer-header').textContent = 'Editar Oferta del Día (24 Horas)';
-    document.getElementById('admin-offer-id').value = promo.id;
+    // Ensure establishments are available if empty
+    if (!this.establishments || this.establishments.length === 0) {
+      try {
+        const res = await fetch('/api/owner/establishments');
+        if (res.ok) {
+          const list = await res.json();
+          this.establishments = this.enforceVerifiedGps(list);
+        }
+      } catch (e) {}
+    }
+
+    const safeSetText = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+    const safeSetValue = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
+
+    safeSetText('modal-admin-offer-header', 'Editar Oferta del Día (24 Horas)');
+    safeSetValue('admin-offer-id', promo.id || '');
     this.populateOfferRestaurantSelect(promo.establishmentId || '');
     const rests = (this.establishments && this.establishments.length > 0) ? this.establishments : (this.restaurants || []);
-    const rest = rests.find(r => String(r.id) === String(promo.establishmentId));
+    const rest = rests.find(r => r && String(r.id) === String(promo.establishmentId));
     this.populateOfferProductSelect(rest);
-    document.getElementById('admin-offer-vendor-name').value = promo.establishmentName || '';
-    document.getElementById('admin-offer-whatsapp').value = promo.vendorWhatsapp || promo.whatsapp || '';
-    document.getElementById('admin-offer-title').value = promo.title || '';
-    document.getElementById('admin-offer-desc').value = promo.description || '';
-    document.getElementById('admin-offer-promo-price').value = promo.promoPrice || '';
-    document.getElementById('admin-offer-orig-price').value = promo.originalPrice || '';
-    document.getElementById('admin-offer-currency').value = promo.currency || 'COP';
-    document.getElementById('admin-offer-image-url').value = promo.image || '';
-    document.getElementById('admin-offer-img-preview').src = promo.image || '/images/burger_royale.jpg';
-    document.getElementById('admin-offer-active').checked = promo.active !== false;
+    safeSetValue('admin-offer-vendor-name', promo.establishmentName || '');
+    safeSetValue('admin-offer-whatsapp', promo.vendorWhatsapp || promo.whatsapp || '');
+    safeSetValue('admin-offer-title', promo.title || '');
+    safeSetValue('admin-offer-desc', promo.description || '');
+    safeSetValue('admin-offer-promo-price', promo.promoPrice || '');
+    safeSetValue('admin-offer-orig-price', promo.originalPrice || '');
+    safeSetValue('admin-offer-currency', promo.currency || 'COP');
+    safeSetValue('admin-offer-image-url', promo.image || '');
+
+    const preview = document.getElementById('admin-offer-img-preview');
+    if (preview) preview.src = promo.image || '/images/burger_royale.jpg';
+
+    const activeCheck = document.getElementById('admin-offer-active');
+    if (activeCheck) activeCheck.checked = promo.active !== false;
+
     const stockEl = document.getElementById('admin-offer-stock');
     if (stockEl) stockEl.value = promo.stockTotal || promo.stockRemaining || 10;
 
-    modal.style.display = 'flex';
     modal.classList.remove('hidden');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    this.checkModalOpenState();
   }
 
   async saveAdminOffer() {
-    const id = document.getElementById('admin-offer-id').value.trim();
-    const restId = document.getElementById('admin-offer-restaurant').value.trim();
-    const vendorName = document.getElementById('admin-offer-vendor-name').value.trim();
-    const vendorWhatsapp = document.getElementById('admin-offer-whatsapp').value.trim();
-    const title = document.getElementById('admin-offer-title').value.trim();
-    const description = document.getElementById('admin-offer-desc').value.trim();
-    const promoPrice = parseFloat(document.getElementById('admin-offer-promo-price').value) || 0;
-    const origPrice = parseFloat(document.getElementById('admin-offer-orig-price').value) || promoPrice;
-    const currency = document.getElementById('admin-offer-currency').value || 'COP';
-    const image = document.getElementById('admin-offer-image-url').value.trim() || '/images/burger_royale.jpg';
-    const active = document.getElementById('admin-offer-active').checked;
+    const id = document.getElementById('admin-offer-id')?.value?.trim() || '';
+    const restId = document.getElementById('admin-offer-restaurant')?.value?.trim() || '';
+    const vendorName = document.getElementById('admin-offer-vendor-name')?.value?.trim() || '';
+    const vendorWhatsapp = document.getElementById('admin-offer-whatsapp')?.value?.trim() || '';
+    const title = document.getElementById('admin-offer-title')?.value?.trim() || '';
+    const description = document.getElementById('admin-offer-desc')?.value?.trim() || '';
+    const promoPrice = parseFloat(document.getElementById('admin-offer-promo-price')?.value) || 0;
+    const origPrice = parseFloat(document.getElementById('admin-offer-orig-price')?.value) || promoPrice;
+    const currency = document.getElementById('admin-offer-currency')?.value || 'COP';
+    const image = document.getElementById('admin-offer-image-url')?.value?.trim() || '/images/burger_royale.jpg';
+    const active = document.getElementById('admin-offer-active') ? document.getElementById('admin-offer-active').checked : true;
 
     if (!vendorName || !title || promoPrice <= 0) {
       alert('Por favor completa el nombre del negocio, el título y el precio de la oferta.');
@@ -11086,6 +11149,9 @@ class AdminController {
 
 const AdminApp = new AdminController();
 window.AdminApp = AdminApp;
+window.openNewOfferModal = function() {
+  AdminApp.openNewOfferModal();
+};
 
 window.getTodayDayId = function() {
   const dayIndex = new Date().getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado

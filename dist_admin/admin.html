@@ -4159,7 +4159,7 @@
   </div>
 
   <!-- Modal: Crear / Editar Oferta del Día (Flash 24 Horas) -->
-  <div id="modal-admin-offer" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999990; display: none; align-items: center; justify-content: center; padding: 14px; box-sizing: border-box; overflow-y: auto;">
+  <div id="modal-admin-offer" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999990; display: none; align-items: center; justify-content: center; padding: 14px; box-sizing: border-box; overflow-y: auto;" onclick="if(event.target === this) AdminApp.closeAdminOfferModal()">
     <div style="background: #141828; border: 1.5px solid rgba(239, 68, 68, 0.45); border-radius: 20px; width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; color: #FFF; box-shadow: 0 16px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column;">
       
       <!-- Header -->

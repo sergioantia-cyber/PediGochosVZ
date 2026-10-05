@@ -1773,18 +1773,26 @@ class KitchenController {
       });
     }
 
-    document.getElementById('promo-title').value = '';
-    document.getElementById('promo-description').value = '';
-    document.getElementById('promo-original-price').value = '';
-    document.getElementById('promo-price').value = '';
-    document.getElementById('promo-image').value = '';
+    const safeSetValue = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
+    safeSetValue('promo-title', '');
+    safeSetValue('promo-description', '');
+    safeSetValue('promo-original-price', '');
+    safeSetValue('promo-price', '');
+    safeSetValue('promo-image', '');
 
+    modal.style.display = 'flex';
     modal.classList.add('active');
   }
 
   closeDailyPromoModal() {
     const modal = document.getElementById('kitchen-promo-modal');
-    if (modal) modal.classList.remove('active');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
   }
 
   handlePromoProductSelect(productId) {
