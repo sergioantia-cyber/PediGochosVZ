@@ -6478,7 +6478,112 @@ class AdminController {
 
     const titleEl = document.getElementById('qr-modal-title');
     if (titleEl) titleEl.innerText = `📱 Display QR: ${est.name}`;
+
+    const subtitleEl = document.getElementById('qr-modal-subtitle');
+    if (subtitleEl) subtitleEl.innerText = 'Diseño de alta definición para acrílicos de mesa, displays y stickers.';
+
+    const tableContainer = document.getElementById('qr-modal-table-container');
+    if (tableContainer) tableContainer.style.display = 'block';
+
+    const batchBtn = document.getElementById('qr-modal-batch-btn');
+    if (batchBtn) batchBtn.style.display = 'inline-flex';
     
+    const tableInp = document.getElementById('qr-modal-table-input');
+    if (tableInp) tableInp.value = '';
+
+    this.updateStoreQRDisplay();
+    modal.classList.add('active');
+    this.checkModalOpenState();
+  }
+
+  openServiceQRModal(serviceKey) {
+    const servicesConfig = {
+      resin: {
+        id: 'serv-resin',
+        serviceKey: 'resin',
+        name: 'SHELLI ART',
+        displayName: 'Shelli Art • Arte en Resina',
+        slogan: 'Llaveros y recuerdos en resina epóxica, fotos, NFC y pan de oro 24K',
+        serviceParam: 'service=resin',
+        badge: '✨ RESINA & LLAVEROS',
+        themeColor: '#EC4899',
+        isService: true
+      },
+      print3d: {
+        id: 'serv-print3d',
+        serviceKey: 'print3d',
+        name: 'PEDIGOCHOS 3D LAB',
+        displayName: 'PediGochos 3D Lab • Impresiones 3D',
+        slogan: 'Laboratorio de impresión 3D, prototipado rápido y piezas a medida',
+        serviceParam: 'service=print3d',
+        badge: '🖨️ 3D LAB & PROTOTIPOS',
+        themeColor: '#6366F1',
+        isService: true
+      },
+      pinatas: {
+        id: 'serv-pinatas',
+        serviceKey: 'pinatas',
+        name: 'CREACIONES LOLA',
+        displayName: 'Creaciones Lola • Piñatas',
+        slogan: 'Piñatas artesanales 3D y números decorados por encargo',
+        serviceParam: 'service=pinatas',
+        badge: '🎉 PIÑATAS CREATIVAS',
+        themeColor: '#F43F5E',
+        isService: true
+      },
+      paint: {
+        id: 'serv-paint',
+        serviceKey: 'paint',
+        name: 'TALLER AUTOMOTRIZ',
+        displayName: 'Taller Automotriz • Latonería y Pintura',
+        slogan: 'Latonería profesional y pintura al horno garantizada',
+        serviceParam: 'service=paint',
+        badge: '🎨 LATONERÍA & PINTURA',
+        themeColor: '#EA580C',
+        isService: true
+      },
+      cauchera: {
+        id: 'serv-cauchera',
+        serviceKey: 'cauchera',
+        name: 'CAUCHERA CACHU 24/7',
+        displayName: 'Cauchera Cachu • Despinche 24H',
+        slogan: 'Montallantas y auxilio vial a domicilio 24 horas',
+        serviceParam: 'service=cauchera',
+        badge: '🔧 AUXILIO VIAL 24/7',
+        themeColor: '#EF4444',
+        isService: true
+      },
+      movil: {
+        id: 'serv-ride',
+        serviceKey: 'movil',
+        name: 'PEDIGOCHOS MÓVIL',
+        displayName: 'PediGochos Móvil • Transporte',
+        slogan: 'Moto Taxi, Autos y carreras express con tarifa GPS',
+        serviceParam: 'service=movil',
+        badge: '🛵 PEDIGOCHOS MÓVIL',
+        themeColor: '#FF6B00',
+        isService: true
+      }
+    };
+
+    const service = servicesConfig[serviceKey] || servicesConfig.resin;
+    this.currentQREst = service;
+
+    const modal = document.getElementById('admin-store-qr-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('qr-modal-title');
+    if (titleEl) titleEl.innerText = `📱 QR Oficial: ${service.displayName || service.name}`;
+
+    const subtitleEl = document.getElementById('qr-modal-subtitle');
+    if (subtitleEl) subtitleEl.innerText = 'Código QR oficial HD para afiches, volantes, redes sociales y acceso directo a este servicio.';
+
+    const tableContainer = document.getElementById('qr-modal-table-container');
+    if (tableContainer) tableContainer.style.display = 'none';
+
+    const batchBtn = document.getElementById('qr-modal-batch-btn');
+    if (batchBtn) batchBtn.style.display = 'none';
+
     const tableInp = document.getElementById('qr-modal-table-input');
     if (tableInp) tableInp.value = '';
 
@@ -6500,9 +6605,14 @@ class AdminController {
     const tableNum = tableInp ? tableInp.value.trim() : '';
 
     const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
-    let directUrl = `${origin}/?store=${encodeURIComponent(est.id)}`;
-    if (tableNum) {
-      directUrl += `&mesa=${encodeURIComponent(tableNum)}`;
+    let directUrl = '';
+    if (est.isService) {
+      directUrl = `${origin}/?${est.serviceParam || ('service=' + (est.serviceKey || 'all'))}`;
+    } else {
+      directUrl = `${origin}/?store=${encodeURIComponent(est.id)}`;
+      if (tableNum) {
+        directUrl += `&mesa=${encodeURIComponent(tableNum)}`;
+      }
     }
 
     const urlInp = document.getElementById('qr-modal-url-input');
@@ -6676,8 +6786,13 @@ class AdminController {
     ctx.stroke();
     ctx.restore();
 
-    // 4. Four Cardinal Food Badges
-    const badges = [
+    // 4. Four Cardinal Food or Service Badges
+    const badges = est.isService ? [
+      { x: cx, y: cy - R, icon: '🛠️' },
+      { x: cx - R, y: cy, icon: '✨' },
+      { x: cx + R, y: cy, icon: '🖨️' },
+      { x: cx, y: cy + R, icon: '🛵' }
+    ] : [
       { x: cx, y: cy - R, icon: '🍔' },
       { x: cx - R, y: cy, icon: '🍽️' },
       { x: cx + R, y: cy, icon: '🥟' },
@@ -6707,9 +6822,9 @@ class AdminController {
       ctx.restore();
     });
 
-    // 5. Top Restaurant Name Header
+    // 5. Top Restaurant / Service Name Header
     ctx.save();
-    const rawName = (est.name || 'RESTAURANTE').toUpperCase();
+    const rawName = (est.name || (est.isService ? 'SERVICIO' : 'RESTAURANTE')).toUpperCase();
     
     let fontSize = 52;
     if (rawName.length > 18) fontSize = 42;
@@ -6728,12 +6843,43 @@ class AdminController {
     nameGrad.addColorStop(1, '#FF5500');
     ctx.fillStyle = nameGrad;
     
-    const nameY = tableNum ? 260 : 285;
+    const hasSubtitlePill = Boolean(tableNum || (est.isService && est.badge));
+    const nameY = hasSubtitlePill ? 260 : 285;
     ctx.fillText(rawName, cx, nameY);
     ctx.restore();
 
-    // Table Pill Badge (if specified)
-    if (tableNum) {
+    // Subtitle Pill Badge (Service Badge or Table Number)
+    if (est.isService && est.badge) {
+      ctx.save();
+      const serviceBadgeText = est.badge.toUpperCase();
+      ctx.font = '900 23px "Montserrat", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      const textWidth = ctx.measureText(serviceBadgeText).width;
+      const pillW = textWidth + 38;
+      const pillH = 38;
+      const pillX = cx - pillW / 2;
+      const pillY = 302;
+
+      ctx.fillStyle = 'rgba(255, 107, 0, 0.2)';
+      ctx.strokeStyle = '#FF6B00';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(pillX, pillY, pillW, pillH, 19);
+      } else {
+        ctx.rect(pillX, pillY, pillW, pillH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFA726';
+      ctx.shadowColor = 'rgba(255, 107, 0, 0.6)';
+      ctx.shadowBlur = 10;
+      ctx.fillText(serviceBadgeText, cx, pillY + pillH / 2);
+      ctx.restore();
+    } else if (tableNum) {
       ctx.save();
       const tableText = `📍 MESA ${tableNum.toUpperCase()}`;
       ctx.font = '900 24px "Montserrat", sans-serif';
@@ -6769,7 +6915,7 @@ class AdminController {
     if (qrElement) {
       const qrSize = 580;
       const qrX = cx - qrSize / 2;
-      const qrY = tableNum ? 355 : 340;
+      const qrY = hasSubtitlePill ? 355 : 340;
 
       // Clean pure white plate for max scanner readability with glowing orange border
       ctx.save();
@@ -6800,7 +6946,8 @@ class AdminController {
     ctx.fillStyle = '#FFA000';
     ctx.shadowColor = 'rgba(255, 107, 0, 0.7)';
     ctx.shadowBlur = 12;
-    ctx.fillText('PEDIGOCHOS • ESCANEA PARA ORDENAR', cx, 985);
+    const ctaText = est.isService ? 'PEDIGOCHOS • ESCANEA PARA SOLICITAR SERVICIO' : 'PEDIGOCHOS • ESCANEA PARA ORDENAR';
+    ctx.fillText(ctaText, cx, 985);
     ctx.restore();
   }
 
@@ -6829,13 +6976,21 @@ class AdminController {
     if (!this.currentQREst) return;
     const est = this.currentQREst;
     const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
-    const directUrl = `${origin}/?store=${encodeURIComponent(est.id)}`;
+    const directUrl = est.isService
+      ? `${origin}/?${est.serviceParam || ('service=' + (est.serviceKey || 'all'))}`
+      : `${origin}/?store=${encodeURIComponent(est.id)}`;
     
-    const msg = `👑 *PEDIGOCHOS CENTRAL - CÓDIGO QR OFICIAL DE TU COMERCIO*\n\n` +
-      `¡Hola *${est.name}*! Desde la administración central de PediGochos hemos generado tu Tarjeta de Difusión y Código QR Oficial:\n\n` +
-      `🔗 *Enlace Directo de tu Carta:* ${directUrl}\n\n` +
-      `📲 Tus clientes pueden escanear tu QR o hacer clic en este enlace para ver tu menú, precios actualizados y pedir a domicilio o directo a su mesa.\n\n` +
-      `¡Muchos éxitos y buenas ventas con PediGochos! 🚀`;
+    const msg = est.isService
+      ? `🛠️ *PEDIGOCHOS CENTRAL - CÓDIGO QR Y ENLACE DIRECTO DE SERVICIO*\n\n` +
+        `¡Hola *${est.name}*! Desde la administración central de PediGochos hemos generado el Código QR Oficial de tu servicio:\n\n` +
+        `🔗 *Enlace Directo del Servicio:* ${directUrl}\n\n` +
+        `📲 Tus clientes pueden escanear tu QR o hacer clic en este enlace para abrir directamente el servicio, cotizar y solicitar pedidos.\n\n` +
+        `¡Muchos éxitos con PediGochos! 🚀`
+      : `👑 *PEDIGOCHOS CENTRAL - CÓDIGO QR OFICIAL DE TU COMERCIO*\n\n` +
+        `¡Hola *${est.name}*! Desde la administración central de PediGochos hemos generado tu Tarjeta de Difusión y Código QR Oficial:\n\n` +
+        `🔗 *Enlace Directo de tu Carta:* ${directUrl}\n\n` +
+        `📲 Tus clientes pueden escanear tu QR o hacer clic en este enlace para ver tu menú, precios actualizados y pedir a domicilio o directo a su mesa.\n\n` +
+        `¡Muchos éxitos y buenas ventas con PediGochos! 🚀`;
 
     let cleanPhone = (est.phone || '').replace(/\D/g, '');
     let waUrl = '';

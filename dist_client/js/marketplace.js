@@ -186,11 +186,19 @@ class MarketplaceController {
         this.openDailyOfferOrderModal(promoParam);
       }, 500);
     }
+
+    // Check deep link ?service=KEY or ?servicio=KEY or ?s=KEY
+    const serviceParam = urlParams.get('service') || urlParams.get('servicio') || urlParams.get('s');
+    if (serviceParam) {
+      setTimeout(() => {
+        this.openServiceByParam(serviceParam);
+      }, 500);
+    }
     
     // Auto-detect user's GPS coordinates immediately on startup
     this.requestAutomaticGPS(false);
 
-    this.currentCategory = 'comidas';
+    this.currentCategory = serviceParam ? 'servicios' : 'comidas';
     this.currentServiceCategory = null;
     window.activeFoodTypeFilter = null;
     
@@ -639,12 +647,12 @@ class MarketplaceController {
         id: 'serv-resin',
         name: 'SHELLI ART',
         displayName: 'Shelli Art',
-        category: 'personalizado',
-        subCategory: 'resina',
-        categoryLabel: 'Arte & Recuerdos',
+        category: 'resin',
+        subCategory: 'resin',
+        categoryLabel: 'Arte en Resina & Recuerdos',
         categoryIcon: '✨',
         slogan: 'Diseño y arte exclusivo en resina epóxica, llaveros personalizados con fotos, chip NFC, hojilla de oro 24K y recuerdos',
-        serviceName: 'Llaveros Personalizados & Arte',
+        serviceName: 'Llaveros Personalizados & Arte en Resina',
         logo: '/images/services/shelliart_logo.svg',
         image: '/images/services/shelliart_banner.jpg',
         rating: 5.0,
@@ -660,7 +668,7 @@ class MarketplaceController {
         id: 'serv-pinatas',
         name: 'CREACIONES LOLA',
         displayName: 'Creaciones Lola',
-        category: 'personalizado',
+        category: 'pinatas',
         subCategory: 'pinatas',
         categoryLabel: 'Fiestas & Piñatas',
         categoryIcon: '🎉',
@@ -681,7 +689,7 @@ class MarketplaceController {
         id: 'serv-print3d',
         name: 'PEDIGOCHOS 3D LAB',
         displayName: 'PediGochos 3D Lab',
-        category: 'personalizado',
+        category: 'print3d',
         subCategory: 'print3d',
         categoryLabel: 'Tecnología & 3D Lab',
         categoryIcon: '🖨️',
@@ -1502,9 +1510,11 @@ ${mapsLink}
 
   // Navigation
   selectCategory(category) {
-    if (category === 'personalizado') category = 'personalizados';
+    if (category === 'personalizado' || category === 'personalizados') {
+      category = 'servicios';
+    }
     this.currentCategory = category;
-    if (category === 'servicios' || category === 'personalizados') {
+    if (category === 'servicios') {
       this.currentServiceCategory = null;
     }
     window.activeFoodTypeFilter = null; // Always reset filter so Food Categories Grid shows first for comidas
@@ -1512,7 +1522,7 @@ ${mapsLink}
     // Update active class in categories tabs (DeliverCity style)
     document.querySelectorAll('.category-card-delivercity').forEach(card => {
       const c = card.dataset.category;
-      if (c === category || (category === 'personalizados' && c === 'personalizado')) {
+      if (c === category || (category === 'servicios' && (c === 'servicios' || c === 'personalizado' || c === 'personalizados'))) {
         card.classList.add('active');
       } else {
         card.classList.remove('active');
@@ -1522,7 +1532,7 @@ ${mapsLink}
     // Update active class in marketplace switcher nav pills
     document.querySelectorAll('.mkt-nav-pill').forEach(pill => {
       const p = pill.dataset.mkt;
-      if (p === category || (category === 'personalizados' && p === 'personalizado')) {
+      if (p === category || (category === 'servicios' && (p === 'servicios' || p === 'personalizado' || p === 'personalizados'))) {
         pill.classList.add('active');
       } else {
         pill.classList.remove('active');
@@ -1543,6 +1553,7 @@ ${mapsLink}
     // Category selected -> Keep floating action bubbles visible while browsing on home
     this.updateFloatingAndHeaderSos(false);
 
+    this.updateQuickFiltersForCategory();
     this.renderEstablishments();
 
     // Smoothly scroll down so user immediately sees the category items (especially for Servicios)
@@ -1584,8 +1595,63 @@ ${mapsLink}
     }, 50);
   }
 
+  updateQuickFiltersForCategory() {
+    const quickFiltersContainer = document.getElementById('marketplace-quick-filters');
+    const foodCravingChips = document.getElementById('quick-food-craving-chips');
+    const cravingsSection = document.querySelector('.pedigochos-cravings-section');
+    const moreServicesSection = document.getElementById('more-services-grid-section');
+
+    if (this.currentCategory === 'servicios') {
+      if (foodCravingChips) foodCravingChips.style.display = 'none';
+      if (cravingsSection) cravingsSection.style.display = 'none';
+      if (moreServicesSection) moreServicesSection.style.display = 'none';
+
+      if (quickFiltersContainer) {
+        const activeCat = this.currentServiceCategory || 'all';
+        const servicePills = [
+          { key: 'all', icon: '🌟', label: 'Todos' },
+          { key: 'resin', icon: '✨', label: 'Shelli Art (Resina)' },
+          { key: 'print3d', icon: '🖨️', label: '3D Lab & STL' },
+          { key: 'pinatas', icon: '🎉', label: 'Piñatas (Lola)' },
+          { key: 'paint', icon: '🎨', label: 'Latonería & Pintura' },
+          { key: 'cauchera', icon: '🔧', label: 'Cauchera 24/7' },
+          { key: 'movil', icon: '🛵', label: 'PediGochos Móvil' }
+        ];
+
+        quickFiltersContainer.innerHTML = servicePills.map(p => `
+          <button type="button" class="quick-filter-pill ${activeCat === p.key ? 'active' : ''}" data-service-filter="${p.key}" onclick="MarketplaceApp.selectServiceCategory('${p.key}')">
+            <span>${p.icon}</span> ${p.label}
+          </button>
+        `).join('');
+      }
+    } else {
+      if (foodCravingChips) foodCravingChips.style.display = 'flex';
+      if (cravingsSection) cravingsSection.style.display = 'block';
+      if (moreServicesSection) moreServicesSection.style.display = 'block';
+
+      if (quickFiltersContainer && !quickFiltersContainer.querySelector('[data-filter]')) {
+        const activeFilter = this.activeQuickFilter || 'all';
+        const foodPills = [
+          { key: 'all', icon: '🌟', label: 'Todos' },
+          { key: 'abiertos', icon: '🟢', label: 'Abiertos' },
+          { key: 'mas_pedidos', icon: '🔥', label: 'Más pedidos' },
+          { key: 'mejor_valorados', icon: '⭐', label: 'Mejor valorados' },
+          { key: 'mas_rapidos', icon: '⚡', label: 'Más rápidos' },
+          { key: 'cerca', icon: '📍', label: 'Cerca de mí' }
+        ];
+
+        quickFiltersContainer.innerHTML = foodPills.map(p => `
+          <button type="button" class="quick-filter-pill ${activeFilter === p.key ? 'active' : ''}" data-filter="${p.key}" onclick="MarketplaceApp.setQuickFilter('${p.key}')">
+            <span>${p.icon}</span> ${p.label}
+          </button>
+        `).join('');
+      }
+    }
+  }
+
   selectServiceCategory(categoryKey) {
     this.currentServiceCategory = categoryKey;
+    this.updateQuickFiltersForCategory();
     this.renderEstablishments();
     setTimeout(() => {
       const target = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
@@ -1597,6 +1663,7 @@ ${mapsLink}
 
   resetServiceCategory() {
     this.currentServiceCategory = null;
+    this.updateQuickFiltersForCategory();
     this.renderEstablishments();
     setTimeout(() => {
       const target = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
@@ -1604,6 +1671,34 @@ ${mapsLink}
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 60);
+  }
+
+  openServiceByParam(serviceParam) {
+    if (!serviceParam) return;
+    const key = String(serviceParam).toLowerCase().trim();
+    this.selectCategory('servicios');
+    
+    if (['resin', 'shelli', 'shelliart', 'resina', 'arte', 'llaveros'].includes(key)) {
+      this.selectServiceCategory('resin');
+      setTimeout(() => this.executeServiceAction('resin'), 250);
+    } else if (['print3d', '3d', 'labs', 'lab', '3dlab', 'impresion3d', 'impresiones3d'].includes(key)) {
+      this.selectServiceCategory('print3d');
+      setTimeout(() => this.executeServiceAction('print3d'), 250);
+    } else if (['pinatas', 'pinata', 'lola', 'creacioneslola'].includes(key)) {
+      this.selectServiceCategory('pinatas');
+      setTimeout(() => this.executeServiceAction('pinatas'), 250);
+    } else if (['paint', 'latoneria', 'pintura', 'taller'].includes(key)) {
+      this.selectServiceCategory('paint');
+      setTimeout(() => this.executeServiceAction('paint'), 250);
+    } else if (['cauchera', 'cachu', 'montallantas', 'despinche'].includes(key)) {
+      this.selectServiceCategory('cauchera');
+      setTimeout(() => this.executeServiceAction('cauchera'), 250);
+    } else if (['movil', 'ride', 'moto', 'mototaxi', 'taxi', 'transporte'].includes(key)) {
+      this.selectServiceCategory('movil');
+      setTimeout(() => this.executeServiceAction('ride'), 250);
+    } else {
+      this.selectServiceCategory('all');
+    }
   }
 
   executeServiceAction(actionType) {
@@ -2331,13 +2426,58 @@ ${mapsLink}
         ? this.serviceEstablishments
         : this.getDefaultServiceEstablishments();
 
-      const servicesList = allServices.filter(e => ['cauchera', 'paint', 'movil'].includes(e.category));
+      const servicesList = allServices;
 
       // STAGE 1: Visual Grid of Service Categories (Hub)
       if (!this.currentServiceCategory) {
-        if (allRestTitle) allRestTitle.textContent = 'Servicios Técnicos & Auxilio Disponibles (3)';
+        if (allRestTitle) allRestTitle.textContent = 'Servicios Especializados & Auxilio (6)';
 
         const serviceCategories = [
+          {
+            key: 'resin',
+            name: 'Arte & Recuerdos en Resina',
+            iconImg: '/images/services/cat_resina.svg',
+            color: '#EC4899',
+            gradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(236, 72, 153, 0.55)',
+            glow: 'rgba(236, 72, 153, 0.35)',
+            badge: '✨ Shelli Art • NFC & Oro 24K',
+            items: [
+              'Llaveros letras A-Z personalizados en resina epóxica de alta calidad',
+              'Diseños con hojilla de oro 24K, borlas, fotos y chips inteligentes NFC',
+              'Recuerdos exclusivos para fiestas, aniversarios y fechas especiales'
+            ]
+          },
+          {
+            key: 'print3d',
+            name: 'Tecnología & Impresiones 3D',
+            iconImg: '/images/services/cat_print3d.svg',
+            color: '#6366F1',
+            gradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(99, 102, 241, 0.55)',
+            glow: 'rgba(99, 102, 241, 0.35)',
+            badge: '🔄 PediGochos 3D Lab • Visor 360°',
+            items: [
+              'Prototipado rápido y fabricación de piezas técnicas y mecánicas',
+              'Repuestos automotrices descatalogados y soportes plásticos a medida',
+              'Modelos STL interactivos en visor 3D en tiempo real'
+            ]
+          },
+          {
+            key: 'pinatas',
+            name: 'Fiestas & Piñatas Creativas',
+            iconImg: '/images/services/cat_pinatas.svg',
+            color: '#F43F5E',
+            gradient: 'linear-gradient(135deg, rgba(244, 63, 94, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(244, 63, 94, 0.55)',
+            glow: 'rgba(244, 63, 94, 0.35)',
+            badge: '🎉 Creaciones Lola • Hecho a Mano',
+            items: [
+              'Piñatas artesanales temáticas 3D y siluetas personalizadas',
+              'Números temáticos con flores y decoraciones para cumpleaños',
+              'Mini-piñatas de mesa y recuerdos para celebraciones'
+            ]
+          },
           {
             key: 'cauchera',
             name: 'Auxilio Vial & Montallantas 24/7',
@@ -2346,7 +2486,7 @@ ${mapsLink}
             gradient: 'linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(239, 68, 68, 0.55)',
             glow: 'rgba(239, 68, 68, 0.35)',
-            badge: '🔴 Guardia Activa 24/7',
+            badge: '🔴 Cauchera Cachu • Guardia 24/7',
             items: [
               'Montallantas a domicilio para motos, autos y camionetas 24H',
               'Despinche express en ruta con parches vulcanizados de alta durabilidad',
@@ -2361,7 +2501,7 @@ ${mapsLink}
             gradient: 'linear-gradient(135deg, rgba(234, 88, 12, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(234, 88, 12, 0.55)',
             glow: 'rgba(234, 88, 12, 0.35)',
-            badge: '🔥 Secado al Horno',
+            badge: '🔥 Taller San Antonio • Secado al Horno',
             items: [
               'Sacado de golpes en frío y desabollado profesional',
               'Latonería general y enderezada de chasis automotriz',
@@ -2376,7 +2516,7 @@ ${mapsLink}
             gradient: 'linear-gradient(135deg, rgba(255, 107, 0, 0.18) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(255, 107, 0, 0.55)',
             glow: 'rgba(255, 107, 0, 0.35)',
-            badge: '⚡ Tarifa Automática GPS',
+            badge: '⚡ PediGochos Móvil • Tarifa GPS',
             items: [
               'Moto Taxi express para traslados urbanos rápidos y económicos',
               'Carreras cómodas y seguras en autos estándar',
@@ -2388,11 +2528,11 @@ ${mapsLink}
         let html = `
           <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-bottom: 6px; padding: 16px 20px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1.5px solid rgba(239, 68, 68, 0.3); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
             <div>
-              <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">🛠 Servicios Técnicos & Emergencia</h3>
-              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Auxilio vial en ruta 24/7, taller automotriz y movilidad express en San Antonio</p>
+              <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">🛠 Servicios Especializados & Auxilio</h3>
+              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Arte en resina, 3D Lab, piñatas, auxilio vial 24/7, taller y transporte en San Antonio</p>
             </div>
             <button type="button" onclick="MarketplaceApp.selectServiceCategory('all')" style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.22); color: #FFF; padding: 9px 16px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
-              <span>🌟</span> Ver Todos los Servicios (3)
+              <span>🌟</span> Ver Todos los Servicios (6)
             </button>
           </div>
         `;
@@ -2458,24 +2598,38 @@ ${mapsLink}
       // STAGE 2: Establishments in Selected Category (or All)
       const targetCategory = this.currentServiceCategory;
       const targetEstablishments = (targetCategory && targetCategory !== 'all')
-        ? servicesList.filter(e => e.category === targetCategory)
+        ? servicesList.filter(e => 
+            e.category === targetCategory || 
+            e.subCategory === targetCategory || 
+            e.actionType === targetCategory || 
+            (targetCategory === 'movil' && (e.actionType === 'ride' || e.category === 'movil')) ||
+            (targetCategory === 'resin' && (e.actionType === 'resin' || e.category === 'resin' || e.category === 'personalizado')) ||
+            (targetCategory === 'print3d' && (e.actionType === 'print3d' || e.category === 'print3d')) ||
+            (targetCategory === 'pinatas' && (e.actionType === 'pinatas' || e.category === 'pinatas'))
+          )
         : servicesList;
 
       if (allRestTitle) {
         const catMap = {
-          'all': 'Todos los Servicios Técnicos',
-          'cauchera': 'Centros de Auxilio Vial & Montallantas',
-          'paint': 'Talleres Automotriz & Latonería',
-          'movil': 'Flotas de Transporte & Movilidad'
+          'all': 'Todos los Servicios Especializados',
+          'resin': 'Shelli Art • Arte en Resina & Llaveros',
+          'print3d': 'PediGochos 3D Lab • Impresiones 3D & Prototipado',
+          'pinatas': 'Creaciones Lola • Piñatas & Fiestas Creativas',
+          'cauchera': 'Centros de Auxilio Vial & Montallantas 24/7',
+          'paint': 'Talleres Automotriz & Latonería al Horno',
+          'movil': 'Flotas de Transporte & Movilidad Express'
         };
         allRestTitle.textContent = `${catMap[targetCategory] || 'Empresas de Servicios'} (${targetEstablishments.length})`;
       }
 
       const catPills = [
         { key: 'all', label: '🌟 Todos' },
-        { key: 'cauchera', label: '🔧 Auxilio & Montallantas 24/7' },
+        { key: 'resin', label: '✨ Shelli Art (Resina)' },
+        { key: 'print3d', label: '🖨️ 3D Lab & Impresiones 3D' },
+        { key: 'pinatas', label: '🎉 Piñatas (Creaciones Lola)' },
         { key: 'paint', label: '🎨 Automotriz & Latonería' },
-        { key: 'movil', label: '🛵 Transporte Express' }
+        { key: 'cauchera', label: '🔧 Auxilio & Montallantas 24/7' },
+        { key: 'movil', label: '🛵 PediGochos Móvil' }
       ];
 
       let html = `
@@ -3817,6 +3971,7 @@ ${mapsLink}
 
     this.currentCategory = 'comidas';
     window.activeFoodTypeFilter = foodTypeId;
+    this.updateQuickFiltersForCategory();
 
     // 1. Update quick craving chips styles
     document.querySelectorAll('#quick-food-craving-chips .craving-chip').forEach(btn => {

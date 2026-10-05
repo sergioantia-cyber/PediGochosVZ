@@ -837,6 +837,17 @@
               Control de cotizaciones, fichas técnicas, pedidos personalizados y solicitudes en vivo por categoría de servicio.
             </p>
           </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <select id="admin-quick-service-qr-select" onchange="if(this.value){ AdminApp.openServiceQRModal(this.value); this.value=''; }" style="background: #09090D; border: 1.5px solid #FF6B00; color: #FFA000; font-size: 12px; font-weight: 800; padding: 8px 14px; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(255,107,0,0.25);">
+              <option value="">📱 Generar QR de Servicio...</option>
+              <option value="resin">✨ Shelli Art (Resina)</option>
+              <option value="print3d">🖨️ 3D Lab (Impresión 3D)</option>
+              <option value="pinatas">🎉 Piñatas (Creaciones Lola)</option>
+              <option value="paint">🎨 Latonería y Pintura</option>
+              <option value="cauchera">🔧 Cauchera Cachu 24/7</option>
+              <option value="movil">🛵 PediGochos Móvil</option>
+            </select>
+          </div>
         </div>
 
         <!-- Services & Flash Offers KPI Metrics Bar -->
@@ -883,9 +894,14 @@
                 Cotizaciones con fotos de choques, pintura automotriz, piezas y chat de negociación en vivo.
               </p>
             </div>
-            <button type="button" onclick="AdminApp.openPaintAdminModal()" style="background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(220,38,38,0.35);">
-              <span>🎨</span> Administrar Latonería
-            </button>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" onclick="AdminApp.openPaintAdminModal()" style="flex: 1; background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(220,38,38,0.35);">
+                <span>🎨</span> Administrar Latonería
+              </button>
+              <button type="button" onclick="AdminApp.openServiceQRModal('paint')" style="background: rgba(234, 88, 12, 0.18); border: 1.5px solid #EA580C; color: #FFA000; font-weight: 800; padding: 10px 14px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Generar Código QR y Enlace">
+                <span>📱</span> QR
+              </button>
+            </div>
           </div>
 
           <!-- 2. 3D Lab -->
@@ -902,9 +918,14 @@
                 Pedidos de piezas 3D, cotizador automático por gramo y hora de máquina, y archivos STL.
               </p>
             </div>
-            <button type="button" onclick="AdminApp.openPrint3DAdminModal()" style="background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(79,70,229,0.35);">
-              <span>🖨️</span> Administrar 3D Lab
-            </button>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" onclick="AdminApp.openPrint3DAdminModal()" style="flex: 1; background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(79,70,229,0.35);">
+                <span>🖨️</span> Administrar 3D Lab
+              </button>
+              <button type="button" onclick="AdminApp.openServiceQRModal('print3d')" style="background: rgba(99, 102, 241, 0.18); border: 1.5px solid #6366F1; color: #818CF8; font-weight: 800; padding: 10px 14px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Generar Código QR y Enlace">
+                <span>📱</span> QR
+              </button>
+            </div>
           </div>
 
           <!-- 3. Shelli Art -->
@@ -921,9 +942,14 @@
                 Creaciones en resina epóxica, personalización de colores, llaveros, tablas y fichas técnicas.
               </p>
             </div>
-            <button type="button" onclick="AdminApp.openResinAdminModal()" style="background: linear-gradient(135deg, #DB2777 0%, #9D174D 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(219,39,119,0.35);">
-              <span>✨</span> Administrar Shelli Art
-            </button>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" onclick="AdminApp.openResinAdminModal()" style="flex: 1; background: linear-gradient(135deg, #DB2777 0%, #9D174D 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(219,39,119,0.35);">
+                <span>✨</span> Administrar Shelli Art
+              </button>
+              <button type="button" onclick="AdminApp.openServiceQRModal('resin')" style="background: rgba(244, 114, 182, 0.18); border: 1.5px solid #F472B6; color: #F472B6; font-weight: 800; padding: 10px 14px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Generar Código QR y Enlace">
+                <span>📱</span> QR
+              </button>
+            </div>
           </div>
 
           <!-- 4. Piñatas Personalizadas -->
@@ -940,9 +966,14 @@
                 Piñatas personalizadas temáticas, selección de medidas y cotizaciones directas a WhatsApp.
               </p>
             </div>
-            <button type="button" onclick="AdminApp.openPinatasAdminModal()" style="background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(225,29,72,0.35);">
-              <span>🪅</span> Administrar Piñatas
-            </button>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" onclick="AdminApp.openPinatasAdminModal()" style="flex: 1; background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(225,29,72,0.35);">
+                <span>🪅</span> Administrar Piñatas
+              </button>
+              <button type="button" onclick="AdminApp.openServiceQRModal('pinatas')" style="background: rgba(244, 63, 94, 0.18); border: 1.5px solid #F43F5E; color: #FB7185; font-weight: 800; padding: 10px 14px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Generar Código QR y Enlace">
+                <span>📱</span> QR
+              </button>
+            </div>
           </div>
 
           <!-- 5. Cauchera 24/7 -->
@@ -958,9 +989,14 @@
                 Auxilio vial de despinchado y cambio de neumáticos de motos y autos a domicilio en tiempo real.
               </p>
             </div>
-            <button type="button" onclick="AdminApp.openCaucheraAdminModal()" style="background: linear-gradient(135deg, #D97706 0%, #B45309 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(217,119,6,0.35);">
-              <span>🛞</span> Administrar Cauchera 24/7
-            </button>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" onclick="AdminApp.openCaucheraAdminModal()" style="flex: 1; background: linear-gradient(135deg, #D97706 0%, #B45309 100%); color: #FFF; border: none; font-weight: 800; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(217,119,6,0.35);">
+                <span>🛞</span> Administrar Cauchera 24/7
+              </button>
+              <button type="button" onclick="AdminApp.openServiceQRModal('cauchera')" style="background: rgba(239, 68, 68, 0.18); border: 1.5px solid #EF4444; color: #FCA5A5; font-weight: 800; padding: 10px 14px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Generar Código QR y Enlace">
+                <span>📱</span> QR
+              </button>
+            </div>
           </div>
 
           <!-- 6. Movilidad Urbana -->
@@ -982,6 +1018,9 @@
               </button>
               <button type="button" onclick="AdminApp.openDriverChatModal()" style="flex: 1; background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: #FFF; border: none; font-weight: 800; padding: 10px 6px; border-radius: 10px; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 4px 12px rgba(99,102,241,0.35);" title="Abrir canal grupal de chat con conductores">
                 <span>💬</span> Chat
+              </button>
+              <button type="button" onclick="AdminApp.openServiceQRModal('movil')" style="background: rgba(255, 107, 0, 0.18); border: 1.5px solid #FF6B00; color: #FFA000; font-weight: 800; padding: 10px 12px; border-radius: 10px; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" title="Generar Código QR y Enlace">
+                <span>📱</span> QR
               </button>
             </div>
           </div>
@@ -3272,13 +3311,13 @@
           <h3 id="qr-modal-title" style="margin: 0; color: #FFF; font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px;">
             📱 Display QR Restaurante & Mesas
           </h3>
-          <p style="margin: 3px 0 0 0; font-size: 12px; color: #94A3B8;">Diseño de alta definición para acrílicos de mesa, displays y stickers.</p>
+          <p id="qr-modal-subtitle" style="margin: 3px 0 0 0; font-size: 12px; color: #94A3B8;">Diseño de alta definición para acrílicos de mesa, displays y stickers.</p>
         </div>
         <button class="modal-close" onclick="AdminApp.closeStoreQRModal()" style="font-size: 18px; color: #fff; background: rgba(255,255,255,0.1); border: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</button>
       </div>
 
       <!-- Table / Mesa selector option -->
-      <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px; margin-bottom: 14px;">
+      <div id="qr-modal-table-container" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px; margin-bottom: 14px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <label style="font-size: 12px; font-weight: 800; color: #FCD34D;">
             🍽️ Número de Mesa / Ubicación (Opcional):
@@ -3329,7 +3368,7 @@
         </div>
 
         <div style="display: flex; gap: 8px;">
-          <button type="button" onclick="AdminApp.downloadBatchTableQRs(1, 10)" style="flex: 1; background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1.5px solid #10B981; padding: 9px 12px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+          <button type="button" id="qr-modal-batch-btn" onclick="AdminApp.downloadBatchTableQRs(1, 10)" style="flex: 1; background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1.5px solid #10B981; padding: 9px 12px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
             📦 Descargar Lote Mesas (1 al 10)
           </button>
           <button type="button" onclick="AdminApp.openStoreQRInNewTab()" style="background: #334155; color: #E2E8F0; border: none; padding: 9px 14px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
