@@ -243,6 +243,10 @@ class MarketplaceController {
     }
 
     this.renderEstablishments();
+    this.initHorizontalScroll('food-type-filters-container');
+    this.initHorizontalScroll('featured-carousel-container');
+    this.initHorizontalScroll('quick-food-craving-chips');
+    this.initHorizontalScroll('marketplace-quick-filters');
     this.updateCartBadge();
     await this.checkSupabaseSession();
     this.checkActiveOrderTracking();
@@ -2080,6 +2084,78 @@ ${mapsLink}
     }
   }
 
+  scrollCarousel(containerId, offset) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.scrollBy({ left: offset, behavior: 'smooth' });
+  }
+
+  initHorizontalScroll(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el || el.dataset.horizontalScrollInited === 'true') return;
+    el.dataset.horizontalScrollInited = 'true';
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let hasDragged = false;
+
+    el.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      isDown = true;
+      hasDragged = false;
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+      el.classList.add('is-dragging');
+    });
+
+    const stopDragging = () => {
+      if (!isDown) return;
+      isDown = false;
+      setTimeout(() => {
+        el.classList.remove('is-dragging');
+      }, 50);
+    };
+
+    window.addEventListener('mouseup', stopDragging);
+
+    const onMouseMove = (e) => {
+      if (!isDown) return;
+      const x = e.pageX - el.offsetLeft;
+      const walk = x - startX;
+      if (Math.abs(walk) > 5) {
+        hasDragged = true;
+      }
+      if (hasDragged) {
+        e.preventDefault();
+        el.scrollLeft = scrollLeft - walk;
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+
+    // Intercept clicks on child elements if the user was dragging
+    el.addEventListener('click', (e) => {
+      if (hasDragged) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setTimeout(() => { hasDragged = false; }, 0);
+      }
+    }, true);
+
+    // Wheel event to translate vertical wheel to horizontal scroll smoothly
+    el.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) {
+        const atStart = el.scrollLeft <= 1 && e.deltaY < 0;
+        const atEnd = (el.scrollLeft + el.clientWidth >= el.scrollWidth - 2) && e.deltaY > 0;
+        if (!atStart && !atEnd) {
+          e.preventDefault();
+          el.scrollBy({ left: e.deltaY * 1.2, behavior: 'auto' });
+        }
+      }
+    }, { passive: false });
+  }
+
   renderFoodBubbleCarousel() {
     const container = document.getElementById('food-type-filters-container');
     if (!container) return;
@@ -2117,6 +2193,8 @@ ${mapsLink}
         </button>
       `;
     }).join('');
+
+    this.initHorizontalScroll('food-type-filters-container');
   }
 
   // Legacy fallback grid
@@ -3897,6 +3975,8 @@ ${mapsLink}
       `;
       container.appendChild(card);
     });
+
+    this.initHorizontalScroll('featured-carousel-container');
   }
 
   renderFoodTypeFilterButtons() {

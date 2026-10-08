@@ -367,9 +367,15 @@
             <span class="material-symbols-outlined text-badge-gold text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
             <h3 class="font-headline-sm text-headline-sm text-on-surface">Locales Mejor Valorados</h3>
           </div>
-          <span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">⭐ Top Favoritos</span>
+          <div class="flex items-center gap-2">
+            <span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">⭐ Top Favoritos</span>
+            <div class="flex items-center gap-1">
+              <button type="button" class="carousel-nav-btn prev" onclick="MarketplaceApp.scrollCarousel('featured-carousel-container', -260)" title="Anterior">‹</button>
+              <button type="button" class="carousel-nav-btn next" onclick="MarketplaceApp.scrollCarousel('featured-carousel-container', 260)" title="Siguiente">›</button>
+            </div>
+          </div>
         </div>
-        <div class="flex gap-3 overflow-x-auto no-scrollbar -mx-margin px-margin py-2" id="featured-carousel-container" style="scroll-snap-type: x mandatory;">
+        <div class="flex gap-3 overflow-x-auto no-scrollbar -mx-margin px-margin py-2" id="featured-carousel-container" style="scroll-snap-type: x proximity;">
           <!-- Dynamically populated by MarketplaceApp.renderFeaturedCarousel() -->
         </div>
       </section>
@@ -381,7 +387,11 @@
             <span class="material-symbols-outlined text-amber-200 text-[22px] drop-shadow-sm">restaurant_menu</span>
             <h3 class="font-headline-sm text-headline-sm text-white font-bold drop-shadow-sm">¿Qué te provoca hoy?</h3>
           </div>
-          <button type="button" class="font-label-sm text-label-sm text-white font-bold bg-white/20 hover:bg-white/30 border border-white/30 px-3 py-1 rounded-full backdrop-blur-md transition-all shadow-sm active:scale-95" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">Ver todo</button>
+          <div class="flex items-center gap-1.5">
+            <button type="button" class="carousel-nav-btn-cravings prev" onclick="MarketplaceApp.scrollCarousel('food-type-filters-container', -240)" title="Desplazar a la izquierda">‹</button>
+            <button type="button" class="carousel-nav-btn-cravings next" onclick="MarketplaceApp.scrollCarousel('food-type-filters-container', 240)" title="Desplazar a la derecha">›</button>
+            <button type="button" class="font-label-sm text-label-sm text-white font-bold bg-white/20 hover:bg-white/30 border border-white/30 px-3 py-1 rounded-full backdrop-blur-md transition-all shadow-sm active:scale-95" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">Ver todo</button>
+          </div>
         </div>
         <div class="flex gap-3 overflow-x-auto no-scrollbar py-1" id="food-type-filters-container">
           <!-- Populated by MarketplaceApp.renderFoodBubbleCarousel() -->
