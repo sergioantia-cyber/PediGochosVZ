@@ -4258,6 +4258,13 @@ ${mapsLink}
       const isDaySpecific = !days.includes('todos');
       const isAvailableToday = days.includes('todos') || days.includes(todayDay);
 
+      const isFestival = Boolean(
+        prod.is_festival === true ||
+        prod.is_festival === 'true' ||
+        (prod.name && /festival/i.test(prod.name)) ||
+        (prod.category && /festival/i.test(prod.category))
+      );
+
       let dayBadgeHTML = '';
       if (isAgotado) {
         dayBadgeHTML = `<span style="display: inline-block; font-size: 10px; font-weight: 800; background: rgba(239,68,68,0.2); color: #EF4444; border: 1px solid rgba(239,68,68,0.4); padding: 2px 6px; border-radius: 4px; margin-bottom: 4px;">🚫 Agotado por Hoy</span>`;
@@ -4268,12 +4275,14 @@ ${mapsLink}
           const daysNames = days.map(d => d.slice(0, 3).toUpperCase()).join(', ');
           dayBadgeHTML = `<span style="display: inline-block; font-size: 9.5px; font-weight: 700; background: rgba(255,255,255,0.06); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin-bottom: 4px;">📅 Solo ${daysNames}</span>`;
         }
+      } else if (isFestival) {
+        dayBadgeHTML = `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 900; background: rgba(15, 23, 42, 0.94); color: #FFB020; border: 1.5px solid #FF8A00; padding: 2.5px 7px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">✨ 2 Platos x $30.000</span>`;
       }
 
       const isItemDisabled = !isStoreOpen || isAgotado || !isAvailableToday;
 
       const card = document.createElement('div');
-      card.className = `product-card animate-fade-in-up ${isItemDisabled ? 'product-disabled' : ''}`;
+      card.className = `product-card animate-fade-in-up ${isFestival ? 'product-card-festival' : ''} ${isItemDisabled ? 'product-disabled' : ''}`;
       card.style.cursor = isItemDisabled ? 'not-allowed' : 'pointer';
       card.style.animationDelay = `${index * 0.05}s`;
       if (!isStoreOpen) {
@@ -4312,21 +4321,34 @@ ${mapsLink}
 
       const formattedPrice = this.formatPesos(prod.price);
 
+      const festivalRibbonHTML = isFestival
+        ? `<div class="festival-ribbon-bar"><span style="font-size: 13px;">🎉</span> FESTIVAL DÚO · 2 PLATOS X $30.000 <span style="font-size: 13px;">🔥</span></div>`
+        : '';
+
+      const pricePillHTML = isFestival
+        ? `<div class="product-price-pill" style="background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%); color: #FFFFFF; font-weight: 950; border: 1.5px solid #FFD07B; box-shadow: 0 4px 14px rgba(255, 107, 0, 0.5);"><span>${formattedPrice}</span></div>`
+        : `<div class="product-price-pill"><span>${formattedPrice}</span></div>`;
+
+      const detailsCtaHTML = isFestival
+        ? `<span class="btn-tap-details" style="color: #FF9E2C;"><span>🎉 Elegir 2 Platos</span><span>➔</span></span>`
+        : `<span class="btn-tap-details"><span>🔍 Ver detalles</span><span>➔</span></span>`;
+
       const actionButtonHTML = !isStoreOpen
         ? `<span style="font-size: 11px; color: #ef4444; font-weight: 800; background: rgba(239,68,68,0.18); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.35);">🔴 Cerrado</span>`
         : (isAgotado
           ? `<span style="font-size: 11px; color: #EF4444; font-weight: 800; background: rgba(239,68,68,0.18); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.35);">🚫 Agotado</span>`
           : (!isAvailableToday
             ? `<span style="font-size: 11px; color: var(--text-muted); font-weight: 800; background: rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 8px;">No hoy</span>`
-            : `<button class="btn-add-product" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')" title="Personalizar y agregar">+</button>`));
+            : (isFestival
+              ? `<button class="btn-add-product" style="background: linear-gradient(135deg, #FF8A00 0%, #EA580C 100%); box-shadow: 0 4px 14px rgba(255, 107, 0, 0.5); color: #FFF;" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')" title="Personalizar Festival">+</button>`
+              : `<button class="btn-add-product" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')" title="Personalizar y agregar">+</button>`)));
 
       card.innerHTML = `
+        ${festivalRibbonHTML}
         <div class="product-square-media">
           ${imgHTML}
           ${dayBadgeHTML ? `<div class="product-badge-float">${dayBadgeHTML}</div>` : ''}
-          <div class="product-price-pill">
-            <span>${formattedPrice}</span>
-          </div>
+          ${pricePillHTML}
         </div>
         <div class="product-card-body">
           <div>
@@ -4334,10 +4356,7 @@ ${mapsLink}
             <p>${prod.description || 'Deliciosa preparación artesanal elaborada con los mejores ingredientes.'}</p>
           </div>
           <div class="product-card-cta">
-            <span class="btn-tap-details">
-              <span>🔍 Ver detalles</span>
-              <span>➔</span>
-            </span>
+            ${detailsCtaHTML}
             ${actionButtonHTML}
           </div>
         </div>

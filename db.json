@@ -21397,6 +21397,220 @@
         }
       ],
       "disabled": false
+    },
+    {
+      "id": "parrilla-gocha-test-1788220000000",
+      "name": "La Parrilla Gocha - Restaurante de Prueba",
+      "category": "comidas",
+      "description": "Hamburguesas al carbón, cortes a la parrilla, perros gigantes y combos festivales al mejor estilo gocho.",
+      "logo": "🔥",
+      "bannerType": "gradient",
+      "banner": "linear-gradient(135deg, #7F1D1D 0%, #C2410C 50%, #B45309 100%)",
+      "linkKey": "PARRILLAGRIL",
+      "delivery_fee": 4000,
+      "themeColor": "#EA580C",
+      "logoImage": "https://images.unsplash.com/photo-1550547660-d9450f859349?w=300",
+      "tables": [],
+      "layout": [],
+      "open_time": "00:00",
+      "close_time": "23:59",
+      "disabled": false,
+      "location": "San Antonio del Táchira",
+      "adminRating": 4.9,
+      "reviewCount": 28,
+      "created_at": "2026-10-08T12:00:00.000Z",
+      "products": [
+        {
+          "id": "prod-festival-duo-30k",
+          "name": "🎉 Festival Dúo: 2 Platos Especiales x $30.000",
+          "is_festival": true,
+          "price": 30000,
+          "category": "🎉 Festival Especial",
+          "image": "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=600",
+          "description": "¡Combo Festival de la Casa! Elige 2 de nuestros platos más pedidos por solo $30.000 COP. Selecciona tus 2 especialidades favoritas entre Hamburguesas Grill, Perros Gigantes, Patacones o Salchipapas.",
+          "exclusions": [
+            "Sin Cebolla",
+            "Sin Salsas",
+            "Sin Pepinillos",
+            "Salsas Aparte"
+          ],
+          "modifiers": [
+            {
+              "group_id": "grp-festival-plato-1",
+              "group_name": "Primer Plato del Festival",
+              "selection_type": "single",
+              "is_required": true,
+              "options": [
+                {
+                  "option_id": "opt-f1-burger",
+                  "name": "🍔 Hamburguesa Clásica al Carbón (160g res, cheddar y tocineta)",
+                  "extra_price": 0
+                },
+                {
+                  "option_id": "opt-f1-perro",
+                  "name": "🌭 Perro Caliente Gigante (Doble salchicha, queso y papitas)",
+                  "extra_price": 0
+                },
+                {
+                  "option_id": "opt-f1-patacon",
+                  "name": "🥪 Patacón Criollo Especial (Carne mechada y queso de mano)",
+                  "extra_price": 0
+                },
+                {
+                  "option_id": "opt-f1-salchipapa",
+                  "name": "🍟 Salchipapa Rústica Mixta (Con queso fundido y maíz tierno)",
+                  "extra_price": 0
+                }
+              ]
+            },
+            {
+              "group_id": "grp-festival-plato-2",
+              "group_name": "Segundo Plato del Festival",
+              "selection_type": "single",
+              "is_required": true,
+              "options": [
+                {
+                  "option_id": "opt-f2-burger",
+                  "name": "🍔 Hamburguesa Clásica al Carbón (160g res, cheddar y tocineta)",
+                  "extra_price": 0
+                },
+                {
+                  "option_id": "opt-f2-perro",
+                  "name": "🌭 Perro Caliente Gigante (Doble salchicha, queso y papitas)",
+                  "extra_price": 0
+                },
+                {
+                  "option_id": "opt-f2-patacon",
+                  "name": "🥪 Patacón Criollo Especial (Carne mechada y queso de mano)",
+                  "extra_price": 0
+                },
+                {
+                  "option_id": "opt-f2-salchipapa",
+                  "name": "🍟 Salchipapa Rústica Mixta (Con queso fundido y maíz tierno)",
+                  "extra_price": 0
+                }
+              ]
+            },
+            {
+              "group_id": "grp-festival-bebida",
+              "group_name": "Acompañamiento de Bebida",
+              "selection_type": "single",
+              "is_required": false,
+              "options": [
+                {
+                  "option_id": "opt-fb-cola",
+                  "name": "🥤 Coca-Cola 400ml",
+                  "extra_price": 4000
+                },
+                {
+                  "option_id": "opt-fb-te",
+                  "name": "🥤 Té Frío Lipton Limón 400ml",
+                  "extra_price": 3500
+                },
+                {
+                  "option_id": "opt-fb-agua",
+                  "name": "🥤 Agua Mineral Manantial 500ml",
+                  "extra_price": 3000
+                },
+                {
+                  "option_id": "opt-fb-none",
+                  "name": "❌ Sin bebida adicional",
+                  "extra_price": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "prod-burger-smash-19k",
+          "name": "🍔 Hamburguesa Doble Carne Smash & Cheddar",
+          "price": 19000,
+          "category": "🍔 Hamburguesas",
+          "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600",
+          "description": "Doble torta de carne smashed de 120g, queso cheddar americano fundido, cebolla caramelizada y salsa tártara de la casa.",
+          "exclusions": [
+            "Sin Cebolla",
+            "Sin Tocineta",
+            "Sin Salsa"
+          ]
+        },
+        {
+          "id": "prod-burger-crispy-17k",
+          "name": "🍔 Hamburguesa Pollo Crispy Ranch",
+          "price": 17000,
+          "category": "🍔 Hamburguesas",
+          "image": "https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?w=600",
+          "description": "Pechuga de pollo súper crocante con aderezo ranch, lechuga fresca, tomate y queso gouda.",
+          "exclusions": [
+            "Sin Lechuga",
+            "Sin Tomate",
+            "Sin Ranch"
+          ]
+        },
+        {
+          "id": "prod-perro-super-12k",
+          "name": "🌭 Perro Caliente Súper Gocho Especial",
+          "price": 12000,
+          "category": "🌭 Perros Calientes",
+          "image": "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=600",
+          "description": "Salchicha especial a la parrilla, queso blanco rallado, tocineta crujiente, papitas ralladas y mezcla de salsas tradicionales.",
+          "exclusions": [
+            "Sin Cebolla",
+            "Sin Tocineta",
+            "Sin Papitas"
+          ]
+        },
+        {
+          "id": "prod-patacon-mixto-19k",
+          "name": "🥪 Patacón Mixto Doble Queso",
+          "price": 19000,
+          "category": "🥪 Patacones",
+          "image": "https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=600",
+          "description": "Tostones dorados rellenos de carne desmechada, pollo a la plancha, queso de mano, aguacate fresco y salsa tártara.",
+          "exclusions": [
+            "Sin Aguacate",
+            "Sin Carne",
+            "Sin Pollo"
+          ]
+        },
+        {
+          "id": "prod-salchipapa-15k",
+          "name": "🍟 Salchipapa Rústica con Tocineta & Cheddar",
+          "price": 15000,
+          "category": "🍟 Raciones",
+          "image": "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600",
+          "description": "Papas rústicas doradas con rodajas de salchicha parrillera, queso cheddar fundido, tocineta ahumada y maíz dulce.",
+          "exclusions": [
+            "Sin Maíz",
+            "Sin Tocineta",
+            "Sin Cheddar"
+          ]
+        },
+        {
+          "id": "prod-coca-cola-5k",
+          "name": "🥤 Coca-Cola Personal 400ml",
+          "price": 5000,
+          "category": "🥤 Bebidas",
+          "image": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600",
+          "description": "Refresco original bien frío."
+        },
+        {
+          "id": "prod-te-frio-45k",
+          "name": "🥤 Té Frío Lipton Limón 400ml",
+          "price": 4500,
+          "category": "🥤 Bebidas",
+          "image": "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600",
+          "description": "Té frío refrescante con sabor a limón natural."
+        },
+        {
+          "id": "prod-agua-35k",
+          "name": "🥤 Agua Mineral Manantial 500ml",
+          "price": 3500,
+          "category": "🥤 Bebidas",
+          "image": "https://images.unsplash.com/photo-1559839914-17aae19cec71?w=600",
+          "description": "Botella de agua mineral pura bien fría."
+        }
+      ]
     }
   ],
   "orders": [

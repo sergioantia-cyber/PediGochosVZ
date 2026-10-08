@@ -1812,6 +1812,36 @@
   transform: scale(0.985);
 }
 
+/* Festival Special Dish Highlighted Frame */
+.product-card.product-card-festival {
+  border: 2px solid #FF8A00 !important;
+  background: linear-gradient(180deg, rgba(255, 138, 0, 0.08) 0%, #1E2330 100%) !important;
+  box-shadow: 0 8px 24px rgba(255, 107, 0, 0.28), 0 0 16px rgba(255, 138, 0, 0.2) !important;
+  position: relative;
+}
+
+.product-card.product-card-festival:hover {
+  border-color: #FFA25B !important;
+  background-color: #26212B !important;
+  box-shadow: 0 14px 32px rgba(255, 107, 0, 0.4), 0 0 24px rgba(255, 138, 0, 0.3) !important;
+}
+
+.product-card.product-card-festival .festival-ribbon-bar {
+  background: linear-gradient(90deg, #FF6B00 0%, #EA580C 100%);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+  padding: 5px 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
 /* Square Media Container */
 .product-card .product-square-media {
   position: relative;
