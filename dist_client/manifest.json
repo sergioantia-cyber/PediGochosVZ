@@ -1,15 +1,16 @@
 {
-  "short_name": "Cocina Gochos",
-  "name": "PediGochos Cocina KDS",
+  "short_name": "PediGochos",
+  "name": "PediGochos Delivery & Restaurantes",
+  "description": "Pide lo que quieras de los mejores restaurantes de San Antonio del Táchira con delivery express y GPS en vivo.",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3565/3565418.png",
+      "src": "/images/logo-pedigochos.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/kitchen.html",
+  "start_url": "/index.html",
   "background_color": "#0F172A",
   "theme_color": "#FF5E3A",
   "display": "standalone",

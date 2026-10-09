@@ -1,12 +1,16 @@
-const CACHE_NAME = 'pedigochos-v256';
+const CACHE_NAME = 'pedigochos-v257';
 const ASSETS = [
   '/',
   '/index.html',
   '/admin.html',
   '/kitchen.html',
+  '/driver.html',
   '/css/common.css',
   '/css/kitchen.css',
-  '/manifest.json'
+  '/css/driver.css',
+  '/manifest.json',
+  '/manifest-kitchen.json',
+  '/manifest-driver.json'
 ];
 
 self.addEventListener('install', (event) => {
