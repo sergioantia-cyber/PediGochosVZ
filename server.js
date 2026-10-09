@@ -981,8 +981,81 @@ function writeDB(data) {
   }
 }
 
-// Owner Master Key Configuration
-const OWNER_PASSWORDS = ['0424', 'DUEÑO123', 'DUENO123', 'OWNER123'];
+// ==============================================================================
+// 🔐 MASTER KEYS & SECURITY CONFIGURATION VIA ENVIRONMENT VARIABLES
+// ==============================================================================
+const isStrictSecurity = process.env.STRICT_SECURITY === 'true' || process.env.OWNER_PASSWORDS_STRICT === 'true';
+
+// 1. Owner / Superadmin Master Passwords (OWNER_MASTER_KEY, ADMIN_MASTER_KEY, MASTER_KEY, OWNER_PASSWORDS)
+const defaultOwnerPasswords = isStrictSecurity ? [] : ['0424', 'DUEÑO123', 'DUENO123', 'OWNER123'];
+const envOwnerKeys = [
+  process.env.OWNER_MASTER_KEY,
+  process.env.ADMIN_MASTER_KEY,
+  process.env.MASTER_KEY,
+  process.env.OWNER_PASSWORDS
+]
+  .filter(Boolean)
+  .flatMap(k => k.split(','))
+  .map(k => k.trim().toUpperCase())
+  .filter(Boolean);
+
+const OWNER_PASSWORDS = [...new Set([...envOwnerKeys, ...defaultOwnerPasswords])];
+if (OWNER_PASSWORDS.length === 0) {
+  OWNER_PASSWORDS.push('0424'); // Fallback protection
+}
+
+// 2. Safety Confirmation Key for Critical Operations (delete establishment, wipe orders/billing history)
+const envSafetyKey = (process.env.SAFETY_CONFIRM_KEY || '').trim().toUpperCase();
+
+function isSafetyCodeValid(code) {
+  if (!code) return false;
+  const clean = code.toString().trim().toUpperCase();
+  if (envSafetyKey && clean === envSafetyKey) return true;
+  return OWNER_PASSWORDS.includes(clean);
+}
+
+// 3. Merchant / Kitchen Master Keys (MERCHANT_MASTER_KEY, KITCHEN_MASTER_KEY, SHOP_MASTER_KEY)
+const defaultMerchantKeys = isStrictSecurity ? [] : ['0424', 'DUEÑO123', 'ADMIN123'];
+const envMerchantKeys = [
+  process.env.MERCHANT_MASTER_KEY,
+  process.env.KITCHEN_MASTER_KEY,
+  process.env.SHOP_MASTER_KEY
+]
+  .filter(Boolean)
+  .flatMap(k => k.split(','))
+  .map(k => k.trim().toUpperCase())
+  .filter(Boolean);
+
+const MERCHANT_MASTER_KEYS = [...new Set([...envMerchantKeys, ...defaultMerchantKeys, ...OWNER_PASSWORDS])];
+
+function isMerchantMasterKeyValid(key) {
+  if (!key) return false;
+  const clean = key.toString().trim().toUpperCase();
+  return MERCHANT_MASTER_KEYS.includes(clean);
+}
+
+// 4. Driver Master Keys (DRIVER_MASTER_KEY, DRIVER_PASSWORD, DRIVER_MASTER_PASSWORD)
+const defaultDriverKeys = isStrictSecurity ? [] : ['12345@', 'GOCHO-8821'];
+const envDriverKeys = [
+  process.env.DRIVER_MASTER_KEY,
+  process.env.DRIVER_PASSWORD,
+  process.env.DRIVER_MASTER_PASSWORD
+]
+  .filter(Boolean)
+  .flatMap(k => k.split(','))
+  .map(k => k.trim())
+  .filter(Boolean);
+
+const DRIVER_MASTER_KEYS = [...new Set([...envDriverKeys, ...defaultDriverKeys])];
+
+function isDriverMasterKeyValid(key) {
+  if (!key) return false;
+  const clean = key.toString().trim();
+  const cleanUpper = clean.toUpperCase();
+  return DRIVER_MASTER_KEYS.some(k => k === clean || k.toUpperCase() === cleanUpper);
+}
+
+console.log(`🔐 Master Keys Security initialized: Owner keys active (${OWNER_PASSWORDS.length}), Driver keys active (${DRIVER_MASTER_KEYS.length}), Merchant keys active (${MERCHANT_MASTER_KEYS.length}). Strict mode: ${isStrictSecurity ? 'ENABLED 🛡️' : 'DISABLED (compatibility mode)'}`);
 
 // REST API Endpoints
 // Verify Owner login and return complete establishments list with keys
@@ -990,14 +1063,30 @@ app.post('/api/owner/login', (req, res) => {
   const { password } = req.body;
   const normalizedInput = password ? password.trim().toUpperCase() : '';
   
-  console.log(`Intento de login de dueño: "${password}" (normalizado: "${normalizedInput}")`);
-
   if (OWNER_PASSWORDS.includes(normalizedInput)) {
     const db = readDB();
     res.json({ success: true, establishments: db.establishments });
   } else {
     res.status(401).json({ success: false, error: 'Clave de Dueño incorrecta' });
   }
+});
+
+// Endpoint to verify any master key securely without exposing secrets
+app.post('/api/auth/verify-master-key', (req, res) => {
+  const { code, type } = req.body;
+  if (!code) {
+    return res.status(400).json({ valid: false, error: 'Código requerido' });
+  }
+  const clean = code.toString().trim();
+  let isValid = false;
+  if (type === 'driver') {
+    isValid = isDriverMasterKeyValid(clean);
+  } else if (type === 'merchant' || type === 'kitchen') {
+    isValid = isMerchantMasterKeyValid(clean);
+  } else {
+    isValid = isSafetyCodeValid(clean);
+  }
+  res.json({ valid: isValid });
 });
 
 // Manual Cloud Save - Only called when admin clicks "💾 Guardar Cambios" button
@@ -1014,7 +1103,7 @@ app.post('/api/cloud/save', async (req, res) => {
   }
 });
 
-// Verify Merchant login by linkKey, code, id or Master Owner Key
+// Verify Merchant login by linkKey, code, id or Master Environment Key
 app.post('/api/merchant/login', (req, res) => {
   const { key } = req.body;
   if (!key) {
@@ -1031,8 +1120,8 @@ app.post('/api/merchant/login', (req, res) => {
     return lk === normalizedKey || id === normalizedKey;
   });
 
-  // 2. Master Owner Key override ('0424' or 'DUEÑO123' or 'ADMIN123')
-  if (!est && (normalizedKey === '0424' || normalizedKey === 'DUEÑO123' || normalizedKey === 'ADMIN123')) {
+  // 2. Master Key override (configured via Environment Variables)
+  if (!est && isMerchantMasterKeyValid(normalizedKey)) {
     est = (db.establishments || [])[0] || null;
   }
   
@@ -2028,12 +2117,14 @@ app.put('/api/establishments/:id', (req, res) => {
   res.json({ success: true, establishment: est });
 });
 
-// DELETE to remove an establishment (authorized by code 0424)
+// DELETE to remove an establishment (authorized by master safety code)
 app.delete('/api/establishments/:id', async (req, res) => {
   const { id } = req.params;
   const { code } = req.query;
+  const authHeader = req.headers['code'] || req.headers['authorization'];
+  const testCode = code || (authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : null);
   
-  if (code !== '0424') {
+  if (!isSafetyCodeValid(testCode)) {
     return res.status(403).json({ error: 'Código maestro incorrecto' });
   }
   
@@ -2052,12 +2143,14 @@ app.delete('/api/establishments/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-// POST to reset orders/billing history for an establishment (authorized by code 0424)
+// POST to reset orders/billing history for an establishment (authorized by master safety code)
 app.post('/api/establishments/:id/orders/reset', (req, res) => {
   const { id } = req.params;
   const { code } = req.query;
+  const authHeader = req.headers['code'] || req.headers['authorization'];
+  const testCode = code || (authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : null);
 
-  if (code !== '0424') {
+  if (!isSafetyCodeValid(testCode)) {
     return res.status(403).json({ error: 'Código maestro incorrecto' });
   }
 
@@ -2553,7 +2646,7 @@ app.post('/api/drivers/register', (req, res) => {
   res.status(201).json(driverData);
 });
 
-// POST driver login (yoxman / 12345@ and registered drivers)
+// POST driver login (supports environment variable master driver keys and registered drivers)
 app.post('/api/driver/login', (req, res) => {
   const { username, password, phone, linkKey } = req.body;
   const userClean = String(username || phone || '').trim().toLowerCase();
@@ -2562,26 +2655,32 @@ app.post('/api/driver/login', (req, res) => {
   const db = readDB();
   if (!db.drivers) db.drivers = [];
 
-  // Account requirement: yoxman / 12345@
-  if (userClean === 'yoxman' && passClean === '12345@') {
-    let yoxmanDriver = db.drivers.find(d => d.username === 'yoxman' || d.id === 'drv-yoxman' || (d.name && d.name.toLowerCase() === 'yoxman'));
-    if (!yoxmanDriver) {
-      yoxmanDriver = {
-        id: 'drv-yoxman',
-        username: 'yoxman',
-        name: 'Yoxman',
-        phone: 'yoxman',
-        linkKey: '12345@',
-        vehicleType: 'Moto 🛵',
-        status: 'Disponible',
-        isLockedName: true,
-        totalDeliveries: 0,
-        lastActive: new Date().toISOString()
-      };
-      db.drivers.push(yoxmanDriver);
-      writeDB(db);
+  // Master Driver Key validation (configured via Environment Variables)
+  if (isDriverMasterKeyValid(passClean)) {
+    let activeDriver = db.drivers.find(d => {
+      const dUser = String(d.username || d.phone || d.name || '').trim().toLowerCase();
+      return dUser === userClean;
+    });
+
+    if (!activeDriver) {
+      activeDriver = db.drivers.find(d => d.username === 'yoxman' || d.id === 'drv-yoxman') || db.drivers[0];
+      if (!activeDriver) {
+        activeDriver = {
+          id: 'drv-master-' + Date.now(),
+          username: userClean || 'repartidor',
+          name: (userClean ? userClean.charAt(0).toUpperCase() + userClean.slice(1) : 'Repartidor Autorizado'),
+          phone: userClean || '+573227949751',
+          linkKey: passClean,
+          vehicleType: 'Moto 🛵',
+          status: 'Disponible',
+          totalDeliveries: 0,
+          lastActive: new Date().toISOString()
+        };
+        db.drivers.push(activeDriver);
+        writeDB(db);
+      }
     }
-    return res.json({ success: true, driver: yoxmanDriver });
+    return res.json({ success: true, driver: activeDriver });
   }
 
   // Check matching driver in db.drivers
@@ -2593,21 +2692,6 @@ app.post('/api/driver/login', (req, res) => {
 
   if (match) {
     return res.json({ success: true, driver: match });
-  }
-
-  // Fallback for default Central driver: +573227949751 with GOCHO-8821
-  if ((userClean === '+573227949751' || userClean === '573227949751' || userClean === 'central') && passClean.toUpperCase() === 'GOCHO-8821') {
-    return res.json({
-      success: true,
-      driver: {
-        id: 'drv-central-1',
-        name: 'Central Gocho',
-        phone: '+573227949751',
-        linkKey: 'GOCHO-8821',
-        vehicleType: 'Moto 🛵',
-        status: 'Disponible'
-      }
-    });
   }
 
   res.status(401).json({ success: false, error: 'Usuario o clave de repartidor incorrecta.' });

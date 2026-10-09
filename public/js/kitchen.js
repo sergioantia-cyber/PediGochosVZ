@@ -3699,7 +3699,22 @@ class KitchenController {
 
       if (newKeyInput && newKeyInput !== currentLinkKey.toUpperCase()) {
         const masterCode = prompt('⚠️ Para modificar la Clave de Vinculación debes ingresar el Código de Confirmación Maestro:');
-        if (masterCode === '0424') {
+        let isAuthorized = false;
+        if (masterCode && masterCode.trim()) {
+          try {
+            const vRes = await fetch('/api/auth/verify-master-key', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code: masterCode.trim(), type: 'kitchen' })
+            });
+            const vData = await vRes.json();
+            if (vData.valid) isAuthorized = true;
+          } catch (e) {
+            if (masterCode.trim() === '0424') isAuthorized = true;
+          }
+        }
+
+        if (isAuthorized) {
           finalLinkKey = newKeyInput;
           newLinkKeyToSend = newKeyInput;
           localStorage.setItem(`admin_key_${this.selectedId}`, newKeyInput);

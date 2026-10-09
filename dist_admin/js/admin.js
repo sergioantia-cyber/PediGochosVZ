@@ -3713,16 +3713,11 @@ class AdminController {
   }
 
   async deleteEstablishment(id, name) {
-    const code = prompt(`⚠️ ATENCIÓN: Estás a punto de eliminar permanentemente el comercio "${name}".\n\nPor favor, ingresa el código maestro de seguridad 0424 para confirmar:`);
-    if (code === null) return;
-
-    if (code !== '0424') {
-      alert('❌ Código maestro incorrecto. Operación cancelada.');
-      return;
-    }
+    const code = prompt(`⚠️ ATENCIÓN: Estás a punto de eliminar permanentemente el comercio "${name}".\n\nPor favor, ingresa el código maestro de seguridad para confirmar:`);
+    if (!code || !code.trim()) return;
 
     try {
-      const response = await fetch(`/api/establishments/${id}?code=0424`, {
+      const response = await fetch(`/api/establishments/${id}?code=${encodeURIComponent(code.trim())}`, {
         method: 'DELETE'
       });
 
@@ -3732,7 +3727,7 @@ class AdminController {
         this.markPendingChanges();
       } else {
         const data = await response.json();
-        alert('Error al eliminar establecimiento: ' + (data.error || 'Problema desconocido'));
+        alert('❌ Error: ' + (data.error || 'Código maestro incorrecto o problema en servidor'));
       }
     } catch (err) {
       console.error(err);
@@ -3745,16 +3740,11 @@ class AdminController {
     const est = this.establishments.find(e => e.id === this.activeShopId);
     if (!est) return;
 
-    const code = prompt(`⚠️ ATENCIÓN: Estás a punto de resetear e iniciar desde $0 toda la facturación e historial de pedidos del establecimiento "${est.name}".\n\nPor favor, ingresa el código de confirmación 0424 para proceder:`);
-    if (code === null) return;
-
-    if (code !== '0424') {
-      alert('❌ Código maestro incorrecto. Operación cancelada.');
-      return;
-    }
+    const code = prompt(`⚠️ ATENCIÓN: Estás a punto de resetear e iniciar desde $0 toda la facturación e historial de pedidos del establecimiento "${est.name}".\n\nPor favor, ingresa el código maestro de confirmación para proceder:`);
+    if (!code || !code.trim()) return;
 
     try {
-      const response = await fetch(`/api/establishments/${this.activeShopId}/orders/reset?code=0424`, {
+      const response = await fetch(`/api/establishments/${this.activeShopId}/orders/reset?code=${encodeURIComponent(code.trim())}`, {
         method: 'POST'
       });
 
@@ -3765,11 +3755,11 @@ class AdminController {
         this.markPendingChanges();
       } else {
         const data = await response.json();
-        alert('Error al resetear la facturación: ' + (data.error || 'Problema de red.'));
+        alert('❌ Error: ' + (data.error || 'Código maestro incorrecto o problema en servidor'));
       }
     } catch (err) {
       console.error(err);
-      alert('Error de red al intentar resetear la facturación.');
+      alert('Error de red al resetear facturación.');
     }
   }
 
