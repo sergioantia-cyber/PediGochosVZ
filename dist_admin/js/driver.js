@@ -60,8 +60,56 @@ class DriverController {
   init() {
     this.requestWakeLock();
     this.setupAudioUnlock();
+    this.initPushNotifications();
     this.updateVoiceToggleUI();
     this.checkLocalSession();
+  }
+
+  initPushNotifications() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      try {
+        Notification.requestPermission();
+      } catch(e) {}
+    }
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try {
+        window.Capacitor.Plugins.LocalNotifications.requestPermissions();
+      } catch(e) {}
+    }
+  }
+
+  scheduleSystemNotification(title, body) {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try {
+        window.Capacitor.Plugins.LocalNotifications.schedule({
+          notifications: [{
+            title,
+            body,
+            id: Math.floor(Math.random() * 100000),
+            schedule: { at: new Date(Date.now() + 100) },
+            sound: 'beep.wav'
+          }]
+        });
+        return;
+      } catch(e) {}
+    }
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, {
+              body,
+              icon: '/images/burger_royale.jpg',
+              badge: '/images/burger_royale.jpg',
+              vibrate: [800, 250, 800, 250, 1000]
+            });
+          });
+        } else {
+          new Notification(title, { body, icon: '/images/burger_royale.jpg' });
+        }
+      } catch(e) {}
+    }
   }
 
   toggleVoiceAlerts() {
@@ -154,11 +202,8 @@ class DriverController {
   checkLocalSession() {
     try {
       const saved = JSON.parse(localStorage.getItem('pedigochos_active_driver') || 'null');
-      if (saved && (saved.username === 'yoxman' || saved.id === 'drv-yoxman' || saved.phone === 'yoxman' || saved.name === 'Yoxman')) {
+      if (saved && (saved.id || saved.username || saved.name || saved.phone)) {
         this.driver = saved;
-        // Lock name strictly to Yoxman
-        this.driver.name = 'Yoxman';
-        this.driver.isLockedName = true;
         this.onSessionAuthenticated();
         return;
       }
@@ -175,10 +220,6 @@ class DriverController {
       gate.classList.remove('hidden');
       gate.style.display = 'flex';
     }
-    const uInp = document.getElementById('driver-input-username');
-    const pInp = document.getElementById('driver-input-password');
-    if (uInp && !uInp.value) uInp.value = 'yoxman';
-    if (pInp && !pInp.value) pInp.value = '12345@';
   }
 
   async loginDriver() {
@@ -191,7 +232,7 @@ class DriverController {
 
     if (!username || !password) {
       if (errEl) {
-        errEl.innerText = '⚠️ Ingresa usuario y clave.';
+        errEl.innerText = '⚠️ Ingresa usuario/teléfono y tu clave.';
         errEl.classList.remove('hidden');
       }
       return;
@@ -207,10 +248,8 @@ class DriverController {
       if (res.ok) {
         const data = await res.json();
         this.driver = data.driver;
-        // Guarantee locked name
-        this.driver.name = 'Yoxman';
-        this.driver.isLockedName = true;
         localStorage.setItem('pedigochos_active_driver', JSON.stringify(this.driver));
+        this.initPushNotifications();
         this.onSessionAuthenticated();
       } else {
         const errData = await res.json().catch(() => ({}));
@@ -254,8 +293,11 @@ class DriverController {
     if (!this.driver) return;
     const nameEl = document.getElementById('driver-profile-name');
     const phoneEl = document.getElementById('driver-profile-phone');
-    if (nameEl) nameEl.innerText = 'Yoxman';
-    if (phoneEl) phoneEl.innerText = `Repartidor Oficial • ${this.driver.vehicleType || 'Moto 🛵'}`;
+    if (nameEl) nameEl.innerText = this.driver.name || 'Repartidor';
+    if (phoneEl) {
+      const contactInfo = this.driver.phone ? `📱 ${this.driver.phone}` : 'Repartidor Oficial';
+      phoneEl.innerText = `${contactInfo} • ${this.driver.vehicleType || 'Moto 🛵'}`;
+    }
   }
 
   startDriverServices() {
@@ -341,8 +383,12 @@ class DriverController {
         if (navigator.vibrate) {
           navigator.vibrate([0, 800, 300, 800, 300, 1000]);
         }
-        // Speak incoming service announcement aloud
-        this.speakServiceAlert(brandNewList[0]);
+        // Speak incoming service announcement aloud and send system notification
+        const topSvc = brandNewList[0];
+        this.speakServiceAlert(topSvc);
+        const notifTitle = topSvc.serviceType === 'ride' ? '🚖 ¡NUEVA CARRERA MÓVIL DISPONIBLE!' : '📦 ¡NUEVO PEDIDO DE COMIDA / ENCOMIENDA!';
+        const notifBody = `${topSvc.origin || 'Origen'} ➔ ${topSvc.destination || 'Destino'} • Ganancia: ${topSvc.fareFormatted || `$${topSvc.fare || 5000} COP`}`;
+        this.scheduleSystemNotification(notifTitle, notifBody);
       }
 
       messages.forEach(m => this.knownMessageIds.add(m.id));
@@ -562,8 +608,8 @@ class DriverController {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          senderName: 'Yoxman',
-          senderPhone: this.driver?.phone || 'yoxman',
+          senderName: this.driver?.name || 'Repartidor',
+          senderPhone: this.driver?.phone || '',
           text: text
         })
       });
@@ -671,10 +717,14 @@ class DriverController {
   }
 
   // ==========================================
-  // TAKE & ACCEPT SERVICE
+  // TAKE & ACCEPT SERVICE (TOMA EXCLUSIVA)
   // ==========================================
   async takeService(orderId) {
     if (!orderId) return;
+
+    const myName = this.driver?.name || 'Repartidor';
+    const myId = this.driver?.id || 'drv-temp';
+    const myPhone = this.driver?.phone || '';
 
     try {
       const res = await fetch('/api/driver/accept-order', {
@@ -682,9 +732,9 @@ class DriverController {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId: orderId,
-          driverId: this.driver?.id || 'drv-yoxman',
-          driverName: 'Yoxman',
-          driverPhone: this.driver?.phone || 'yoxman'
+          driverId: myId,
+          driverName: myName,
+          driverPhone: myPhone
         })
       });
 
@@ -698,14 +748,15 @@ class DriverController {
         const chatCard = this.chatMessages.find(m => m.orderId === orderId);
         if (chatCard) {
           chatCard.status = 'Tomado';
-          chatCard.takenBy = 'Yoxman';
+          chatCard.takenBy = myName;
           this.renderChatFeed();
         }
 
         // Switch directly to active order detail tab
         this.switchTab('active');
       } else {
-        alert('Este servicio ya fue tomado por otro compañero repartidor.');
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || '⚠️ Este servicio ya fue tomado por otro compañero repartidor.');
         this.loadChatMessages();
       }
     } catch(e) {
@@ -726,8 +777,8 @@ class DriverController {
 
       const myActive = orders.find(o => 
         o.driver && 
-        (o.driver.name === 'Yoxman' || o.driver.id === this.driver?.id) && 
-        o.status === 'En Camino'
+        (o.driver.id === this.driver?.id || o.driver.phone === this.driver?.phone || (this.driver?.name && o.driver.name === this.driver.name)) && 
+        (o.status === 'En Camino' || o.status === 'Tomado')
       );
 
       if (myActive) {
@@ -790,7 +841,8 @@ class DriverController {
     const totalBs = (totalCop / 100).toFixed(2);
     const totalUsd = (totalCop / 4000).toFixed(2);
 
-    const whatsappGreeting = encodeURIComponent(`Hola ${custName}, soy Yoxman de PediGochos 🛵. Ya tomé tu servicio y voy en camino hacia tu ubicación.`);
+    const driverSelfName = this.driver?.name || 'tu repartidor';
+    const whatsappGreeting = encodeURIComponent(`Hola ${custName}, soy ${driverSelfName} de PediGochos 🛵. Ya tomé tu servicio y voy en camino hacia tu ubicación.`);
     const cleanPhone = custPhone ? custPhone.replace(/\D/g, '') : '';
     const whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${whatsappGreeting}` : '#';
 
@@ -1196,7 +1248,7 @@ class DriverController {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId: orderId,
-          driverPhone: this.driver?.phone || 'yoxman',
+          driverPhone: this.driver?.phone || '',
           hasProof: !!this.currentProofPhoto
         })
       });
@@ -1205,7 +1257,7 @@ class DriverController {
         if (typeof Sound !== 'undefined') Sound.playSuccessChime();
         if (navigator.vibrate) navigator.vibrate([0, 250, 100, 250]);
         this.speakText('¡Servicio completado con éxito! Buen trabajo.');
-        alert('🎉 ¡Excelente trabajo Yoxman! Servicio completado con éxito.');
+        alert(`🎉 ¡Excelente trabajo ${this.driver?.name || 'Compañero'}! Servicio completado con éxito.`);
         this.currentProofPhoto = null;
         this.activeOrder = null;
         this.switchTab('history');
@@ -1228,11 +1280,15 @@ class DriverController {
 
       const todayStr = new Date().toISOString().slice(0, 10);
       
-      // Filter orders belonging to Yoxman of today
+      // Filter orders belonging to this driver of today
       const todayOrders = orders.filter(o => {
         const isToday = (o.createdAt || '').startsWith(todayStr);
-        const isYoxman = o.driver && (o.driver.name === 'Yoxman' || o.driver.id === 'drv-yoxman' || o.driver.id === this.driver?.id);
-        return isToday && isYoxman;
+        const isMine = o.driver && (
+          o.driver.id === this.driver?.id || 
+          o.driver.phone === this.driver?.phone || 
+          (this.driver?.name && o.driver.name === this.driver.name)
+        );
+        return isToday && isMine;
       });
 
       // Calculate finances
@@ -1354,7 +1410,9 @@ class DriverController {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            driverPhone: 'yoxman',
+            driverId: this.driver?.id || null,
+            driverPhone: this.driver?.phone || null,
+            orderId: this.activeOrder?.id || null,
             latitude: lat,
             longitude: lng
           })

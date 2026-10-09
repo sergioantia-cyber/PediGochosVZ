@@ -831,6 +831,21 @@
                 <input type="hidden" id="order-distance">
               </div>
 
+              <!-- Direcciones Frecuentes Guardadas -->
+              <div class="form-group" style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-color); display: flex; align-items: center; gap: 5px;">
+                    <span>📍</span> Direcciones Frecuentes
+                  </label>
+                  <button type="button" onclick="MarketplaceApp.promptSaveCurrentAddress()" style="background: rgba(255, 94, 58, 0.12); border: 1px solid rgba(255, 94, 58, 0.35); color: #FF5E3A; border-radius: 8px; padding: 4px 10px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s;">
+                    ➕ Guardar actual
+                  </button>
+                </div>
+                <div id="saved-addresses-chips" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin;">
+                  <!-- Rendered dynamically by MarketplaceApp.renderSavedAddressesChips() -->
+                </div>
+              </div>
+
               <!-- Dirección -->
               <div class="form-group">
                 <label for="order-address">Dirección de Entrega <span class="required">*</span></label>
@@ -1031,7 +1046,10 @@
                   <span id="cart-subtotal">$0.00</span>
                 </div>
                 <div class="total-row delivery-cost-row">
-                  <span>Costo de Envío</span>
+                  <div>
+                    <span>Costo de Envío</span>
+                    <small id="cart-delivery-breakdown" style="display: block; font-size: 11px; color: #10B981; font-weight: 600;"></small>
+                  </div>
                   <span id="cart-delivery-cost">$2.00</span>
                 </div>
                 <div class="total-row hidden" id="cart-discount-row">

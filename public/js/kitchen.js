@@ -104,6 +104,14 @@ class KitchenController {
       Sound.onAlarmStop(() => this.hideAlarmBanner());
     }
 
+    // Request background notification permissions
+    if ('Notification' in window && Notification.permission === 'default') {
+      try { Notification.requestPermission(); } catch(e) {}
+    }
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try { window.Capacitor.Plugins.LocalNotifications.requestPermissions(); } catch(e) {}
+    }
+
     // Start 4-second REST polling fallback to guarantee live order updates & sound notifications
     this.startPollingFallback();
   }
@@ -223,6 +231,24 @@ class KitchenController {
                   schedule: { at: new Date(Date.now() + 100) }
                 }]
               });
+            } catch(e) {}
+          } else if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+              if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+                navigator.serviceWorker.ready.then(reg => {
+                  reg.showNotification('🚨 ¡NUEVO PEDIDO RECIBIDO! #' + orderCode, {
+                    body: `${activeNewOrders[0].customerName || 'Cliente'} - Total: $${activeNewOrders[0].total || 0}`,
+                    icon: '/images/burger_royale.jpg',
+                    badge: '/images/burger_royale.jpg',
+                    vibrate: [1000, 300, 1000, 300, 1500]
+                  });
+                });
+              } else {
+                new Notification('🚨 ¡NUEVO PEDIDO RECIBIDO! #' + orderCode, {
+                  body: `${activeNewOrders[0].customerName || 'Cliente'} - Total: $${activeNewOrders[0].total || 0}`,
+                  icon: '/images/burger_royale.jpg'
+                });
+              }
             } catch(e) {}
           }
         }

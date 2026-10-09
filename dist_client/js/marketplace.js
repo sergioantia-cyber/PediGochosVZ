@@ -74,6 +74,9 @@ class MarketplaceController {
     this.paymentMethod = 'Efectivo'; // Default payment method: 'Efectivo' or 'Transferencia'
     this.isTrackingMinimized = false; // Whether active order tracking is minimized
     this.activeQuickFilter = 'all'; // Quick filter: 'all', 'abiertos', 'mas_pedidos', 'mejor_valorados', 'mas_rapidos', 'cerca'
+    this.selectedSavedAddressLabel = null; // Currently active frequent address chip
+    this.driverTrackingMarker = null; // Live Leaflet marker for driver motorcycle
+    this.activeTrackingOrderId = null; // ID of active order being tracked in real time
 
     // Ride-hailing service state
     this.rideOrigin = { lat: null, lng: null, address: '' };
@@ -402,6 +405,9 @@ class MarketplaceController {
                 }
               }
             } catch(e) {}
+          }
+          if (data.type === 'DRIVER_LOCATION_UPDATE') {
+            this.handleDriverLocationUpdate(data);
           }
         } catch (e) {
           console.error(e);
@@ -6337,6 +6343,7 @@ ${mapsLink}
           this.initLeafletMap();
         }, 250);
       }
+      this.renderSavedAddressesChips();
     }
   }
 
@@ -6536,18 +6543,37 @@ ${mapsLink}
     if (usdEl) usdEl.innerText = '$' + (grandTotal / copPerUsd).toFixed(2) + ' USD';
     
     const deliveryRow = document.querySelector('.delivery-cost-row');
+    const deliveryBreakdownEl = document.getElementById('cart-delivery-breakdown');
     if (this.orderType === 'delivery') {
       deliveryRow.classList.remove('hidden');
       if (hasFreeDeliveryReward) {
         deliveryCostSpan.innerHTML = '<span style="color: #10B981; font-weight: 900;">GRATIS 🎉</span> <span style="font-size: 10px; color: #34D399; font-weight: 700;">(GochoPoints)</span>';
+        if (deliveryBreakdownEl) deliveryBreakdownEl.innerText = 'Envío Gratis aplicado';
       } else if (numShops === 1) {
         const singleShopId = shopIds[0];
         deliveryCostSpan.innerText = this.formatPesos(uniqueShops[singleShopId].delivery_fee);
+        if (deliveryBreakdownEl) {
+          if (this.calculatedDistanceKm) {
+            const dist = Number(this.calculatedDistanceKm).toFixed(1);
+            deliveryBreakdownEl.innerText = `${dist} km ($5.000 base + $1.500/km extra)`;
+          } else {
+            deliveryBreakdownEl.innerText = `Tarifa dinámica por distancia`;
+          }
+        }
       } else {
         deliveryCostSpan.innerText = this.formatPesos(totalDeliveryFee);
+        if (deliveryBreakdownEl) {
+          if (this.calculatedDistanceKm) {
+            const dist = Number(this.calculatedDistanceKm).toFixed(1);
+            deliveryBreakdownEl.innerText = `${numShops} locales • ${dist} km`;
+          } else {
+            deliveryBreakdownEl.innerText = `${numShops} locales`;
+          }
+        }
       }
     } else {
       deliveryRow.classList.add('hidden');
+      if (deliveryBreakdownEl) deliveryBreakdownEl.innerText = '';
     }
 
     // Update quick banner and review badges
@@ -6764,6 +6790,7 @@ ${mapsLink}
 
     // Step-specific handlers
     if (currentStep === 1) {
+      this.renderSavedAddressesChips();
       if (this.orderType === 'delivery') {
         setTimeout(() => {
           if (this.leafMap) this.leafMap.invalidateSize();
@@ -6846,8 +6873,13 @@ ${mapsLink}
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="color: var(--text-muted);">🛵 Envío a Domicilio:</span>
-          <span style="font-weight: 800; color: #10B981;">${hasFreeDelivery ? '🎉 GRATIS (GochoPoints)' : (document.getElementById('cart-delivery-cost')?.innerText || '$2.000')}</span>
+          <span style="font-weight: 800; color: #10B981;">${hasFreeDelivery ? '🎉 GRATIS (GochoPoints)' : (document.getElementById('cart-delivery-cost')?.innerText || '$5.000')}</span>
         </div>
+        ${(!hasFreeDelivery && this.orderType === 'delivery' && this.calculatedDistanceKm) ? `
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 5px 8px; font-size: 11.5px; color: #10B981; display: flex; justify-content: space-between; align-items: center;">
+          <span>📏 Tarifa por distancia (${Number(this.calculatedDistanceKm).toFixed(1)} km):</span>
+          <span style="font-weight: 700;">$5.000 base + $1.500/km extra</span>
+        </div>` : ''}
       </div>
     `;
   }
@@ -8349,7 +8381,7 @@ ${mapsLink}
       lines.push(`🔐 *Código de Seguridad:* *${securityCode}*`);
       if (deliv.distanceKm || context.distanceKm) {
         const dist = Number(deliv.distanceKm || context.distanceKm).toFixed(1);
-        lines.push(`📏 *Distancia Estimada:* ${dist} km`);
+        lines.push(`📏 *Distancia Estimada:* ${dist} km (Tarifa: $5.000 base + $1.500/km extra)`);
       }
       const lat = deliv.latitude || context.latitude;
       const lng = deliv.longitude || context.longitude;
@@ -9272,6 +9304,183 @@ ${mapsLink}
     this.setUserLocationOnMap([lat, lng], shopCenter, true);
   }
 
+  // --- GESTIÓN DE DIRECCIONES FRECUENTES GUARDADAS ---
+  getSavedAddresses() {
+    try {
+      const data = localStorage.getItem('pedigochos_saved_addresses');
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading saved addresses:', e);
+    }
+    return [];
+  }
+
+  saveAddressToStorage(addressObj) {
+    try {
+      let addresses = this.getSavedAddresses();
+      const existingIdx = addresses.findIndex(a => a.label.toLowerCase() === addressObj.label.toLowerCase());
+      if (existingIdx >= 0) {
+        addresses[existingIdx] = addressObj;
+      } else {
+        addresses.unshift(addressObj);
+      }
+      localStorage.setItem('pedigochos_saved_addresses', JSON.stringify(addresses));
+      this.renderSavedAddressesChips();
+    } catch (e) {
+      console.warn('Error saving address:', e);
+    }
+  }
+
+  deleteSavedAddress(encodedLabel) {
+    try {
+      const label = decodeURIComponent(encodedLabel);
+      let addresses = this.getSavedAddresses();
+      addresses = addresses.filter(a => a.label.toLowerCase() !== label.toLowerCase());
+      localStorage.setItem('pedigochos_saved_addresses', JSON.stringify(addresses));
+      if (this.selectedSavedAddressLabel === label) {
+        this.selectedSavedAddressLabel = null;
+      }
+      this.renderSavedAddressesChips();
+      this.showToast(`🗑️ Dirección eliminada`);
+    } catch (e) {
+      console.warn('Error deleting address:', e);
+    }
+  }
+
+  renderSavedAddressesChips() {
+    const container = document.getElementById('saved-addresses-chips');
+    if (!container) return;
+
+    const addresses = this.getSavedAddresses();
+    if (!addresses || addresses.length === 0) {
+      container.innerHTML = `
+        <div style="font-size: 11.5px; color: var(--text-muted); font-style: italic; padding: 4px 0;">
+          💡 Guarda tu dirección actual como Casa, Trabajo o Favorita para pedir en 1 toque.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = addresses.map(addr => {
+      const icon = addr.icon || (addr.label.toLowerCase().includes('casa') ? '🏠' : (addr.label.toLowerCase().includes('trabajo') || addr.label.toLowerCase().includes('oficina') ? '💼' : '⭐'));
+      const isSelected = (this.selectedSavedAddressLabel === addr.label);
+      const borderStyle = isSelected 
+        ? 'border-color: #FF5E3A; background: rgba(255, 94, 58, 0.2); box-shadow: 0 0 10px rgba(255, 94, 58, 0.3);' 
+        : 'border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.06);';
+      const safeLabel = encodeURIComponent(addr.label);
+
+      return `
+        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; border: 1.5px solid; font-size: 12px; font-weight: 700; color: #FFF; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; ${borderStyle}"
+             onclick="MarketplaceApp.applySavedAddress('${safeLabel}')"
+             title="${addr.address || addr.label}">
+          <span>${icon}</span>
+          <span>${addr.label}</span>
+          <button type="button" onclick="event.stopPropagation(); MarketplaceApp.deleteSavedAddress('${safeLabel}')" style="background: none; border: none; color: rgba(255,255,255,0.45); font-size: 14px; line-height: 1; padding: 0 0 0 4px; cursor: pointer; display: inline-flex; align-items: center;" title="Eliminar dirección">×</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  applySavedAddress(encodedLabel) {
+    const label = decodeURIComponent(encodedLabel);
+    const addresses = this.getSavedAddresses();
+    const addr = addresses.find(a => a.label.toLowerCase() === label.toLowerCase());
+    if (!addr) return;
+
+    this.selectedSavedAddressLabel = addr.label;
+
+    const addressInput = document.getElementById('order-address');
+    if (addressInput) {
+      addressInput.value = addr.address;
+    }
+
+    const refInput = document.getElementById('order-reference');
+    if (refInput && addr.reference) {
+      refInput.value = addr.reference;
+    }
+
+    if (addr.lat && addr.lng && !isNaN(parseFloat(addr.lat)) && !isNaN(parseFloat(addr.lng))) {
+      this.updateDeliveryCoordinates(parseFloat(addr.lat), parseFloat(addr.lng));
+      if (this.leafMap) {
+        this.leafMap.setView([parseFloat(addr.lat), parseFloat(addr.lng)], 16);
+      }
+    }
+
+    this.renderSavedAddressesChips();
+    this.showToast(`📍 Dirección '${addr.label}' aplicada y GPS ubicado`);
+  }
+
+  promptSaveCurrentAddress() {
+    const addressInput = document.getElementById('order-address');
+    const currentAddress = addressInput ? addressInput.value.trim() : '';
+    if (!currentAddress) {
+      alert('Por favor ingresa primero tu dirección de entrega en el campo de texto para poder guardarla.');
+      if (addressInput) addressInput.focus();
+      return;
+    }
+
+    const refInput = document.getElementById('order-reference');
+    const currentRef = refInput ? refInput.value.trim() : '';
+
+    const chosen = prompt(`¿Con qué nombre deseas guardar esta dirección?\n(Ejemplos: Casa, Trabajo, Pareja, Abuela):`, 'Casa');
+    if (!chosen || !chosen.trim()) return;
+
+    const cleanLabel = chosen.trim();
+    let icon = '📍';
+    const lower = cleanLabel.toLowerCase();
+    if (lower.includes('casa')) icon = '🏠';
+    else if (lower.includes('trabajo') || lower.includes('ofi')) icon = '💼';
+    else if (lower.includes('fav')) icon = '⭐';
+    else if (lower.includes('pareja') || lower.includes('novi') || lower.includes('amor')) icon = '❤️';
+
+    const newSaved = {
+      id: 'addr_' + Date.now(),
+      label: cleanLabel,
+      icon: icon,
+      address: currentAddress,
+      reference: currentRef,
+      lat: this.selectedLatitude,
+      lng: this.selectedLongitude
+    };
+
+    this.saveAddressToStorage(newSaved);
+    this.selectedSavedAddressLabel = cleanLabel;
+    this.renderSavedAddressesChips();
+    this.showToast(`✅ Dirección '${cleanLabel}' guardada con éxito`);
+  }
+
+  // --- SEGUIMIENTO GPS EN VIVO DEL REPARTIDOR ---
+  handleDriverLocationUpdate(data) {
+    if (!this.trackingMap || !data.lat || !data.lng) return;
+    const currentActiveId = this.activeTrackingOrderId || localStorage.getItem('active_order_id');
+    if (!currentActiveId) return;
+
+    const matches = (data.orderId && String(data.orderId) === String(currentActiveId)) ||
+                    (Array.isArray(data.orderIds) && data.orderIds.some(id => String(id) === String(currentActiveId)));
+    if (!matches) return;
+
+    const newCoords = [parseFloat(data.lat), parseFloat(data.lng)];
+    if (isNaN(newCoords[0]) || isNaN(newCoords[1])) return;
+
+    if (this.driverTrackingMarker) {
+      this.driverTrackingMarker.setLatLng(newCoords);
+      this.driverTrackingMarker.setPopupContent(`<b>Repartidor en camino 🛵</b><br><small style="color: #10B981; font-weight: 700;">📡 GPS en Vivo</small>`);
+    } else {
+      const driverIcon = L.divIcon({
+        className: 'custom-driver-marker',
+        html: `<div style="background-color: #10B981; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5); border: 2px solid white; animation: pulse 2s infinite;">🛵</div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+      this.driverTrackingMarker = L.marker(newCoords, { icon: driverIcon }).addTo(this.trackingMap);
+      this.driverTrackingMarker.bindPopup(`<b>Repartidor en camino 🛵</b><br><small style="color: #10B981; font-weight: 700;">📡 GPS en Vivo</small>`);
+      if (this.trackingLayers) this.trackingLayers.push(this.driverTrackingMarker);
+    }
+  }
+
   calculateGeodesicDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Earth radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -9328,6 +9537,8 @@ ${mapsLink}
 
   dismissActiveOrderTracking() {
     localStorage.removeItem('active_order_id');
+    this.activeTrackingOrderId = null;
+    this.driverTrackingMarker = null;
     this.isTrackingMinimized = false;
     if (this.trackingTimer) {
       clearTimeout(this.trackingTimer);
@@ -9555,6 +9766,7 @@ ${mapsLink}
   }
 
   async pollActiveOrder(orderId) {
+    this.activeTrackingOrderId = orderId;
     try {
       const res = await fetch('/api/orders');
       if (!res.ok) return;
@@ -9729,16 +9941,27 @@ ${mapsLink}
 
     // 3. Driver / Progress Position
     const status = order.status || 'Pendiente';
+    let driverCoords = null;
     if (status === 'En Camino' || status === 'En camino' || status === 'Listo') {
-      const driverCoords = [ (estCoords[0] + custCoords[0]) / 2, (estCoords[1] + custCoords[1]) / 2 ];
+      let isLiveGps = false;
+      const dLoc = order.driverLocation || (order.deliveryDetails && order.deliveryDetails.driverLocation);
+      if (dLoc && dLoc.lat && dLoc.lng && !isNaN(parseFloat(dLoc.lat)) && !isNaN(parseFloat(dLoc.lng))) {
+        driverCoords = [parseFloat(dLoc.lat), parseFloat(dLoc.lng)];
+        isLiveGps = true;
+      } else {
+        driverCoords = [ (estCoords[0] + custCoords[0]) / 2, (estCoords[1] + custCoords[1]) / 2 ];
+      }
       const driverIcon = L.divIcon({
         className: 'custom-driver-marker',
-        html: `<div style="background-color: #10B981; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5); border: 2px solid white;">🚴</div>`,
+        html: `<div style="background-color: #10B981; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5); border: 2px solid white;">🛵</div>`,
         iconSize: [36, 36],
         iconAnchor: [18, 18]
       });
       const driverMarker = L.marker(driverCoords, { icon: driverIcon }).addTo(this.trackingMap);
-      driverMarker.bindPopup(`<b>Repartidor en camino 🛵</b>`);
+      driverMarker.bindPopup(isLiveGps 
+        ? `<b>Repartidor en camino 🛵</b><br><small style="color: #10B981; font-weight: 700;">📡 GPS en Vivo Activo</small>` 
+        : `<b>Repartidor en camino 🛵</b>`);
+      this.driverTrackingMarker = driverMarker;
       this.trackingLayers.push(driverMarker);
     }
 
@@ -9747,7 +9970,9 @@ ${mapsLink}
     this.trackingLayers.push(line);
 
     // Fit bounds
-    const bounds = L.latLngBounds([estCoords, custCoords]);
+    const allPoints = [estCoords, custCoords];
+    if (driverCoords) allPoints.push(driverCoords);
+    const bounds = L.latLngBounds(allPoints);
     this.trackingMap.fitBounds(bounds, { padding: [30, 30] });
   }
 

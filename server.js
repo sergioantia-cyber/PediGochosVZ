@@ -571,12 +571,26 @@ async function syncFromPostgres() {
         const existingReviews = (localData && Array.isArray(localData.reviews)) ? localData.reviews : [];
         const existingPromos = (localData && Array.isArray(localData.promotions)) ? localData.promotions : [];
 
-        const restoredOrders = (orders || []).map(ord => {
+        const localOrders = (localData && Array.isArray(localData.orders)) ? localData.orders : [];
+        const mergedOrders = [...(orders || [])];
+        const pgOrderIds = new Set(mergedOrders.map(o => String(o.id).trim()));
+        localOrders.forEach(lo => {
+          if (lo && lo.id && !pgOrderIds.has(String(lo.id).trim())) {
+            mergedOrders.push(lo);
+          }
+        });
+
+        const restoredOrders = mergedOrders.map(ord => {
           const det = ord.deliveryDetails || {};
           return {
             ...ord,
             customerEmail: ord.customerEmail || det.customerEmail || null,
-            userId: ord.userId || det.userId || null
+            userId: ord.userId || det.userId || null,
+            driver: ord.driver || det.driver || null,
+            driverLocation: ord.driverLocation || det.driverLocation || null,
+            paymentMethod: ord.paymentMethod || det.paymentMethod || 'Efectivo',
+            paymentNotes: ord.paymentNotes || det.paymentNotes || '',
+            paymentReceiptUrl: ord.paymentReceiptUrl || det.paymentReceiptUrl || null
           };
         });
 
@@ -650,8 +664,6 @@ async function saveToPostgres() {
       }
     }
 
-
-
     // 2. Bulk Upsert Orders
     if (localData.orders && localData.orders.length > 0) {
       const normalizedOrders = localData.orders.map(ord => ({
@@ -666,7 +678,12 @@ async function saveToPostgres() {
         deliveryDetails: {
           ...(ord.deliveryDetails || {}),
           customerEmail: ord.customerEmail || (ord.deliveryDetails && ord.deliveryDetails.customerEmail) || null,
-          userId: ord.userId || (ord.deliveryDetails && ord.deliveryDetails.userId) || null
+          userId: ord.userId || (ord.deliveryDetails && ord.deliveryDetails.userId) || null,
+          driver: ord.driver || (ord.deliveryDetails && ord.deliveryDetails.driver) || null,
+          driverLocation: ord.driverLocation || (ord.deliveryDetails && ord.deliveryDetails.driverLocation) || null,
+          paymentMethod: ord.paymentMethod || (ord.deliveryDetails && ord.deliveryDetails.paymentMethod) || null,
+          paymentNotes: ord.paymentNotes || (ord.deliveryDetails && ord.deliveryDetails.paymentNotes) || null,
+          paymentReceiptUrl: ord.paymentReceiptUrl || (ord.deliveryDetails && ord.deliveryDetails.paymentReceiptUrl) || null
         },
         status: ord.status || 'Pendiente',
         cancelReason: ord.cancelReason || null,
@@ -1608,6 +1625,7 @@ app.put('/api/orders/:id/status', (req, res) => {
   if (driver) order.driver = driver;
   order.updatedAt = new Date().toISOString();
   writeDB(db);
+  saveChangesToCloud().catch(err => console.warn('Cloud sync error on status update:', err));
 
   broadcastToMerchant(order.establishmentId, {
     type: 'ORDER_UPDATED',
@@ -1780,6 +1798,7 @@ app.post('/api/orders', (req, res) => {
 
   db.orders.push(order);
   writeDB(db);
+  saveChangesToCloud().catch(err => console.warn('Cloud sync error on order creation:', err));
 
   console.log(`New order created: ${order.id} for establishment: ${order.establishmentId} (User: ${order.customerEmail || 'Guest'})`);
 
@@ -2690,6 +2709,15 @@ app.post('/api/driver/accept-order', (req, res) => {
     return res.status(404).json({ error: 'Pedido no encontrado' });
   }
 
+  // TOMA EXCLUSIVA: Si el pedido ya fue tomado por otro repartidor, rechazar con conflicto 409
+  if (order.driver && order.driver.id && order.driver.id !== driverId && (order.status === 'En Camino' || order.status === 'Tomado' || order.status === 'Entregado')) {
+    return res.status(409).json({
+      success: false,
+      error: `Este pedido ya fue tomado exclusivamente por ${order.driver.name}.`,
+      takenBy: order.driver.name
+    });
+  }
+
   order.status = 'En Camino';
   order.driver = {
     id: driverId || 'drv-temp',
@@ -2706,6 +2734,7 @@ app.post('/api/driver/accept-order', (req, res) => {
   }
 
   writeDB(db);
+  saveChangesToCloud().catch(err => console.warn('Cloud sync error on driver accept:', err));
 
   // Update in driver chat
   try {
@@ -2738,6 +2767,17 @@ app.post('/api/driver/accept-order', (req, res) => {
     order: order
   });
 
+  // Broadcast globally so customer active tracking immediately shows driver assigned
+  const globalPayload = JSON.stringify({
+    type: 'ORDER_UPDATED',
+    orderId: order.id,
+    status: 'En Camino',
+    order: order
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(globalPayload);
+  });
+
   res.json({ success: true, order: order });
 });
 
@@ -2762,6 +2802,7 @@ app.post('/api/driver/complete-order', (req, res) => {
   }
 
   writeDB(db);
+  saveChangesToCloud().catch(err => console.warn('Cloud sync error on driver complete:', err));
 
   // Update in driver chat
   try {
@@ -2774,7 +2815,8 @@ app.post('/api/driver/complete-order', (req, res) => {
       const updatePayload = JSON.stringify({
         type: 'DRIVER_CHAT_UPDATE',
         orderId: order.id,
-        status: 'Entregado'
+        status: 'Entregado',
+        takenBy: order.driver ? order.driver.name : 'Repartidor'
       });
       wss.clients.forEach(c => {
         if (c.readyState === WebSocket.OPEN) c.send(updatePayload);
@@ -2784,8 +2826,6 @@ app.post('/api/driver/complete-order', (req, res) => {
     console.error('Error updating driver chat completion:', err);
   }
 
-  writeDB(db);
-
   broadcastToMerchant(order.establishmentId, {
     type: 'ORDER_UPDATED',
     orderId: order.id,
@@ -2793,26 +2833,84 @@ app.post('/api/driver/complete-order', (req, res) => {
     order: order
   });
 
+  // Broadcast globally to customer tracking
+  const completePayload = JSON.stringify({
+    type: 'ORDER_UPDATED',
+    orderId: order.id,
+    status: 'Entregado',
+    order: order
+  });
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(completePayload);
+  });
+
   res.json({ success: true, order: order });
 });
 
 // POST driver broadcasts live GPS location
 app.post('/api/driver/location', (req, res) => {
-  const { driverPhone, latitude, longitude } = req.body;
-  if (!driverPhone || latitude === undefined || longitude === undefined) {
-    return res.status(400).json({ error: 'driverPhone, latitude and longitude required' });
+  const { driverPhone, driverId, latitude, longitude, orderId } = req.body;
+  if (latitude === undefined || longitude === undefined) {
+    return res.status(400).json({ error: 'latitude and longitude required' });
+  }
+
+  const lat = parseFloat(latitude);
+  const lng = parseFloat(longitude);
+  if (isNaN(lat) || isNaN(lng)) {
+    return res.status(400).json({ error: 'Valid numerical coordinates required' });
   }
 
   const db = readDB();
-  let drv = (db.drivers || []).find(d => d.phone === driverPhone);
+  const drv = (db.drivers || []).find(d => 
+    (driverId && d.id === driverId) || 
+    (driverPhone && (d.phone === driverPhone || d.username === driverPhone || d.id === driverPhone))
+  );
+
   if (drv) {
-    drv.latitude = parseFloat(latitude);
-    drv.longitude = parseFloat(longitude);
+    drv.latitude = lat;
+    drv.longitude = lng;
     drv.lastActive = new Date().toISOString();
-    writeDB(db);
   }
 
-  res.json({ success: true, latitude, longitude });
+  // Update any active order in 'En Camino' assigned to this driver
+  let activeOrderUpdated = null;
+  (db.orders || []).forEach(o => {
+    const isThisOrder = orderId && o.id === orderId;
+    const isThisDriver = o.driver && (
+      (driverId && o.driver.id === driverId) ||
+      (driverPhone && o.driver.phone === driverPhone) ||
+      (drv && (o.driver.id === drv.id || o.driver.phone === drv.phone))
+    );
+    if ((isThisOrder || isThisDriver) && (o.status === 'En Camino' || o.status === 'Tomado')) {
+      o.driverLocation = {
+        latitude: lat,
+        longitude: lng,
+        updatedAt: new Date().toISOString()
+      };
+      if (o.deliveryDetails) {
+        o.deliveryDetails.driverLocation = o.driverLocation;
+      }
+      activeOrderUpdated = o;
+    }
+  });
+
+  writeDB(db);
+
+  // Broadcast live GPS update to all connected clients (especially customer active tracking map!)
+  if (activeOrderUpdated) {
+    const locPayload = JSON.stringify({
+      type: 'DRIVER_LOCATION_UPDATE',
+      orderId: activeOrderUpdated.id,
+      driverName: activeOrderUpdated.driver?.name || 'Repartidor',
+      latitude: lat,
+      longitude: lng
+    });
+    wss.clients.forEach(c => {
+      if (c.readyState === WebSocket.OPEN) c.send(locPayload);
+    });
+  }
+
+  res.json({ success: true, latitude: lat, longitude: lng, orderId: activeOrderUpdated ? activeOrderUpdated.id : null });
 });
 
 // ==========================================

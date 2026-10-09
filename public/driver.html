@@ -20,17 +20,17 @@
       
       <form onsubmit="event.preventDefault(); DriverApp.loginDriver();" style="margin-top: 20px; text-align: left;">
         <div class="form-group">
-          <label for="driver-input-username" style="font-size: 11.5px; color: #94A3B8; font-weight: 700;">Usuario de Repartidor *</label>
-          <input type="text" id="driver-input-username" value="yoxman" placeholder="Usuario (Ej. yoxman)" class="input-3d" autocomplete="username">
+          <label for="driver-input-username" style="font-size: 11.5px; color: #94A3B8; font-weight: 700;">Usuario o Teléfono de Repartidor *</label>
+          <input type="text" id="driver-input-username" value="" placeholder="Ej. Carlos Pérez o 04141234567" class="input-3d" autocomplete="username">
         </div>
 
         <div class="form-group" style="margin-top: 14px;">
           <label for="driver-input-password" style="font-size: 11.5px; color: #94A3B8; font-weight: 700;">Clave de Acceso *</label>
-          <input type="password" id="driver-input-password" value="12345@" placeholder="Clave (Ej. 12345@)" class="input-3d" autocomplete="current-password">
+          <input type="password" id="driver-input-password" value="" placeholder="Tu clave asignada" class="input-3d" autocomplete="current-password">
         </div>
 
         <button type="submit" class="btn-3d btn-3d-emerald" style="width: 100%; margin-top: 18px; font-size: 15px; padding: 14px;">
-          🚀 Iniciar Sesión (Yoxman)
+          🚀 Iniciar Sesión
         </button>
 
         <div id="driver-login-error" class="error-text hidden" style="margin-top: 12px; font-size: 12.5px; color: #EF4444; font-weight: 700; text-align: center;"></div>
@@ -46,7 +46,7 @@
       <div class="driver-brand" style="display: flex; align-items: center; gap: 10px;">
         <span class="logo-emoji">🛵</span>
         <div>
-          <h2 id="driver-profile-name" style="margin: 0; font-size: 17px; font-weight: 900; color: #FFF;">Yoxman</h2>
+          <h2 id="driver-profile-name" style="margin: 0; font-size: 17px; font-weight: 900; color: #FFF;">Repartidor</h2>
           <span id="driver-profile-phone" class="driver-sub-info" style="font-size: 11px; color: #10B981; font-weight: 700;">Repartidor Oficial • Moto 🛵</span>
         </div>
         <div class="live-active-light-badge" title="App del Repartidor Activa" style="margin-left: 4px;">
