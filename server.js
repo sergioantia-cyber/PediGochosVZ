@@ -267,8 +267,14 @@ async function syncFromSupabase() {
             cloudData.establishments.push(localEst);
           } else {
             const cloudEst = cloudData.establishments[cloudIndex];
-            if (!Array.isArray(cloudEst.products) || cloudEst.products.length === 0 || (Array.isArray(localEst.products) && localEst.products.length > cloudEst.products.length)) {
+            if (String(localEst.id).trim() === 'zeus-burger-1786252888630' || !Array.isArray(cloudEst.products) || cloudEst.products.length === 0 || (Array.isArray(localEst.products) && localEst.products.length >= cloudEst.products.length)) {
               cloudEst.products = localEst.products || [];
+              if (localEst.logoImage) cloudEst.logoImage = localEst.logoImage;
+              if (localEst.description) cloudEst.description = localEst.description;
+              if (localEst.phone) cloudEst.phone = localEst.phone;
+              if (localEst.address) cloudEst.address = localEst.address;
+              if (localEst.open_time) cloudEst.open_time = localEst.open_time;
+              if (localEst.close_time) cloudEst.close_time = localEst.close_time;
             }
             if (localEst.rating !== undefined) cloudEst.rating = localEst.rating;
             if (localEst.adminRating !== undefined) cloudEst.adminRating = localEst.adminRating;

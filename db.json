@@ -20218,14 +20218,14 @@
       "id": "zeus-burger-1786252888630",
       "name": "Zeus Burger",
       "category": "comidas",
-      "description": "Hamburguesas, hoy dogs",
+      "description": "¡No tienes que salir de casa para cenar delicioso! Hamburguesas, perros calientes, salchipapas y papas con tártara de la casa.",
       "logo": "🍔",
       "bannerType": "gradient",
       "banner": "linear-gradient(135deg, #FF8C00, #FF4500)",
       "linkKey": "91Z7J8",
       "delivery_fee": 0,
       "themeColor": "#ff5e3a",
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1786254279318_905.png",
+      "logoImage": "/images/zeus/logo.jpg",
       "tables": [
         {
           "id": "t-1",
@@ -20311,549 +20311,665 @@
         {
           "id": "p-1786252957650-26",
           "name": "Hamburguesa Sencilla",
-          "image": "",
           "price": 19000,
           "category": "Hamburguesas",
-          "modifiers": [
-            {
-              "options": [
-                {
-                  "id": "opt-17862529576490.9951207532453257",
-                  "name": "carne de res",
-                  "option_id": "opt-17862529576490.14739848746260698",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529576490.23574001362659358",
-                  "name": "tocineta",
-                  "option_id": "opt-17862529576490.21165354978539486",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529576490.5400872032454455",
-                  "name": "vegetales",
-                  "option_id": "opt-17862529576490.7930934625158433",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529576490.8876775638750016",
-                  "name": "jamón",
-                  "option_id": "opt-17862529576490.8888702523407287",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529576490.6325760526799492",
-                  "name": "queso",
-                  "option_id": "opt-17862529576490.8839403407019222",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529576490.47890981397291044",
-                  "name": "huevo",
-                  "option_id": "opt-17862529576490.1396031629925707",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529576490.4328860188997916",
-                  "name": "papas fritas",
-                  "option_id": "opt-17862529576490.0814354945936353",
-                  "extra_price": 0
-                }
-              ],
-              "group_id": "g-extras-1786252957649",
-              "required": false,
-              "group_name": "Adicionales",
-              "selection_type": "multiple"
-            }
-          ],
+          "image": "/images/zeus/sencilla.jpg",
+          "description": "1 carne de res, tocineta, vegetales, jamón, queso, huevo y papas fritas.",
           "exclusions": [
             {
-              "id": "ex-0",
-              "name": "1 carne de res",
-              "price": 500
+              "id": "ex-res",
+              "name": "Carne de res"
             },
             {
-              "id": "ex-1",
-              "name": "tocineta",
-              "price": 500
+              "id": "ex-toci",
+              "name": "Tocineta"
             },
             {
-              "id": "ex-2",
-              "name": "vegetales",
-              "price": 500
+              "id": "ex-veg",
+              "name": "Vegetales"
             },
             {
-              "id": "ex-3",
-              "name": "jamón",
-              "price": 500
+              "id": "ex-jam",
+              "name": "Jamón"
             },
             {
-              "id": "ex-4",
-              "name": "queso",
-              "price": 500
+              "id": "ex-que",
+              "name": "Queso"
             },
             {
-              "id": "ex-5",
-              "name": "huevo",
-              "price": 500
+              "id": "ex-hue",
+              "name": "Huevo"
             },
             {
-              "id": "ex-6",
-              "name": "papas fritas",
-              "price": 500
+              "id": "ex-pap",
+              "name": "Papas fritas"
             }
           ],
-          "category_id": "abe9179f-4695-4a00-be9c-aa357b7f11f1",
-          "description": "1 carne de res, tocineta, vegetales, jamón, queso, huevo y papas fritas."
+          "modifiers": [
+            {
+              "group_id": "g-adicionales-zeus",
+              "group_name": "Adicionales",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-zeus-carne",
+                  "name": "🥩 Carne Extra",
+                  "price": 5000,
+                  "extra_price": 5000
+                },
+                {
+                  "id": "opt-zeus-huevo",
+                  "name": "🍳 Huevo Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tocineta",
+                  "name": "🥓 Tocineta Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tartara",
+                  "name": "🥣 Tártara de la Casa Extra",
+                  "price": 2000,
+                  "extra_price": 2000
+                }
+              ]
+            },
+            {
+              "group_id": "g-salsas-zeus",
+              "group_name": "Salsas de la Casa (Elige las que desees)",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-salsa-tomate",
+                  "name": "🍅 Salsa de Tomate",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-pina",
+                  "name": "🍍 Salsa de Piña",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mostaza",
+                  "name": "🟡 Mostaza",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mayonesa",
+                  "name": "⚪ Mayonesa",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-tartara",
+                  "name": "🥣 Tártara de la Casa",
+                  "price": 0,
+                  "extra_price": 0
+                }
+              ]
+            }
+          ]
         },
         {
           "id": "p-1786252974605-64",
           "name": "Hamburguesa Especial",
-          "image": "",
           "price": 21000,
           "category": "Hamburguesas",
-          "modifiers": [
-            {
-              "options": [
-                {
-                  "id": "opt-17862529746050.7547731450165037",
-                  "name": "1 carne de res",
-                  "price": 500,
-                  "option_id": "opt-17862529746050.026654073390245614",
-                  "extra_price": 500
-                },
-                {
-                  "id": "opt-17862529746050.2840693915413117",
-                  "name": "pechuga",
-                  "option_id": "opt-17862529746050.8326346757310014",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529746050.3171850183988991",
-                  "name": "tocineta",
-                  "option_id": "opt-17862529746050.45030489451724043",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529746050.21745335896795037",
-                  "name": "vegetales",
-                  "option_id": "opt-17862529746050.025427683931136702",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529746050.8213679306057327",
-                  "name": "jamón",
-                  "option_id": "opt-17862529746050.9229659863852907",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529746050.6952179261375415",
-                  "name": "queso",
-                  "option_id": "opt-17862529746050.1496283791560059",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529746050.7363780582716811",
-                  "name": "huevo",
-                  "option_id": "opt-17862529746050.7799238814734701",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529746050.17195376447934174",
-                  "name": "papas fritas",
-                  "option_id": "opt-17862529746050.586909293488593",
-                  "extra_price": 0
-                }
-              ],
-              "group_id": "g-extras-1786252974605",
-              "required": false,
-              "group_name": "Adicionales",
-              "selection_type": "multiple"
-            }
-          ],
+          "image": "/images/zeus/especial.jpg",
+          "description": "1 carne de res, pechuga, tocineta, vegetales, jamón, queso, huevo y papas fritas.",
           "exclusions": [
             {
-              "id": "ex-0",
-              "name": "1 carne de res",
-              "price": 500
+              "id": "ex-res",
+              "name": "Carne de res"
             },
             {
-              "id": "ex-1",
-              "name": "pechuga",
-              "price": 500
+              "id": "ex-pec",
+              "name": "Pechuga"
             },
             {
-              "id": "ex-2",
-              "name": "tocineta",
-              "price": 500
+              "id": "ex-toci",
+              "name": "Tocineta"
             },
             {
-              "id": "ex-3",
-              "name": "vegetales",
-              "price": 500
+              "id": "ex-veg",
+              "name": "Vegetales"
             },
             {
-              "id": "ex-4",
-              "name": "jamón",
-              "price": 500
+              "id": "ex-jam",
+              "name": "Jamón"
             },
             {
-              "id": "ex-5",
-              "name": "queso",
-              "price": 500
+              "id": "ex-que",
+              "name": "Queso"
             },
             {
-              "id": "ex-6",
-              "name": "huevo",
-              "price": 500
+              "id": "ex-hue",
+              "name": "Huevo"
             },
             {
-              "id": "ex-7",
-              "name": "papas fritas",
-              "price": 500
+              "id": "ex-pap",
+              "name": "Papas fritas"
             }
           ],
-          "category_id": "abe9179f-4695-4a00-be9c-aa357b7f11f1",
-          "description": "1 carne de res, pechuga, tocineta, vegetales, jamón, queso, huevo y papas fritas."
+          "modifiers": [
+            {
+              "group_id": "g-adicionales-zeus",
+              "group_name": "Adicionales",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-zeus-carne",
+                  "name": "🥩 Carne Extra",
+                  "price": 5000,
+                  "extra_price": 5000
+                },
+                {
+                  "id": "opt-zeus-huevo",
+                  "name": "🍳 Huevo Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tocineta",
+                  "name": "🥓 Tocineta Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tartara",
+                  "name": "🥣 Tártara de la Casa Extra",
+                  "price": 2000,
+                  "extra_price": 2000
+                }
+              ]
+            },
+            {
+              "group_id": "g-salsas-zeus",
+              "group_name": "Salsas de la Casa (Elige las que desees)",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-salsa-tomate",
+                  "name": "🍅 Salsa de Tomate",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-pina",
+                  "name": "🍍 Salsa de Piña",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mostaza",
+                  "name": "🟡 Mostaza",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mayonesa",
+                  "name": "⚪ Mayonesa",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-tartara",
+                  "name": "🥣 Tártara de la Casa",
+                  "price": 0,
+                  "extra_price": 0
+                }
+              ]
+            }
+          ]
         },
         {
           "id": "p-1786252993842-31",
           "name": "Hamburguesa Zeus",
-          "image": "",
           "price": 23000,
           "category": "Hamburguesas",
-          "modifiers": [
-            {
-              "options": [
-                {
-                  "id": "opt-17862529938420.037862328524433164",
-                  "name": "carne de res",
-                  "option_id": "opt-17862529938420.8490466660160616",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529938420.5157745705990006",
-                  "name": "pechuga",
-                  "option_id": "opt-17862529938420.8245565312756645",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529938420.11912632035212456",
-                  "name": "tocineta",
-                  "option_id": "opt-17862529938420.7759417728371765",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529938420.6450772182937372",
-                  "name": "chuleta",
-                  "option_id": "opt-17862529938420.23156266914507895",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529938420.14124338073701193",
-                  "name": "vegetales",
-                  "option_id": "opt-17862529938420.13809171307814072",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529938420.13543828255351043",
-                  "name": "jamón",
-                  "option_id": "opt-17862529938420.24839147917941407",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529938420.9639206152082687",
-                  "name": "queso",
-                  "option_id": "opt-17862529938420.46602693046030574",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529938420.6861672747752608",
-                  "name": "huevo",
-                  "option_id": "opt-17862529938420.988471348373074",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862529938420.030321475385399532",
-                  "name": "papas frita",
-                  "option_id": "opt-17862529938420.3107409139229189",
-                  "extra_price": 0
-                }
-              ],
-              "group_id": "g-extras-1786252993842",
-              "required": false,
-              "group_name": "Adicionales",
-              "selection_type": "multiple"
-            }
-          ],
+          "image": "/images/zeus/zeus_burger.jpg",
+          "description": "1 carne de res, pechuga, tocineta, chuleta, vegetales, jamón, queso, huevo y papas fritas.",
           "exclusions": [
             {
-              "id": "ex-0",
-              "name": "1 carne de res",
-              "price": 500
+              "id": "ex-res",
+              "name": "Carne de res"
             },
             {
-              "id": "ex-1",
-              "name": "pechuga",
-              "price": 500
+              "id": "ex-pec",
+              "name": "Pechuga"
             },
             {
-              "id": "ex-2",
-              "name": "tocineta",
-              "price": 500
+              "id": "ex-toci",
+              "name": "Tocineta"
             },
             {
-              "id": "ex-3",
-              "name": "chuleta",
-              "price": 500
+              "id": "ex-chu",
+              "name": "Chuleta"
             },
             {
-              "id": "ex-4",
-              "name": "vegetales",
-              "price": 500
+              "id": "ex-veg",
+              "name": "Vegetales"
             },
             {
-              "id": "ex-5",
-              "name": "jamón",
-              "price": 500
+              "id": "ex-jam",
+              "name": "Jamón"
             },
             {
-              "id": "ex-6",
-              "name": "queso",
-              "price": 500
+              "id": "ex-que",
+              "name": "Queso"
             },
             {
-              "id": "ex-7",
-              "name": "huevo",
-              "price": 500
+              "id": "ex-hue",
+              "name": "Huevo"
             },
             {
-              "id": "ex-8",
-              "name": "papas frita",
-              "price": 500
+              "id": "ex-pap",
+              "name": "Papas fritas"
             }
           ],
-          "category_id": "abe9179f-4695-4a00-be9c-aa357b7f11f1",
-          "description": "1 carne de res, pechuga, tocineta, chuleta, vegetales, jamón, queso, huevo y papas frita."
+          "modifiers": [
+            {
+              "group_id": "g-adicionales-zeus",
+              "group_name": "Adicionales",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-zeus-carne",
+                  "name": "🥩 Carne Extra",
+                  "price": 5000,
+                  "extra_price": 5000
+                },
+                {
+                  "id": "opt-zeus-huevo",
+                  "name": "🍳 Huevo Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tocineta",
+                  "name": "🥓 Tocineta Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tartara",
+                  "name": "🥣 Tártara de la Casa Extra",
+                  "price": 2000,
+                  "extra_price": 2000
+                }
+              ]
+            },
+            {
+              "group_id": "g-salsas-zeus",
+              "group_name": "Salsas de la Casa (Elige las que desees)",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-salsa-tomate",
+                  "name": "🍅 Salsa de Tomate",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-pina",
+                  "name": "🍍 Salsa de Piña",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mostaza",
+                  "name": "🟡 Mostaza",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mayonesa",
+                  "name": "⚪ Mayonesa",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-tartara",
+                  "name": "🥣 Tártara de la Casa",
+                  "price": 0,
+                  "extra_price": 0
+                }
+              ]
+            }
+          ]
         },
         {
           "id": "p-1786253008548-49",
           "name": "Perro Caliente Zeus",
-          "image": "",
           "price": 15000,
           "category": "Perros",
-          "modifiers": [
-            {
-              "options": [
-                {
-                  "id": "opt-17862530085480.16423530237582717",
-                  "name": "Salchicha fazenda",
-                  "option_id": "opt-17862530085480.5797863905650408",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530085480.7196145375157671",
-                  "name": "cebolla",
-                  "option_id": "opt-17862530085480.8935188371215848",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530085480.938848141762622",
-                  "name": "ensalada",
-                  "option_id": "opt-17862530085480.7771726169197191",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530085480.7431739089772443",
-                  "name": "papitas fosforito",
-                  "option_id": "opt-17862530085480.03823554342430846",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530085480.8820678800988477",
-                  "name": "queso",
-                  "option_id": "opt-17862530085480.6381831532277474",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530085480.360848743629432",
-                  "name": "papas fritas",
-                  "option_id": "opt-17862530085480.5117851968415915",
-                  "extra_price": 0
-                }
-              ],
-              "group_id": "g-extras-1786253008548",
-              "required": false,
-              "group_name": "Adicionales",
-              "selection_type": "multiple"
-            }
-          ],
+          "image": "/images/zeus/perro_zeus.jpg",
+          "description": "Salchicha fazenda, cebolla, ensalada, papitas fosforito, queso y papas fritas.",
           "exclusions": [
             {
-              "id": "ex-0",
-              "name": "Salchicha fazenda",
-              "price": 500
+              "id": "ex-sal",
+              "name": "Salchicha fazenda"
             },
             {
-              "id": "ex-1",
-              "name": "cebolla",
-              "price": 500
+              "id": "ex-ceb",
+              "name": "Cebolla"
             },
             {
-              "id": "ex-2",
-              "name": "ensalada",
-              "price": 500
+              "id": "ex-ens",
+              "name": "Ensalada"
             },
             {
-              "id": "ex-3",
-              "name": "papitas fosforito",
-              "price": 500
+              "id": "ex-fos",
+              "name": "Papitas fosforito"
             },
             {
-              "id": "ex-4",
-              "name": "queso",
-              "price": 500
+              "id": "ex-que",
+              "name": "Queso"
             },
             {
-              "id": "ex-5",
-              "name": "papas fritas",
-              "price": 500
+              "id": "ex-pap",
+              "name": "Papas fritas"
             }
           ],
-          "category_id": "d17d8481-80a5-4eb8-a720-bd7085fb38fa",
-          "description": "Salchicha fazenda, cebolla, ensalada, papitas fosforito, queso y papas fritas."
+          "modifiers": [
+            {
+              "group_id": "g-adicionales-zeus",
+              "group_name": "Adicionales",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-zeus-carne",
+                  "name": "🥩 Carne Extra",
+                  "price": 5000,
+                  "extra_price": 5000
+                },
+                {
+                  "id": "opt-zeus-huevo",
+                  "name": "🍳 Huevo Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tocineta",
+                  "name": "🥓 Tocineta Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tartara",
+                  "name": "🥣 Tártara de la Casa Extra",
+                  "price": 2000,
+                  "extra_price": 2000
+                }
+              ]
+            },
+            {
+              "group_id": "g-salsas-zeus",
+              "group_name": "Salsas de la Casa (Elige las que desees)",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-salsa-tomate",
+                  "name": "🍅 Salsa de Tomate",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-pina",
+                  "name": "🍍 Salsa de Piña",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mostaza",
+                  "name": "🟡 Mostaza",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mayonesa",
+                  "name": "⚪ Mayonesa",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-tartara",
+                  "name": "🥣 Tártara de la Casa",
+                  "price": 0,
+                  "extra_price": 0
+                }
+              ]
+            }
+          ]
         },
         {
           "id": "p-1786253020428-37",
           "name": "Papas Fritas",
-          "image": "",
           "price": 7000,
           "category": "Papas",
-          "modifiers": [
-            {
-              "options": [
-                {
-                  "id": "opt-17862530204280.5694281328916204",
-                  "name": "1 porción de papitas fritas con tártara de la casa",
-                  "option_id": "opt-17862530204280.61056328267254",
-                  "extra_price": 0
-                }
-              ],
-              "group_id": "g-extras-1786253020428",
-              "required": false,
-              "group_name": "Adicionales",
-              "selection_type": "multiple"
-            }
-          ],
+          "image": "/images/zeus/papas_fritas.jpg",
+          "description": "1 porción de papitas fritas crujientes con tártara de la casa.",
           "exclusions": [
             {
-              "id": "ex-0",
-              "name": "1 porción de papitas fritas con tártara de la casa",
-              "price": 500
+              "id": "ex-tar",
+              "name": "Tártara de la casa"
             }
           ],
-          "category_id": "eb37b64c-05a1-4e5b-902e-2b9a16b336b6",
-          "description": "1 porción de papitas fritas con tártara de la casa."
+          "modifiers": [
+            {
+              "group_id": "g-adicionales-papas",
+              "group_name": "Adicionales",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-papas-tartara",
+                  "name": "🥣 Tártara de la Casa Extra",
+                  "price": 2000,
+                  "extra_price": 2000
+                },
+                {
+                  "id": "opt-papas-carne",
+                  "name": "🥩 Carne Extra",
+                  "price": 5000,
+                  "extra_price": 5000
+                },
+                {
+                  "id": "opt-papas-huevo",
+                  "name": "🍳 Huevo Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-papas-tocineta",
+                  "name": "🥓 Tocineta Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                }
+              ]
+            },
+            {
+              "group_id": "g-salsas-zeus",
+              "group_name": "Salsas de la Casa (Elige las que desees)",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-salsa-tomate",
+                  "name": "🍅 Salsa de Tomate",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-pina",
+                  "name": "🍍 Salsa de Piña",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mostaza",
+                  "name": "🟡 Mostaza",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mayonesa",
+                  "name": "⚪ Mayonesa",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-tartara",
+                  "name": "🥣 Tártara de la Casa",
+                  "price": 0,
+                  "extra_price": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p-zeus-tartara-casa",
+          "name": "Tártara de la Casa",
+          "price": 2000,
+          "category": "Salsas & Extras",
+          "image": "/images/zeus/tartara_casa.jpg",
+          "description": "1 salsa extra de la más deliciosa tártara de la casa.",
+          "exclusions": [],
+          "modifiers": []
         },
         {
           "id": "p-1786253031422-18",
           "name": "Salchipapa",
-          "image": "",
           "price": 16000,
           "category": "Salchipapas",
-          "modifiers": [
-            {
-              "options": [
-                {
-                  "id": "opt-17862530314220.6729273551176393",
-                  "name": "300gr de papa",
-                  "option_id": "opt-17862530314220.7447338881584171",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530314220.7882409559860502",
-                  "name": "salchicha delichicks",
-                  "option_id": "opt-17862530314220.9362924066676667",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530314220.5053226765144915",
-                  "name": "tomate",
-                  "option_id": "opt-17862530314220.6117653364597802",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530314220.07414192668249431",
-                  "name": "cebolla",
-                  "option_id": "opt-17862530314220.7418651623301503",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530314220.10969753830223306",
-                  "name": "lechuga",
-                  "option_id": "opt-17862530314220.5519185581777557",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17862530314220.7927833260926409",
-                  "name": "queso",
-                  "option_id": "opt-17862530314220.425319468568348",
-                  "extra_price": 0
-                }
-              ],
-              "group_id": "g-extras-1786253031422",
-              "required": false,
-              "group_name": "Adicionales",
-              "selection_type": "multiple"
-            }
-          ],
+          "image": "/images/zeus/salchipapa.jpg",
+          "description": "300gr de papa, salchicha delichicks, tomate, cebolla, lechuga, queso.",
           "exclusions": [
             {
-              "id": "ex-0",
-              "name": "300gr de papa",
-              "price": 500
+              "id": "ex-sal",
+              "name": "Salchicha delichicks"
             },
             {
-              "id": "ex-1",
-              "name": "salchicha delichicks",
-              "price": 500
+              "id": "ex-tom",
+              "name": "Tomate"
             },
             {
-              "id": "ex-2",
-              "name": "tomate",
-              "price": 500
+              "id": "ex-ceb",
+              "name": "Cebolla"
             },
             {
-              "id": "ex-3",
-              "name": "cebolla",
-              "price": 500
+              "id": "ex-lec",
+              "name": "Lechuga"
             },
             {
-              "id": "ex-4",
-              "name": "lechuga",
-              "price": 500
-            },
-            {
-              "id": "ex-5",
-              "name": "queso",
-              "price": 500
+              "id": "ex-que",
+              "name": "Queso"
             }
           ],
-          "category_id": "eb37b64c-05a1-4e5b-902e-2b9a16b336b6",
-          "description": "300gr de papa, salchicha delichicks, tomate, cebolla, lechuga, queso."
+          "modifiers": [
+            {
+              "group_id": "g-adicionales-zeus",
+              "group_name": "Adicionales",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-zeus-carne",
+                  "name": "🥩 Carne Extra",
+                  "price": 5000,
+                  "extra_price": 5000
+                },
+                {
+                  "id": "opt-zeus-huevo",
+                  "name": "🍳 Huevo Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tocineta",
+                  "name": "🥓 Tocineta Extra",
+                  "price": 1000,
+                  "extra_price": 1000
+                },
+                {
+                  "id": "opt-zeus-tartara",
+                  "name": "🥣 Tártara de la Casa Extra",
+                  "price": 2000,
+                  "extra_price": 2000
+                }
+              ]
+            },
+            {
+              "group_id": "g-salsas-zeus",
+              "group_name": "Salsas de la Casa (Elige las que desees)",
+              "required": false,
+              "selection_type": "multiple",
+              "options": [
+                {
+                  "id": "opt-salsa-tomate",
+                  "name": "🍅 Salsa de Tomate",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-pina",
+                  "name": "🍍 Salsa de Piña",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mostaza",
+                  "name": "🟡 Mostaza",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-mayonesa",
+                  "name": "⚪ Mayonesa",
+                  "price": 0,
+                  "extra_price": 0
+                },
+                {
+                  "id": "opt-salsa-tartara",
+                  "name": "🥣 Tártara de la Casa",
+                  "price": 0,
+                  "extra_price": 0
+                }
+              ]
+            }
+          ]
         }
       ],
       "prep_time": null,
       "delivery_time": null,
       "created_at": "2026-08-09T05:21:28.927042+00:00",
-      "location": "San Antonio",
+      "location": "Barrio Ricaurte, San Antonio del Táchira",
       "latitude": null,
       "longitude": null,
       "location_lat": null,
       "location_lng": null,
-      "open_time": "17:00",
+      "open_time": "18:00",
       "close_time": "00:00",
-      "disabled": false
+      "disabled": false,
+      "phone": "(58) 424-766-6025 / (58) 424-710-4131",
+      "whatsapp": "584247666025",
+      "instagram": "@zeusburger30",
+      "address": "Calle 13 con Cra 9 y 10 #50-56 Barrio Ricaurte"
     },
     {
       "id": "cafe-plaza-1788116700000",
