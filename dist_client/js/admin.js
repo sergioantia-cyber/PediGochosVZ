@@ -273,7 +273,7 @@ class AdminController {
 
   async init() {
     // Auto-detect version update and clear stale caches
-    const APP_VER = '191';
+    const APP_VER = '258';
     try {
       const cachedVer = localStorage.getItem('pedigochos_app_ver');
       if (cachedVer && cachedVer !== APP_VER) {
@@ -6819,6 +6819,11 @@ class AdminController {
       { x: cx - R, y: cy, icon: '✨' },
       { x: cx + R, y: cy, icon: '🖨️' },
       { x: cx, y: cy + R, icon: '🛵' }
+    ] : est.isAppGeneral ? [
+      { x: cx, y: cy - R, icon: '🍔' },
+      { x: cx - R, y: cy, icon: '🍕' },
+      { x: cx + R, y: cy, icon: '🌮' },
+      { x: cx, y: cy + R, icon: '🛵' }
     ] : [
       { x: cx, y: cy - R, icon: '🍔' },
       { x: cx - R, y: cy, icon: '🍽️' },
@@ -6870,13 +6875,13 @@ class AdminController {
     nameGrad.addColorStop(1, '#FF5500');
     ctx.fillStyle = nameGrad;
     
-    const hasSubtitlePill = Boolean(tableNum || (est.isService && est.badge));
+    const hasSubtitlePill = Boolean(tableNum || ((est.isService || est.isAppGeneral) && est.badge));
     const nameY = hasSubtitlePill ? 260 : 285;
     ctx.fillText(rawName, cx, nameY);
     ctx.restore();
 
     // Subtitle Pill Badge (Service Badge or Table Number)
-    if (est.isService && est.badge) {
+    if ((est.isService || est.isAppGeneral) && est.badge) {
       ctx.save();
       const serviceBadgeText = est.badge.toUpperCase();
       ctx.font = '900 23px "Montserrat", sans-serif';
@@ -11178,6 +11183,12 @@ const AdminApp = new AdminController();
 window.AdminApp = AdminApp;
 window.openNewOfferModal = function() {
   AdminApp.openNewOfferModal();
+};
+
+window.openAppGeneralQRModal = function() {
+  if (window.AdminApp && typeof window.AdminApp.openAppGeneralQRModal === 'function') {
+    window.AdminApp.openAppGeneralQRModal();
+  }
 };
 
 window.getTodayDayId = function() {
