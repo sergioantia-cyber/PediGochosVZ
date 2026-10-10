@@ -6458,6 +6458,41 @@ class AdminController {
     }
   }
 
+  openAppGeneralQRModal() {
+    const appConfig = {
+      id: 'pedigochos-marketplace',
+      name: 'PEDIGOCHOS',
+      displayName: 'PediGochos • Delivery & Marketplace',
+      slogan: 'Pide lo que quieras de los mejores restaurantes y comercios',
+      isAppGeneral: true,
+      badge: '🚀 APP OFICIAL',
+      themeColor: '#FF5E3A'
+    };
+    this.currentQREst = appConfig;
+
+    const modal = document.getElementById('admin-store-qr-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('qr-modal-title');
+    if (titleEl) titleEl.innerText = `📱 QR Oficial: Menú de la App (PediGochos)`;
+
+    const subtitleEl = document.getElementById('qr-modal-subtitle');
+    if (subtitleEl) subtitleEl.innerText = 'Código QR oficial HD para afiches, redes sociales y acceso directo al menú general de PediGochos.';
+
+    const tableContainer = document.getElementById('qr-modal-table-container');
+    if (tableContainer) tableContainer.style.display = 'none';
+
+    const batchBtn = document.getElementById('qr-modal-batch-btn');
+    if (batchBtn) batchBtn.style.display = 'none';
+
+    const tableInp = document.getElementById('qr-modal-table-input');
+    if (tableInp) tableInp.value = '';
+
+    this.updateStoreQRDisplay();
+    modal.classList.add('active');
+    this.checkModalOpenState();
+  }
+
   openStoreQRModal(estId) {
     const est = (this.establishments || []).find(e => String(e.id) === String(estId));
     if (!est) return;
@@ -6596,7 +6631,9 @@ class AdminController {
 
     const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
     let directUrl = '';
-    if (est.isService) {
+    if (est.isAppGeneral) {
+      directUrl = `${origin}/`;
+    } else if (est.isService) {
       directUrl = `${origin}/?${est.serviceParam || ('service=' + (est.serviceKey || 'all'))}`;
     } else {
       directUrl = `${origin}/?store=${encodeURIComponent(est.id)}`;
