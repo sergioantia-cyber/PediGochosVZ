@@ -4027,13 +4027,19 @@ class AdminController {
 
   openProductSpecsModal(productId) {
     const shopId = window.activeShopIdForMenu || this.activeShopId;
-    const est = this.establishments.find(e => e.id === shopId);
+    let est = this.establishments.find(e => e.id === shopId);
+    if (!est) {
+      est = this.establishments.find(e => e.products && e.products.some(p => p.id === productId));
+    }
     if (!est) return;
 
     const prod = est.products.find(p => p.id === productId);
     if (!prod) return;
 
     this.activeSpecsProductId = productId;
+    this.activeSpecsShopId = est.id;
+    window.activeShopIdForMenu = est.id;
+    this.activeShopId = est.id;
     
     // Set title
     const titleEl = document.getElementById('specs-modal-title');
@@ -4054,12 +4060,36 @@ class AdminController {
     // Load exclusions / ingredients
     this.specsIngredients = prod.exclusions ? prod.exclusions.map(e => ({
       name: typeof e === 'object' && e.name ? e.name : String(e),
-      price: typeof e === 'object' && e.price !== undefined ? e.price : 500
+      price: typeof e === 'object' && e.price !== undefined ? (parseFloat(e.price) || 0) : 500
     })) : [];
     this.renderSpecsIngredients();
 
-    // Load modifier groups
-    this.specsGroups = prod.modifiers ? JSON.parse(JSON.stringify(prod.modifiers)) : [];
+    // Load modifier groups asegurando ids y precios numéricos
+    this.specsGroups = (prod.modifiers ? JSON.parse(JSON.stringify(prod.modifiers)) : []).map((group, gIdx) => {
+      const gId = group.group_id || group.id || `g-${Date.now()}-${gIdx}`;
+      return {
+        ...group,
+        group_id: gId,
+        id: gId,
+        group_name: group.group_name || group.name || 'Adicionales',
+        selection_type: group.selection_type || 'multiple',
+        is_required: !!(group.is_required || group.required),
+        options: (group.options || []).map((opt, oIdx) => {
+          const optId = opt.option_id || opt.id || `opt-${Date.now()}-${gIdx}-${oIdx}`;
+          const rawPrice = opt.price !== undefined ? opt.price : (opt.extra_price !== undefined ? opt.extra_price : 0);
+          const pVal = parseFloat(rawPrice);
+          const safePrice = isNaN(pVal) ? 0 : pVal;
+          return {
+            ...opt,
+            option_id: optId,
+            id: optId,
+            name: opt.name || '',
+            price: safePrice,
+            extra_price: safePrice
+          };
+        })
+      };
+    });
     this.renderSpecsGroups();
 
     // Set product image preview & reset file upload input
@@ -4207,12 +4237,16 @@ class AdminController {
     if (!container) return;
     container.innerHTML = '';
 
-    if (this.specsGroups.length === 0) {
+    if (!Array.isArray(this.specsGroups) || this.specsGroups.length === 0) {
       container.innerHTML = `<p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 10px 0;">No hay grupos de adicionales configurados.</p>`;
       return;
     }
 
     this.specsGroups.forEach((group, gIdx) => {
+      if (!group.group_id) group.group_id = group.id || `g-${Date.now()}-${gIdx}`;
+      if (!group.id) group.id = group.group_id;
+      if (!Array.isArray(group.options)) group.options = [];
+
       const gDiv = document.createElement('div');
       gDiv.style.background = 'rgba(255,255,255,0.02)';
       gDiv.style.border = '1px solid rgba(255,255,255,0.05)';
@@ -4225,55 +4259,178 @@ class AdminController {
 
       gDiv.innerHTML = `
         <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
-          <input type="text" value="${group.group_name}" onchange="AdminApp.updateGroupName('${group.group_id}', this.value)" placeholder="Nombre del grupo (ej. Salsas)" style="flex: 1; padding: 6px 10px; font-size: 12.5px; background: rgba(18,18,22,0.6); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px;">
+          <input type="text" class="group-name-input" value="${group.group_name || ''}" placeholder="Nombre del grupo (ej. Salsas)" style="flex: 1; padding: 6px 10px; font-size: 12.5px; background: rgba(18,18,22,0.6); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px;">
           
-          <select onchange="AdminApp.updateGroupType('${group.group_id}', this.value)" style="background: rgba(18,18,22,0.6); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 6px; border-radius: 8px; font-size: 11.5px;">
+          <select class="group-type-select" style="background: rgba(18,18,22,0.6); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 6px; border-radius: 8px; font-size: 11.5px;">
             <option value="single" ${group.selection_type === 'single' ? 'selected' : ''}>Selección Única</option>
             <option value="multiple" ${group.selection_type === 'multiple' ? 'selected' : ''}>Selección Múltiple</option>
           </select>
 
           <label style="display: flex; align-items: center; gap: 4px; font-size: 11.5px; cursor: pointer; color: var(--text-muted); margin: 0;">
-            <input type="checkbox" ${group.is_required ? 'checked' : ''} onchange="AdminApp.updateGroupRequired('${group.group_id}', this.checked)"> Oblig.
+            <input type="checkbox" class="group-req-checkbox" ${group.is_required ? 'checked' : ''}> Oblig.
           </label>
 
-          <button type="button" onclick="AdminApp.deleteModifierGroup('${group.group_id}')" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer; padding: 0; width: auto; height: auto;">🗑️</button>
+          <button type="button" class="group-delete-btn" title="Eliminar este grupo de modificadores" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 14px; cursor: pointer; padding: 4px 8px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;">🗑️</button>
         </div>
 
         <div style="border-top: 1px dashed rgba(255,255,255,0.04); padding-top: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 700;">Opciones de Selección</span>
-            <button type="button" class="btn-neumorphic" onclick="AdminApp.addOptionToGroup('${group.group_id}')" style="margin: 0; padding: 4px 8px; font-size: 10px; height: 24px;">➕ Opción</button>
+            <button type="button" class="btn-neumorphic group-add-opt-btn" style="margin: 0; padding: 4px 8px; font-size: 10px; height: 24px;">➕ Opción</button>
           </div>
-          <div id="options-list-${group.group_id}" style="display: flex; flex-direction: column; gap: 6px;">
+          <div class="options-list-container" style="display: flex; flex-direction: column; gap: 6px;">
             <!-- Rendered dynamically below -->
           </div>
         </div>
       `;
 
-      const optList = gDiv.querySelector(`#options-list-${group.group_id}`);
-      group.options.forEach((opt, oIdx) => {
-        const oDiv = document.createElement('div');
-        oDiv.style.display = 'flex';
-        oDiv.style.gap = '8px';
-        oDiv.style.alignItems = 'center';
-
-        oDiv.innerHTML = `
-          <input type="text" value="${opt.name}" onchange="AdminApp.updateOptionName('${group.group_id}', '${opt.option_id}', this.value)" placeholder="Opción" style="flex: 1; padding: 4px 8px; font-size: 11.5px; background: rgba(18,18,22,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 6px;">
-          <input type="number" value="${opt.price}" onchange="AdminApp.updateOptionPrice('${group.group_id}', '${opt.option_id}', this.value)" placeholder="Precio ($)" style="width: 80px; padding: 4px 8px; font-size: 11.5px; background: rgba(18,18,22,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 6px;">
-          <button type="button" onclick="AdminApp.deleteOptionFromGroup('${group.group_id}', '${opt.option_id}')" style="background: none; border: none; color: #ef4444; font-size: 11px; cursor: pointer; padding: 0; width: auto; height: auto;">✕</button>
-        `;
-        optList.appendChild(oDiv);
+      // Eventos del encabezado del grupo
+      const nameInput = gDiv.querySelector('.group-name-input');
+      nameInput.addEventListener('change', (ev) => {
+        AdminApp.updateGroupName(group.group_id, ev.target.value);
       });
+
+      const typeSelect = gDiv.querySelector('.group-type-select');
+      typeSelect.addEventListener('change', (ev) => {
+        AdminApp.updateGroupType(group.group_id, ev.target.value);
+      });
+
+      const reqCheckbox = gDiv.querySelector('.group-req-checkbox');
+      reqCheckbox.addEventListener('change', (ev) => {
+        AdminApp.updateGroupRequired(group.group_id, ev.target.checked);
+      });
+
+      const delGroupBtn = gDiv.querySelector('.group-delete-btn');
+      delGroupBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        AdminApp.deleteModifierGroup(group.group_id);
+      });
+
+      const addOptBtn = gDiv.querySelector('.group-add-opt-btn');
+      addOptBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        AdminApp.addOptionToGroup(group.group_id);
+      });
+
+      // Renderizado de las opciones de selección del grupo
+      const optList = gDiv.querySelector('.options-list-container');
+      if (group.options.length === 0) {
+        optList.innerHTML = `<span style="font-size: 11px; color: #64748B; font-style: italic; padding: 2px 0;">No hay opciones en este grupo. Pulsa "➕ Opción" para agregar.</span>`;
+      } else {
+        group.options.forEach((opt, oIdx) => {
+          if (!opt.option_id) opt.option_id = opt.id || `opt-${Date.now()}-${gIdx}-${oIdx}`;
+          if (!opt.id) opt.id = opt.option_id;
+
+          const rawPrice = opt.price !== undefined ? opt.price : (opt.extra_price !== undefined ? opt.extra_price : 0);
+          const currentPrice = isNaN(parseFloat(rawPrice)) ? 0 : parseFloat(rawPrice);
+          opt.price = currentPrice;
+          opt.extra_price = currentPrice;
+
+          const oDiv = document.createElement('div');
+          oDiv.style.display = 'flex';
+          oDiv.style.gap = '8px';
+          oDiv.style.alignItems = 'center';
+
+          // Input de nombre
+          const nameInp = document.createElement('input');
+          nameInp.type = 'text';
+          nameInp.value = opt.name || '';
+          nameInp.placeholder = 'Opción / Adicional';
+          nameInp.style.flex = '1';
+          nameInp.style.padding = '5px 8px';
+          nameInp.style.fontSize = '12px';
+          nameInp.style.background = 'rgba(18,18,22,0.4)';
+          nameInp.style.border = '1px solid rgba(255,255,255,0.06)';
+          nameInp.style.color = '#fff';
+          nameInp.style.borderRadius = '6px';
+          nameInp.addEventListener('input', (ev) => {
+            opt.name = ev.target.value;
+          });
+          nameInp.addEventListener('change', (ev) => {
+            AdminApp.updateOptionName(group.group_id, opt.option_id, ev.target.value, oIdx);
+          });
+
+          // Input de precio
+          const priceInp = document.createElement('input');
+          priceInp.type = 'number';
+          priceInp.step = 'any';
+          priceInp.value = currentPrice;
+          priceInp.placeholder = 'Precio ($)';
+          priceInp.title = 'Precio del adicional (al guardar se sincronizará automáticamente en todos los platos del restaurante)';
+          priceInp.style.width = '85px';
+          priceInp.style.padding = '5px 8px';
+          priceInp.style.fontSize = '12px';
+          priceInp.style.background = 'rgba(18,18,22,0.4)';
+          priceInp.style.border = '1px solid rgba(255,255,255,0.06)';
+          priceInp.style.color = '#fff';
+          priceInp.style.borderRadius = '6px';
+          priceInp.addEventListener('input', (ev) => {
+            const num = parseFloat(ev.target.value) || 0;
+            opt.price = num;
+            opt.extra_price = num;
+          });
+          priceInp.addEventListener('change', (ev) => {
+            AdminApp.updateOptionPrice(group.group_id, opt.option_id, ev.target.value, oIdx);
+          });
+
+          // Botón ✕ de eliminar opción de selección
+          const delOptBtn = document.createElement('button');
+          delOptBtn.type = 'button';
+          delOptBtn.innerHTML = '✕';
+          delOptBtn.title = 'Eliminar esta opción';
+          delOptBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+          delOptBtn.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+          delOptBtn.style.color = '#ef4444';
+          delOptBtn.style.fontSize = '13px';
+          delOptBtn.style.fontWeight = 'bold';
+          delOptBtn.style.cursor = 'pointer';
+          delOptBtn.style.padding = '0';
+          delOptBtn.style.width = '28px';
+          delOptBtn.style.height = '28px';
+          delOptBtn.style.minWidth = '28px';
+          delOptBtn.style.minHeight = '28px';
+          delOptBtn.style.borderRadius = '6px';
+          delOptBtn.style.display = 'inline-flex';
+          delOptBtn.style.alignItems = 'center';
+          delOptBtn.style.justifyContent = 'center';
+          delOptBtn.style.transition = 'all 0.15s ease';
+
+          delOptBtn.addEventListener('mouseenter', () => {
+            delOptBtn.style.background = 'rgba(239, 68, 68, 0.3)';
+            delOptBtn.style.borderColor = '#ef4444';
+          });
+          delOptBtn.addEventListener('mouseleave', () => {
+            delOptBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+            delOptBtn.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+          });
+
+          delOptBtn.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            AdminApp.deleteOptionFromGroup(group.group_id, opt.option_id, oIdx);
+          });
+
+          oDiv.appendChild(nameInp);
+          oDiv.appendChild(priceInp);
+          oDiv.appendChild(delOptBtn);
+          optList.appendChild(oDiv);
+        });
+      }
 
       container.appendChild(gDiv);
     });
   }
 
   addModifierGroup() {
+    if (!Array.isArray(this.specsGroups)) this.specsGroups = [];
+    const newGId = 'g-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     this.specsGroups.push({
-      group_id: 'g-' + Date.now() + '-' + Math.floor(Math.random() * 100),
+      group_id: newGId,
+      id: newGId,
       group_name: 'Adicionales',
-      selection_type: 'single',
+      selection_type: 'multiple',
       is_required: false,
       options: []
     });
@@ -4281,58 +4438,83 @@ class AdminController {
   }
 
   deleteModifierGroup(groupId) {
-    this.specsGroups = this.specsGroups.filter(g => g.group_id !== groupId);
+    if (!Array.isArray(this.specsGroups)) return;
+    this.specsGroups = this.specsGroups.filter(g => g.group_id !== groupId && g.id !== groupId);
     this.renderSpecsGroups();
   }
 
   updateGroupName(groupId, val) {
-    const group = this.specsGroups.find(g => g.group_id === groupId);
-    if (group) group.group_name = val.trim();
+    const group = this.specsGroups?.find(g => g.group_id === groupId || g.id === groupId);
+    if (group) group.group_name = (val || '').trim();
   }
 
   updateGroupType(groupId, val) {
-    const group = this.specsGroups.find(g => g.group_id === groupId);
+    const group = this.specsGroups?.find(g => g.group_id === groupId || g.id === groupId);
     if (group) group.selection_type = val;
   }
 
   updateGroupRequired(groupId, val) {
-    const group = this.specsGroups.find(g => g.group_id === groupId);
-    if (group) group.is_required = val;
+    const group = this.specsGroups?.find(g => g.group_id === groupId || g.id === groupId);
+    if (group) group.is_required = !!val;
   }
 
   addOptionToGroup(groupId) {
-    const group = this.specsGroups.find(g => g.group_id === groupId);
+    const group = this.specsGroups?.find(g => g.group_id === groupId || g.id === groupId);
     if (group) {
+      if (!Array.isArray(group.options)) group.options = [];
+      const newOptId = 'opt-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
       group.options.push({
-        option_id: 'opt-' + Date.now() + '-' + Math.floor(Math.random() * 100),
+        option_id: newOptId,
+        id: newOptId,
         name: 'Nuevo adicional',
-        price: 0
+        price: 0,
+        extra_price: 0
       });
       this.renderSpecsGroups();
     }
   }
 
-  deleteOptionFromGroup(groupId, optionId) {
-    const group = this.specsGroups.find(g => g.group_id === groupId);
-    if (group) {
-      group.options = group.options.filter(o => o.option_id !== optionId);
+  deleteOptionFromGroup(groupId, optionId, oIdx) {
+    const group = this.specsGroups?.find(g => g.group_id === groupId || g.id === groupId);
+    if (group && Array.isArray(group.options)) {
+      if (typeof oIdx === 'number' && oIdx >= 0 && oIdx < group.options.length) {
+        group.options.splice(oIdx, 1);
+      } else {
+        const target = String(optionId || '');
+        const foundIdx = group.options.findIndex(o => String(o.option_id || o.id) === target);
+        if (foundIdx !== -1) {
+          group.options.splice(foundIdx, 1);
+        } else {
+          group.options = group.options.filter(o => String(o.option_id || o.id) !== target);
+        }
+      }
       this.renderSpecsGroups();
     }
   }
 
-  updateOptionName(groupId, optionId, val) {
-    const group = this.specsGroups.find(g => g.group_id === groupId);
-    if (group) {
-      const opt = group.options.find(o => o.option_id === optionId);
-      if (opt) opt.name = val.trim();
+  updateOptionName(groupId, optionId, val, oIdx) {
+    const group = this.specsGroups?.find(g => g.group_id === groupId || g.id === groupId);
+    if (group && Array.isArray(group.options)) {
+      let opt = (typeof oIdx === 'number' && group.options[oIdx]) ? group.options[oIdx] : null;
+      if (!opt) {
+        opt = group.options.find(o => String(o.option_id || o.id) === String(optionId));
+      }
+      if (opt) opt.name = (val || '').trim();
     }
   }
 
-  updateOptionPrice(groupId, optionId, val) {
-    const group = this.specsGroups.find(g => g.group_id === groupId);
-    if (group) {
-      const opt = group.options.find(o => o.option_id === optionId);
-      if (opt) opt.price = parseFloat(val) || 0;
+  updateOptionPrice(groupId, optionId, val, oIdx) {
+    const group = this.specsGroups?.find(g => g.group_id === groupId || g.id === groupId);
+    if (group && Array.isArray(group.options)) {
+      let opt = (typeof oIdx === 'number' && group.options[oIdx]) ? group.options[oIdx] : null;
+      if (!opt) {
+        opt = group.options.find(o => String(o.option_id || o.id) === String(optionId));
+      }
+      if (opt) {
+        const num = parseFloat(val) || 0;
+        opt.price = num;
+        opt.extra_price = num;
+      }
     }
   }
 
@@ -4340,7 +4522,11 @@ class AdminController {
     e.preventDefault();
     if (!this.activeSpecsProductId) return;
 
-    const est = this.establishments.find(e => e.id === window.activeShopIdForMenu);
+    const targetShopId = this.activeSpecsShopId || window.activeShopIdForMenu || this.activeShopId;
+    let est = this.establishments.find(e => e.id === targetShopId);
+    if (!est) {
+      est = this.establishments.find(e => e.products && e.products.some(p => p.id === this.activeSpecsProductId));
+    }
     if (!est) return;
 
     const prod = est.products.find(p => p.id === this.activeSpecsProductId);
@@ -4360,70 +4546,126 @@ class AdminController {
     prod.out_of_stock = !isAvail;
 
     // 2. Prepare exclusions
-    prod.exclusions = this.specsIngredients.map((item, i) => {
-      const ingName = typeof item === 'string' ? item : item.name;
-      const ingPrice = typeof item === 'string' ? 500 : (item.price !== undefined ? item.price : 500);
+    prod.exclusions = (this.specsIngredients || []).map((item, i) => {
+      const ingName = typeof item === 'string' ? item : (item.name || '');
+      const ingPrice = typeof item === 'string' ? 500 : (item.price !== undefined ? (parseFloat(item.price) || 0) : 500);
       return {
         id: `ex-${i}`,
         name: ingName,
-        price: ingPrice
+        price: isNaN(ingPrice) ? 500 : ingPrice
       };
     });
 
-    // 3. Save modifiers groups
-    prod.modifiers = this.specsGroups;
+    // 3. Save modifiers groups con precios consistentes
+    prod.modifiers = (this.specsGroups || []).map((g, gIdx) => {
+      const gId = g.group_id || g.id || `g-${Date.now()}-${gIdx}`;
+      return {
+        ...g,
+        group_id: gId,
+        id: gId,
+        group_name: g.group_name || 'Adicionales',
+        selection_type: g.selection_type || 'multiple',
+        is_required: !!g.is_required,
+        options: (g.options || []).map((opt, oIdx) => {
+          const optId = opt.option_id || opt.id || `opt-${Date.now()}-${gIdx}-${oIdx}`;
+          const p = parseFloat(opt.price !== undefined ? opt.price : (opt.extra_price !== undefined ? opt.extra_price : 0)) || 0;
+          return {
+            ...opt,
+            option_id: optId,
+            id: optId,
+            name: opt.name || '',
+            price: p,
+            extra_price: p
+          };
+        })
+      };
+    });
 
-    // 4. Create pricing map for exclusions and modifiers
-    const priceMap = {};
+    // 4. Función de normalización de cadenas para matching inteligente (sin emojis, acentos o signos)
+    const cleanNameForMatching = (str) => {
+      if (!str) return '';
+      return str
+        .toString()
+        .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F018}-\u{1F270}\u{2388}\u{2B05}\u{2B06}\u{2B07}\u{2B1B}\u{2B1C}\u{2B50}\u{2B55}\u{200D}\u{FE0F}]/gu, '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    };
+
+    // Crear mapas de precios
+    const exclPriceMap = new Map();
     prod.exclusions.forEach(item => {
-      const key = item.name.trim().toLowerCase();
-      if (key) priceMap[key] = item.price;
+      const key = cleanNameForMatching(item.name);
+      if (key) exclPriceMap.set(key, item.price);
     });
+
+    const modPriceMap = new Map();
     prod.modifiers.forEach(group => {
-      if (group.options) {
+      if (Array.isArray(group.options)) {
         group.options.forEach(opt => {
-          const key = opt.name.trim().toLowerCase();
-          if (key) priceMap[key] = opt.price;
+          const key = cleanNameForMatching(opt.name);
+          if (key) modPriceMap.set(key, opt.price);
         });
       }
     });
 
-    // 5. Propagate pricing changes to all other products in the establishment
-    est.products.forEach(p => {
-      // Exclusions
-      if (p.exclusions) {
-        p.exclusions = p.exclusions.map(ex => {
-          let exName = typeof ex === 'string' ? ex : (ex.name || '');
-          let exPrice = typeof ex === 'string' ? 500 : (ex.price !== undefined ? ex.price : 500);
-          const key = exName.trim().toLowerCase();
-          if (priceMap[key] !== undefined) {
-            exPrice = priceMap[key];
-          }
-          return { id: ex.id || `ex-${Math.random()}`, name: exName, price: exPrice };
-        });
-      }
-      // Modifiers
-      if (p.modifiers) {
-        p.modifiers.forEach(group => {
-          if (group.options) {
-            group.options.forEach(opt => {
-              const key = opt.name.trim().toLowerCase();
-              if (priceMap[key] !== undefined) {
-                opt.price = priceMap[key];
-                opt.extra_price = priceMap[key];
+    // 5. Propagar cambios de precio a TODOS los platos del mismo restaurante
+    let syncedProductsCount = 0;
+    if (Array.isArray(est.products)) {
+      est.products.forEach(p => {
+        if (p.id === prod.id) return; // El plato actual ya está actualizado
+        let productChanged = false;
+
+        // Propagar en exclusiones
+        if (Array.isArray(p.exclusions)) {
+          p.exclusions = p.exclusions.map(ex => {
+            const exName = typeof ex === 'string' ? ex : (ex.name || '');
+            let exPrice = typeof ex === 'string' ? 500 : (ex.price !== undefined ? parseFloat(ex.price) : 500);
+            const key = cleanNameForMatching(exName);
+            if (exclPriceMap.has(key)) {
+              const newPrice = exclPriceMap.get(key);
+              if (exPrice !== newPrice) {
+                exPrice = newPrice;
+                productChanged = true;
               }
-            });
-          }
-        });
-      }
-    });
+            }
+            return { id: ex.id || `ex-${Math.random()}`, name: exName, price: exPrice };
+          });
+        }
+
+        // Propagar en modificadores / opciones de selección
+        if (Array.isArray(p.modifiers)) {
+          p.modifiers.forEach(group => {
+            if (Array.isArray(group.options)) {
+              group.options.forEach(opt => {
+                const key = cleanNameForMatching(opt.name);
+                if (modPriceMap.has(key)) {
+                  const newPrice = modPriceMap.get(key);
+                  if (opt.price !== newPrice || opt.extra_price !== newPrice) {
+                    opt.price = newPrice;
+                    opt.extra_price = newPrice;
+                    productChanged = true;
+                  }
+                }
+              });
+            }
+          });
+        }
+
+        if (productChanged) {
+          syncedProductsCount++;
+        }
+      });
+    }
 
     const fileInput = document.getElementById('specs-product-image-file');
     const imageFile = fileInput ? fileInput.files[0] : null;
 
     try {
       if (imageFile && typeof MenuBuilder !== 'undefined') {
-        this.showToast('Uploading image...');
+        this.showToast('Subiendo foto del producto...');
         const newImgUrl = await MenuBuilder.uploadProductImage(imageFile);
         prod.image = newImgUrl;
       }
@@ -4438,7 +4680,10 @@ class AdminController {
       });
 
       if (res.ok) {
-        this.showToast('✅ Especificaciones guardadas correctamente.');
+        const syncMsg = syncedProductsCount > 0
+          ? `✅ Especificaciones guardadas y precios sincronizados en ${syncedProductsCount} platos del restaurante.`
+          : '✅ Especificaciones guardadas correctamente.';
+        this.showToast(syncMsg);
         this.closeProductSpecsModal();
         if (typeof this.loadModalProducts === 'function') {
           this.loadModalProducts();
@@ -4450,12 +4695,14 @@ class AdminController {
           this.renderModalProducts();
         }
         this.markPendingChanges();
+        // Disparar respaldo a la nube en segundo plano
+        this.triggerCloudBackup().catch(err => console.warn('Cloud backup aviso:', err));
       } else {
         alert('Error al guardar especificaciones.');
       }
     } catch (err) {
       console.error(err);
-      alert('Error de conexión.');
+      alert('Error de conexión al guardar.');
     }
   }
 
@@ -11197,6 +11444,38 @@ window.openAppGeneralQRModal = function() {
   if (window.AdminApp && typeof window.AdminApp.openAppGeneralQRModal === 'function') {
     window.AdminApp.openAppGeneralQRModal();
   }
+};
+
+window.closeProductSpecsModal = function() {
+  AdminApp.closeProductSpecsModal();
+};
+
+window.handleSpecsSubmit = function(e) {
+  AdminApp.handleSpecsSubmit(e);
+};
+
+window.addIngredientOption = function() {
+  AdminApp.addIngredientOption();
+};
+
+window.removeIngredientOption = function(idx) {
+  AdminApp.removeIngredientOption(idx);
+};
+
+window.addModifierGroup = function() {
+  AdminApp.addModifierGroup();
+};
+
+window.deleteModifierGroup = function(groupId) {
+  AdminApp.deleteModifierGroup(groupId);
+};
+
+window.addOptionToGroup = function(groupId) {
+  AdminApp.addOptionToGroup(groupId);
+};
+
+window.deleteOptionFromGroup = function(groupId, optionId, oIdx) {
+  AdminApp.deleteOptionFromGroup(groupId, optionId, oIdx);
 };
 
 window.getTodayDayId = function() {
