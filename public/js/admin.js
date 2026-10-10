@@ -273,7 +273,7 @@ class AdminController {
 
   async init() {
     // Auto-detect version update and clear stale caches
-    const APP_VER = '258';
+    const APP_VER = '259';
     try {
       const cachedVer = localStorage.getItem('pedigochos_app_ver');
       if (cachedVer && cachedVer !== APP_VER) {
@@ -6465,7 +6465,7 @@ class AdminController {
       displayName: 'PediGochos • Delivery & Marketplace',
       slogan: 'Pide lo que quieras de los mejores restaurantes y comercios',
       isAppGeneral: true,
-      badge: '🚀 APP OFICIAL',
+      badge: '',
       themeColor: '#FF5E3A'
     };
     this.currentQREst = appConfig;
@@ -6632,7 +6632,7 @@ class AdminController {
     const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
     let directUrl = '';
     if (est.isAppGeneral) {
-      directUrl = `${origin}/`;
+      directUrl = 'https://pedigochos.com/';
     } else if (est.isService) {
       directUrl = `${origin}/?${est.serviceParam || ('service=' + (est.serviceKey || 'all'))}`;
     } else {
@@ -6875,13 +6875,13 @@ class AdminController {
     nameGrad.addColorStop(1, '#FF5500');
     ctx.fillStyle = nameGrad;
     
-    const hasSubtitlePill = Boolean(tableNum || ((est.isService || est.isAppGeneral) && est.badge));
-    const nameY = hasSubtitlePill ? 260 : 285;
+    const hasSubtitlePill = Boolean(tableNum || (est.isService && est.badge));
+    const nameY = hasSubtitlePill ? 250 : 255;
     ctx.fillText(rawName, cx, nameY);
     ctx.restore();
 
     // Subtitle Pill Badge (Service Badge or Table Number)
-    if ((est.isService || est.isAppGeneral) && est.badge) {
+    if (est.isService && est.badge) {
       ctx.save();
       const serviceBadgeText = est.badge.toUpperCase();
       ctx.font = '900 23px "Montserrat", sans-serif';
@@ -6947,7 +6947,7 @@ class AdminController {
     if (qrElement) {
       const qrSize = 580;
       const qrX = cx - qrSize / 2;
-      const qrY = hasSubtitlePill ? 355 : 340;
+      const qrY = hasSubtitlePill ? 355 : 330;
 
       // Clean pure white plate for max scanner readability with glowing orange border
       ctx.save();
@@ -7007,12 +7007,20 @@ class AdminController {
   shareStoreQRWhatsApp() {
     if (!this.currentQREst) return;
     const est = this.currentQREst;
-    const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.onrender.com' : window.location.origin;
-    const directUrl = est.isService
+    const origin = (window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.hostname === '127.0.0.1') ? 'https://pedigochos.com' : window.location.origin;
+    const directUrl = est.isAppGeneral
+      ? 'https://pedigochos.com/'
+      : est.isService
       ? `${origin}/?${est.serviceParam || ('service=' + (est.serviceKey || 'all'))}`
       : `${origin}/?store=${encodeURIComponent(est.id)}`;
     
-    const msg = est.isService
+    const msg = est.isAppGeneral
+      ? `🚀 *PEDIGOCHOS - ENLACE Y MENÚ GENERAL DE LA APP*\n\n` +
+        `¡Hola! Te compartimos el acceso oficial al menú y delivery de PediGochos:\n\n` +
+        `🔗 *Enlace Directo:* https://pedigochos.com/\n\n` +
+        `📲 Pide comida de los mejores restaurantes o solicita servicios especializados.\n\n` +
+        `¡Disfrútalo! 🍔🍕🛵`
+      : est.isService
       ? `🛠️ *PEDIGOCHOS CENTRAL - CÓDIGO QR Y ENLACE DIRECTO DE SERVICIO*\n\n` +
         `¡Hola *${est.name}*! Desde la administración central de PediGochos hemos generado el Código QR Oficial de tu servicio:\n\n` +
         `🔗 *Enlace Directo del Servicio:* ${directUrl}\n\n` +
