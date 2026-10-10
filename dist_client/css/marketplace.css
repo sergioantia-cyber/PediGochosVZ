@@ -3126,6 +3126,18 @@ body {
   display: flex;
   flex-direction: column;
   max-height: 90vh;
+  background-color: #1A1F2C !important;
+  color: #FFFFFF !important;
+}
+
+.customizer-modal-content .modal-header {
+  background-color: #161A25 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.customizer-modal-content .modal-header h3 {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
 }
 
 .customizer-product-header {
@@ -3133,8 +3145,8 @@ body {
   flex-direction: column;
   gap: 14px;
   padding: 18px;
-  background-color: var(--bg-card, #FFFFFF);
-  border-bottom: 1px solid var(--border);
+  background-color: #202636 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .customizer-product-img-wrapper {
@@ -3387,48 +3399,53 @@ body {
   justify-content: space-between;
   padding: 10px 14px;
   font-size: 14px;
-  background-color: #F9FAFB;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background-color: #242A38;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
   margin-bottom: 8px;
   transition: all 0.2s ease;
+  color: #FFFFFF;
 }
 
 .modifier-option:hover {
-  border-color: #D1D5DB;
+  border-color: rgba(255, 94, 58, 0.45);
+  background-color: #2B3345;
 }
 
 /* Excluded Base Ingredient Row (Qty = 0) */
-.modifier-option.ingredient-excluded {
-  background-color: #FEF2F2 !important; /* Light red */
-  border-color: #FCA5A5 !important;
+.modifier-option.ingredient-excluded,
+.modifier-option.option-excluded {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
   opacity: 0.85;
 }
 
-.modifier-option.ingredient-excluded .option-name {
-  color: #991B1B !important;
+.modifier-option.ingredient-excluded .option-name,
+.modifier-option.option-excluded .option-name {
+  color: #F87171 !important;
   text-decoration: line-through;
+  opacity: 0.75;
 }
 
 /* Extra Ingredient Row (Qty > 1 for base, or Qty >= 1 for additions) */
 .modifier-option.ingredient-extra {
-  background-color: rgba(255, 94, 58, 0.05) !important; /* Light primary */
-  border-color: rgba(255, 94, 58, 0.3) !important;
+  background-color: rgba(255, 94, 58, 0.15) !important;
+  border-color: #FF5E3A !important;
 }
 
 .modifier-option.ingredient-extra .option-name {
-  color: var(--secondary) !important;
+  color: #FFFFFF !important;
   font-weight: 700;
 }
 
 /* Active Single Select option (Bread type active) */
 .modifier-option.option-single-active {
-  background-color: rgba(255, 94, 58, 0.08) !important;
-  border-color: var(--primary) !important;
+  background-color: rgba(255, 94, 58, 0.15) !important;
+  border-color: #FF5E3A !important;
 }
 
 .modifier-option.option-single-active .option-name {
-  color: var(--primary) !important;
+  color: #FFFFFF !important;
   font-weight: 700;
 }
 
@@ -3444,19 +3461,20 @@ body {
 .option-label-container input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: var(--primary);
+  accent-color: #FF5E3A;
   cursor: pointer;
 }
 
 .option-name {
-  font-weight: 500;
-  color: var(--text-main);
+  font-weight: 600;
+  color: #FFFFFF !important;
+  font-size: 14px;
 }
 
 .option-extra-price {
   font-size: 13px;
-  color: var(--text-muted);
-  font-weight: 600;
+  color: #FBBF24 !important;
+  font-weight: 700;
 }
 
 /* Quantity selector inside modifier option (add-ons Qty) */
@@ -3464,35 +3482,40 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #F3F4F6;
-  border-radius: 6px;
+  background-color: #161A24;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
   padding: 2px 6px;
   margin-left: 10px;
 }
 
 .btn-qty-mini {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  background-color: #FFFFFF;
-  color: var(--secondary);
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid var(--border);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background-color: #2E374A;
+  color: #FFFFFF !important;
+  font-size: 13px;
+  font-weight: 900;
+  border: 1px solid rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-qty-mini:hover {
-  background-color: #F9FAFB;
+  background-color: #FF5E3A;
+  border-color: #FF5E3A;
+  color: #FFFFFF !important;
 }
 
 .option-qty-val {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--secondary);
-  min-width: 12px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #FFFFFF !important;
+  min-width: 22px;
   text-align: center;
 }
 
@@ -3545,15 +3568,17 @@ body {
   justify-content: space-between;
   gap: 16px;
   padding: 16px;
-  border-top: 1px solid var(--border);
-  background-color: #FFFFFF;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background-color: #161A25 !important;
+  color: #FFFFFF !important;
 }
 
 .quantity-selector-container {
   display: flex;
   align-items: center;
   gap: 12px;
-  background-color: #F3F4F6;
+  background-color: #242A38 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-radius: var(--radius-sm);
   padding: 4px 8px;
 }
@@ -3562,24 +3587,28 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  background-color: #FFFFFF;
-  color: var(--secondary);
+  background-color: #2E374A !important;
+  color: #FFFFFF !important;
   font-size: 16px;
-  font-weight: 700;
-  border: 1px solid var(--border);
+  font-weight: 900;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-qty-large:hover {
-  background-color: #F9FAFB;
+  background-color: #FF5E3A !important;
+  border-color: #FF5E3A !important;
+  color: #FFFFFF !important;
 }
 
 #customizer-quantity-display {
   font-size: 15px;
-  font-weight: 700;
-  color: var(--secondary);
+  font-weight: 800;
+  color: #FFFFFF !important;
   min-width: 18px;
   text-align: center;
 }

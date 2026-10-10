@@ -5234,10 +5234,10 @@ ${mapsLink}
           rightControlHTML = `
             <div style="display: flex; align-items: center;">
               ${extraPriceDisplay}
-              <div class="option-qty-control" style="display: flex;">
-                <button type="button" class="btn-qty-mini" onclick="event.preventDefault(); event.stopPropagation(); MarketplaceApp.updateBaseIngredientQty('${itemName.replace(/'/g, "\\'")}', '${sideKey}', -1)">-</button>
-                <span class="option-qty-val" style="min-width: 20px; text-align: center; font-weight: 800; font-size: 12px;">${extraQty}</span>
-                <button type="button" class="btn-qty-mini" onclick="event.preventDefault(); event.stopPropagation(); MarketplaceApp.updateBaseIngredientQty('${itemName.replace(/'/g, "\\'")}', '${sideKey}', 1)">+</button>
+              <div class="option-qty-control" style="display: flex; background-color: #161A24; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px; padding: 2px 6px;">
+                <button type="button" class="btn-qty-mini" style="background-color: #2E374A; color: #FFFFFF; font-weight: 900; width: 24px; height: 24px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.25);" onclick="event.preventDefault(); event.stopPropagation(); MarketplaceApp.updateBaseIngredientQty('${itemName.replace(/'/g, "\\'")}', '${sideKey}', -1)">-</button>
+                <span class="option-qty-val" style="min-width: 22px; text-align: center; font-weight: 900; font-size: 13px; color: #FFFFFF;">${extraQty}</span>
+                <button type="button" class="btn-qty-mini" style="background-color: #2E374A; color: #FFFFFF; font-weight: 900; width: 24px; height: 24px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.25);" onclick="event.preventDefault(); event.stopPropagation(); MarketplaceApp.updateBaseIngredientQty('${itemName.replace(/'/g, "\\'")}', '${sideKey}', 1)">+</button>
               </div>
             </div>
           `;
@@ -5245,8 +5245,8 @@ ${mapsLink}
 
         optionDiv.innerHTML = `
           <div class="option-label-container" onclick="MarketplaceApp.toggleBaseIngredient('${itemName.replace(/'/g, "\\'")}', '${sideKey}')">
-            <input type="checkbox" ${isIncluded ? 'checked' : ''} style="margin: 0;">
-            <span class="option-name" style="margin-left: 8px; ${!isIncluded ? 'text-decoration: line-through; opacity: 0.55;' : ''}">${itemName}</span>
+            <input type="checkbox" ${isIncluded ? 'checked' : ''} style="margin: 0; accent-color: #FF5E3A; width: 18px; height: 18px;">
+            <span class="option-name" style="margin-left: 8px; font-weight: 600; font-size: 14px; color: ${isIncluded ? '#FFFFFF' : '#F87171'}; ${!isIncluded ? 'text-decoration: line-through; opacity: 0.65;' : ''}">${itemName}</span>
           </div>
           ${rightControlHTML}
         `;
@@ -5263,7 +5263,7 @@ ${mapsLink}
       let isSmallSizeSelected = false;
       const sizeGroup = activeProduct.modifiers.find(g => (g.group_name || '').toLowerCase() === 'tamaño');
       if (sizeGroup && Array.isArray(sizeGroup.options)) {
-        const selectedSizeOpt = sizeGroup.options.find(opt => this.customizerState.quantities[sideKey]['opt_' + opt.option_id] === 1);
+        const selectedSizeOpt = sizeGroup.options.find(opt => this.customizerState.quantities[sideKey]['opt_' + (opt.option_id || opt.id)] === 1);
         if (selectedSizeOpt) {
           const sName = (selectedSizeOpt.name || '').toLowerCase();
           if (sName.includes('pequeña') || sName.includes('personal') || sName.includes('pequeño')) {
@@ -5286,8 +5286,8 @@ ${mapsLink}
           
           groupDiv.innerHTML = `
             <div class="modifier-group-title" onclick="MarketplaceApp.toggleGroupCollapse('${colId}', this)" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-weight: 700;">${group.group_name || ''}${sideLabel}</span>
-              <span class="collapse-chevron" style="transition: transform 0.2s; font-size: 12px; ${chevronTransform}">▼</span>
+              <span style="font-weight: 800; color: #FFFFFF;">${group.group_name || ''}${sideLabel}</span>
+              <span class="collapse-chevron" style="transition: transform 0.2s; font-size: 12px; color: #CBD5E1; ${chevronTransform}">▼</span>
             </div>
             <div class="${listClass}" id="${colId}"></div>
           `;
@@ -5296,6 +5296,8 @@ ${mapsLink}
           if (group.options && Array.isArray(group.options)) {
             group.options.forEach(opt => {
               if (!opt) return;
+              const optId = opt.option_id || opt.id;
+              if (!optId) return;
               const optNameLower = (opt.name || '').toLowerCase().trim();
 
               // Strictly filter out duplicate sizes showing inside Adicionales
@@ -5304,28 +5306,29 @@ ${mapsLink}
               }
 
               if (isSmallSizeSelected && optNameLower.includes('borde')) {
-                this.customizerState.quantities[sideKey]['opt_' + opt.option_id] = 0;
+                this.customizerState.quantities[sideKey]['opt_' + optId] = 0;
                 return;
               }
 
-              const qty = this.customizerState.quantities[sideKey]['opt_' + opt.option_id] || 0;
-              const extraPriceText = (opt.extra_price || 0) > 0 ? `+ ${this.formatPesos(opt.extra_price)}` : '';
+              const qty = this.customizerState.quantities[sideKey]['opt_' + optId] || 0;
+              const extraPrice = (opt.extra_price !== undefined ? opt.extra_price : (opt.price !== undefined ? opt.price : 0));
+              const extraPriceText = extraPrice > 0 ? `+ ${this.formatPesos(extraPrice)}` : '';
               
               const optionDiv = document.createElement('div');
               let stateClass = qty > 0 ? 'ingredient-extra' : '';
 
               optionDiv.className = `modifier-option ${stateClass}`;
               optionDiv.innerHTML = `
-                <div class="option-label-container" onclick="MarketplaceApp.toggleMultipleSelection('${opt.option_id}', '${sideKey}')">
-                  <input type="checkbox" ${qty > 0 ? 'checked' : ''} style="margin: 0;">
-                  <span class="option-name" style="margin-left: 8px;">${opt.name || ''}</span>
+                <div class="option-label-container" onclick="MarketplaceApp.toggleMultipleSelection('${optId}', '${sideKey}')">
+                  <input type="checkbox" ${qty > 0 ? 'checked' : ''} style="margin: 0; accent-color: #FF5E3A; width: 18px; height: 18px;">
+                  <span class="option-name" style="margin-left: 8px; font-weight: ${qty > 0 ? '700' : '600'}; font-size: 14px; color: #FFFFFF;">${opt.name || ''}</span>
                 </div>
                 <div style="display: flex; align-items: center;">
-                  <span class="option-extra-price" style="margin-right: 8px;">${extraPriceText}</span>
-                  <div class="option-qty-control" style="display: ${qty > 0 ? 'flex' : 'none'}">
-                    <button class="btn-qty-mini" onclick="event.preventDefault(); event.stopPropagation(); MarketplaceApp.updateUnifiedQty('opt_${opt.option_id}', '${sideKey}', -1)">-</button>
-                    <span class="option-qty-val">${qty}</span>
-                    <button class="btn-qty-mini" onclick="event.preventDefault(); event.stopPropagation(); MarketplaceApp.updateUnifiedQty('opt_${opt.option_id}', '${sideKey}', 1)">+</button>
+                  <span class="option-extra-price" style="margin-right: 8px; color: #FBBF24; font-weight: 700; font-size: 12.5px;">${extraPriceText}</span>
+                  <div class="option-qty-control" style="display: ${qty > 0 ? 'flex' : 'none'}; background-color: #161A24; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px; padding: 2px 6px;">
+                    <button class="btn-qty-mini" style="background-color: #2E374A; color: #FFFFFF; font-weight: 900; width: 24px; height: 24px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.25);" onclick="event.preventDefault(); event.stopPropagation(); MarketplaceApp.updateUnifiedQty('opt_${optId}', '${sideKey}', -1)">-</button>
+                    <span class="option-qty-val" style="min-width: 22px; text-align: center; font-weight: 900; font-size: 13px; color: #FFFFFF;">${qty}</span>
+                    <button class="btn-qty-mini" style="background-color: #2E374A; color: #FFFFFF; font-weight: 900; width: 24px; height: 24px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.25);" onclick="event.preventDefault(); event.stopPropagation(); MarketplaceApp.updateUnifiedQty('opt_${optId}', '${sideKey}', 1)">+</button>
                   </div>
                 </div>
               `;
@@ -5852,13 +5855,14 @@ ${mapsLink}
           }
         } else if (group.selection_type === 'multiple') {
           group.options.forEach(opt => {
-            const qty = this.customizerState.quantities[sideKey]['opt_' + opt.option_id] || 0;
+            const optId = opt ? (opt.option_id || opt.id) : null;
+            const qty = optId ? (this.customizerState.quantities[sideKey]['opt_' + optId] || 0) : 0;
             if (qty > 0) {
               addOns.push({
-                option_id: opt.option_id,
+                option_id: optId,
                 name: prefix + opt.name,
                 quantity: qty,
-                price_per_unit: this.normalizeCopPrice(opt.extra_price)
+                price_per_unit: this.normalizeCopPrice(opt.extra_price || opt.price || 0)
               });
             }
           });
