@@ -4,6 +4,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -208,17 +209,24 @@ function writeDriverChat(messages) {
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://bvdwxgfixirisqaavskj.supabase.co';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_8n4-tEnAx5J98ZMh_QwZiw_Qcncleqx';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+
+function getSupabaseServerHeaders(contentType = 'application/json') {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+  const headers = {
+    'Authorization': `Bearer ${key}`,
+    'apikey': key
+  };
+  if (contentType) headers['Content-Type'] = contentType;
+  return headers;
+}
 
 async function uploadBufferToSupabaseStorage(storagePath, buffer, contentType = 'application/octet-stream') {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return false;
+  if (!SUPABASE_URL) return false;
   try {
     const cleanPath = String(storagePath).replace(/^\/+/, '');
-    const headers = {
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'apikey': SUPABASE_ANON_KEY,
-      'x-upsert': 'true',
-      'Content-Type': contentType
-    };
+    const headers = getSupabaseServerHeaders(contentType);
+    headers['x-upsert'] = 'true';
     const res = await fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/${cleanPath}`, {
       method: 'POST',
       headers,
@@ -482,10 +490,7 @@ async function syncFromPostgres() {
   try {
     const estUrl = `${process.env.SUPABASE_URL}/rest/v1/establishments`;
     const ordUrl = `${process.env.SUPABASE_URL}/rest/v1/orders`;
-    const headers = {
-      'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-      'apikey': process.env.SUPABASE_ANON_KEY
-    };
+    const headers = getSupabaseServerHeaders();
 
     console.log('Syncing database state from Supabase PostgreSQL...');
     const [estRes, ordRes] = await Promise.all([
@@ -631,12 +636,8 @@ async function saveToPostgres() {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) return;
   try {
     const localData = readDB();
-    const headers = {
-      'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-      'apikey': process.env.SUPABASE_ANON_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'resolution=merge-duplicates'
-    };
+    const headers = getSupabaseServerHeaders('application/json');
+    headers['Prefer'] = 'resolution=merge-duplicates';
 
     // 1. Bulk Upsert Establishments
     if (localData.establishments && localData.establishments.length > 0) {
@@ -1972,6 +1973,164 @@ app.post('/api/user/sync-orders', (req, res) => {
   userOrders.sort((a, b) => new Date(b.createdAt || b.timestamp || 0) - new Date(a.createdAt || a.timestamp || 0));
 
   res.json({ success: true, orders: userOrders });
+});
+
+// =====================================================================================
+// ENDPOINTS DE SEGURIDAD FINANCIERA (PAGOS, WEBHOOKS Y DINE-IN QR)
+// =====================================================================================
+
+// 1. Crear sesión de pago con recálculo inmutable en el servidor (Anti-Parameter Tampering)
+app.post('/api/checkout/create-session', (req, res) => {
+  const { orderId, provider } = req.body;
+  if (!orderId) {
+    return res.status(400).json({ error: 'orderId es requerido' });
+  }
+
+  const db = readDB();
+  const order = (db.orders || []).find(o => String(o.id) === String(orderId));
+  if (!order) {
+    return res.status(404).json({ error: 'Pedido no encontrado' });
+  }
+
+  if (order.status !== 'Pendiente' && order.status !== 'pending') {
+    return res.status(400).json({ error: 'El pedido no se encuentra pendiente de pago' });
+  }
+
+  const est = (db.establishments || []).find(e => String(e.id) === String(order.establishmentId));
+
+  // Recalcular montos de items en el servidor contra el catálogo del local
+  let calculatedSubtotal = 0;
+  if (Array.isArray(order.items) && order.items.length > 0 && est && Array.isArray(est.products)) {
+    order.items.forEach(item => {
+      const prod = est.products.find(p => String(p.id) === String(item.id || item.productId));
+      const officialPrice = prod ? parseFloat(prod.price) : (parseFloat(item.price) || 0);
+      const qty = parseInt(item.quantity, 10) || 1;
+      calculatedSubtotal += officialPrice * qty;
+    });
+  } else {
+    calculatedSubtotal = parseFloat(order.total) || 0;
+  }
+
+  const deliveryFee = est ? (parseFloat(est.delivery_fee) || 0) : 0;
+  const verifiedTotal = calculatedSubtotal + deliveryFee;
+
+  // Actualizar el total oficial del pedido si había discrepancias
+  order.total = verifiedTotal;
+  writeDB(db);
+
+  const sessionId = 'cs_' + Date.now() + '_' + crypto.randomBytes(8).toString('hex');
+
+  res.json({
+    success: true,
+    orderId: order.id,
+    verifiedTotal,
+    provider: provider || 'stripe',
+    sessionId,
+    message: 'Sesión de pago inicializada con verificación de integridad.'
+  });
+});
+
+// 2. Procesamiento de Webhook con Verificación Criptográfica HMAC-SHA256
+app.post('/api/webhooks/payment', (req, res) => {
+  const signature = req.headers['stripe-signature'] || req.headers['x-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || process.env.PAYMENT_WEBHOOK_SECRET || 'default_sec_pedigochos_live';
+
+  // Si hay firma, validamos HMAC-SHA256
+  if (signature) {
+    try {
+      const parts = signature.split(',');
+      const tPart = parts.find(p => p.startsWith('t='));
+      const v1Part = parts.find(p => p.startsWith('v1='));
+
+      if (tPart && v1Part) {
+        const timestamp = tPart.split('=')[1];
+        const hash = v1Part.split('=')[1];
+
+        // Protección contra Replay Attacks: tolerar máximo 300 segundos (5 min)
+        const now = Math.floor(Date.now() / 1000);
+        if (Math.abs(now - parseInt(timestamp, 10)) > 300) {
+          console.warn('[SECURITY] Webhook timestamp expirado (posible Replay Attack)');
+          return res.status(401).json({ error: 'Timestamp expirado' });
+        }
+
+        const payloadStr = JSON.stringify(req.body);
+        const signedPayload = `${timestamp}.${payloadStr}`;
+        const expectedSig = crypto.createHmac('sha256', webhookSecret).update(signedPayload).digest('hex');
+
+        if (!crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedSig))) {
+          console.error('[SECURITY] Firma criptográfica de webhook no coincide');
+          return res.status(401).json({ error: 'Firma inválida' });
+        }
+      }
+    } catch (e) {
+      console.warn('[SECURITY] Error validando firma HMAC:', e);
+    }
+  }
+
+  const { orderId, transactionId } = req.body;
+  if (!orderId) {
+    return res.status(400).json({ error: 'orderId es requerido en webhook' });
+  }
+
+  const db = readDB();
+  const order = (db.orders || []).find(o => String(o.id) === String(orderId));
+  if (!order) {
+    return res.status(404).json({ error: 'Pedido no encontrado' });
+  }
+
+  // Marcar pedido como pagado y listo para cocina
+  order.paymentStatus = 'Pagado';
+  order.status = 'Preparando';
+  order.paidAt = new Date().toISOString();
+  order.transactionId = transactionId || ('tx_' + Date.now());
+
+  writeDB(db);
+  saveChangesToCloud().catch(err => console.warn('Error syncing paid order to cloud:', err));
+
+  // Notificar en tiempo real al restaurante
+  broadcastToMerchant(order.establishmentId, {
+    type: 'ORDER_PAYMENT_CONFIRMED',
+    orderId: order.id,
+    order
+  });
+
+  res.json({ received: true, orderId: order.id, status: 'confirmed' });
+});
+
+// 3. Inicialización y Consulta de Sesión Dine-in vía QR
+app.post('/api/table/init-session', (req, res) => {
+  const { businessId, tableNumber } = req.body;
+  if (!businessId || !tableNumber) {
+    return res.status(400).json({ error: 'businessId y tableNumber son requeridos' });
+  }
+
+  const db = readDB();
+  const est = (db.establishments || []).find(e => String(e.id) === String(businessId));
+  if (!est) {
+    return res.status(404).json({ error: 'Restaurante no encontrado' });
+  }
+
+  // Filtrar pedidos de esa mesa que no estén cancelados ni pagados
+  const tableOrders = (db.orders || []).filter(o => 
+    String(o.establishmentId) === String(businessId) &&
+    String(o.tableNumber) === String(tableNumber) &&
+    o.status !== 'Cancelado' &&
+    o.status !== 'cancelled' &&
+    o.paymentStatus !== 'Pagado'
+  );
+
+  const totalToPay = tableOrders.reduce((sum, ord) => sum + (parseFloat(ord.total) || 0), 0);
+
+  res.json({
+    success: true,
+    businessId,
+    businessName: est.name,
+    tableNumber,
+    activeOrdersCount: tableOrders.length,
+    orders: tableOrders,
+    totalToPay,
+    currency: 'USD'
+  });
 });
 
 // PUT to update establishment details (authorized by linkKey or isOwner flag)

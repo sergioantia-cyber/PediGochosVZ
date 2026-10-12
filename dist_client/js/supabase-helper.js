@@ -111,19 +111,47 @@ class SupabaseHelper {
     await this.init();
     if (!this.client) return null;
     
-    // Query user_roles table for role mappings
-    const { data, error } = await this.client
-      .from('user_roles')
-      .select('role, establishment_id')
-      .eq('email', email)
-      .single();
+    // 1. Intentar obtener el rol mediante la funcion segura RPC de Postgres
+    try {
+      const { data: rpcRole, error: rpcErr } = await this.client.rpc('get_user_role');
+      if (!rpcErr && rpcRole && rpcRole !== 'customer') {
+        // Consultar el establishment_id si es merchant o waiter
+        const { data: roleRow } = await this.client
+          .from('user_roles')
+          .select('role, establishment_id, business_id')
+          .limit(1)
+          .single();
+        return {
+          role: rpcRole,
+          establishment_id: roleRow ? (roleRow.establishment_id || roleRow.business_id) : null
+        };
+      }
+    } catch (e) {
+      // Continuar con fallback tradicional
+    }
+
+    // 2. Fallback tradicional consultando user_roles
+    try {
+      const query = this.client
+        .from('user_roles')
+        .select('role, establishment_id, business_id');
+        
+      if (email) {
+        query.eq('email', email);
+      }
       
-    if (error) {
-      console.warn('No custom role found in user_roles or error querying:', error.message);
-      return null;
+      const { data, error } = await query.maybeSingle();
+      if (!error && data) {
+        return {
+          role: data.role,
+          establishment_id: data.establishment_id || data.business_id
+        };
+      }
+    } catch (err) {
+      console.warn('Error querying user_roles:', err);
     }
     
-    return data; // { role: 'customer'|'merchant'|'owner', establishment_id }
+    return { role: 'customer', establishment_id: null };
   }
 }
 
