@@ -1008,9 +1008,8 @@ class MarketplaceController {
 
     if (waBtn) {
       waBtn.onclick = () => {
-        if (data.whatsappUrl) {
-          window.open(data.whatsappUrl, '_blank');
-        }
+        const waLink = data.whatsappUrl || 'https://wa.me/573227949751';
+        window.open(waLink, '_blank');
       };
     }
 
@@ -1472,21 +1471,9 @@ class MarketplaceController {
     const lng = this.offerOrderGps.lng.toFixed(6);
     const mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
 
-    // Target vendor WhatsApp
-    let targetPhone = promo.vendorWhatsapp || promo.whatsapp || '';
-    let cleanPhone = targetPhone.replace(/\D/g, '');
-    if (cleanPhone.startsWith('0')) {
-      cleanPhone = '58' + cleanPhone.substring(1);
-    } else if (cleanPhone.length === 10 && cleanPhone.startsWith('4')) {
-      cleanPhone = '58' + cleanPhone;
-    } else if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
-      cleanPhone = '57' + cleanPhone;
-    }
-
-    if (!cleanPhone) {
-      alert('El comercio emisor no tiene un número de WhatsApp configurado para recibir pedidos.');
-      return;
-    }
+    // Target WhatsApp Central Oficial PediGochos (+57 322 794 9751)
+    const officialWaNumber = '573227949751';
+    const cleanPhone = officialWaNumber;
 
     // Save client info for future convenience
     try {
@@ -1507,7 +1494,8 @@ class MarketplaceController {
 ${notes ? `📝 *Notas:* ${notes}\n` : ''}📍 *UBICACIÓN GPS PRECISA (OBLIGATORIA):*
 ${mapsLink}
 ━━━━━━━━━━━━━━━━━━━━
-🚀 *Generado vía PediGochos*`;
+🚀 *Generado vía PediGochos*
+💬 *Central WhatsApp Oficial: +57 322 794 9751*`;
 
     const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank');
