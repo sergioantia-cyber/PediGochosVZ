@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "build": "node scripts/build-client-app.js && node scripts/build-admin-app.js",
     "admin:apk": "node scripts/build-admin-apk.js",
     "admin:build": "node scripts/build-admin-app.js && npx cap sync android",
     "client:apk": "node scripts/build-client-apk.js",
