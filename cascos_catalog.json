@@ -22,13 +22,15 @@
     "sizes": [
       {
         "size": "L",
-        "available": false,
-        "price": 570000
+        "available": true,
+        "price": 570000,
+        "stock": 1
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 570000
+        "available": true,
+        "price": 570000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -42,7 +44,9 @@
       "INTEGRAL",
       "SHAFT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 3,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9540399562996",
@@ -68,7 +72,8 @@
       {
         "size": "M",
         "available": true,
-        "price": 880000
+        "price": 880000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -84,7 +89,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 1,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9540385177844",
@@ -110,7 +117,8 @@
       {
         "size": "L",
         "available": true,
-        "price": 490000
+        "price": 490000,
+        "stock": 4
       }
     ],
     "hasSizes": true,
@@ -126,7 +134,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 4,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9536987529460",
@@ -153,18 +163,21 @@
     "sizes": [
       {
         "size": "M",
-        "available": false,
-        "price": 470000
+        "available": true,
+        "price": 470000,
+        "stock": 4
       },
       {
         "size": "L",
         "available": true,
-        "price": 470000
+        "price": 470000,
+        "stock": 1
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 470000
+        "available": true,
+        "price": 470000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -176,7 +189,9 @@
       "Abatible",
       "SHAFT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 7,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9522547196148",
@@ -201,18 +216,21 @@
     "sizes": [
       {
         "size": "M",
-        "available": false,
-        "price": 660000
+        "available": true,
+        "price": 660000,
+        "stock": 4
       },
       {
         "size": "L",
-        "available": false,
-        "price": 660000
+        "available": true,
+        "price": 660000,
+        "stock": 1
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 660000
+        "available": true,
+        "price": 660000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -228,7 +246,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 7,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9482485072116",
@@ -254,7 +274,8 @@
       {
         "size": "M",
         "available": true,
-        "price": 750000
+        "price": 750000,
+        "stock": 4
       }
     ],
     "hasSizes": true,
@@ -269,7 +290,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 4,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412360667380",
@@ -299,7 +322,10 @@
       "LLantas",
       "SHAFT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 3,
+    "stockTotal": 3,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412358471924",
@@ -327,18 +353,21 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 380000
+        "available": true,
+        "price": 380000,
+        "stock": 4
       },
       {
         "size": "M",
         "available": true,
-        "price": 390000
+        "price": 390000,
+        "stock": 1
       },
       {
         "size": "L",
         "available": true,
-        "price": 390000
+        "price": 390000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -351,7 +380,9 @@
       "CASCO",
       "SHAFT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 7,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412356079860",
@@ -381,18 +412,21 @@
     "sizes": [
       {
         "size": "M",
-        "available": false,
-        "price": 400000
+        "available": true,
+        "price": 400000,
+        "stock": 1
       },
       {
         "size": "L",
-        "available": false,
-        "price": 400000
+        "available": true,
+        "price": 400000,
+        "stock": 2
       },
       {
         "size": "XL",
         "available": true,
-        "price": 400000
+        "price": 400000,
+        "stock": 3
       }
     ],
     "hasSizes": true,
@@ -406,7 +440,9 @@
       "SHAFT",
       "SOLID"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 6,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412355686644",
@@ -433,13 +469,15 @@
     "sizes": [
       {
         "size": "L",
-        "available": false,
-        "price": 590000
+        "available": true,
+        "price": 590000,
+        "stock": 2
       },
       {
         "size": "S",
         "available": true,
-        "price": 590000
+        "price": 590000,
+        "stock": 3
       }
     ],
     "hasSizes": true,
@@ -454,7 +492,9 @@
       "Abatible",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 5,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412353360116",
@@ -484,17 +524,20 @@
       {
         "size": "S",
         "available": true,
-        "price": 590000
+        "price": 590000,
+        "stock": 3
       },
       {
         "size": "L",
-        "available": false,
-        "price": 590000
+        "available": true,
+        "price": 590000,
+        "stock": 4
       },
       {
         "size": "XL",
         "available": true,
-        "price": 590000
+        "price": 590000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -509,7 +552,9 @@
       "Abatible",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 8,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412348870900",
@@ -538,18 +583,21 @@
     "sizes": [
       {
         "size": "L",
-        "available": false,
-        "price": 400000
+        "available": true,
+        "price": 400000,
+        "stock": 4
       },
       {
         "size": "M",
         "available": true,
-        "price": 400000
+        "price": 400000,
+        "stock": 1
       },
       {
         "size": "S",
-        "available": false,
-        "price": 400000
+        "available": true,
+        "price": 400000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -562,7 +610,9 @@
       "CASCO",
       "KOV"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 7,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412347855092",
@@ -587,23 +637,27 @@
     "sizes": [
       {
         "size": "L",
-        "available": false,
-        "price": 2020000
+        "available": true,
+        "price": 2020000,
+        "stock": 4
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 220000
+        "available": true,
+        "price": 220000,
+        "stock": 1
       },
       {
         "size": "S",
-        "available": false,
-        "price": 220000
+        "available": true,
+        "price": 220000,
+        "stock": 2
       },
       {
         "size": "M",
         "available": true,
-        "price": 220000
+        "price": 220000,
+        "stock": 3
       }
     ],
     "hasSizes": true,
@@ -618,7 +672,9 @@
       "CASCO",
       "ICH"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412346347764",
@@ -643,23 +699,27 @@
     "sizes": [
       {
         "size": "M",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 1
       },
       {
         "size": "L",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 2
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 3
       },
       {
         "size": "S",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 4
       }
     ],
     "hasSizes": true,
@@ -674,7 +734,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412345659636",
@@ -706,23 +768,27 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 450000
+        "available": true,
+        "price": 450000,
+        "stock": 4
       },
       {
         "size": "M",
-        "available": false,
-        "price": 450000
+        "available": true,
+        "price": 450000,
+        "stock": 1
       },
       {
         "size": "L",
-        "available": false,
-        "price": 450000
+        "available": true,
+        "price": 450000,
+        "stock": 2
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 450000
+        "available": true,
+        "price": 450000,
+        "stock": 3
       }
     ],
     "hasSizes": true,
@@ -738,7 +804,9 @@
       "SHAFT",
       "SOLID"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412342251764",
@@ -763,7 +831,8 @@
       {
         "size": "XS",
         "available": false,
-        "price": 90000
+        "price": 90000,
+        "stock": 0
       }
     ],
     "hasSizes": true,
@@ -775,7 +844,9 @@
       "Integral",
       "KIDS"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 0,
+    "stockStatus": "out_of_stock"
   },
   {
     "id": "casco-9412340973812",
@@ -806,7 +877,10 @@
       "MALETA",
       "Maletas y morrales"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 5,
+    "stockTotal": 5,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412339007732",
@@ -835,7 +909,10 @@
       "PIERNERA",
       "Varios"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 2,
+    "stockTotal": 2,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412335370484",
@@ -857,8 +934,9 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -874,7 +952,9 @@
       "MT",
       "TEXTIL"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 2,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412335173876",
@@ -896,8 +976,9 @@
     "sizes": [
       {
         "size": "L",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 4
       }
     ],
     "hasSizes": true,
@@ -913,7 +994,9 @@
       "MT",
       "TEXTIL"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 4,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412332290292",
@@ -944,7 +1027,10 @@
       "pescuezo",
       "Varios"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 2,
+    "stockTotal": 2,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412332159220",
@@ -976,7 +1062,10 @@
       "intercomunicador moto",
       "Tecnología para motociclistas"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 3,
+    "stockTotal": 3,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412331569396",
@@ -1011,7 +1100,10 @@
       "llanta sin cámara",
       "llanta-urbana-moto"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 3,
+    "stockTotal": 3,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412331438324",
@@ -1047,7 +1139,10 @@
       "llanta moto trabajo",
       "llanta urbana"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 3,
+    "stockTotal": 3,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412331340020",
@@ -1083,7 +1178,10 @@
       "Llanta Moto",
       "llanta sin cámara"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 2,
+    "stockTotal": 2,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412331307252",
@@ -1114,7 +1212,10 @@
       "LLANTA",
       "LLANTAS"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 4,
+    "stockTotal": 4,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412330782964",
@@ -1149,7 +1250,10 @@
       "llanta sin cámara",
       "llanta urbana"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 4,
+    "stockTotal": 4,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412330422516",
@@ -1182,7 +1286,10 @@
       "llanta-urbana-moto",
       "repuestos-moto"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 4,
+    "stockTotal": 4,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412330193140",
@@ -1219,7 +1326,10 @@
       "soporte manubrio",
       "Varios"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 4,
+    "stockTotal": 4,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412326162676",
@@ -1246,22 +1356,26 @@
       {
         "size": "XXL",
         "available": false,
-        "price": 730000
+        "price": 730000,
+        "stock": 0
       },
       {
         "size": "L",
         "available": false,
-        "price": 730000
+        "price": 730000,
+        "stock": 0
       },
       {
         "size": "M",
         "available": false,
-        "price": 730000
+        "price": 730000,
+        "stock": 0
       },
       {
         "size": "S",
         "available": false,
-        "price": 730000
+        "price": 730000,
+        "stock": 0
       }
     ],
     "hasSizes": true,
@@ -1276,7 +1390,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 0,
+    "stockStatus": "out_of_stock"
   },
   {
     "id": "casco-9412325638388",
@@ -1314,7 +1430,10 @@
       "Guantes para moto",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 4,
+    "stockTotal": 4,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412325277940",
@@ -1340,23 +1459,27 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 2
       },
       {
         "size": "M",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 3
       },
       {
         "size": "XL",
         "available": true,
-        "price": 750000
+        "price": 750000,
+        "stock": 4
       },
       {
         "size": "L",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -1371,7 +1494,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412324393204",
@@ -1397,22 +1522,26 @@
       {
         "size": "L",
         "available": true,
-        "price": 630000
+        "price": 630000,
+        "stock": 3
       },
       {
         "size": "XL",
         "available": true,
-        "price": 630000
+        "price": 630000,
+        "stock": 4
       },
       {
         "size": "M",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 1
       },
       {
         "size": "S",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -1428,7 +1557,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412324229364",
@@ -1453,23 +1584,27 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 175000
+        "available": true,
+        "price": 175000,
+        "stock": 2
       },
       {
         "size": "M",
-        "available": false,
-        "price": 175000
+        "available": true,
+        "price": 175000,
+        "stock": 3
       },
       {
         "size": "L",
         "available": true,
-        "price": 175000
+        "price": 175000,
+        "stock": 4
       },
       {
         "size": "XL",
         "available": true,
-        "price": 175000
+        "price": 175000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -1485,7 +1620,9 @@
       "Guantes para moto",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412323672308",
@@ -1511,18 +1648,21 @@
     "sizes": [
       {
         "size": "L",
-        "available": false,
-        "price": 120000
+        "available": true,
+        "price": 120000,
+        "stock": 3
       },
       {
         "size": "M",
-        "available": false,
-        "price": 120000
+        "available": true,
+        "price": 120000,
+        "stock": 4
       },
       {
         "size": "S",
         "available": true,
-        "price": 120000
+        "price": 120000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -1535,7 +1675,9 @@
       "BUZO",
       "Textil moto"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 8,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412323344628",
@@ -1561,23 +1703,27 @@
     "sizes": [
       {
         "size": "XL",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 2
       },
       {
         "size": "L",
         "available": true,
-        "price": 630000
+        "price": 630000,
+        "stock": 3
       },
       {
         "size": "M",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 4
       },
       {
         "size": "S",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -1593,7 +1739,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412322099444",
@@ -1618,23 +1766,27 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 490000
+        "available": true,
+        "price": 490000,
+        "stock": 4
       },
       {
         "size": "M",
-        "available": false,
-        "price": 490000
+        "available": true,
+        "price": 490000,
+        "stock": 1
       },
       {
         "size": "XL",
         "available": true,
-        "price": 490000
+        "price": 490000,
+        "stock": 2
       },
       {
         "size": "L",
         "available": true,
-        "price": 490000
+        "price": 490000,
+        "stock": 3
       }
     ],
     "hasSizes": true,
@@ -1650,7 +1802,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412320362740",
@@ -1675,23 +1829,27 @@
     "sizes": [
       {
         "size": "XL",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 2
       },
       {
         "size": "L",
         "available": true,
-        "price": 630000
+        "price": 630000,
+        "stock": 3
       },
       {
         "size": "S",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 4
       },
       {
         "size": "M",
-        "available": false,
-        "price": 630000
+        "available": true,
+        "price": 630000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -1706,7 +1864,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412319019252",
@@ -1732,23 +1892,27 @@
     "sizes": [
       {
         "size": "XL",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 3
       },
       {
         "size": "M",
         "available": true,
-        "price": 750000
+        "price": 750000,
+        "stock": 4
       },
       {
         "size": "L",
         "available": true,
-        "price": 750000
+        "price": 750000,
+        "stock": 1
       },
       {
         "size": "S",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -1763,7 +1927,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412318527732",
@@ -1789,22 +1955,26 @@
       {
         "size": "XXL",
         "available": false,
-        "price": 750000
+        "price": 750000,
+        "stock": 0
       },
       {
         "size": "S",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 4
       },
       {
         "size": "L",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 1
       },
       {
         "size": "M",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -1819,7 +1989,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 7,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412318462196",
@@ -1845,22 +2017,26 @@
       {
         "size": "XL",
         "available": true,
-        "price": 570000
+        "price": 570000,
+        "stock": 1
       },
       {
         "size": "L",
-        "available": false,
-        "price": 570000
+        "available": true,
+        "price": 570000,
+        "stock": 2
       },
       {
         "size": "M",
-        "available": false,
-        "price": 570000
+        "available": true,
+        "price": 570000,
+        "stock": 3
       },
       {
         "size": "S",
-        "available": false,
-        "price": 570000
+        "available": true,
+        "price": 570000,
+        "stock": 4
       }
     ],
     "hasSizes": true,
@@ -1875,7 +2051,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412317905140",
@@ -1901,7 +2079,8 @@
       {
         "size": "XL",
         "available": true,
-        "price": 750000
+        "price": 750000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -1917,7 +2096,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 1,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412316168436",
@@ -1945,17 +2126,20 @@
       {
         "size": "XL",
         "available": true,
-        "price": 600000
+        "price": 600000,
+        "stock": 1
       },
       {
         "size": "L",
-        "available": false,
-        "price": 600000
+        "available": true,
+        "price": 600000,
+        "stock": 2
       },
       {
         "size": "M",
-        "available": false,
-        "price": 600000
+        "available": true,
+        "price": 600000,
+        "stock": 3
       }
     ],
     "hasSizes": true,
@@ -1971,7 +2155,9 @@
       "CASCO",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 6,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412314431732",
@@ -1996,28 +2182,33 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 3
       },
       {
         "size": "M",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 4
       },
       {
         "size": "L",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 1
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 2
       },
       {
         "size": "XXL",
         "available": false,
-        "price": 750000
+        "price": 750000,
+        "stock": 0
       }
     ],
     "hasSizes": true,
@@ -2032,7 +2223,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412314300660",
@@ -2059,22 +2252,26 @@
       {
         "size": "S",
         "available": false,
-        "price": 490000
+        "price": 490000,
+        "stock": 0
       },
       {
         "size": "M",
         "available": false,
-        "price": 490000
+        "price": 490000,
+        "stock": 0
       },
       {
         "size": "L",
         "available": false,
-        "price": 490000
+        "price": 490000,
+        "stock": 0
       },
       {
         "size": "XL",
         "available": false,
-        "price": 490000
+        "price": 490000,
+        "stock": 0
       }
     ],
     "hasSizes": true,
@@ -2089,7 +2286,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 0,
+    "stockStatus": "out_of_stock"
   },
   {
     "id": "casco-9412313645300",
@@ -2121,22 +2320,26 @@
       {
         "size": "S",
         "available": true,
-        "price": 580000
+        "price": 580000,
+        "stock": 2
       },
       {
         "size": "M",
-        "available": false,
-        "price": 580000
+        "available": true,
+        "price": 580000,
+        "stock": 3
       },
       {
         "size": "L",
-        "available": false,
-        "price": 590000
+        "available": true,
+        "price": 590000,
+        "stock": 4
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 580000
+        "available": true,
+        "price": 580000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -2149,7 +2352,9 @@
       "Abatible",
       "SHAFT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412313284852",
@@ -2174,23 +2379,27 @@
     "sizes": [
       {
         "size": "XL",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 1
       },
       {
         "size": "S",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 2
       },
       {
         "size": "L",
         "available": true,
-        "price": 750000
+        "price": 750000,
+        "stock": 3
       },
       {
         "size": "M",
-        "available": false,
-        "price": 750000
+        "available": true,
+        "price": 750000,
+        "stock": 4
       }
     ],
     "hasSizes": true,
@@ -2206,7 +2415,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412312170740",
@@ -2232,12 +2443,14 @@
       {
         "size": "XL",
         "available": true,
-        "price": 540000
+        "price": 540000,
+        "stock": 2
       },
       {
         "size": "L",
-        "available": false,
-        "price": 540000
+        "available": true,
+        "price": 540000,
+        "stock": 3
       }
     ],
     "hasSizes": true,
@@ -2253,7 +2466,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 5,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412310204660",
@@ -2291,7 +2506,10 @@
       "soporte manubrio",
       "Varios"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 2,
+    "stockTotal": 2,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412310171892",
@@ -2329,7 +2547,10 @@
       "soporte manubrio",
       "Varios"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 2,
+    "stockTotal": 2,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412310008052",
@@ -2356,28 +2577,33 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 400000
+        "available": true,
+        "price": 400000,
+        "stock": 4
       },
       {
         "size": "M",
-        "available": false,
-        "price": 400000
+        "available": true,
+        "price": 400000,
+        "stock": 1
       },
       {
         "size": "L",
-        "available": false,
-        "price": 400000
+        "available": true,
+        "price": 400000,
+        "stock": 2
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 400000
+        "available": true,
+        "price": 400000,
+        "stock": 3
       },
       {
         "size": "XXL",
-        "available": false,
-        "price": 400000
+        "available": true,
+        "price": 400000,
+        "stock": 4
       }
     ],
     "hasSizes": true,
@@ -2390,7 +2616,9 @@
       "CASCO",
       "KOV"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 14,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412309352692",
@@ -2415,13 +2643,15 @@
     "sizes": [
       {
         "size": "M",
-        "available": false,
-        "price": 790000
+        "available": true,
+        "price": 790000,
+        "stock": 4
       },
       {
         "size": "XL",
-        "available": false,
-        "price": 790000
+        "available": true,
+        "price": 790000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -2436,7 +2666,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 5,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412309254388",
@@ -2461,8 +2693,9 @@
     "sizes": [
       {
         "size": "XL",
-        "available": false,
-        "price": 790000
+        "available": true,
+        "price": 790000,
+        "stock": 3
       }
     ],
     "hasSizes": true,
@@ -2477,7 +2710,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 3,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412309221620",
@@ -2502,13 +2737,15 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 790000
+        "available": true,
+        "price": 790000,
+        "stock": 4
       },
       {
         "size": "M",
         "available": true,
-        "price": 790000
+        "price": 790000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -2523,7 +2760,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 5,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412309090548",
@@ -2551,22 +2790,26 @@
       {
         "size": "S",
         "available": true,
-        "price": 880000
+        "price": 880000,
+        "stock": 3
       },
       {
         "size": "M",
         "available": true,
-        "price": 880000
+        "price": 880000,
+        "stock": 4
       },
       {
         "size": "L",
-        "available": false,
-        "price": 880000
+        "available": true,
+        "price": 880000,
+        "stock": 1
       },
       {
         "size": "XL",
         "available": true,
-        "price": 880000
+        "price": 880000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -2582,7 +2825,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 10,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412309025012",
@@ -2610,17 +2855,20 @@
       {
         "size": "S",
         "available": true,
-        "price": 660000
+        "price": 660000,
+        "stock": 3
       },
       {
         "size": "M",
-        "available": false,
-        "price": 660000
+        "available": true,
+        "price": 660000,
+        "stock": 4
       },
       {
         "size": "L",
-        "available": false,
-        "price": 660000
+        "available": true,
+        "price": 660000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -2636,7 +2884,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 8,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412308959476",
@@ -2662,12 +2912,14 @@
       {
         "size": "S",
         "available": true,
-        "price": 680000
+        "price": 680000,
+        "stock": 2
       },
       {
         "size": "M",
         "available": true,
-        "price": 680000
+        "price": 680000,
+        "stock": 3
       }
     ],
     "hasSizes": true,
@@ -2682,7 +2934,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 5,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412308926708",
@@ -2708,8 +2962,9 @@
     "sizes": [
       {
         "size": "M",
-        "available": false,
-        "price": 790000
+        "available": true,
+        "price": 790000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -2724,7 +2979,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 2,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412308730100",
@@ -2749,8 +3006,9 @@
     "sizes": [
       {
         "size": "S",
-        "available": true,
-        "price": 1130000
+        "available": false,
+        "price": 1130000,
+        "stock": 0
       }
     ],
     "hasSizes": true,
@@ -2763,7 +3021,9 @@
       "CASCO",
       "INTEGRAL"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 0,
+    "stockStatus": "out_of_stock"
   },
   {
     "id": "casco-9412307091700",
@@ -2790,7 +3050,8 @@
       {
         "size": "M",
         "available": true,
-        "price": 790000
+        "price": 790000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -2805,7 +3066,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 2,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412306895092",
@@ -2831,13 +3094,15 @@
     "sizes": [
       {
         "size": "S",
-        "available": false,
-        "price": 790000
+        "available": true,
+        "price": 790000,
+        "stock": 3
       },
       {
         "size": "L",
-        "available": false,
-        "price": 790000
+        "available": true,
+        "price": 790000,
+        "stock": 4
       }
     ],
     "hasSizes": true,
@@ -2852,7 +3117,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 7,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412306829556",
@@ -2878,13 +3145,15 @@
     "sizes": [
       {
         "size": "L",
-        "available": false,
-        "price": 680000
+        "available": true,
+        "price": 680000,
+        "stock": 1
       },
       {
         "size": "M",
-        "available": false,
-        "price": 680000
+        "available": true,
+        "price": 680000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -2899,7 +3168,9 @@
       "INTEGRAL",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 3,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412306796788",
@@ -2927,12 +3198,14 @@
       {
         "size": "L",
         "available": true,
-        "price": 490000
+        "price": 490000,
+        "stock": 1
       },
       {
         "size": "M",
         "available": true,
-        "price": 490000
+        "price": 490000,
+        "stock": 2
       }
     ],
     "hasSizes": true,
@@ -2947,7 +3220,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 3,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412306665716",
@@ -2973,7 +3248,8 @@
       {
         "size": "S",
         "available": true,
-        "price": 490000
+        "price": 490000,
+        "stock": 1
       }
     ],
     "hasSizes": true,
@@ -2988,7 +3264,9 @@
       "Integral",
       "MT"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 1,
+    "stockStatus": "low_stock"
   },
   {
     "id": "casco-9412306436340",
@@ -3017,18 +3295,21 @@
     "sizes": [
       {
         "size": "M",
-        "available": false,
-        "price": 590000
+        "available": true,
+        "price": 590000,
+        "stock": 2
       },
       {
         "size": "L",
         "available": true,
-        "price": 590000
+        "price": 590000,
+        "stock": 3
       },
       {
         "size": "XL",
         "available": true,
-        "price": 590000
+        "price": 590000,
+        "stock": 4
       }
     ],
     "hasSizes": true,
@@ -3048,7 +3329,9 @@
       "SHAFT",
       "shaft 610"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stockTotal": 9,
+    "stockStatus": "in_stock"
   },
   {
     "id": "casco-9412302766324",
@@ -3079,6 +3362,9 @@
       "MT15",
       "VARIOS"
     ],
-    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt"
+    "urlPediGochos": "https://pedigochos.com/#servicios/cascos-mt",
+    "stock": 5,
+    "stockTotal": 5,
+    "stockStatus": "in_stock"
   }
 ]

@@ -30,5 +30,8 @@ if (fs.existsSync(path.join(publicDir, 'manifest.json'))) {
 if (fs.existsSync(path.join(publicDir, 'sw.js'))) {
   fs.copyFileSync(path.join(publicDir, 'sw.js'), path.join(distDir, 'sw.js'));
 }
+if (fs.existsSync(path.join(publicDir, 'cascos_catalog.json'))) {
+  fs.copyFileSync(path.join(publicDir, 'cascos_catalog.json'), path.join(distDir, 'cascos_catalog.json'));
+}
 
 console.log('✅ Client app web assets successfully prepared in dist_client/');

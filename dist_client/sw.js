@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pedigochos-v278';
+const CACHE_NAME = 'pedigochos-v279';
 const ASSETS = [
   '/',
   '/index.html',
