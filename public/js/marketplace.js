@@ -790,7 +790,7 @@ class MarketplaceController {
         image: 'https://cdn.shopify.com/s/files/1/0787/7722/1364/files/CASCO_ABATIBLE_MT_ATOM_2_Highlands_A7_BV_3.0.webp?v=1783371896',
         rating: 5.0,
         reviewCount: 94,
-        badges: ['🪖 MT Helmets Oficial', '🛡️ ECE 22.06 & DOT', '📦 Inventario en Vivo (+30 Pesos)'],
+        badges: ['🪖 MT Helmets Oficial', '🛡️ ECE 22.06 & DOT', '📦 Catálogo en Vivo'],
         actionType: 'cascos',
         ctaText: 'Ver Catálogo de Cascos ➔',
         themeColor: '#E11D48',

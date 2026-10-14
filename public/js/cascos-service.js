@@ -511,7 +511,7 @@ const CascosServiceApp = {
           <!-- Notice Banner -->
           <div class="cascos-notice-banner">
             <div>
-              <span>⚡ <strong>Catálogo en Vivo:</strong> Todos los precios reflejan el inventario oficial sumando <strong>+30 pesos</strong> de margen y logística express.</span>
+              <span>⚡ <strong>Catálogo en Vivo:</strong> Inventario oficial con garantía de autenticidad, certificación ECE 22.06 y entrega express a domicilio.</span>
             </div>
             <span id="cascos-results-count" style="font-weight: 800; color: #FFF; white-space: nowrap;">66 productos</span>
           </div>
