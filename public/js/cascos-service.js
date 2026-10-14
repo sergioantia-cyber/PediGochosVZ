@@ -272,7 +272,7 @@ const CascosServiceApp = {
             <div class="casco-card-price-box">
               <div>
                 <div class="casco-price-val">${priceText}</div>
-                <div class="casco-price-note">+30 pesos incluidos</div>
+                <div class="casco-price-note">Entrega a domicilio</div>
               </div>
             </div>
 
@@ -396,7 +396,7 @@ const CascosServiceApp = {
             <span style="font-size: 11px; color: #6EE7B7; font-weight: 700; display: block;">Precio Final con Entrega en San Antonio:</span>
             <strong style="font-size: 24px; font-weight: 900; color: #10B981;">${priceText}</strong>
           </div>
-          <span style="font-size: 11px; color: #CBD5E1; font-weight: 600;">+30 pesos de margen incluidos</span>
+          <span style="font-size: 11px; color: #6EE7B7; font-weight: 700;">✅ Entrega garantizada</span>
         </div>
 
         ${sizesHtml}
@@ -436,7 +436,7 @@ const CascosServiceApp = {
 🏷️ *Marca:* ${item.vendor}
 📁 *Categoría:* ${item.categoryLabel}
 📏 *Talla Deseada:* *${chosenSize}*
-💰 *Precio Final:* *${priceText}* (+30 pesos incluidos)
+💰 *Precio Final:* *${priceText}*
 🛡️ *Certificaciones:* ${certText}
 📸 *Foto de Referencia:* ${item.image}
 🔗 *Ficha Original:* ${item.urlOriginal}
