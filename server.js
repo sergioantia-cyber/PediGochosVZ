@@ -5436,7 +5436,7 @@ app.get('/api/pinata-services/stats', (req, res) => {
 });
 
 /* ==========================================================================
-   EL RETÉN DEL CASCO - CASCOS MT HELMETS & PROTECCIÓN MOTERA ENDPOINTS
+   PEDIGOCHOS RIDER - CASCOS MT HELMETS & PROTECCIÓN MOTERA ENDPOINTS
    ========================================================================== */
 const CASCOS_CATALOG_FILE = path.join(__dirname, 'cascos_catalog.json');
 

@@ -148,27 +148,27 @@
   },
   {
     "id": "serv-cascos",
-    "name": "EL RETÉN DEL CASCO",
-    "displayName": "El Retén del Casco",
+    "name": "PEDIGOCHOS RIDER",
+    "displayName": "PediGochos Rider",
     "category": "cascos",
     "subCategory": "cascos",
     "categoryLabel": "Cascos & Protección Motera",
     "categoryIcon": "🪖",
-    "slogan": "Tienda oficial de cascos certificados MT Helmets, Shaft, Kov, visores y accesorios con entrega directa a San Antonio",
-    "serviceName": "Cascos MT Helmets & Indumentaria",
-    "logo": "/images/services/retendelcasco_logo.png",
-    "image": "https://cdn.shopify.com/s/files/1/0787/7722/1364/files/CASCO_ABATIBLE_MT_ATOM_2_Highlands_A7_BV_3.0.webp?v=1783371896",
+    "slogan": "Tienda oficial PediGochos de cascos certificados MT Helmets, Shaft, Kov, visores y protección motera con entrega express",
+    "serviceName": "PediGochos Rider • Cascos & Protección",
+    "logo": "/images/services/pedigochos_cascos_logo.svg",
+    "image": "/images/services/pedigochos_cascos_banner.svg",
     "rating": 5.0,
-    "reviewCount": 94,
+    "reviewCount": 112,
     "badges": [
       "🪖 MT Helmets Oficial",
       "🛡️ ECE 22.06 & DOT",
       "📦 Catálogo en Vivo"
     ],
     "actionType": "cascos",
-    "ctaText": "Ver Catálogo de Cascos ➔",
+    "ctaText": "Ver Catálogo PediGochos Rider ➔",
     "themeColor": "#E11D48",
     "phone": "+57 322 794 9751",
-    "location": "San Antonio / Cúcuta / El Retén del Casco"
+    "location": "San Antonio / Táchira / Zona Frontera"
   }
 ]

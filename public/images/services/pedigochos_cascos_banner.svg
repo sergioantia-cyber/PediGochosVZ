@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bannerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050811"/>
+      <stop offset="45%" stop-color="#0F172A"/>
+      <stop offset="85%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#2E0814"/>
+    </linearGradient>
+
+    <!-- Orange / Rose Linear Gradient -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF6B00"/>
+      <stop offset="50%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#E11D48"/>
+    </linearGradient>
+
+    <!-- Visor Gradient -->
+    <linearGradient id="visGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+
+    <!-- Speed Streaks Filter -->
+    <filter id="glowFilt" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="500" fill="url(#bannerBg)"/>
+
+  <!-- Speed Geometric Slanted Ribbons -->
+  <g opacity="0.12">
+    <polygon points="680,0 820,0 620,500 480,500" fill="#FF6B00"/>
+    <polygon points="850,0 1020,0 820,500 650,500" fill="#F43F5E"/>
+    <polygon points="1050,0 1200,0 1020,500 870,500" fill="#E11D48"/>
+  </g>
+
+  <!-- Ambient Glow Orbs -->
+  <circle cx="950" cy="250" r="220" fill="#E11D48" opacity="0.15" filter="url(#glowFilt)"/>
+  <circle cx="150" cy="80" r="140" fill="#FF6B00" opacity="0.12" filter="url(#glowFilt)"/>
+
+  <!-- ==================== LEFT BRANDING & INFORMATION ==================== -->
+  <g transform="translate(70, 75)">
+    <!-- Top Micro Tag -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="260" height="34" rx="17" fill="rgba(225, 29, 72, 0.22)" stroke="#E11D48" stroke-width="1.5"/>
+      <text x="130" y="22" font-family="'Outfit', sans-serif" font-size="12.5" font-weight="900" fill="#FDA4AF" text-anchor="middle" letter-spacing="1.5">
+        🪖 CATÁLOGO OFICIAL • ECE 22.06
+      </text>
+    </g>
+
+    <!-- Main Title -->
+    <text x="0" y="95" font-family="'Outfit', 'Impact', sans-serif" font-size="52" font-weight="900" fill="#FFFFFF" letter-spacing="-1">
+      PEDI<tspan fill="#FF6B00">GOCHOS</tspan> <tspan fill="#F43F5E">RIDER</tspan>
+    </text>
+
+    <!-- Subtitle -->
+    <text x="0" y="142" font-family="'Outfit', sans-serif" font-size="22" font-weight="700" fill="#E2E8F0" letter-spacing="-0.2">
+      Cascos Certificados, Visores &amp; Protección Motera
+    </text>
+
+    <!-- Description Paragraph -->
+    <text x="0" y="185" font-family="'Outfit', sans-serif" font-size="15" font-weight="500" fill="#94A3B8" line-height="1.5">
+      Modelos integrales, abatibles y abiertos con homologación europea ECE 22.06 y DOT.
+    </text>
+    <text x="0" y="210" font-family="'Outfit', sans-serif" font-size="15" font-weight="500" fill="#94A3B8">
+      Marcas MT Helmets, Shaft, Kov, visores Pinlock e indumentaria con entrega express en frontera.
+    </text>
+
+    <!-- Badges Row -->
+    <g transform="translate(0, 255)">
+      <!-- Badge 1: MT Helmets -->
+      <g>
+        <rect x="0" y="0" width="160" height="42" rx="12" fill="rgba(15, 23, 42, 0.85)" stroke="#38BDF8" stroke-width="1.5"/>
+        <text x="80" y="26" font-family="'Outfit', sans-serif" font-size="13.5" font-weight="800" fill="#38BDF8" text-anchor="middle">⚡ MT Helmets</text>
+      </g>
+      <!-- Badge 2: ECE 22.06 -->
+      <g transform="translate(175, 0)">
+        <rect x="0" y="0" width="160" height="42" rx="12" fill="rgba(15, 23, 42, 0.85)" stroke="#E11D48" stroke-width="1.5"/>
+        <text x="80" y="26" font-family="'Outfit', sans-serif" font-size="13.5" font-weight="800" fill="#FDA4AF" text-anchor="middle">🛡️ ECE 22.06 Oficial</text>
+      </g>
+      <!-- Badge 3: San Antonio -->
+      <g transform="translate(350, 0)">
+        <rect x="0" y="0" width="180" height="42" rx="12" fill="rgba(15, 23, 42, 0.85)" stroke="#FF6B00" stroke-width="1.5"/>
+        <text x="90" y="26" font-family="'Outfit', sans-serif" font-size="13.5" font-weight="800" fill="#FF8A00" text-anchor="middle">🛵 Entrega en Frontera</text>
+      </g>
+    </g>
+
+    <!-- Lower Call to Action Pill -->
+    <g transform="translate(0, 325)">
+      <rect x="0" y="0" width="240" height="48" rx="14" fill="url(#accentGrad)"/>
+      <text x="120" y="30" font-family="'Outfit', sans-serif" font-size="15" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">
+        Explorar Catálogo ➔
+      </text>
+    </g>
+  </g>
+
+  <!-- ==================== RIGHT SIDE: HERO HELMET ARTWORK ==================== -->
+  <g transform="translate(930, 240)">
+    <!-- Helmet Aura / Speed Blur Halo -->
+    <ellipse cx="0" cy="0" rx="170" ry="170" fill="url(#visGrad)" opacity="0.12" filter="url(#glowFilt)"/>
+
+    <!-- Helmet Outer Shell (Profile / 3/4 angle) -->
+    <path d="M -110 -110
+             C -20 -150, 80 -120, 120 -40
+             C 150 20, 140 100, 90 140
+             C 40 170, -30 160, -80 130
+             C -130 100, -145 20, -135 -40
+             C -130 -80, -120 -100, -110 -110 Z"
+          fill="#0F172A" stroke="url(#accentGrad)" stroke-width="6"/>
+
+    <!-- Visor Window -->
+    <path d="M -70 -60
+             C 0 -90, 70 -70, 95 -10
+             C 110 30, 85 70, 40 85
+             C -10 95, -60 70, -75 20
+             C -85 -20, -80 -50, -70 -60 Z"
+          fill="url(#visGrad)" stroke="#38BDF8" stroke-width="3"/>
+
+    <!-- Visor Reflection Flare -->
+    <path d="M -50 -50
+             C 0 -75, 45 -60, 65 -20
+             C 30 -25, -20 -20, -50 10 Z"
+          fill="#FFFFFF" opacity="0.6"/>
+
+    <!-- Top Aerodynamic Fin Spoiler -->
+    <polygon points="-120,-80 -90,-125 -60,-100 -95,-60" fill="#E11D48"/>
+
+    <!-- Lower Chin Mesh Vent -->
+    <polygon points="10,85 50,75 42,98 8,105" fill="#020617" stroke="#FF6B00" stroke-width="2"/>
+
+    <!-- MT Certified Emblem Tag on Helmet Base -->
+    <circle cx="-50" cy="115" r="16" fill="#E11D48" stroke="#FFF" stroke-width="2"/>
+    <text x="-50" y="120" font-family="'Outfit', sans-serif" font-size="10" font-weight="900" fill="#FFF" text-anchor="middle">MT</text>
+  </g>
+</svg>

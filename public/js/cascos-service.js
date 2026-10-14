@@ -1,5 +1,5 @@
 /* ==========================================================================
-   El Retén del Casco - MT Helmets & Indumentaria Motera Module Logic
+   PediGochos Rider - MT Helmets & Indumentaria Motera Module Logic
    PediGochos Specialized Services Module
    ========================================================================== */
 
@@ -250,7 +250,7 @@ const CascosServiceApp = {
       return `
         <div class="casco-card" id="card-${p.id}">
           <div class="casco-card-img-box" onclick="CascosServiceApp.openDetail('${p.id}')">
-            <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.src='https://retendelcasco.com/cdn/shop/files/Modo_de_aislamiento_6192cb98-c215-460f-af28-c73558f97f30.png?v=1776110226'">
+            <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.src='/images/services/pedigochos_cascos_logo.svg'">
             <span class="casco-brand-badge ${isMt ? 'mt-badge' : ''}">${p.vendor}</span>
             ${(p.certifications && p.certifications.length > 0 && p.certifications[0].includes('22.06')) ? `<span class="casco-cert-pill-floating">🛡️ 22.06</span>` : ''}
             ${(p.images && p.images.length > 1) ? `<span class="casco-photos-count">📷 ${p.images.length} fotos</span>` : ''}
@@ -430,7 +430,7 @@ const CascosServiceApp = {
     const custPhone = (typeof localStorage !== 'undefined' && (localStorage.getItem('pedigochos_user_phone') || localStorage.getItem('customer_phone'))) || '';
 
     const message = 
-`🪖 *¡NUEVA SOLICITUD DE CASCO - EL RETÉN DEL CASCO!* 🏍️
+`🪖 *¡NUEVA SOLICITUD DE CASCO - PEDIGOCHOS RIDER!* 🏍️
 ━━━━━━━━━━━━━━━━━━━━━
 📦 *Modelo:* ${item.title}
 🏷️ *Marca:* ${item.vendor}
@@ -439,13 +439,12 @@ const CascosServiceApp = {
 💰 *Precio Final:* *${priceText}*
 🛡️ *Certificaciones:* ${certText}
 📸 *Foto de Referencia:* ${item.image}
-🔗 *Ficha Original:* ${item.urlOriginal}
 ━━━━━━━━━━━━━━━━━━━━━
 👤 *Cliente:* ${custName || 'Cliente PediGochos'}
 📱 *WhatsApp de Contacto:* ${custPhone || 'El de este chat'}
 📍 *Destino de Entrega:* San Antonio del Táchira / Zona Frontera
 ━━━━━━━━━━━━━━━━━━━━━
-💬 _Hola Central PediGochos, deseo solicitar este casco de El Retén del Casco con entrega a domicilio. Por favor confirmarme la disponibilidad de la talla y método de pago. ¡Gracias!_`;
+💬 _Hola Central PediGochos, deseo solicitar este casco de PediGochos Rider con entrega a domicilio. Por favor confirmarme la disponibilidad de la talla y método de pago. ¡Gracias!_`;
 
     const waUrl = `https://wa.me/${this.officialWhatsApp}?text=${encodeURIComponent(message)}`;
 
@@ -471,16 +470,16 @@ const CascosServiceApp = {
           <div class="cascos-header">
             <div class="cascos-header-left">
               <div class="cascos-logo-box">
-                <img src="/images/services/retendelcasco_logo.png" alt="El Retén del Casco" onerror="this.src='https://retendelcasco.com/cdn/shop/files/Modo_de_aislamiento_6192cb98-c215-460f-af28-c73558f97f30.png?v=1776110226'">
+                <img src="/images/services/pedigochos_cascos_logo.svg" alt="PediGochos Rider" onerror="this.src='/images/services/pedigochos_cascos_logo.svg'">
               </div>
               <div class="cascos-title-box">
-                <h3>El Retén del Casco <span>🪖</span></h3>
-                <p>Distribuidor Oficial MT Helmets • ECE 22.06 • Despacho a San Antonio</p>
+                <h3>PediGochos Rider <span>🪖</span></h3>
+                <p>Tienda Oficial MT Helmets • ECE 22.06 • Despacho a San Antonio</p>
               </div>
             </div>
 
             <div class="cascos-header-actions">
-              <a href="https://wa.me/${this.officialWhatsApp}?text=${encodeURIComponent('Hola Central PediGochos, consulto sobre el catálogo de cascos MT de El Retén del Casco.')}" target="_blank" rel="noopener noreferrer" class="cascos-wa-badge">
+              <a href="https://wa.me/${this.officialWhatsApp}?text=${encodeURIComponent('Hola Central PediGochos, consulto sobre el catálogo de cascos y protección de PediGochos Rider.')}" target="_blank" rel="noopener noreferrer" class="cascos-wa-badge">
                 <span>💬</span> WhatsApp Oficial
               </a>
               <button type="button" class="cascos-close-btn" onclick="CascosServiceApp.close()" title="Cerrar Catálogo">✕</button>

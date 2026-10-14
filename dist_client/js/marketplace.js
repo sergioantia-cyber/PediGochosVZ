@@ -778,24 +778,24 @@ class MarketplaceController {
       },
       {
         id: 'serv-cascos',
-        name: 'EL RETÉN DEL CASCO',
-        displayName: 'El Retén del Casco',
+        name: 'PEDIGOCHOS RIDER',
+        displayName: 'PediGochos Rider',
         category: 'cascos',
         subCategory: 'cascos',
         categoryLabel: 'Cascos & Protección Motera',
         categoryIcon: '🪖',
-        slogan: 'Tienda oficial de cascos certificados MT Helmets, Shaft, Kov, visores y accesorios con entrega directa a San Antonio',
-        serviceName: 'Cascos MT Helmets & Indumentaria',
-        logo: '/images/services/retendelcasco_logo.png',
-        image: 'https://cdn.shopify.com/s/files/1/0787/7722/1364/files/CASCO_ABATIBLE_MT_ATOM_2_Highlands_A7_BV_3.0.webp?v=1783371896',
+        slogan: 'Tienda oficial PediGochos de cascos certificados MT Helmets, Shaft, Kov, visores y protección motera con entrega express',
+        serviceName: 'PediGochos Rider • Cascos & Protección',
+        logo: '/images/services/pedigochos_cascos_logo.svg',
+        image: '/images/services/pedigochos_cascos_banner.svg',
         rating: 5.0,
-        reviewCount: 94,
+        reviewCount: 112,
         badges: ['🪖 MT Helmets Oficial', '🛡️ ECE 22.06 & DOT', '📦 Catálogo en Vivo'],
         actionType: 'cascos',
-        ctaText: 'Ver Catálogo de Cascos ➔',
+        ctaText: 'Ver Catálogo PediGochos Rider ➔',
         themeColor: '#E11D48',
         phone: '+57 322 794 9751',
-        location: 'San Antonio / Cúcuta / El Retén del Casco'
+        location: 'San Antonio / Táchira / Zona Frontera'
       }
     ];
   }
@@ -1715,7 +1715,7 @@ ${mapsLink}
     } else if (['movil', 'ride', 'moto', 'mototaxi', 'taxi', 'transporte'].includes(key)) {
       this.selectServiceCategory('movil');
       setTimeout(() => this.executeServiceAction('ride'), 250);
-    } else if (['cascos', 'casco', 'mt', 'mthelmets', 'reten', 'retendelcasco'].includes(key)) {
+    } else if (['cascos', 'casco', 'rider', 'moto', 'helmets', 'mthelmets'].includes(key)) {
       this.selectServiceCategory('cascos');
       setTimeout(() => this.executeServiceAction('cascos'), 250);
     } else {
@@ -1730,7 +1730,7 @@ ${mapsLink}
         if (typeof CascosServiceApp !== 'undefined' && CascosServiceApp.open) {
           CascosServiceApp.open();
         } else {
-          alert('Cargando catálogo El Retén del Casco...');
+          alert('Cargando catálogo PediGochos Rider...');
         }
         break;
       case 'resin':
@@ -2538,13 +2538,13 @@ ${mapsLink}
         const serviceCategories = [
           {
             key: 'cascos',
-            name: 'El Retén del Casco (MT Helmets)',
-            iconImg: '/images/services/retendelcasco_logo.png',
+            name: 'PediGochos Rider (Cascos & Moto)',
+            iconImg: '/images/services/pedigochos_cascos_logo.svg',
             color: '#E11D48',
             gradient: 'linear-gradient(135deg, rgba(225, 29, 72, 0.22) 0%, rgba(30, 41, 59, 0.9) 100%)',
             border: 'rgba(225, 29, 72, 0.6)',
             glow: 'rgba(225, 29, 72, 0.35)',
-            badge: '🪖 MT Helmets Oficial • ECE 22.06',
+            badge: '🪖 PediGochos Rider • ECE 22.06',
             items: [
               'Cascos integrales, abatibles y abiertos con certificación europea ECE 22.06',
               'Visores polarizados, repuestos originales MT y accesorios moteros',
@@ -2731,7 +2731,7 @@ ${mapsLink}
       if (allRestTitle) {
         const catMap = {
           'all': 'Todos los Servicios Especializados',
-          'cascos': 'El Retén del Casco • MT Helmets & Indumentaria',
+          'cascos': 'PediGochos Rider • Cascos & Protección Motera',
           'resin': 'Shelli Art • Arte en Resina & Llaveros',
           'print3d': 'PediGochos 3D Lab • Impresiones 3D & Prototipado',
           'pinatas': 'Creaciones Lola • Piñatas & Fiestas Creativas',
@@ -2744,7 +2744,7 @@ ${mapsLink}
 
       const catPills = [
         { key: 'all', label: '🌟 Todos' },
-        { key: 'cascos', label: '🪖 El Retén del Casco (MT)' },
+        { key: 'cascos', label: '🪖 PediGochos Rider' },
         { key: 'resin', label: '✨ Shelli Art (Resina)' },
         { key: 'print3d', label: '🖨️ 3D Lab & Impresiones 3D' },
         { key: 'pinatas', label: '🎉 Piñatas (Creaciones Lola)' },
