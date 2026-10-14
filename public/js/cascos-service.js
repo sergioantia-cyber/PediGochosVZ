@@ -48,8 +48,32 @@ const CascosServiceApp = {
         }
       }
     } catch (e) {
-      console.warn('Error loading cascos catalog from API:', e);
+      console.warn('API endpoint failed, trying static fallback:', e);
     }
+
+    // Fallback 1: Static public file
+    try {
+      const staticRes = await fetch(`/cascos_catalog.json?t=${Date.now()}`);
+      if (staticRes.ok) {
+        const data = await staticRes.json();
+        if (Array.isArray(data) && data.length > 0) {
+          this.catalog = data;
+          return;
+        }
+      }
+    } catch (_) {}
+
+    // Fallback 2: Supabase direct storage CDN
+    try {
+      const cloudRes = await fetch('https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/cascos_catalog.json');
+      if (cloudRes.ok) {
+        const data = await cloudRes.json();
+        if (Array.isArray(data) && data.length > 0) {
+          this.catalog = data;
+          return;
+        }
+      }
+    } catch (_) {}
   },
 
   open() {

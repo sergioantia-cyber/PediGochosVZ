@@ -394,11 +394,41 @@ async function syncFromSupabase() {
       try {
         const servEstUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/service_establishments.json`;
         const servEstRes = await fetch(servEstUrl);
+        let cloudServEsts = [];
         if (servEstRes.ok) {
-          const cloudServEsts = await servEstRes.json();
-          if (Array.isArray(cloudServEsts) && cloudServEsts.length > 0) {
-            fs.writeFileSync(SERVICE_ESTABLISHMENTS_FILE, JSON.stringify(cloudServEsts, null, 2), 'utf8');
-            console.log(`🎉 service_establishments.json restored from Supabase Storage!`);
+          try { cloudServEsts = await servEstRes.json(); } catch (_) {}
+        }
+        let localServEsts = [];
+        try {
+          if (fs.existsSync(SERVICE_ESTABLISHMENTS_FILE)) {
+            localServEsts = JSON.parse(fs.readFileSync(SERVICE_ESTABLISHMENTS_FILE, 'utf8'));
+          }
+        } catch (_) {}
+
+        // Combine using Map so serv-cascos and all local services are safely preserved
+        const estMap = new Map();
+        (cloudServEsts || []).forEach(e => { if (e && e.id) estMap.set(e.id, e); });
+        (localServEsts || []).forEach(e => { if (e && e.id) estMap.set(e.id, e); });
+        const mergedEsts = Array.from(estMap.values());
+        if (mergedEsts.length > 0) {
+          fs.writeFileSync(SERVICE_ESTABLISHMENTS_FILE, JSON.stringify(mergedEsts, null, 2), 'utf8');
+          console.log(`🎉 service_establishments.json synced with ${mergedEsts.length} establishments!`);
+        }
+      } catch (e) {
+        console.warn('Could not sync service_establishments:', e.message);
+      }
+
+      // Also ensure cascos_catalog.json is loaded
+      try {
+        if (!fs.existsSync(CASCOS_CATALOG_FILE) || fs.statSync(CASCOS_CATALOG_FILE).size < 100) {
+          const cascosUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/cascos_catalog.json`;
+          const cascosRes = await fetch(cascosUrl);
+          if (cascosRes.ok) {
+            const cascosData = await cascosRes.json();
+            if (Array.isArray(cascosData) && cascosData.length > 0) {
+              fs.writeFileSync(CASCOS_CATALOG_FILE, JSON.stringify(cascosData, null, 2), 'utf8');
+              console.log(`🎉 cascos_catalog.json restored from Supabase Storage (${cascosData.length} items)!`);
+            }
           }
         }
       } catch (e) {}

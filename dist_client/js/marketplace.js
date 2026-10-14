@@ -2533,9 +2533,24 @@ ${mapsLink}
 
       // STAGE 1: Visual Grid of Service Categories (Hub)
       if (!this.currentServiceCategory) {
-        if (allRestTitle) allRestTitle.textContent = 'Servicios Especializados & Auxilio (6)';
+        if (allRestTitle) allRestTitle.textContent = 'Servicios Especializados & Auxilio (7)';
 
         const serviceCategories = [
+          {
+            key: 'cascos',
+            name: 'El Retén del Casco (MT Helmets)',
+            iconImg: '/images/services/retendelcasco_logo.png',
+            color: '#E11D48',
+            gradient: 'linear-gradient(135deg, rgba(225, 29, 72, 0.22) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            border: 'rgba(225, 29, 72, 0.6)',
+            glow: 'rgba(225, 29, 72, 0.35)',
+            badge: '🪖 MT Helmets Oficial • ECE 22.06',
+            items: [
+              'Cascos integrales, abatibles y abiertos con certificación europea ECE 22.06',
+              'Visores polarizados, repuestos originales MT y accesorios moteros',
+              'Indumentaria de protección, guantes, chaquetas y llantas para moto'
+            ]
+          },
           {
             key: 'resin',
             name: 'Arte & Recuerdos en Resina',
@@ -2632,10 +2647,10 @@ ${mapsLink}
           <div style="grid-column: 1 / -1; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin-bottom: 6px; padding: 16px 20px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1.5px solid rgba(239, 68, 68, 0.3); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
             <div>
               <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 900; color: #FFF; letter-spacing: -0.2px;">🛠 Servicios Especializados & Auxilio</h3>
-              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Arte en resina, 3D Lab, piñatas, auxilio vial 24/7, taller y transporte en San Antonio</p>
+              <p style="margin: 0; font-size: 13px; color: #CBD5E1;">Cascos MT, arte en resina, 3D Lab, piñatas, auxilio vial 24/7, taller y transporte en San Antonio</p>
             </div>
             <button type="button" onclick="MarketplaceApp.selectServiceCategory('all')" style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.22); color: #FFF; padding: 9px 16px; border-radius: 20px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
-              <span>🌟</span> Ver Todos los Servicios (6)
+              <span>🌟</span> Ver Todos los Servicios (7)
             </button>
           </div>
         `;
