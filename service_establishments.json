@@ -145,5 +145,30 @@
     "themeColor": "#FF6B00",
     "phone": "+57 322 794 9751",
     "location": "San Antonio / Táchira"
+  },
+  {
+    "id": "serv-cascos",
+    "name": "EL RETÉN DEL CASCO",
+    "displayName": "El Retén del Casco",
+    "category": "cascos",
+    "subCategory": "cascos",
+    "categoryLabel": "Cascos & Protección Motera",
+    "categoryIcon": "🪖",
+    "slogan": "Tienda oficial de cascos certificados MT Helmets, Shaft, Kov, visores y accesorios con entrega directa a San Antonio",
+    "serviceName": "Cascos MT Helmets & Indumentaria",
+    "logo": "/images/services/retendelcasco_logo.png",
+    "image": "https://cdn.shopify.com/s/files/1/0787/7722/1364/files/CASCO_ABATIBLE_MT_ATOM_2_Highlands_A7_BV_3.0.webp?v=1783371896",
+    "rating": 5.0,
+    "reviewCount": 94,
+    "badges": [
+      "🪖 MT Helmets Oficial",
+      "🛡️ ECE 22.06 & DOT",
+      "📦 Inventario en Vivo (+30 Pesos)"
+    ],
+    "actionType": "cascos",
+    "ctaText": "Ver Catálogo de Cascos ➔",
+    "themeColor": "#E11D48",
+    "phone": "+57 322 794 9751",
+    "location": "San Antonio / Cúcuta / El Retén del Casco"
   }
 ]

@@ -1,0 +1,701 @@
+/* ==========================================================================
+   El Retén del Casco - MT Helmets & Indumentaria Motera Module CSS
+   PediGochos Specialized Services Module
+   ========================================================================== */
+
+:root {
+  --cascos-brand: #E11D48;
+  --cascos-brand-dark: #BE123C;
+  --cascos-brand-light: #FDA4AF;
+  --cascos-brand-glow: rgba(225, 29, 72, 0.35);
+  --cascos-bg: #0B0F19;
+  --cascos-card: #111827;
+  --cascos-border: rgba(255, 255, 255, 0.08);
+}
+
+/* Modal Overlay */
+.cascos-service-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999995;
+  background: rgba(5, 7, 12, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  box-sizing: border-box;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.cascos-service-modal.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Container */
+.cascos-service-container {
+  background: var(--cascos-bg);
+  border: 1.5px solid var(--cascos-border);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 1020px;
+  height: 94vh;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px var(--cascos-brand-glow);
+  position: relative;
+}
+
+/* Header */
+.cascos-header {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.2) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border-bottom: 1.5px solid rgba(225, 29, 72, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.cascos-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cascos-logo-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #000;
+  border: 2px solid var(--cascos-brand);
+  box-shadow: 0 0 16px var(--cascos-brand-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.cascos-logo-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cascos-title-box h3 {
+  margin: 0;
+  color: #FFF;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cascos-title-box p {
+  margin: 2px 0 0 0;
+  font-size: 11.5px;
+  color: #CBD5E1;
+  font-weight: 600;
+}
+
+.cascos-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cascos-wa-badge {
+  background: rgba(37, 211, 102, 0.15);
+  border: 1px solid #25D366;
+  color: #25D366;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cascos-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFF;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.cascos-close-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #EF4444;
+}
+
+/* Control Bar (Search, Filter, Currencies) */
+.cascos-controls-bar {
+  padding: 12px 18px 8px 18px;
+  background: #0E131F;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.cascos-search-currency-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cascos-search-box {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+}
+
+.cascos-search-box input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 9px 12px 9px 36px;
+  color: #FFF;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.cascos-search-box input:focus {
+  border-color: var(--cascos-brand);
+  box-shadow: 0 0 12px var(--cascos-brand-glow);
+}
+
+.cascos-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.cascos-currency-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.cascos-curr-btn {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cascos-curr-btn.active {
+  background: var(--cascos-brand);
+  color: #FFF;
+  box-shadow: 0 2px 8px var(--cascos-brand-glow);
+}
+
+/* Category Filter Tabs */
+.cascos-filter-pills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cascos-pill-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  color: #CBD5E1;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.cascos-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cascos-pill-btn.active {
+  background: linear-gradient(135deg, var(--cascos-brand) 0%, #BE123C 100%);
+  border-color: var(--cascos-brand);
+  color: #FFF;
+  box-shadow: 0 2px 10px var(--cascos-brand-glow);
+}
+
+.cascos-pill-badge {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* Info Notice Banner */
+.cascos-notice-banner {
+  background: rgba(225, 29, 72, 0.08);
+  border-left: 3px solid var(--cascos-brand);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11.5px;
+  color: #E2E8F0;
+  flex-shrink: 0;
+}
+
+.cascos-notice-banner strong {
+  color: #FDA4AF;
+}
+
+/* Products Grid Content Area */
+.cascos-content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.cascos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+/* Product Card */
+.casco-card {
+  background: var(--cascos-card);
+  border: 1.5px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.casco-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(225, 29, 72, 0.5);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 18px var(--cascos-brand-glow);
+}
+
+/* Card Image Box */
+.casco-card-img-box {
+  width: 100%;
+  height: 220px;
+  background: #060911;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.casco-card-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.casco-card:hover .casco-card-img-box img {
+  transform: scale(1.06);
+}
+
+.casco-brand-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFF;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.casco-brand-badge.mt-badge {
+  background: #E11D48;
+  border-color: #FDA4AF;
+}
+
+.casco-cert-pill-floating {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(16, 185, 129, 0.85);
+  color: #FFF;
+  padding: 3px 7px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.casco-photos-count {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #E2E8F0;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Card Body */
+.casco-card-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+}
+
+.casco-card-category {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.casco-card-title {
+  margin: 0;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 38px;
+}
+
+/* Badges Row */
+.casco-certs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.casco-cert-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #CBD5E1;
+}
+
+.casco-cert-badge.ece {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #F59E0B;
+  color: #FCD34D;
+}
+
+/* Sizes Row */
+.casco-sizes-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.casco-size-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.casco-size-pill {
+  width: 24px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #CBD5E1;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Price Box */
+.casco-card-price-box {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.casco-price-val {
+  font-size: 18px;
+  font-weight: 900;
+  color: #10B981;
+  letter-spacing: -0.3px;
+}
+
+.casco-price-note {
+  font-size: 10px;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+/* Card Actions */
+.casco-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.btn-casco-order-wa {
+  flex: 1;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: #FFF;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-casco-order-wa:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.5);
+}
+
+.btn-casco-detail {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #FFF;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.btn-casco-detail:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ==========================================================================
+   PRODUCT DETAIL MODAL
+   ========================================================================== */
+.casco-detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999998;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.casco-detail-modal.hidden {
+  display: none;
+}
+
+.casco-detail-card {
+  background: #111827;
+  border: 1.5px solid rgba(225, 29, 72, 0.4);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 92vh;
+  overflow-y: auto;
+  color: #FFF;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px var(--cascos-brand-glow);
+  display: flex;
+  flex-direction: column;
+}
+
+.casco-detail-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.casco-detail-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.casco-detail-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Gallery in Detail */
+.casco-gallery-main {
+  width: 100%;
+  height: 280px;
+  background: #060911;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.casco-gallery-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.casco-thumbnails-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.casco-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  background: #060911;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.casco-thumb.active {
+  border-color: var(--cascos-brand);
+  box-shadow: 0 0 10px var(--cascos-brand-glow);
+}
+
+.casco-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Size Selector in Detail Modal */
+.casco-size-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.casco-size-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: #FFF;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.casco-size-btn.selected {
+  background: var(--cascos-brand);
+  border-color: #FDA4AF;
+  box-shadow: 0 0 12px var(--cascos-brand-glow);
+}
+
+.casco-size-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+@media (max-width: 640px) {
+  .cascos-service-container {
+    height: 98vh;
+    max-height: 98vh;
+    border-radius: 16px;
+  }
+  .cascos-grid {
+    grid-template-columns: 1fr;
+  }
+  .casco-card-img-box {
+    height: 200px;
+  }
+}

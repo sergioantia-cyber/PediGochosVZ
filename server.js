@@ -464,6 +464,11 @@ async function uploadToSupabase() {
       promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/resin_settings.json`, { method: 'POST', headers, body: resinContent }));
     }
 
+    if (fs.existsSync(CASCOS_CATALOG_FILE)) {
+      const cascosContent = fs.readFileSync(CASCOS_CATALOG_FILE, 'utf8');
+      promises.push(fetch(`${SUPABASE_URL}/storage/v1/object/menu_images/cascos_catalog.json`, { method: 'POST', headers, body: cascosContent }));
+    }
+
     await Promise.all(promises);
     console.log('☁️ Database state, disabled stores, GPS, Drivers, Resin & Pinatas backup updated successfully in Supabase Storage!');
   } catch (err) {
@@ -5398,6 +5403,50 @@ app.get('/api/pinata-services/stats', (req, res) => {
     avgResponseMinutes,
     totalMoneyUsd
   });
+});
+
+/* ==========================================================================
+   EL RETÉN DEL CASCO - CASCOS MT HELMETS & PROTECCIÓN MOTERA ENDPOINTS
+   ========================================================================== */
+const CASCOS_CATALOG_FILE = path.join(__dirname, 'cascos_catalog.json');
+
+function readCascosCatalog() {
+  try {
+    if (fs.existsSync(CASCOS_CATALOG_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CASCOS_CATALOG_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch (err) {
+    console.error('Error reading cascos_catalog.json:', err);
+  }
+  return [];
+}
+
+function writeCascosCatalog(data) {
+  try {
+    fs.writeFileSync(CASCOS_CATALOG_FILE, JSON.stringify(data, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Error writing cascos_catalog.json:', err);
+    return false;
+  }
+}
+
+app.get('/api/cascos-services/catalog', async (req, res) => {
+  let catalog = readCascosCatalog();
+  if (catalog.length === 0 && SUPABASE_URL) {
+    try {
+      const cloudRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/menu_images/cascos_catalog.json`);
+      if (cloudRes.ok) {
+        const cloudData = await cloudRes.json();
+        if (Array.isArray(cloudData) && cloudData.length > 0) {
+          writeCascosCatalog(cloudData);
+          return res.json(cloudData);
+        }
+      }
+    } catch(e) {}
+  }
+  res.json(catalog);
 });
 
 /* ==========================================================================

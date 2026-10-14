@@ -775,6 +775,27 @@ class MarketplaceController {
         themeColor: '#FF6B00',
         phone: '+57 322 794 9751',
         location: 'San Antonio / Táchira'
+      },
+      {
+        id: 'serv-cascos',
+        name: 'EL RETÉN DEL CASCO',
+        displayName: 'El Retén del Casco',
+        category: 'cascos',
+        subCategory: 'cascos',
+        categoryLabel: 'Cascos & Protección Motera',
+        categoryIcon: '🪖',
+        slogan: 'Tienda oficial de cascos certificados MT Helmets, Shaft, Kov, visores y accesorios con entrega directa a San Antonio',
+        serviceName: 'Cascos MT Helmets & Indumentaria',
+        logo: '/images/services/retendelcasco_logo.png',
+        image: 'https://cdn.shopify.com/s/files/1/0787/7722/1364/files/CASCO_ABATIBLE_MT_ATOM_2_Highlands_A7_BV_3.0.webp?v=1783371896',
+        rating: 5.0,
+        reviewCount: 94,
+        badges: ['🪖 MT Helmets Oficial', '🛡️ ECE 22.06 & DOT', '📦 Inventario en Vivo (+30 Pesos)'],
+        actionType: 'cascos',
+        ctaText: 'Ver Catálogo de Cascos ➔',
+        themeColor: '#E11D48',
+        phone: '+57 322 794 9751',
+        location: 'San Antonio / Cúcuta / El Retén del Casco'
       }
     ];
   }
@@ -1694,6 +1715,9 @@ ${mapsLink}
     } else if (['movil', 'ride', 'moto', 'mototaxi', 'taxi', 'transporte'].includes(key)) {
       this.selectServiceCategory('movil');
       setTimeout(() => this.executeServiceAction('ride'), 250);
+    } else if (['cascos', 'casco', 'mt', 'mthelmets', 'reten', 'retendelcasco'].includes(key)) {
+      this.selectServiceCategory('cascos');
+      setTimeout(() => this.executeServiceAction('cascos'), 250);
     } else {
       this.selectServiceCategory('all');
     }
@@ -1702,6 +1726,13 @@ ${mapsLink}
   executeServiceAction(actionType) {
     this.updateFloatingAndHeaderSos(true);
     switch (actionType) {
+      case 'cascos':
+        if (typeof CascosServiceApp !== 'undefined' && CascosServiceApp.open) {
+          CascosServiceApp.open();
+        } else {
+          alert('Cargando catálogo El Retén del Casco...');
+        }
+        break;
       case 'resin':
         if (typeof ResinServiceApp !== 'undefined' && ResinServiceApp.open) {
           ResinServiceApp.open();
@@ -2675,6 +2706,7 @@ ${mapsLink}
             e.subCategory === targetCategory || 
             e.actionType === targetCategory || 
             (targetCategory === 'movil' && (e.actionType === 'ride' || e.category === 'movil')) ||
+            (targetCategory === 'cascos' && (e.actionType === 'cascos' || e.category === 'cascos')) ||
             (targetCategory === 'resin' && (e.actionType === 'resin' || e.category === 'resin' || e.category === 'personalizado')) ||
             (targetCategory === 'print3d' && (e.actionType === 'print3d' || e.category === 'print3d')) ||
             (targetCategory === 'pinatas' && (e.actionType === 'pinatas' || e.category === 'pinatas'))
@@ -2684,6 +2716,7 @@ ${mapsLink}
       if (allRestTitle) {
         const catMap = {
           'all': 'Todos los Servicios Especializados',
+          'cascos': 'El Retén del Casco • MT Helmets & Indumentaria',
           'resin': 'Shelli Art • Arte en Resina & Llaveros',
           'print3d': 'PediGochos 3D Lab • Impresiones 3D & Prototipado',
           'pinatas': 'Creaciones Lola • Piñatas & Fiestas Creativas',
@@ -2696,6 +2729,7 @@ ${mapsLink}
 
       const catPills = [
         { key: 'all', label: '🌟 Todos' },
+        { key: 'cascos', label: '🪖 El Retén del Casco (MT)' },
         { key: 'resin', label: '✨ Shelli Art (Resina)' },
         { key: 'print3d', label: '🖨️ 3D Lab & Impresiones 3D' },
         { key: 'pinatas', label: '🎉 Piñatas (Creaciones Lola)' },
