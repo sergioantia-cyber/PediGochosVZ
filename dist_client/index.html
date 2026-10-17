@@ -16,25 +16,28 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://bvdwxgfixirisqaavskj.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.shopify.com">
+
   <link rel="icon" type="image/png" href="/images/logo-pedigochos.png">
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
   <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="/css/common.css?v=231">
-  <link rel="stylesheet" href="/css/marketplace.css?v=275">
+  <link rel="stylesheet" href="/css/marketplace.css?v=280">
   <link rel="stylesheet" href="/css/paint-service.css?v=232">
   <link rel="stylesheet" href="/css/print3d-service.css?v=237">
   <link rel="stylesheet" href="/css/resin-service.css?v=253">
   <link rel="stylesheet" href="/css/pinata-service.css?v=234">
-  <link rel="stylesheet" href="/css/cascos-service.css?v=279">
+  <link rel="stylesheet" href="/css/cascos-service.css?v=280">
   <link rel="stylesheet" href="/css/drive.css?v=270">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
   <style>
     @layer base {
-      html, body { width: 100vw; margin: 0; padding: 0; background-color: #f9f9ff; }
-      body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+      html, body { width: 100vw; margin: 0; padding: 0; background-color: #f9f9ff; scroll-behavior: smooth; }
+      body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; font-family: 'Outfit', sans-serif; }
       .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
       .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
       main > :first-child { margin-top: 0 !important; }
@@ -190,18 +193,23 @@
             <span class="font-headline-sm text-headline-sm leading-none brand-metallic-title">
               <span class="brand-metallic-pedi">Pedi</span><span class="brand-metallic-gochos">Gochos</span>
             </span>
-            <span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-white/20 text-white font-bold backdrop-blur-md border border-white/25">Restaurantes</span>
+            <span id="header-vertical-badge" class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-white/20 text-white font-bold backdrop-blur-md border border-white/25">Super-App ⚡</span>
           </div>
           <button type="button" class="flex items-center gap-1 text-left min-w-0 focus:outline-none mt-0.5 group" onclick="MarketplaceApp.openLocationModal()" title="Toca para cambiar tu dirección o ver mapa">
             <span class="material-symbols-outlined text-white text-[15px] shrink-0">location_on</span>
-            <span class="font-label-sm text-label-sm text-white/95 font-semibold truncate max-w-[140px]" id="header-selected-address">San Antonio del Táchira</span>
+            <span class="font-label-sm text-label-sm text-white/95 font-semibold truncate max-w-[135px]" id="header-selected-address">San Antonio del Táchira</span>
             <span class="material-symbols-outlined text-white/80 group-hover:text-white text-[15px] shrink-0">expand_more</span>
           </button>
         </div>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <button type="button" id="header-sos-btn" aria-label="Auxilio Rápido SOS" onclick="MarketplaceApp.toggleSosMenu(true)" class="h-9 px-3 rounded-full bg-white text-emergency-red flex items-center gap-1 shadow-md border border-white/40 active:scale-95 transition-all">
-          <span class="material-symbols-outlined text-[16px] font-bold">e911_emergency</span>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <!-- Global Persistent Currency Pill in Header -->
+        <button type="button" id="header-currency-quick-btn" onclick="MarketplaceApp.cycleCurrency()" title="Toca para cambiar moneda (COP / USD / Bs.)" class="h-9 px-2.5 rounded-full bg-black/25 hover:bg-black/35 text-white border border-white/30 backdrop-blur-md flex items-center gap-1 shadow-sm active:scale-95 transition-all">
+          <span id="header-currency-flag" class="text-[13px] leading-none">🇨🇴</span>
+          <span id="header-currency-code" class="font-label-sm text-[11px] font-black tracking-wide">COP</span>
+        </button>
+        <button type="button" id="header-sos-btn" aria-label="Auxilio Rápido SOS" onclick="MarketplaceApp.toggleSosMenu(true)" class="h-9 px-2.5 rounded-full bg-white text-emergency-red flex items-center gap-1 shadow-md border border-white/40 active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[15px] font-bold">e911_emergency</span>
           <span class="font-label-sm text-label-sm font-black tracking-wider">S.O.S</span>
         </button>
         <button type="button" aria-label="Ver carrito" onclick="MarketplaceApp.openCartModal()" class="relative w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md flex items-center justify-center transition-colors">
@@ -314,21 +322,31 @@
         </button>
       </div>
 
-      <!-- Search & Currency Switcher Bar -->
-      <section class="px-margin pt-space-sm pb-space-xs flex flex-col gap-space-sm">
+      <!-- Search & Global Multi-Currency Switcher Bar -->
+      <section class="px-margin pt-space-sm pb-space-xs flex flex-col gap-space-xs sticky-search-glass">
         <div class="flex items-center gap-space-xs">
           <div class="relative flex-1">
             <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-            <input class="w-full h-11 pl-10 pr-9 bg-surface-container rounded-full font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:bg-surface-container-highest transition-colors" placeholder="Buscar hamburguesas, pizzas, tequeños o locales..." type="text" id="global-search" oninput="MarketplaceApp.handleSearch(event)" autocomplete="off"/>
+            <input class="w-full h-11 pl-10 pr-9 bg-surface-container rounded-full font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:bg-surface-container-highest transition-all shadow-inner" placeholder="Buscar comida, cascos MT, locales o servicios..." type="text" id="global-search" oninput="MarketplaceApp.handleSearch(event)" autocomplete="off"/>
             <button type="button" id="search-clear-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface text-[14px] font-bold hidden" onclick="MarketplaceApp.clearSearch()" title="Limpiar búsqueda">✕</button>
           </div>
-          <!-- Dual Currency Selector (Frontera) -->
-          <div class="flex items-center bg-surface-container rounded-full p-0.5 shrink-0 text-label-sm font-label-sm" id="search-currency-toggles">
-            <button type="button" class="curr-pill px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-bold shadow-sm transition-all active" data-curr="COP" onclick="MarketplaceApp.setCurrency('COP')">COP</button>
-            <button type="button" class="curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all" data-curr="USD" onclick="MarketplaceApp.setCurrency('USD')">USD</button>
-            <button type="button" class="curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all" data-curr="VES" onclick="MarketplaceApp.setCurrency('VES')">Bs.</button>
+          <!-- Global Tri-Currency Selector (Frontera) -->
+          <div class="flex items-center bg-surface-container rounded-full p-0.5 shrink-0 text-label-sm font-label-sm border border-outline-variant/40 shadow-sm" id="search-currency-toggles">
+            <button type="button" class="curr-pill px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-bold shadow-sm transition-all active" data-curr="COP" onclick="MarketplaceApp.setCurrency('COP')">🇨🇴 COP</button>
+            <button type="button" class="curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all" data-curr="USD" onclick="MarketplaceApp.setCurrency('USD')">💵 USD</button>
+            <button type="button" class="curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all" data-curr="VES" onclick="MarketplaceApp.setCurrency('VES')">🇻🇪 Bs.</button>
           </div>
         </div>
+
+        <!-- Live Exchange Rate & Active Currency Strip -->
+        <div id="global-exchange-rate-bar" class="global-rate-strip" onclick="MarketplaceApp.cycleCurrency()" title="Toca para alternar entre Pesos, Dólares y Bolívares">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="rate-pulse-dot"></span>
+            <span class="rate-strip-label" id="global-rate-text">💱 Tasa Frontera Hoy: <strong>1 USD = $4.000 COP</strong> • Precios en <strong>COP</strong></span>
+          </div>
+          <span class="rate-strip-action">Cambiar ⇄</span>
+        </div>
+
         <!-- Quick Food Craving Filter Chips -->
         <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-margin px-margin py-1" id="quick-food-craving-chips">
           <button type="button" class="craving-chip active" data-food-type="all" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">
@@ -355,6 +373,74 @@
           <button type="button" class="craving-chip" style="background: rgba(225, 29, 72, 0.18); border: 1.5px solid rgba(225, 29, 72, 0.55); color: #FDA4AF;" onclick="CascosServiceApp.open()">
             <span>🪖</span><span style="color: #FFF; font-weight: 800;">Cascos MT</span>
           </button>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SUPER-APP BENTO HUB (Unificación Visual de Verticales PediGochos)
+           ==================================================================== -->
+      <section class="px-margin mt-2" id="superapp-bento-hub" aria-label="Ecosistema PediGochos Super-App">
+        <div class="bento-hub-grid">
+          <!-- Bento 1: Comida & Restaurantes (Main Spotlight) -->
+          <div class="bento-card bento-food active" data-bento-cat="comidas" onclick="MarketplaceApp.selectCategory('comidas')">
+            <div class="bento-card-top">
+              <span class="bento-icon-wrap food-glow">🍔</span>
+              <span class="bento-live-pill food-pill">🔥 Delivery Express</span>
+            </div>
+            <div class="bento-card-content">
+              <h4 class="bento-title">Restaurantes & Comida</h4>
+              <p class="bento-sub">Hamburguesas, pizzas, salchipapas y más a tu puerta</p>
+            </div>
+            <div class="bento-arrow">➔</div>
+          </div>
+
+          <!-- Bento 2: PediGochos Rider (Cascos & Moto Store) -->
+          <div class="bento-card bento-rider" data-bento-cat="cascos" onclick="CascosServiceApp.open()">
+            <div class="bento-card-top">
+              <div class="bento-rider-logo">
+                <img src="/images/services/pedigochos_cascos_logo.svg" alt="PediGochos Rider">
+              </div>
+              <span class="bento-live-pill rider-pill">🟢 En Stock</span>
+            </div>
+            <div class="bento-card-content">
+              <h4 class="bento-title">PediGochos Rider 🪖</h4>
+              <p class="bento-sub">Cascos ECE 22.06, llantas e indumentaria motera</p>
+            </div>
+            <div class="bento-arrow">➔</div>
+          </div>
+
+          <!-- Bento Row 2: 3 Compact Verticals -->
+          <div class="bento-subgrid">
+            <!-- Bento 3: PediGochos Móvil / Drive -->
+            <div class="bento-mini-card bento-drive" data-bento-cat="drive" onclick="MarketplaceApp.openRideModal()">
+              <div class="bento-mini-header">
+                <span class="bento-mini-icon">🛵</span>
+                <span class="bento-mini-badge drive-badge">GPS</span>
+              </div>
+              <h5 class="bento-mini-title">Moto & Viajes</h5>
+              <span class="bento-mini-desc">Desde $4.000</span>
+            </div>
+
+            <!-- Bento 4: Arte, Resina, 3D & Piñatas -->
+            <div class="bento-mini-card bento-art" data-bento-cat="personalizados" onclick="MarketplaceApp.selectCategory('personalizados')">
+              <div class="bento-mini-header">
+                <span class="bento-mini-icon">🎨</span>
+                <span class="bento-mini-badge art-badge">3D & Arte</span>
+              </div>
+              <h5 class="bento-mini-title">Personalizados</h5>
+              <span class="bento-mini-desc">Resina y Piñatas</span>
+            </div>
+
+            <!-- Bento 5: Auxilio Vial & Salud 24/7 -->
+            <div class="bento-mini-card bento-services" data-bento-cat="servicios" onclick="MarketplaceApp.selectCategory('servicios')">
+              <div class="bento-mini-header">
+                <span class="bento-mini-icon">🛞</span>
+                <span class="bento-mini-badge sos-badge">24/7</span>
+              </div>
+              <h5 class="bento-mini-title">Auxilio & Salud</h5>
+              <span class="bento-mini-desc">Cauchera y +</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -438,7 +524,49 @@
         </div>
 
         <div class="flex flex-col gap-space-md" id="establishments-grid">
-          <!-- Dynamically filled by MarketplaceApp -->
+          <!-- Shimmer Skeleton Loaders (Shown while fetching establishments) -->
+          <div class="pedigochos-skeleton-card">
+            <div class="skeleton-banner shimmer-wave"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-avatar shimmer-wave"></div>
+              <div class="skeleton-lines">
+                <div class="skeleton-line title shimmer-wave"></div>
+                <div class="skeleton-line subtitle shimmer-wave"></div>
+                <div class="skeleton-pills">
+                  <span class="skeleton-pill shimmer-wave"></span>
+                  <span class="skeleton-pill shimmer-wave"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pedigochos-skeleton-card">
+            <div class="skeleton-banner shimmer-wave"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-avatar shimmer-wave"></div>
+              <div class="skeleton-lines">
+                <div class="skeleton-line title shimmer-wave"></div>
+                <div class="skeleton-line subtitle shimmer-wave"></div>
+                <div class="skeleton-pills">
+                  <span class="skeleton-pill shimmer-wave"></span>
+                  <span class="skeleton-pill shimmer-wave"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pedigochos-skeleton-card">
+            <div class="skeleton-banner shimmer-wave"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-avatar shimmer-wave"></div>
+              <div class="skeleton-lines">
+                <div class="skeleton-line title shimmer-wave"></div>
+                <div class="skeleton-line subtitle shimmer-wave"></div>
+                <div class="skeleton-pills">
+                  <span class="skeleton-pill shimmer-wave"></span>
+                  <span class="skeleton-pill shimmer-wave"></span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -3151,13 +3279,13 @@
   <script defer src="/js/print3d-service.js?v=254"></script>
   <script defer src="/js/resin-service.js?v=254"></script>
   <script defer src="/js/pinata-service.js?v=254"></script>
-  <script defer src="/js/cascos-service.js?v=279"></script>
+  <script defer src="/js/cascos-service.js?v=280"></script>
   <script defer src="/js/pedigochos-drive.js?v=270"></script>
-  <script defer src="/js/marketplace.js?v=279"></script>
+  <script defer src="/js/marketplace.js?v=280"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=279').then((reg) => {
+        navigator.serviceWorker.register('/sw.js?v=280').then((reg) => {
           reg.update();
         }).catch(() => {});
       });

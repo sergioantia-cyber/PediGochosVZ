@@ -95,6 +95,7 @@ const CascosServiceApp = {
       }
 
       if (this.catalog.length === 0) {
+        this.renderSkeletons();
         this.loadCatalog().then(() => {
           this.renderFilterPills();
           this.renderGrid();
@@ -106,6 +107,22 @@ const CascosServiceApp = {
     }
   },
 
+  renderSkeletons() {
+    const grid = document.getElementById('cascos-products-grid');
+    if (!grid) return;
+    grid.innerHTML = Array.from({ length: 6 }).map(() => `
+      <div class="casco-skeleton-card">
+        <div class="casco-skeleton-img casco-skeleton-shimmer"></div>
+        <div class="casco-skeleton-body">
+          <div class="casco-skeleton-shimmer" style="width: 45%; height: 12px; border-radius: 6px;"></div>
+          <div class="casco-skeleton-shimmer" style="width: 85%; height: 16px; border-radius: 6px;"></div>
+          <div class="casco-skeleton-shimmer" style="width: 65%; height: 22px; border-radius: 8px; margin-top: 6px;"></div>
+          <div class="casco-skeleton-shimmer" style="width: 100%; height: 38px; border-radius: 12px; margin-top: 6px;"></div>
+        </div>
+      </div>
+    `).join('');
+  },
+
   close() {
     const modal = document.getElementById('cascos-service-modal');
     if (modal) modal.classList.add('hidden');
@@ -114,10 +131,13 @@ const CascosServiceApp = {
     }
   },
 
-  setCurrency(curr) {
+  setCurrency(curr, fromMarketplace = false) {
     this.selectedCurrency = curr;
-    if (typeof MarketplaceApp !== 'undefined' && MarketplaceApp.setCurrency) {
-      MarketplaceApp.selectedCurrency = curr;
+    try {
+      localStorage.setItem('pedigochos_selected_currency', curr);
+    } catch (_) {}
+    if (!fromMarketplace && typeof MarketplaceApp !== 'undefined' && MarketplaceApp.setCurrency) {
+      MarketplaceApp.setCurrency(curr, true);
     }
     // Update currency buttons
     document.querySelectorAll('.cascos-curr-btn').forEach(btn => {

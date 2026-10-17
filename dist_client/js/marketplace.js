@@ -71,6 +71,7 @@ class MarketplaceController {
     this.activeCoupon = null;
     this.gochoPoints = parseInt(localStorage.getItem('gocho_points') || '0', 10);
     this.currentCategory = 'comidas'; // Default to comidas on home entry
+    this.selectedCurrency = localStorage.getItem('pedigochos_selected_currency') || 'COP';
     this.paymentMethod = 'Efectivo'; // Default payment method: 'Efectivo' or 'Transferencia'
     this.isTrackingMinimized = false; // Whether active order tracking is minimized
     this.activeQuickFilter = 'all'; // Quick filter: 'all', 'abiertos', 'mas_pedidos', 'mejor_valorados', 'mas_rapidos', 'cerca'
@@ -245,6 +246,7 @@ class MarketplaceController {
       });
     }
 
+    this.updateGlobalCurrencyUI();
     this.renderEstablishments();
     this.initHorizontalScroll('food-type-filters-container');
     this.initHorizontalScroll('featured-carousel-container');
@@ -1529,6 +1531,7 @@ ${mapsLink}
 
   // Navigation
   selectCategory(category) {
+    const rawRequestedCategory = category;
     if (category === 'personalizado' || category === 'personalizados') {
       category = 'servicios';
     }
@@ -1538,6 +1541,25 @@ ${mapsLink}
     }
     window.activeFoodTypeFilter = null; // Always reset filter so Food Categories Grid shows first for comidas
     
+    // Update active state on Super-App Bento Hub cards
+    document.querySelectorAll('#superapp-bento-hub [data-bento-cat]').forEach(bento => {
+      const bCat = bento.getAttribute('data-bento-cat');
+      const isActive = (bCat === rawRequestedCategory) || (rawRequestedCategory === 'comidas' && bCat === 'comidas');
+      bento.classList.toggle('active', isActive);
+    });
+
+    // Update Header Vertical Badge
+    const headerBadge = document.getElementById('header-vertical-badge');
+    if (headerBadge) {
+      const badgeMap = {
+        'comidas': 'Restaurantes 🍔',
+        'personalizados': 'Arte & 3D 🎨',
+        'servicios': 'Servicios 24/7 🛠️',
+        'farmacias': 'Farmacias 💊'
+      };
+      headerBadge.textContent = badgeMap[rawRequestedCategory] || badgeMap[category] || 'Super-App ⚡';
+    }
+
     // Update active class in categories tabs (DeliverCity style)
     document.querySelectorAll('.category-card-delivercity').forEach(card => {
       const c = card.dataset.category;
@@ -2307,7 +2329,7 @@ ${mapsLink}
   // Create Establishment Card element with modern banner layout matching the new aesthetic
   createEstablishmentCard(est) {
     const card = document.createElement('article');
-    card.className = 'bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm flex flex-col active:scale-[0.99] transition-transform cursor-pointer border border-surface-container-high/40';
+    card.className = 'est-card-animate bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md flex flex-col active:scale-[0.99] transition-all cursor-pointer border border-surface-container-high/40';
     const isOpen = this.isEstablishmentOpen(est);
 
     if (!isOpen) {
@@ -8609,8 +8631,44 @@ ${mapsLink}
     return '$' + num.toLocaleString('de-DE');
   }
 
-  setCurrency(curr) {
-    this.selectedCurrency = curr || 'COP';
+  cycleCurrency() {
+    this.triggerHaptic('light');
+    const order = ['COP', 'USD', 'VES'];
+    const currentIdx = order.indexOf(this.selectedCurrency || 'COP');
+    const nextCurr = order[(currentIdx + 1) % order.length];
+    this.setCurrency(nextCurr);
+    const labelMap = {
+      'COP': '🇨🇴 Pesos Colombianos (COP)',
+      'USD': '💵 Dólares (USD)',
+      'VES': '🇻🇪 Bolívares (Bs.)'
+    };
+    this.showToast(`💱 Precios convertidos a ${labelMap[nextCurr]}`);
+  }
+
+  updateGlobalCurrencyUI() {
+    const curr = this.selectedCurrency || 'COP';
+    const flagEl = document.getElementById('header-currency-flag');
+    const codeEl = document.getElementById('header-currency-code');
+    const rateTextEl = document.getElementById('global-rate-text');
+
+    const flagMap = { 'COP': '🇨🇴', 'USD': '💵', 'VES': '🇻🇪' };
+    const codeMap = { 'COP': 'COP', 'USD': 'USD', 'VES': 'Bs.' };
+    if (flagEl) flagEl.textContent = flagMap[curr] || '🇨🇴';
+    if (codeEl) codeEl.textContent = codeMap[curr] || 'COP';
+
+    const usdRate = (this.copToUsdRate && this.copToUsdRate > 0) ? this.copToUsdRate : 4000;
+    const vesRate = (this.copToVesRate && this.copToVesRate > 0) ? this.copToVesRate : 0.025;
+    if (rateTextEl) {
+      if (curr === 'USD') {
+        rateTextEl.innerHTML = `💵 Moneda activa: <strong>Dólares (USD)</strong> • Tasa: <strong>$${usdRate.toLocaleString('de-DE')} COP</strong>`;
+      } else if (curr === 'VES') {
+        const copPerBs = Math.round(1 / vesRate);
+        rateTextEl.innerHTML = `🇻🇪 Moneda activa: <strong>Bolívares (Bs.)</strong> • Tasa: <strong>1 Bs. = $${copPerBs.toLocaleString('de-DE')} COP</strong>`;
+      } else {
+        rateTextEl.innerHTML = `💱 Tasa Frontera Hoy: <strong>1 USD = $${usdRate.toLocaleString('de-DE')} COP</strong> • Precios en <strong>COP</strong>`;
+      }
+    }
+
     const pills = document.querySelectorAll('#search-currency-toggles .curr-pill, .modern-currency-switch .curr-pill');
     pills.forEach(p => {
       const pCurr = p.getAttribute('data-curr');
@@ -8621,14 +8679,27 @@ ${mapsLink}
         p.className = 'curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all';
       }
     });
+  }
 
+  setCurrency(curr, fromExternal = false) {
+    this.selectedCurrency = curr || 'COP';
+    try {
+      localStorage.setItem('pedigochos_selected_currency', this.selectedCurrency);
+    } catch (_) {}
+
+    this.updateGlobalCurrencyUI();
     this.updateHeroPromoCurrency(this.selectedCurrency);
+
+    if (!fromExternal && typeof CascosServiceApp !== 'undefined' && CascosServiceApp.setCurrency) {
+      CascosServiceApp.setCurrency(this.selectedCurrency, true);
+    }
 
     if (this.selectedEstablishment) {
       this.renderMenu(this.selectedEstablishment);
     } else {
       this.renderEstablishments();
     }
+    this.updateCartBadge();
   }
 
   updateHeroPromoCurrency(curr) {

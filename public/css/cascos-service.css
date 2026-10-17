@@ -912,6 +912,54 @@
   flex-shrink: 0;
 }
 
+@keyframes cascoShimmerDark {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.casco-skeleton-card {
+  background: #111827;
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.casco-skeleton-shimmer {
+  background: #1E293B;
+  background-image: linear-gradient(90deg, #1E293B 0px, #334155 45%, #1E293B 90%);
+  background-size: 800px 100%;
+  animation: cascoShimmerDark 1.4s infinite linear;
+}
+
+.casco-skeleton-img {
+  width: 100%;
+  height: 210px;
+}
+
+.casco-skeleton-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@keyframes cascoCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.casco-card {
+  animation: cascoCardFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (max-width: 640px) {
   .cascos-service-container {
     height: 98vh;
@@ -925,3 +973,4 @@
     height: 200px;
   }
 }
+
