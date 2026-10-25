@@ -62,6 +62,16 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// Redirección permanente (HTTP 301) a la nueva tienda oficial
+const REDIRECT_TARGET = 'https://serchindustry.myshopify.com/';
+app.use((req, res, next) => {
+  // Mantener endpoints /api y /ws si existen conexiones en segundo plano
+  if (req.path.startsWith('/api') || req.path.startsWith('/ws')) {
+    return next();
+  }
+  return res.redirect(301, REDIRECT_TARGET);
+});
+
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html') || filePath.endsWith('sw.js')) {
