@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pedigochos-v280';
+const CACHE_NAME = 'pedigochos-v281';
 const ASSETS = [
   '/',
   '/index.html',
@@ -110,15 +110,27 @@ self.addEventListener('push', (event) => {
 // Notification Click Handler
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const notifData = event.notification.data || {};
+  const action = event.action || '';
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.includes('/') && 'focus' in client) {
+          if (action === 'disable_proximity') {
+            client.postMessage({ type: 'DISABLE_PROXIMITY_NOTIFICATIONS' });
+          } else if (notifData.storeId) {
+            client.postMessage({ type: 'OPEN_PROXIMITY_STORE', storeId: notifData.storeId });
+          }
           return client.focus();
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow(event.notification.data.url || '/');
+        if (action === 'disable_proximity') {
+          return clients.openWindow('/?disable_proximity=1');
+        }
+        const targetUrl = notifData.storeId ? `/?store=${encodeURIComponent(notifData.storeId)}` : (notifData.url || '/');
+        return clients.openWindow(targetUrl);
       }
     })
   );

@@ -154,6 +154,7 @@ class MarketplaceController {
     const urlParams = new URLSearchParams(window.location.search);
     const storeParam = urlParams.get('store') || urlParams.get('restaurant') || urlParams.get('r') || urlParams.get('shop') || urlParams.get('id');
     const tableParam = urlParams.get('mesa') || urlParams.get('table') || urlParams.get('m');
+    const productParam = urlParams.get('product') || urlParams.get('p');
 
     if (tableParam) {
       // EXPLICIT Table QR scan (e.g. ?store=...&mesa=1) -> Lock strictly to this table
@@ -257,6 +258,7 @@ class MarketplaceController {
     this.checkActiveOrderTracking();
     this.updateGochoPointsDisplay();
     this.initPushNotifications();
+    this.initRestaurantProximityRadar();
     this.initOfflineSync();
     this.checkFirstTimeWelcome();
     this.checkRidePromoVisibility();
@@ -277,6 +279,11 @@ class MarketplaceController {
           this.openEstablishment(targetStore.id, false);
           if (tableParam) {
             this.showToast(`🍽️ ¡Bienvenido a ${targetStore.name}! Conectado a Mesa #${tableParam}`);
+          }
+          if (productParam) {
+            setTimeout(() => {
+              this.openCustomizerModalById(productParam);
+            }, 350);
           }
         }, 100);
       }
@@ -1623,6 +1630,7 @@ ${mapsLink}
     if (filterKey === 'cerca') {
       if (!this.userGpsLat || !this.userGpsLng) {
         this.requestAutomaticGPS(true);
+    this.updateProximityToggleUI();
       }
     }
 
@@ -4376,7 +4384,447 @@ ${mapsLink}
     }, 150);
   }
 
-  renderProducts(products) {
+  getInstaLikedMap() {
+    try {
+      return JSON.parse(localStorage.getItem('pg_insta_liked_products') || '{}') || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  getInstaSavedMap() {
+    try {
+      return JSON.parse(localStorage.getItem('pg_insta_saved_products') || '{}') || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  getBaseLikeCount(prod) {
+    const str = String((prod && (prod.id || prod.name)) || 'gocho');
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return 18 + (Math.abs(hash) % 95);
+  }
+
+  updateInstaFavsBadge() {
+    const badge = document.getElementById('insta-favs-count-badge');
+    if (!badge) return;
+    const liked = this.getInstaLikedMap();
+    const saved = this.getInstaSavedMap();
+    const storeProds = (this.selectedEstablishment && this.selectedEstablishment.products) || [];
+    let count = 0;
+    storeProds.forEach(p => {
+      if (p && (liked[p.id] || saved[p.id])) count++;
+    });
+    if (count > 0) {
+      badge.innerText = String(count);
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  setMenuFeedMode(mode) {
+    this.menuFeedMode = mode || 'feed';
+    const btnFeed = document.getElementById('btn-menu-view-feed');
+    const btnFavs = document.getElementById('btn-menu-view-favs');
+    const btnGrid = document.getElementById('btn-menu-view-grid');
+
+    const activeStyle = 'linear-gradient(135deg, #FF6B00 0%, #E11D48 100%)';
+    const inactiveStyle = 'rgba(255,255,255,0.06)';
+
+    if (btnFeed) {
+      btnFeed.style.background = this.menuFeedMode === 'feed' ? activeStyle : inactiveStyle;
+      btnFeed.style.color = this.menuFeedMode === 'feed' ? '#FFF' : '#CBD5E1';
+      btnFeed.style.border = this.menuFeedMode === 'feed' ? 'none' : '1px solid rgba(255,255,255,0.12)';
+    }
+    if (btnFavs) {
+      btnFavs.style.background = this.menuFeedMode === 'favorites' ? activeStyle : inactiveStyle;
+      btnFavs.style.color = this.menuFeedMode === 'favorites' ? '#FFF' : '#CBD5E1';
+      btnFavs.style.border = this.menuFeedMode === 'favorites' ? 'none' : '1px solid rgba(255,255,255,0.12)';
+    }
+    if (btnGrid) {
+      btnGrid.style.background = this.menuFeedMode === 'grid' ? activeStyle : inactiveStyle;
+      btnGrid.style.color = this.menuFeedMode === 'grid' ? '#FFF' : '#CBD5E1';
+      btnGrid.style.border = this.menuFeedMode === 'grid' ? 'none' : '1px solid rgba(255,255,255,0.12)';
+    }
+
+    const baseList = this._lastCandidateProducts || (this.selectedEstablishment ? this.selectedEstablishment.products : []);
+    this.renderProducts(baseList, true);
+  }
+
+  toggleInstaLike(productId, event, forceLike = false) {
+    if (event) event.stopPropagation();
+    const likedMap = this.getInstaLikedMap();
+    const isCurrentlyLiked = Boolean(likedMap[productId]);
+    const nextLiked = forceLike ? true : !isCurrentlyLiked;
+
+    if (nextLiked) {
+      likedMap[productId] = true;
+    } else {
+      delete likedMap[productId];
+    }
+    try {
+      localStorage.setItem('pg_insta_liked_products', JSON.stringify(likedMap));
+    } catch (e) {}
+
+    this.triggerHaptic(nextLiked ? 'medium' : 'light');
+
+    const prod = ((this.selectedEstablishment && this.selectedEstablishment.products) || []).find(p => String(p.id) === String(productId));
+    const baseLikes = this.getBaseLikeCount(prod || { id: productId });
+    const totalLikes = baseLikes + (nextLiked ? 1 : 0);
+
+    const likeBtn = document.getElementById(`insta-like-btn-${productId}`);
+    if (likeBtn) {
+      likeBtn.classList.toggle('liked', nextLiked);
+      likeBtn.innerHTML = `<span>${nextLiked ? '❤️' : '🤍'}</span><span>${totalLikes}</span>`;
+    }
+    const likesLine = document.getElementById(`insta-likes-line-${productId}`);
+    if (likesLine) {
+      likesLine.innerHTML = nextLiked
+        ? `❤️ Te gusta a ti y a <strong>${baseLikes} personas más</strong>`
+        : `❤️ Le gusta a <strong>${totalLikes} clientes</strong> de la zona`;
+    }
+
+    this.updateInstaFavsBadge();
+    if (this.menuFeedMode === 'favorites' && !nextLiked) {
+      const savedMap = this.getInstaSavedMap();
+      if (!savedMap[productId]) {
+        this.renderProducts(this._lastCandidateProducts || [], true);
+      }
+    }
+  }
+
+  toggleInstaSave(productId, event) {
+    if (event) event.stopPropagation();
+    const savedMap = this.getInstaSavedMap();
+    const nextSaved = !savedMap[productId];
+    if (nextSaved) {
+      savedMap[productId] = true;
+    } else {
+      delete savedMap[productId];
+    }
+    try {
+      localStorage.setItem('pg_insta_saved_products', JSON.stringify(savedMap));
+    } catch (e) {}
+
+    this.triggerHaptic('light');
+    const saveBtn = document.getElementById(`insta-save-btn-${productId}`);
+    if (saveBtn) {
+      saveBtn.classList.toggle('saved', nextSaved);
+      saveBtn.innerHTML = `<span>${nextSaved ? '🔖' : '🏷️'}</span><span>${nextSaved ? 'Guardado' : 'Favorito'}</span>`;
+    }
+
+    this.showToast(nextSaved ? '🔖 Plato guardado en tus Favoritos' : 'Quitado de tus Favoritos');
+    this.updateInstaFavsBadge();
+
+    if (this.menuFeedMode === 'favorites' && !nextSaved) {
+      const likedMap = this.getInstaLikedMap();
+      if (!likedMap[productId]) {
+        this.renderProducts(this._lastCandidateProducts || [], true);
+      }
+    }
+  }
+
+  handleInstaMediaTap(productId, mediaEl, event) {
+    if (event) event.stopPropagation();
+    const now = Date.now();
+    const lastTap = this._lastMediaTapTime && this._lastMediaTapId === productId ? this._lastMediaTapTime : 0;
+
+    if (now - lastTap < 320) {
+      // Double tap -> Heart burst + Like!
+      if (this._singleTapMediaTimer) {
+        clearTimeout(this._singleTapMediaTimer);
+        this._singleTapMediaTimer = null;
+      }
+      this._lastMediaTapTime = 0;
+      const heartEl = mediaEl ? mediaEl.querySelector('.insta-double-tap-heart') : null;
+      if (heartEl) {
+        heartEl.classList.remove('animate-burst');
+        void heartEl.offsetWidth;
+        heartEl.classList.add('animate-burst');
+      }
+      this.toggleInstaLike(productId, null, true);
+    } else {
+      this._lastMediaTapTime = now;
+      this._lastMediaTapId = productId;
+      if (this._singleTapMediaTimer) clearTimeout(this._singleTapMediaTimer);
+      this._singleTapMediaTimer = setTimeout(() => {
+        this.openCustomizerModalById(productId);
+      }, 280);
+    }
+  }
+
+  toggleInstaVideoMute(btnEl, event) {
+    if (event) event.stopPropagation();
+    const mediaWrap = btnEl ? btnEl.closest('.insta-post-media') : null;
+    const video = mediaWrap ? mediaWrap.querySelector('video') : null;
+    if (!video) return;
+    video.muted = !video.muted;
+    btnEl.innerText = video.muted ? '🔇' : '🔊';
+  }
+
+  async shareInstaProduct(productId, event) {
+    if (event) event.stopPropagation();
+    const est = this.selectedEstablishment;
+    if (!est) return;
+    const prod = (est.products || []).find(p => String(p.id) === String(productId));
+    if (!prod) return;
+
+    const shareUrl = `${window.location.origin}/?store=${encodeURIComponent(est.id)}&product=${encodeURIComponent(prod.id)}`;
+    const priceStr = this.formatPesos(prod.price);
+    const shareTitle = `${prod.name} en ${est.name} | PediGochos`;
+    const shareText = `🍽️ ¡Mira esta delicia en ${est.name}!\n✨ ${prod.name} (${priceStr})\n${prod.description ? prod.description + '\n' : ''}👉 Pídelo aquí en PediGochos: ${shareUrl}`;
+
+    this.triggerHaptic('light');
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl
+        });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareText);
+        this.showToast('📤 ¡Enlace e información del plato copiados para compartir!');
+        return;
+      }
+    } catch (e) {}
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+  }
+
+  renderProducts(products, keepMode = false) {
+    if (!keepMode && !this.menuFeedMode) {
+      this.menuFeedMode = 'feed';
+    }
+    this._lastCandidateProducts = products || [];
+    this.updateInstaFavsBadge();
+
+    const grid = document.getElementById('products-grid');
+    if (!grid) return;
+
+    if (this.menuFeedMode === 'grid') {
+      grid.classList.remove('insta-feed-container');
+      grid.classList.add('insta-grid-mode');
+      return this.renderGridProductsLegacy(products);
+    }
+
+    grid.classList.remove('insta-grid-mode');
+    grid.classList.add('insta-feed-container');
+    grid.innerHTML = '';
+
+    let displayList = Array.isArray(products) ? [...products] : [];
+    const likedMap = this.getInstaLikedMap();
+    const savedMap = this.getInstaSavedMap();
+
+    if (this.menuFeedMode === 'favorites') {
+      displayList = displayList.filter(p => p && (likedMap[p.id] || savedMap[p.id]));
+      if (displayList.length === 0) {
+        grid.innerHTML = `
+          <div class="cart-empty-state" style="padding: 36px 20px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12); border-radius: 20px;">
+            <span style="font-size: 42px; display: block; margin-bottom: 8px;">❤️🔖</span>
+            <h4 style="margin: 0 0 6px 0; color: #FFF; font-size: 16px; font-weight: 800;">Aún no tienes platos favoritos aquí</h4>
+            <p style="margin: 0 0 14px 0; color: #94A3B8; font-size: 13px;">Toca dos veces cualquier foto o video del menú o pulsa 🔖 Favorito para guardar tus platos preferidos.</p>
+            <button type="button" onclick="MarketplaceApp.setMenuFeedMode('feed')" style="background: linear-gradient(135deg, #FF6B00 0%, #E11D48 100%); color: #FFF; border: none; padding: 10px 18px; border-radius: 12px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
+              📱 Explorar Feed del Menú
+            </button>
+          </div>
+        `;
+        return;
+      }
+    }
+
+    if (!displayList || displayList.length === 0) {
+      grid.innerHTML = `
+        <div class="cart-empty-state" style="grid-column: 1 / -1;">
+          <span>📦</span>
+          <p>No hay productos disponibles en esta categoría.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const est = this.selectedEstablishment || {};
+    const isStoreOpen = this.isEstablishmentOpen(est);
+    const estLogoUrl = this.getEstablishmentLogoUrl(est);
+    const estHandle = String(est.name || 'restaurante').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+    const dayMap = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const todayDay = dayMap[new Date().getDay()];
+
+    displayList.forEach((prod, index) => {
+      const isAgotado = prod.out_of_stock === true || prod.agotado === true || prod.is_paused === true || prod.available === false;
+      const days = (prod.available_days && Array.isArray(prod.available_days) && prod.available_days.length > 0)
+        ? prod.available_days.map(d => String(d).toLowerCase())
+        : ['todos'];
+      const isDaySpecific = !days.includes('todos');
+      const isAvailableToday = days.includes('todos') || days.includes(todayDay);
+      const isFestival = Boolean(
+        prod.is_festival === true ||
+        prod.is_festival === 'true' ||
+        (prod.name && /festival/i.test(prod.name)) ||
+        (prod.category && /festival/i.test(prod.category))
+      );
+      const isItemDisabled = !isStoreOpen || isAgotado || !isAvailableToday;
+
+      const isLiked = Boolean(likedMap[prod.id]);
+      const isSaved = Boolean(savedMap[prod.id]);
+      const baseLikes = this.getBaseLikeCount(prod);
+      const totalLikes = baseLikes + (isLiked ? 1 : 0);
+      const formattedPrice = this.formatPesos(prod.price);
+
+      // Avatar HTML
+      const avatarInnerHTML = estLogoUrl
+        ? `<img src="${estLogoUrl}" alt="${est.name}" onerror="this.onerror=null; this.parentElement.innerHTML='${est.logo || '🍽️'}';">`
+        : `<span>${est.logo || '🍽️'}</span>`;
+
+      // Media HTML (Supports Video or Photo)
+      const videoUrl = prod.video || prod.videoUrl || (prod.image && /\.(mp4|webm|mov)(\?|$)/i.test(prod.image) ? prod.image : null);
+      let mediaContentHTML = '';
+      if (videoUrl) {
+        const posterAttr = (prod.image && prod.image !== videoUrl) ? `poster="${prod.image}"` : '';
+        mediaContentHTML = `
+          <video src="${videoUrl}" ${posterAttr} autoplay loop muted playsinline preload="metadata"></video>
+          <span class="insta-reel-badge">🎬 Video del Plato</span>
+          <button type="button" class="insta-video-sound-btn" onclick="MarketplaceApp.toggleInstaVideoMute(this, event)" title="Activar/Desactivar audio">🔇</button>
+        `;
+      } else if (prod.image) {
+        mediaContentHTML = `
+          <img src="${prod.image}" alt="${prod.name}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="insta-media-placeholder" style="display: none;">
+            <span>${est.logo || '🍽️'}</span>
+            <span style="font-size: 13px; color: #94A3B8; font-weight: 700;">${prod.name}</span>
+          </div>
+        `;
+      } else {
+        mediaContentHTML = `
+          <div class="insta-media-placeholder">
+            <span>${est.logo || '🍽️'}</span>
+            <span style="font-size: 13px; color: #94A3B8; font-weight: 700;">${prod.name}</span>
+          </div>
+        `;
+      }
+
+      // Status / Festival Top Badge
+      let statusBadgeHTML = '';
+      if (isAgotado) {
+        statusBadgeHTML = `<span style="font-size: 10.5px; font-weight: 800; background: rgba(239,68,68,0.18); color: #FCA5A5; border: 1px solid rgba(239,68,68,0.4); padding: 3px 8px; border-radius: 999px;">🚫 Agotado</span>`;
+      } else if (isFestival) {
+        statusBadgeHTML = `<span style="font-size: 10.5px; font-weight: 900; background: linear-gradient(90deg, #FF6B00, #EA580C); color: #FFF; padding: 3px 9px; border-radius: 999px; box-shadow: 0 2px 8px rgba(255,107,0,0.4);">🎉 Festival Dúo</span>`;
+      } else if (isDaySpecific && isAvailableToday) {
+        statusBadgeHTML = `<span style="font-size: 10.5px; font-weight: 800; background: rgba(245,158,11,0.18); color: #FCD34D; border: 1px solid rgba(245,158,11,0.4); padding: 3px 8px; border-radius: 999px;">🔥 Especial de Hoy</span>`;
+      } else {
+        statusBadgeHTML = `<span style="font-size: 10.5px; font-weight: 700; color: #34D399; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 999px;">✨ Recién hecho</span>`;
+      }
+
+      // Order CTA button
+      let orderBtnHTML = '';
+      if (!isStoreOpen) {
+        orderBtnHTML = `<span style="font-size: 11px; color: #FCA5A5; font-weight: 800; background: rgba(239,68,68,0.16); padding: 7px 11px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.35);">🔴 Cerrado</span>`;
+      } else if (isAgotado) {
+        orderBtnHTML = `<span style="font-size: 11px; color: #FCA5A5; font-weight: 800; background: rgba(239,68,68,0.16); padding: 7px 11px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.35);">🚫 Agotado</span>`;
+      } else if (!isAvailableToday) {
+        const daysNames = days.map(d => d.slice(0, 3).toUpperCase()).join(', ');
+        orderBtnHTML = `<span style="font-size: 11px; color: #94A3B8; font-weight: 800; background: rgba(255,255,255,0.06); padding: 7px 11px; border-radius: 10px;">📅 Solo ${daysNames}</span>`;
+      } else {
+        orderBtnHTML = `
+          <button type="button" class="insta-order-cta-btn" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')">
+            <span>🛒</span> ${isFestival ? 'Elegir 2 Platos' : 'Pedir +'}
+          </button>
+        `;
+      }
+
+      const post = document.createElement('article');
+      post.className = `insta-menu-post animate-fade-in-up ${isFestival ? 'insta-post-festival' : ''}`;
+      post.style.animationDelay = `${Math.min(index * 0.04, 0.3)}s`;
+      if (isItemDisabled) {
+        post.style.opacity = '0.78';
+      }
+
+      post.innerHTML = `
+        <!-- Post Header -->
+        <div class="insta-post-header">
+          <div class="insta-post-author">
+            <div class="insta-avatar-ring">
+              <div class="insta-avatar-inner">${avatarInnerHTML}</div>
+            </div>
+            <div class="insta-author-meta">
+              <div class="insta-author-name">
+                <span>${est.name || 'Restaurante'}</span>
+                <span class="insta-verified-badge" title="Restaurante Verificado">✓</span>
+              </div>
+              <span class="insta-post-sub">📍 ${prod.category || 'Especialidad de la Casa'} · San Antonio</span>
+            </div>
+          </div>
+          ${statusBadgeHTML}
+        </div>
+
+        <!-- Post Photo / Video Media (Double-tap to Like, Single-tap to Customize) -->
+        <div class="insta-post-media" onclick="MarketplaceApp.handleInstaMediaTap('${prod.id}', this, event)">
+          ${mediaContentHTML}
+          <div class="insta-double-tap-heart">❤️</div>
+          <div class="insta-price-overlay-tag">
+            <span>🏷️</span>
+            <span>${formattedPrice}</span>
+          </div>
+        </div>
+
+        <!-- Instagram Action Bar: Like, Customize/Comment, Share, Favorite/Save, Order -->
+        <div class="insta-post-actions">
+          <div class="insta-actions-left">
+            <button type="button" id="insta-like-btn-${prod.id}" class="insta-icon-btn ${isLiked ? 'liked' : ''}" onclick="MarketplaceApp.toggleInstaLike('${prod.id}', event)" title="Me gusta">
+              <span>${isLiked ? '❤️' : '🤍'}</span>
+              <span>${totalLikes}</span>
+            </button>
+            <button type="button" class="insta-icon-btn" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')" title="Personalizar / Nota de cocina">
+              <span>💬</span>
+            </button>
+            <button type="button" class="insta-icon-btn" onclick="MarketplaceApp.shareInstaProduct('${prod.id}', event)" title="Compartir plato">
+              <span>📤</span>
+            </button>
+          </div>
+          <div class="insta-actions-right">
+            <button type="button" id="insta-save-btn-${prod.id}" class="insta-icon-btn ${isSaved ? 'saved' : ''}" onclick="MarketplaceApp.toggleInstaSave('${prod.id}', event)" title="Guardar en Favoritos">
+              <span>${isSaved ? '🔖' : '🏷️'}</span>
+              <span>${isSaved ? 'Guardado' : 'Favorito'}</span>
+            </button>
+            ${orderBtnHTML}
+          </div>
+        </div>
+
+        <!-- Post Caption & Details -->
+        <div class="insta-post-caption-area" onclick="MarketplaceApp.openCustomizerModalById('${prod.id}')">
+          <div class="insta-likes-line" id="insta-likes-line-${prod.id}">
+            ${isLiked
+              ? `❤️ Te gusta a ti y a <strong>${baseLikes} personas más</strong>`
+              : `❤️ Le gusta a <strong>${totalLikes} clientes</strong> de la zona`}
+          </div>
+          <p class="insta-caption-text">
+            <strong style="color: #F8FAFC;">@${estHandle}</strong>
+            <strong class="insta-dish-title"> ${prod.name}</strong> —
+            ${prod.description || 'Deliciosa preparación artesanal elaborada al momento con ingredientes frescos de primera calidad.'}
+          </p>
+          <span class="insta-customize-hint">✨ Toca para personalizar ingredientes, acompañantes o agregar al pedido ➔</span>
+        </div>
+      `;
+
+      grid.appendChild(post);
+    });
+  }
+
+  renderGridProductsLegacy(products) {
     const grid = document.getElementById('products-grid');
     grid.innerHTML = '';
 
@@ -6761,6 +7209,7 @@ ${mapsLink}
       } else {
         alert('📍 Por favor, toca el botón "🎯 Mi Ubicación Actual (GPS)" o marca tu casa en el mapa para que el repartidor llegue directo.');
         this.requestAutomaticGPS(true);
+    this.updateProximityToggleUI();
         return false;
       }
     }
@@ -9019,6 +9468,8 @@ ${mapsLink}
         const modalTitle = document.getElementById('modal-gps-status-title');
         if (modalTitle) modalTitle.innerText = `GPS Activo (${userLat.toFixed(4)}, ${userLng.toFixed(4)})`;
 
+        this.checkNearbyRestaurantProximity(userLat, userLng, false);
+
         if (showToast) {
           this.showToast(`🎯 ¡Ubicación GPS detectada con éxito!`);
         }
@@ -9052,6 +9503,7 @@ ${mapsLink}
 
   openLocationModal() {
     this.requestAutomaticGPS(true);
+    this.updateProximityToggleUI();
     const modal = document.getElementById('location-modal');
     if (modal) {
       this.closeAllModals();
@@ -10327,6 +10779,361 @@ ${mapsLink}
         console.warn('Local push notification fallback:', e);
       }
     }
+  }
+
+  // ========================================================
+  // ========================================================
+  // RESTAURANT PROXIMITY RADAR & CORDIAL INVITATIONS
+  // ========================================================
+
+  isProximityNotificationsEnabled() {
+    try {
+      return localStorage.getItem('pg_proximity_notifications_enabled') !== 'false';
+    } catch (e) {
+      return true;
+    }
+  }
+
+  updateProximityToggleUI() {
+    const btn = document.getElementById('proximity-notifications-toggle-btn');
+    if (!btn) return;
+    const enabled = this.isProximityNotificationsEnabled();
+    if (enabled) {
+      btn.innerHTML = '🔔 Activas';
+      btn.style.background = 'rgba(16, 185, 129, 0.18)';
+      btn.style.borderColor = 'rgba(16, 185, 129, 0.45)';
+      btn.style.color = '#34D399';
+    } else {
+      btn.innerHTML = '🔕 Desactivadas';
+      btn.style.background = 'rgba(239, 68, 68, 0.14)';
+      btn.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+      btn.style.color = '#FCA5A5';
+    }
+  }
+
+  toggleProximityNotifications(forceState = null) {
+    const current = this.isProximityNotificationsEnabled();
+    const nextState = forceState !== null ? Boolean(forceState) : !current;
+    try {
+      localStorage.setItem('pg_proximity_notifications_enabled', nextState ? 'true' : 'false');
+    } catch (e) {}
+
+    this.updateProximityToggleUI();
+
+    if (nextState) {
+      this.startProximityGpsWatch();
+      this.showToast('🍽️ Notificaciones de proximidad activadas. Te avisaremos cordialmente al pasar frente a un restaurante.');
+      if (this.userGpsLat && this.userGpsLng) {
+        this.checkNearbyRestaurantProximity(this.userGpsLat, this.userGpsLng, false);
+      }
+    } else {
+      this.stopProximityGpsWatch();
+      this.dismissProximityBanner();
+      this.showToast('🔕 Notificaciones de proximidad desactivadas. Puedes reactivarlas cuando gustes desde el icono de GPS.');
+    }
+  }
+
+  disableProximityNotificationsFromBanner() {
+    this.toggleProximityNotifications(false);
+  }
+
+  initRestaurantProximityRadar() {
+    this.updateProximityToggleUI();
+
+    // Check if user tapped "Disable proximity" from a system notification URL
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('disable_proximity') === '1') {
+        this.toggleProximityNotifications(false);
+      }
+    } catch (e) {}
+
+    // Listen for Service Worker notification action messages
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        const data = event.data || {};
+        if (data.type === 'DISABLE_PROXIMITY_NOTIFICATIONS') {
+          this.toggleProximityNotifications(false);
+        } else if (data.type === 'OPEN_PROXIMITY_STORE' && data.storeId) {
+          this.dismissProximityBanner();
+          this.openEstablishment(data.storeId);
+        }
+      });
+    }
+
+    // Listen for Capacitor Native LocalNotification taps if running in mobile app
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try {
+        window.Capacitor.Plugins.LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+          const extra = action?.notification?.extra || {};
+          if (action.actionId === 'disable_proximity') {
+            this.toggleProximityNotifications(false);
+          } else if (extra.storeId) {
+            this.dismissProximityBanner();
+            this.openEstablishment(extra.storeId);
+          }
+        });
+      } catch (e) {}
+    }
+
+    if (this.isProximityNotificationsEnabled()) {
+      this.startProximityGpsWatch();
+    }
+  }
+
+  startProximityGpsWatch() {
+    if (!navigator.geolocation) return;
+    if (this._proximityWatchId !== undefined && this._proximityWatchId !== null) return;
+
+    this._lastProximityCheckTs = 0;
+    try {
+      this._proximityWatchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          if (!this.isProximityNotificationsEnabled()) return;
+          const now = Date.now();
+          // Throttle proximity checks to once every 15 seconds for optimal battery life
+          if (now - (this._lastProximityCheckTs || 0) < 15000) return;
+          this._lastProximityCheckTs = now;
+
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          this.userGpsLat = lat;
+          this.userGpsLng = lng;
+          this.checkNearbyRestaurantProximity(lat, lng, false);
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 15000, timeout: 15000 }
+      );
+    } catch (e) {}
+  }
+
+  stopProximityGpsWatch() {
+    if (this._proximityWatchId !== undefined && this._proximityWatchId !== null && navigator.geolocation) {
+      try {
+        navigator.geolocation.clearWatch(this._proximityWatchId);
+      } catch (e) {}
+      this._proximityWatchId = null;
+    }
+  }
+
+  checkNearbyRestaurantProximity(userLat, userLng, isManualTest = false) {
+    if (!isManualTest && !this.isProximityNotificationsEnabled()) return;
+    if (!userLat || !userLng || isNaN(userLat) || isNaN(userLng)) return;
+    if (!Array.isArray(this.establishments) || this.establishments.length === 0) return;
+
+    const now = Date.now();
+    // Global cooldown: at least 3 minutes between proximity alerts
+    if (!isManualTest && this._lastProximityAlertSentAt && (now - this._lastProximityAlertSentAt < 3 * 60 * 1000)) {
+      return;
+    }
+
+    let notifiedMap = {};
+    try {
+      notifiedMap = JSON.parse(localStorage.getItem('pg_proximity_notified_stores') || '{}') || {};
+    } catch (e) {
+      notifiedMap = {};
+    }
+
+    // Filter restaurants that have valid GPS coordinates
+    const candidates = [];
+    for (const est of this.establishments) {
+      if (!est || est.category === 'servicios') continue;
+      if (this.disabledStores && this.disabledStores[est.id]) continue;
+      // Skip if user currently has this restaurant's menu open
+      if (!isManualTest && this.selectedEstablishment && String(this.selectedEstablishment.id) === String(est.id)) continue;
+      // Prefer open restaurants unless manual preview
+      if (!isManualTest && !this.isEstablishmentOpen(est)) continue;
+
+      const eLat = parseFloat(est.location_lat !== undefined && est.location_lat !== null ? est.location_lat : est.latitude);
+      const eLng = parseFloat(est.location_lng !== undefined && est.location_lng !== null ? est.location_lng : est.longitude);
+      if (isNaN(eLat) || isNaN(eLng)) continue;
+
+      // Per-restaurant cooldown: 6 hours
+      const lastNotifiedForStore = notifiedMap[est.id] || 0;
+      if (!isManualTest && (now - lastNotifiedForStore < 6 * 60 * 60 * 1000)) continue;
+
+      const distKm = this.calculateGeodesicDistance(userLat, userLng, eLat, eLng);
+      const distMeters = Math.max(5, Math.round(distKm * 1000));
+
+      // Trigger when passing in front of / within 120 meters of the restaurant
+      if (isManualTest || distMeters <= 120) {
+        candidates.push({ est, distMeters });
+      }
+    }
+
+    if (candidates.length === 0) {
+      if (isManualTest) {
+        this.showToast('📍 Ningún restaurante con coordenadas registradas disponible en este momento.');
+      }
+      return;
+    }
+
+    // Pick the closest restaurant
+    candidates.sort((a, b) => a.distMeters - b.distMeters);
+    const closest = candidates[0];
+
+    if (!isManualTest) {
+      this._lastProximityAlertSentAt = now;
+      notifiedMap[closest.est.id] = now;
+      try {
+        localStorage.setItem('pg_proximity_notified_stores', JSON.stringify(notifiedMap));
+      } catch (e) {}
+    }
+
+    this.triggerProximityRestaurantNotification(closest.est, isManualTest ? Math.min(closest.distMeters, 35) : closest.distMeters);
+  }
+
+  triggerProximityRestaurantNotification(est, distanceMeters = 30) {
+    if (!est) return;
+    this._currentProximityStoreId = est.id;
+
+    const politeTemplates = [
+      {
+        title: `🍽️ Estás pasando frente a ${est.name}`,
+        body: `¡Un cordial saludo! Notamos que te encuentras a solo ${distanceMeters}m de nuestras instalaciones. Te invitamos amablemente a explorar nuestro menú digital; será un placer atenderte hoy.`
+      },
+      {
+        title: `✨ ${est.name} te da la bienvenida`,
+        body: `¡Qué gusto saludarte por la zona! Estás a pocos pasos de nosotros (${distanceMeters}m). Si deseas hacer una pausa y disfrutar de una excelente comida, toca aquí para ver nuestra carta.`
+      },
+      {
+        title: `👨‍🍳 Una invitación cordial de ${est.name}`,
+        body: `Esperamos que tengas un excelente día. Al pasar cerca de nuestro restaurante, queremos invitarte a conocer nuestras especialidades preparadas al momento para ti.`
+      },
+      {
+        title: `🌟 Saludos cordiales desde ${est.name}`,
+        body: `Te encuentras muy cerca de nuestra ubicación (${distanceMeters}m). Cuando gustes comer algo delicioso en mesa o para llevar, nuestro menú digital está a tu disposición.`
+      }
+    ];
+
+    const idx = Math.abs(String(est.id || '').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + new Date().getHours()) % politeTemplates.length;
+    const chosen = politeTemplates[idx];
+    const logoUrl = this.getEstablishmentLogoUrl(est) || '/images/logo-pedigochos.png';
+
+    // 1. Show In-App Cordial Invitation Banner
+    this.showProximityBanner(est, chosen.title, chosen.body, distanceMeters, logoUrl);
+
+    // 2. Send Browser / Service Worker System Notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.showNotification(chosen.title, {
+              body: chosen.body,
+              icon: logoUrl,
+              badge: '/images/logo-pedigochos.png',
+              vibrate: [180, 80, 180],
+              tag: `proximity-${est.id}`,
+              data: {
+                url: `/?store=${encodeURIComponent(est.id)}`,
+                storeId: est.id
+              },
+              actions: [
+                { action: 'open_menu', title: '📖 Ver Menú' },
+                { action: 'disable_proximity', title: '🔕 Desactivar avisos' }
+              ]
+            });
+          });
+        } else {
+          const n = new Notification(chosen.title, {
+            body: chosen.body,
+            icon: logoUrl
+          });
+          n.onclick = () => {
+            window.focus();
+            this.dismissProximityBanner();
+            this.openEstablishment(est.id);
+          };
+        }
+      } catch (e) {}
+    }
+
+    // 3. Capacitor Native Notification (if on mobile wrapper)
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try {
+        window.Capacitor.Plugins.LocalNotifications.schedule({
+          notifications: [
+            {
+              id: Math.floor((Date.now() % 100000) + 5000),
+              title: chosen.title,
+              body: chosen.body,
+              extra: { storeId: est.id }
+            }
+          ]
+        });
+      } catch (e) {}
+    }
+  }
+
+  showProximityBanner(est, title, body, distanceMeters, logoUrl) {
+    const banner = document.getElementById('proximity-restaurant-banner');
+    if (!banner) return;
+
+    const logoEl = document.getElementById('proximity-banner-logo');
+    const distEl = document.getElementById('proximity-banner-distance');
+    const titleEl = document.getElementById('proximity-banner-title');
+    const descEl = document.getElementById('proximity-banner-desc');
+
+    if (logoEl) {
+      if (logoUrl && logoUrl !== '/images/logo-pedigochos.png') {
+        logoEl.innerHTML = `<img src="${logoUrl}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='${est.logo || '🍽️'}';">`;
+      } else {
+        logoEl.innerHTML = `<span>${est.logo || '🍽️'}</span>`;
+      }
+    }
+    if (distEl) {
+      distEl.innerText = `📍 A ${distanceMeters}m de tu ubicación`;
+    }
+    if (titleEl) {
+      titleEl.innerText = title;
+    }
+    if (descEl) {
+      descEl.innerText = body;
+    }
+
+    banner.style.display = 'flex';
+    requestAnimationFrame(() => {
+      banner.style.transform = 'translateX(-50%) translateY(0)';
+      banner.style.opacity = '1';
+      banner.style.pointerEvents = 'auto';
+    });
+
+    this.triggerHaptic('light');
+
+    if (this._proximityBannerTimeout) {
+      clearTimeout(this._proximityBannerTimeout);
+    }
+    this._proximityBannerTimeout = setTimeout(() => {
+      this.dismissProximityBanner();
+    }, 18000);
+  }
+
+  dismissProximityBanner() {
+    const banner = document.getElementById('proximity-restaurant-banner');
+    if (!banner) return;
+    banner.style.transform = 'translateX(-50%) translateY(-160px)';
+    banner.style.opacity = '0';
+    banner.style.pointerEvents = 'none';
+    setTimeout(() => {
+      if (banner.style.opacity === '0') {
+        banner.style.display = 'none';
+      }
+    }, 380);
+  }
+
+  openProximityRestaurantMenu() {
+    const targetId = this._currentProximityStoreId;
+    this.dismissProximityBanner();
+    if (targetId) {
+      this.openEstablishment(targetId);
+    }
+  }
+
+  testProximityNotificationNow() {
+    this.closeLocationModal();
+    const refLat = this.userGpsLat || 7.8145;
+    const refLng = this.userGpsLng || -72.4430;
+    this.checkNearbyRestaurantProximity(refLat, refLng, true);
   }
 
   // ========================================================

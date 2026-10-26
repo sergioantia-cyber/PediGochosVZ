@@ -7167,3 +7167,396 @@ body {
 
 
 
+
+/* ========================================================
+   INSTAGRAM-STYLE SOCIAL MENU FEED (GochosGram Menu)
+   ======================================================== */
+
+.products-grid.insta-feed-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 22px !important;
+  max-width: 520px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+}
+
+.products-grid.insta-grid-mode {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 12px !important;
+}
+
+/* Story-style rings for internal category circles */
+.internal-category-item .internal-cat-img-wrap {
+  padding: 2.5px !important;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 4px 12px rgba(220, 39, 67, 0.3) !important;
+}
+
+.insta-menu-post {
+  background: linear-gradient(180deg, #161B29 0%, #101420 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.insta-menu-post.insta-post-festival {
+  border: 2px solid #FF8A00 !important;
+  box-shadow: 0 14px 36px rgba(255, 107, 0, 0.32), 0 0 18px rgba(255, 138, 0, 0.2) !important;
+}
+
+.insta-post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  gap: 10px;
+  background: rgba(15, 19, 30, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.insta-post-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.insta-avatar-ring {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(45deg, #FF6B00 0%, #E11D48 50%, #F59E0B 100%);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(225, 29, 72, 0.35);
+}
+
+.insta-avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #121622;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border: 1.5px solid #101420;
+}
+
+.insta-avatar-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.insta-author-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.insta-author-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.insta-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3897F0;
+  color: #FFF;
+  font-size: 9px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.insta-post-sub {
+  font-size: 11px;
+  color: #94A3B8;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.insta-post-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #0B0E17;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  cursor: pointer;
+}
+
+.insta-post-media img,
+.insta-post-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.insta-post-media:active img,
+.insta-post-media:active video {
+  transform: scale(1.015);
+}
+
+.insta-media-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: radial-gradient(circle at center, #1E2538 0%, #0D111C 100%);
+  font-size: 64px;
+}
+
+/* Double-tap big heart overlay animation */
+.insta-double-tap-heart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: 88px;
+  color: #FF3040;
+  filter: drop-shadow(0 8px 28px rgba(255, 48, 64, 0.65));
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+}
+
+.insta-double-tap-heart.animate-burst {
+  animation: instaHeartBurst 0.85s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards;
+}
+
+@keyframes instaHeartBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.25);
+    opacity: 1;
+  }
+  55% {
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 0;
+  }
+}
+
+.insta-price-overlay-tag {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(11, 14, 23, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 107, 0, 0.65);
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 900;
+  padding: 6px 13px;
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.insta-video-sound-btn {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(11, 14, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFF;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  backdrop-filter: blur(8px);
+}
+
+.insta-reel-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFF;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 4;
+  backdrop-filter: blur(6px);
+}
+
+/* Action Bar (Like, Comment/Customize, Share, Save/Favorite, Order CTA) */
+.insta-post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px 14px;
+  gap: 8px;
+}
+
+.insta-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.insta-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.insta-icon-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F8FAFC;
+  height: 38px;
+  padding: 0 11px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease;
+}
+
+.insta-icon-btn:active {
+  transform: scale(0.9);
+}
+
+.insta-icon-btn.liked {
+  background: rgba(255, 48, 64, 0.16);
+  border-color: rgba(255, 48, 64, 0.45);
+  color: #FF3040;
+}
+
+.insta-icon-btn.saved {
+  background: rgba(251, 191, 36, 0.16);
+  border-color: rgba(251, 191, 36, 0.45);
+  color: #FBBF24;
+}
+
+.insta-order-cta-btn {
+  background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%);
+  color: #FFFFFF;
+  border: none;
+  height: 38px;
+  padding: 0 15px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 107, 0, 0.4);
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+
+.insta-order-cta-btn:active {
+  transform: scale(0.95);
+}
+
+/* Post Likes & Caption Section */
+.insta-post-caption-area {
+  padding: 2px 15px 15px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.insta-likes-line {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #F1F5F9;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.insta-caption-text {
+  font-size: 13.5px;
+  color: #CBD5E1;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.insta-caption-text strong.insta-dish-title {
+  color: #FFFFFF;
+  font-weight: 900;
+  font-size: 15px;
+}
+
+.insta-customize-hint {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94A3B8;
+  margin-top: 2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.insta-customize-hint:hover {
+  color: #FF8A3D;
+}

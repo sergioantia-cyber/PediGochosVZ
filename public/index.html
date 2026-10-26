@@ -25,7 +25,7 @@
   <link rel="apple-touch-icon" href="/images/logo-pedigochos.png">
   <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="/css/common.css?v=231">
-  <link rel="stylesheet" href="/css/marketplace.css?v=280">
+  <link rel="stylesheet" href="/css/marketplace.css?v=282">
   <link rel="stylesheet" href="/css/paint-service.css?v=232">
   <link rel="stylesheet" href="/css/print3d-service.css?v=237">
   <link rel="stylesheet" href="/css/resin-service.css?v=253">
@@ -797,8 +797,21 @@
             </div>
           </div>
 
-          <h3 class="section-title" id="internal-section-title">Nuestros Productos</h3>
-          <div class="products-grid" id="products-grid">
+          <div class="insta-menu-toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0 14px 0; padding: 8px 10px; background: rgba(18, 22, 34, 0.9); border: 1px solid rgba(255, 255, 255, 0.09); border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.3);">
+            <h3 class="section-title" id="internal-section-title" style="margin: 0; font-size: 15px; display: flex; align-items: center; gap: 6px;">📸 Feed del Menú</h3>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" id="btn-menu-view-feed" onclick="MarketplaceApp.setMenuFeedMode('feed')" style="background: linear-gradient(135deg, #FF6B00 0%, #E11D48 100%); color: #FFF; border: none; padding: 6px 11px; border-radius: 10px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 3px 10px rgba(225, 29, 72, 0.35); transition: all 0.2s;">
+                <span>📱</span> Feed
+              </button>
+              <button type="button" id="btn-menu-view-favs" onclick="MarketplaceApp.setMenuFeedMode('favorites')" style="background: rgba(255,255,255,0.06); color: #CBD5E1; border: 1px solid rgba(255,255,255,0.12); padding: 6px 11px; border-radius: 10px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                <span>❤️</span> Favoritos <span id="insta-favs-count-badge" style="background: rgba(255,48,64,0.22); color: #FF3040; padding: 1px 5px; border-radius: 999px; font-size: 10px; font-weight: 900; display: none;">0</span>
+              </button>
+              <button type="button" id="btn-menu-view-grid" onclick="MarketplaceApp.setMenuFeedMode('grid')" style="background: rgba(255,255,255,0.06); color: #CBD5E1; border: 1px solid rgba(255,255,255,0.12); padding: 6px 10px; border-radius: 10px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;" title="Vista Cuadrícula">
+                <span>⊞</span>
+              </button>
+            </div>
+          </div>
+          <div class="products-grid insta-feed-container" id="products-grid">
             <!-- Dynamically filled -->
           </div>
 
@@ -3323,7 +3336,7 @@
   <script defer src="/js/pinata-service.js?v=254"></script>
   <script defer src="/js/cascos-service.js?v=280"></script>
   <script defer src="/js/pedigochos-drive.js?v=270"></script>
-  <script defer src="/js/marketplace.js?v=281"></script>
+  <script defer src="/js/marketplace.js?v=282"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
