@@ -181,6 +181,29 @@
     <button type="button" class="banner-close-btn" onclick="event.stopPropagation(); MarketplaceApp.dismissCustomerAlertBanner();" title="Cerrar">✕</button>
   </div>
 
+  <!-- Restaurant Proximity Cordial Invitation Banner -->
+  <div id="proximity-restaurant-banner" style="display: none; position: fixed; top: 14px; left: 50%; transform: translateX(-50%) translateY(-160px); width: calc(100% - 24px); max-width: 460px; background: linear-gradient(145deg, #161C2E 0%, #0F1422 100%); border: 1.5px solid rgba(16, 185, 129, 0.55); border-radius: 20px; box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(16, 185, 129, 0.25); padding: 14px 16px; z-index: 1000001; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease; opacity: 0; pointer-events: none; flex-direction: column; gap: 10px;">
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <div id="proximity-banner-logo" style="width: 48px; height: 48px; border-radius: 14px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">🍽️</div>
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 3px;">
+          <span id="proximity-banner-distance" style="background: rgba(16, 185, 129, 0.18); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; letter-spacing: 0.02em;">📍 A pocos pasos de ti</span>
+          <button type="button" onclick="event.stopPropagation(); MarketplaceApp.dismissProximityBanner();" style="background: rgba(255,255,255,0.08); border: none; color: #94A3B8; width: 24px; height: 24px; border-radius: 50%; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Cerrar">✕</button>
+        </div>
+        <h4 id="proximity-banner-title" style="margin: 0 0 4px 0; font-size: 14px; font-weight: 900; color: #FFFFFF; line-height: 1.25;">🍽️ Estás pasando cerca de nuestro restaurante</h4>
+        <p id="proximity-banner-desc" style="margin: 0; font-size: 12px; color: #CBD5E1; line-height: 1.45; font-weight: 500;">Te invitamos cordialmente a conocer nuestro menú digital y disfrutar de una excelente comida hoy.</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 10px;">
+      <button type="button" onclick="event.stopPropagation(); MarketplaceApp.disableProximityNotificationsFromBanner();" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: #94A3B8; font-size: 11px; font-weight: 700; padding: 8px 11px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;">
+        <span>🔕</span> Desactivar avisos de cercanía
+      </button>
+      <button type="button" onclick="event.stopPropagation(); MarketplaceApp.openProximityRestaurantMenu();" style="flex: 1; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border: none; color: #FFFFFF; font-size: 12.5px; font-weight: 800; padding: 8px 14px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+        <span>📖</span> Ver Menú Ahora
+      </button>
+    </div>
+  </div>
+
   <!-- App Header -->
   <header class="fixed top-0 inset-x-0 z-50 text-white pt-safe pedigochos-top-header bg-[#FF6B00]" style="background-color: #FF6B00; background-image: radial-gradient(ellipse 130% 90% at 50% -20%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.08) 45%, transparent 75%), linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.32) 100%), radial-gradient(rgba(0, 0, 0, 0.14) 15%, transparent 16%), radial-gradient(rgba(0, 0, 0, 0.14) 15%, transparent 16%), linear-gradient(90deg, #FF6F00 0%, #FF5A00 30%, #EA580C 65%, #C2410C 100%); background-size: 100% 100%, 100% 100%, 8px 8px, 8px 8px, 100% 100%; background-position: 0 0, 0 0, 0 0, 4px 4px, 0 0; box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45), inset 0 -2px 5px rgba(0, 0, 0, 0.35), 0 4px 18px rgba(194, 65, 12, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25); border-bottom: 1px solid rgba(0, 0, 0, 0.32);">
     <div class="h-20 px-margin flex items-center justify-between gap-space-sm max-w-xl mx-auto">
@@ -1525,6 +1548,25 @@
         <button type="button" onclick="MarketplaceApp.requestAutomaticGPS(true); MarketplaceApp.closeLocationModal();" style="padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #ffffff; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
           <span>📡</span> Actualizar Mi Ubicación GPS Ahora
         </button>
+
+        <!-- Proximity Restaurant Notifications Toggle Card -->
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">🍽️</span>
+              <div>
+                <div style="font-size: 13.5px; font-weight: 800; color: var(--text-main);">Notificaciones de Proximidad</div>
+                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.35;">Recibe una invitación cordial al pasar frente a un restaurante con ubicación activa.</div>
+              </div>
+            </div>
+            <button type="button" id="proximity-notifications-toggle-btn" onclick="MarketplaceApp.toggleProximityNotifications()" style="padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.18); color: #34D399; font-size: 11.5px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+              🔔 Activas
+            </button>
+          </div>
+          <button type="button" onclick="MarketplaceApp.testProximityNotificationNow()" style="padding: 8px 12px; border-radius: 10px; border: 1px dashed rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.03); color: #94A3B8; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>✨</span> Previsualizar invitación de restaurante cercano
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -3281,7 +3323,7 @@
   <script defer src="/js/pinata-service.js?v=254"></script>
   <script defer src="/js/cascos-service.js?v=280"></script>
   <script defer src="/js/pedigochos-drive.js?v=270"></script>
-  <script defer src="/js/marketplace.js?v=280"></script>
+  <script defer src="/js/marketplace.js?v=281"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

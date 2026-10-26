@@ -257,6 +257,7 @@ class MarketplaceController {
     this.checkActiveOrderTracking();
     this.updateGochoPointsDisplay();
     this.initPushNotifications();
+    this.initRestaurantProximityRadar();
     this.initOfflineSync();
     this.checkFirstTimeWelcome();
     this.checkRidePromoVisibility();
@@ -1623,6 +1624,7 @@ ${mapsLink}
     if (filterKey === 'cerca') {
       if (!this.userGpsLat || !this.userGpsLng) {
         this.requestAutomaticGPS(true);
+    this.updateProximityToggleUI();
       }
     }
 
@@ -6761,6 +6763,7 @@ ${mapsLink}
       } else {
         alert('📍 Por favor, toca el botón "🎯 Mi Ubicación Actual (GPS)" o marca tu casa en el mapa para que el repartidor llegue directo.');
         this.requestAutomaticGPS(true);
+    this.updateProximityToggleUI();
         return false;
       }
     }
@@ -9019,6 +9022,8 @@ ${mapsLink}
         const modalTitle = document.getElementById('modal-gps-status-title');
         if (modalTitle) modalTitle.innerText = `GPS Activo (${userLat.toFixed(4)}, ${userLng.toFixed(4)})`;
 
+        this.checkNearbyRestaurantProximity(userLat, userLng, false);
+
         if (showToast) {
           this.showToast(`🎯 ¡Ubicación GPS detectada con éxito!`);
         }
@@ -9052,6 +9057,7 @@ ${mapsLink}
 
   openLocationModal() {
     this.requestAutomaticGPS(true);
+    this.updateProximityToggleUI();
     const modal = document.getElementById('location-modal');
     if (modal) {
       this.closeAllModals();
@@ -10327,6 +10333,361 @@ ${mapsLink}
         console.warn('Local push notification fallback:', e);
       }
     }
+  }
+
+  // ========================================================
+  // ========================================================
+  // RESTAURANT PROXIMITY RADAR & CORDIAL INVITATIONS
+  // ========================================================
+
+  isProximityNotificationsEnabled() {
+    try {
+      return localStorage.getItem('pg_proximity_notifications_enabled') !== 'false';
+    } catch (e) {
+      return true;
+    }
+  }
+
+  updateProximityToggleUI() {
+    const btn = document.getElementById('proximity-notifications-toggle-btn');
+    if (!btn) return;
+    const enabled = this.isProximityNotificationsEnabled();
+    if (enabled) {
+      btn.innerHTML = '🔔 Activas';
+      btn.style.background = 'rgba(16, 185, 129, 0.18)';
+      btn.style.borderColor = 'rgba(16, 185, 129, 0.45)';
+      btn.style.color = '#34D399';
+    } else {
+      btn.innerHTML = '🔕 Desactivadas';
+      btn.style.background = 'rgba(239, 68, 68, 0.14)';
+      btn.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+      btn.style.color = '#FCA5A5';
+    }
+  }
+
+  toggleProximityNotifications(forceState = null) {
+    const current = this.isProximityNotificationsEnabled();
+    const nextState = forceState !== null ? Boolean(forceState) : !current;
+    try {
+      localStorage.setItem('pg_proximity_notifications_enabled', nextState ? 'true' : 'false');
+    } catch (e) {}
+
+    this.updateProximityToggleUI();
+
+    if (nextState) {
+      this.startProximityGpsWatch();
+      this.showToast('🍽️ Notificaciones de proximidad activadas. Te avisaremos cordialmente al pasar frente a un restaurante.');
+      if (this.userGpsLat && this.userGpsLng) {
+        this.checkNearbyRestaurantProximity(this.userGpsLat, this.userGpsLng, false);
+      }
+    } else {
+      this.stopProximityGpsWatch();
+      this.dismissProximityBanner();
+      this.showToast('🔕 Notificaciones de proximidad desactivadas. Puedes reactivarlas cuando gustes desde el icono de GPS.');
+    }
+  }
+
+  disableProximityNotificationsFromBanner() {
+    this.toggleProximityNotifications(false);
+  }
+
+  initRestaurantProximityRadar() {
+    this.updateProximityToggleUI();
+
+    // Check if user tapped "Disable proximity" from a system notification URL
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('disable_proximity') === '1') {
+        this.toggleProximityNotifications(false);
+      }
+    } catch (e) {}
+
+    // Listen for Service Worker notification action messages
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        const data = event.data || {};
+        if (data.type === 'DISABLE_PROXIMITY_NOTIFICATIONS') {
+          this.toggleProximityNotifications(false);
+        } else if (data.type === 'OPEN_PROXIMITY_STORE' && data.storeId) {
+          this.dismissProximityBanner();
+          this.openEstablishment(data.storeId);
+        }
+      });
+    }
+
+    // Listen for Capacitor Native LocalNotification taps if running in mobile app
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try {
+        window.Capacitor.Plugins.LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+          const extra = action?.notification?.extra || {};
+          if (action.actionId === 'disable_proximity') {
+            this.toggleProximityNotifications(false);
+          } else if (extra.storeId) {
+            this.dismissProximityBanner();
+            this.openEstablishment(extra.storeId);
+          }
+        });
+      } catch (e) {}
+    }
+
+    if (this.isProximityNotificationsEnabled()) {
+      this.startProximityGpsWatch();
+    }
+  }
+
+  startProximityGpsWatch() {
+    if (!navigator.geolocation) return;
+    if (this._proximityWatchId !== undefined && this._proximityWatchId !== null) return;
+
+    this._lastProximityCheckTs = 0;
+    try {
+      this._proximityWatchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          if (!this.isProximityNotificationsEnabled()) return;
+          const now = Date.now();
+          // Throttle proximity checks to once every 15 seconds for optimal battery life
+          if (now - (this._lastProximityCheckTs || 0) < 15000) return;
+          this._lastProximityCheckTs = now;
+
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          this.userGpsLat = lat;
+          this.userGpsLng = lng;
+          this.checkNearbyRestaurantProximity(lat, lng, false);
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 15000, timeout: 15000 }
+      );
+    } catch (e) {}
+  }
+
+  stopProximityGpsWatch() {
+    if (this._proximityWatchId !== undefined && this._proximityWatchId !== null && navigator.geolocation) {
+      try {
+        navigator.geolocation.clearWatch(this._proximityWatchId);
+      } catch (e) {}
+      this._proximityWatchId = null;
+    }
+  }
+
+  checkNearbyRestaurantProximity(userLat, userLng, isManualTest = false) {
+    if (!isManualTest && !this.isProximityNotificationsEnabled()) return;
+    if (!userLat || !userLng || isNaN(userLat) || isNaN(userLng)) return;
+    if (!Array.isArray(this.establishments) || this.establishments.length === 0) return;
+
+    const now = Date.now();
+    // Global cooldown: at least 3 minutes between proximity alerts
+    if (!isManualTest && this._lastProximityAlertSentAt && (now - this._lastProximityAlertSentAt < 3 * 60 * 1000)) {
+      return;
+    }
+
+    let notifiedMap = {};
+    try {
+      notifiedMap = JSON.parse(localStorage.getItem('pg_proximity_notified_stores') || '{}') || {};
+    } catch (e) {
+      notifiedMap = {};
+    }
+
+    // Filter restaurants that have valid GPS coordinates
+    const candidates = [];
+    for (const est of this.establishments) {
+      if (!est || est.category === 'servicios') continue;
+      if (this.disabledStores && this.disabledStores[est.id]) continue;
+      // Skip if user currently has this restaurant's menu open
+      if (!isManualTest && this.selectedEstablishment && String(this.selectedEstablishment.id) === String(est.id)) continue;
+      // Prefer open restaurants unless manual preview
+      if (!isManualTest && !this.isEstablishmentOpen(est)) continue;
+
+      const eLat = parseFloat(est.location_lat !== undefined && est.location_lat !== null ? est.location_lat : est.latitude);
+      const eLng = parseFloat(est.location_lng !== undefined && est.location_lng !== null ? est.location_lng : est.longitude);
+      if (isNaN(eLat) || isNaN(eLng)) continue;
+
+      // Per-restaurant cooldown: 6 hours
+      const lastNotifiedForStore = notifiedMap[est.id] || 0;
+      if (!isManualTest && (now - lastNotifiedForStore < 6 * 60 * 60 * 1000)) continue;
+
+      const distKm = this.calculateGeodesicDistance(userLat, userLng, eLat, eLng);
+      const distMeters = Math.max(5, Math.round(distKm * 1000));
+
+      // Trigger when passing in front of / within 120 meters of the restaurant
+      if (isManualTest || distMeters <= 120) {
+        candidates.push({ est, distMeters });
+      }
+    }
+
+    if (candidates.length === 0) {
+      if (isManualTest) {
+        this.showToast('📍 Ningún restaurante con coordenadas registradas disponible en este momento.');
+      }
+      return;
+    }
+
+    // Pick the closest restaurant
+    candidates.sort((a, b) => a.distMeters - b.distMeters);
+    const closest = candidates[0];
+
+    if (!isManualTest) {
+      this._lastProximityAlertSentAt = now;
+      notifiedMap[closest.est.id] = now;
+      try {
+        localStorage.setItem('pg_proximity_notified_stores', JSON.stringify(notifiedMap));
+      } catch (e) {}
+    }
+
+    this.triggerProximityRestaurantNotification(closest.est, isManualTest ? Math.min(closest.distMeters, 35) : closest.distMeters);
+  }
+
+  triggerProximityRestaurantNotification(est, distanceMeters = 30) {
+    if (!est) return;
+    this._currentProximityStoreId = est.id;
+
+    const politeTemplates = [
+      {
+        title: `🍽️ Estás pasando frente a ${est.name}`,
+        body: `¡Un cordial saludo! Notamos que te encuentras a solo ${distanceMeters}m de nuestras instalaciones. Te invitamos amablemente a explorar nuestro menú digital; será un placer atenderte hoy.`
+      },
+      {
+        title: `✨ ${est.name} te da la bienvenida`,
+        body: `¡Qué gusto saludarte por la zona! Estás a pocos pasos de nosotros (${distanceMeters}m). Si deseas hacer una pausa y disfrutar de una excelente comida, toca aquí para ver nuestra carta.`
+      },
+      {
+        title: `👨‍🍳 Una invitación cordial de ${est.name}`,
+        body: `Esperamos que tengas un excelente día. Al pasar cerca de nuestro restaurante, queremos invitarte a conocer nuestras especialidades preparadas al momento para ti.`
+      },
+      {
+        title: `🌟 Saludos cordiales desde ${est.name}`,
+        body: `Te encuentras muy cerca de nuestra ubicación (${distanceMeters}m). Cuando gustes comer algo delicioso en mesa o para llevar, nuestro menú digital está a tu disposición.`
+      }
+    ];
+
+    const idx = Math.abs(String(est.id || '').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + new Date().getHours()) % politeTemplates.length;
+    const chosen = politeTemplates[idx];
+    const logoUrl = this.getEstablishmentLogoUrl(est) || '/images/logo-pedigochos.png';
+
+    // 1. Show In-App Cordial Invitation Banner
+    this.showProximityBanner(est, chosen.title, chosen.body, distanceMeters, logoUrl);
+
+    // 2. Send Browser / Service Worker System Notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.showNotification(chosen.title, {
+              body: chosen.body,
+              icon: logoUrl,
+              badge: '/images/logo-pedigochos.png',
+              vibrate: [180, 80, 180],
+              tag: `proximity-${est.id}`,
+              data: {
+                url: `/?store=${encodeURIComponent(est.id)}`,
+                storeId: est.id
+              },
+              actions: [
+                { action: 'open_menu', title: '📖 Ver Menú' },
+                { action: 'disable_proximity', title: '🔕 Desactivar avisos' }
+              ]
+            });
+          });
+        } else {
+          const n = new Notification(chosen.title, {
+            body: chosen.body,
+            icon: logoUrl
+          });
+          n.onclick = () => {
+            window.focus();
+            this.dismissProximityBanner();
+            this.openEstablishment(est.id);
+          };
+        }
+      } catch (e) {}
+    }
+
+    // 3. Capacitor Native Notification (if on mobile wrapper)
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      try {
+        window.Capacitor.Plugins.LocalNotifications.schedule({
+          notifications: [
+            {
+              id: Math.floor((Date.now() % 100000) + 5000),
+              title: chosen.title,
+              body: chosen.body,
+              extra: { storeId: est.id }
+            }
+          ]
+        });
+      } catch (e) {}
+    }
+  }
+
+  showProximityBanner(est, title, body, distanceMeters, logoUrl) {
+    const banner = document.getElementById('proximity-restaurant-banner');
+    if (!banner) return;
+
+    const logoEl = document.getElementById('proximity-banner-logo');
+    const distEl = document.getElementById('proximity-banner-distance');
+    const titleEl = document.getElementById('proximity-banner-title');
+    const descEl = document.getElementById('proximity-banner-desc');
+
+    if (logoEl) {
+      if (logoUrl && logoUrl !== '/images/logo-pedigochos.png') {
+        logoEl.innerHTML = `<img src="${logoUrl}" alt="${est.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='${est.logo || '🍽️'}';">`;
+      } else {
+        logoEl.innerHTML = `<span>${est.logo || '🍽️'}</span>`;
+      }
+    }
+    if (distEl) {
+      distEl.innerText = `📍 A ${distanceMeters}m de tu ubicación`;
+    }
+    if (titleEl) {
+      titleEl.innerText = title;
+    }
+    if (descEl) {
+      descEl.innerText = body;
+    }
+
+    banner.style.display = 'flex';
+    requestAnimationFrame(() => {
+      banner.style.transform = 'translateX(-50%) translateY(0)';
+      banner.style.opacity = '1';
+      banner.style.pointerEvents = 'auto';
+    });
+
+    this.triggerHaptic('light');
+
+    if (this._proximityBannerTimeout) {
+      clearTimeout(this._proximityBannerTimeout);
+    }
+    this._proximityBannerTimeout = setTimeout(() => {
+      this.dismissProximityBanner();
+    }, 18000);
+  }
+
+  dismissProximityBanner() {
+    const banner = document.getElementById('proximity-restaurant-banner');
+    if (!banner) return;
+    banner.style.transform = 'translateX(-50%) translateY(-160px)';
+    banner.style.opacity = '0';
+    banner.style.pointerEvents = 'none';
+    setTimeout(() => {
+      if (banner.style.opacity === '0') {
+        banner.style.display = 'none';
+      }
+    }, 380);
+  }
+
+  openProximityRestaurantMenu() {
+    const targetId = this._currentProximityStoreId;
+    this.dismissProximityBanner();
+    if (targetId) {
+      this.openEstablishment(targetId);
+    }
+  }
+
+  testProximityNotificationNow() {
+    this.closeLocationModal();
+    const refLat = this.userGpsLat || 7.8145;
+    const refLng = this.userGpsLng || -72.4430;
+    this.checkNearbyRestaurantProximity(refLat, refLng, true);
   }
 
   // ========================================================
