@@ -675,8 +675,7 @@ class MarketplaceController {
         logo: '/images/services/shelliart_logo.svg',
         image: '/images/services/shelliart_banner.jpg',
         rating: 5.0,
-        reviewCount: 48,
-        badges: ['🎨 Bajo Cotización', '📸 Fotos & NFC', '🎁 Llavero Personalizado'],
+                badges: ['🎨 Bajo Cotización', '📸 Fotos & NFC', '🎁 Llavero Personalizado'],
         actionType: 'resin',
         ctaText: 'Personalizar en Shelli Art ➔',
         themeColor: '#EC4899',
@@ -696,8 +695,7 @@ class MarketplaceController {
         logo: '/images/services/creaciones_lola_logo.svg',
         image: '/images/services/creaciones_lola_banner.png',
         rating: 5.0,
-        reviewCount: 62,
-        badges: ['🎉 100% Hecho a Mano', '⭐ Cualquier Motivo', '🎈 A Palo o Cintas'],
+                badges: ['🎉 100% Hecho a Mano', '⭐ Cualquier Motivo', '🎈 A Palo o Cintas'],
         actionType: 'pinatas',
         ctaText: 'Cotizar en Creaciones Lola ➔',
         themeColor: '#F43F5E',
@@ -717,8 +715,7 @@ class MarketplaceController {
         logo: '/images/services/print3d_logo.svg',
         image: '/images/servicios.jpg',
         rating: 5.0,
-        reviewCount: 35,
-        badges: ['🔄 Visor 3D 360°', '🖨️ PLA • Resina • PETG', '⚡ STL Inmediato'],
+                badges: ['🔄 Visor 3D 360°', '🖨️ PLA • Resina • PETG', '⚡ STL Inmediato'],
         actionType: 'print3d',
         ctaText: 'Prototipar en 3D Lab ➔',
         themeColor: '#6366F1',
@@ -737,8 +734,7 @@ class MarketplaceController {
         logo: '/images/services/paint_logo.svg',
         image: '/images/vehicles/sedan_general.jpg',
         rating: 4.9,
-        reviewCount: 54,
-        badges: ['🔥 Secado al Horno', '🎨 DuPont / Glasurit', '🛡️ Garantía de Color'],
+                badges: ['🔥 Secado al Horno', '🎨 DuPont / Glasurit', '🛡️ Garantía de Color'],
         actionType: 'paint',
         ctaText: 'Cotizar en Taller Automotriz ➔',
         themeColor: '#EA580C',
@@ -757,8 +753,7 @@ class MarketplaceController {
         logo: '/images/services/cauchera_logo.svg',
         image: '/images/servicios.jpg',
         rating: 5.0,
-        reviewCount: 89,
-        badges: ['🔴 Guardia Activa 24/7', '📍 Auxilio por GPS', '⏱️ 15-20 min'],
+                badges: ['🔴 Guardia Activa 24/7', '📍 Auxilio por GPS', '⏱️ 15-20 min'],
         actionType: 'cauchera',
         ctaText: 'Solicitar Auxilio Inmediato ➔',
         themeColor: '#EF4444',
@@ -777,8 +772,7 @@ class MarketplaceController {
         logo: '/images/services/movil_logo.svg',
         image: '/images/vehicles/moto_clasica.jpg',
         rating: 4.9,
-        reviewCount: 140,
-        badges: ['⚡ Tarifa Automática GPS', '🛵 Moto Taxi', '🚗 Auto & Lujo'],
+                badges: ['⚡ Tarifa Automática GPS', '🛵 Moto Taxi', '🚗 Auto & Lujo'],
         actionType: 'ride',
         ctaText: 'Pedir Móvil Ahora ➔',
         themeColor: '#FF6B00',
@@ -798,8 +792,7 @@ class MarketplaceController {
         logo: '/images/services/pedigochos_cascos_logo.svg',
         image: '/images/services/pedigochos_cascos_banner.svg',
         rating: 5.0,
-        reviewCount: 112,
-        badges: ['🪖 MT Helmets Oficial', '🛡️ ECE 22.06 & DOT', '📦 Catálogo en Vivo'],
+                badges: ['🪖 MT Helmets Oficial', '🛡️ ECE 22.06 & DOT', '📦 Catálogo en Vivo'],
         actionType: 'cascos',
         ctaText: 'Ver Catálogo PediGochos Rider ➔',
         themeColor: '#E11D48',
@@ -2388,11 +2381,11 @@ ${mapsLink}
     const hasAdminStars = adminRating > 0;
     const ratingVal = adminRating.toFixed(1);
 
-    const ratingBadge = hasAdminStars
+    const ratingBadge = (hasAdminStars && revCount > 0)
       ? `<div class="flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded-full shrink-0">
           <span class="material-symbols-outlined text-[14px] text-badge-gold" style="font-variation-settings: 'FILL' 1;">star</span>
           <span class="font-label-sm text-label-sm font-bold text-on-surface">${ratingVal}</span>
-          ${revCount > 0 ? `<span class="font-label-sm text-label-sm text-on-surface-variant">(${revCount})</span>` : ''}
+          <span class="font-label-sm text-label-sm text-on-surface-variant">(${revCount})</span>
         </div>`
       : `<div class="flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded-full shrink-0">
           <span class="font-label-sm text-label-sm font-bold text-success-emerald">🟢 Nuevo</span>
@@ -2887,7 +2880,7 @@ ${mapsLink}
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(15, 23, 42, 0.92); border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 8px; flex-wrap: wrap; box-sizing: border-box;">
                   <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; display: inline-flex; align-items: center; gap: 4px;">
-                    ⭐ ${Number(est.rating || 5.0).toFixed(1)} <span style="color: #94A3B8; font-weight: 600; font-size: 10.5px;">(${est.reviewCount || 45}+ opiniones)</span>
+                    ⭐ ${Number(est.rating || 5.0).toFixed(1)} <span style="color: #94A3B8; font-weight: 600; font-size: 10.5px;">${(est.totalReviews || est.reviewCount) ? `(${est.totalReviews || est.reviewCount} opiniones)` : ""}</span>
                   </span>
                   <span style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: inline-flex; align-items: center; gap: 4px;">
                     📍 ${est.location || 'San Antonio'}
@@ -3182,7 +3175,7 @@ ${mapsLink}
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(15, 23, 42, 0.92); border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 8px; flex-wrap: wrap; box-sizing: border-box;">
                   <span style="font-size: 11.5px; font-weight: 800; color: #FCD34D; display: inline-flex; align-items: center; gap: 4px;">
-                    ⭐ ${Number(est.rating || 5.0).toFixed(1)} <span style="color: #94A3B8; font-weight: 600; font-size: 10.5px;">(${est.reviewCount || 45}+ opiniones)</span>
+                    ⭐ ${Number(est.rating || 5.0).toFixed(1)} <span style="color: #94A3B8; font-weight: 600; font-size: 10.5px;">${(est.totalReviews || est.reviewCount) ? `(${est.totalReviews || est.reviewCount} opiniones)` : ""}</span>
                   </span>
                   <span style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: inline-flex; align-items: center; gap: 4px;">
                     📍 ${est.location || 'San Antonio'}
@@ -4432,13 +4425,7 @@ ${mapsLink}
   }
 
   getBaseLikeCount(prod) {
-    const str = String((prod && (prod.id || prod.name)) || 'gocho');
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
-    }
-    return 18 + (Math.abs(hash) % 95);
+    return Number(prod && (prod.likesCount || prod.likes) || 0);
   }
 
   updateInstaFavsBadge() {
@@ -4512,13 +4499,11 @@ ${mapsLink}
     const likeBtn = document.getElementById(`insta-like-btn-${productId}`);
     if (likeBtn) {
       likeBtn.classList.toggle('liked', nextLiked);
-      likeBtn.innerHTML = `<span>${nextLiked ? '❤️' : '🤍'}</span><span>${totalLikes}</span>`;
+      likeBtn.innerHTML = `<span>${nextLiked ? '❤️' : '🤍'}</span>${totalLikes > 0 ? `<span>${totalLikes}</span>` : ""}`;
     }
     const likesLine = document.getElementById(`insta-likes-line-${productId}`);
     if (likesLine) {
-      likesLine.innerHTML = nextLiked
-        ? `❤️ Te gusta a ti y a <strong>${baseLikes} personas más</strong>`
-        : `❤️ Le gusta a <strong>${totalLikes} clientes</strong> de la zona`;
+      likesLine.innerHTML = nextLiked ? "❤️ Te gusta este plato" : (totalLikes > 0 ? `❤️ ${totalLikes} ${totalLikes === 1 ? "me gusta" : "me gusta"}` : "🤍 Sé el primero en darle me gusta");
     }
 
     this.updateInstaFavsBadge();
@@ -4808,7 +4793,7 @@ ${mapsLink}
           <div class="insta-actions-left">
             <button type="button" id="insta-like-btn-${prod.id}" class="insta-icon-btn ${isLiked ? 'liked' : ''}" onclick="MarketplaceApp.toggleInstaLike('${prod.id}', event)" title="Me gusta">
               <span>${isLiked ? '❤️' : '🤍'}</span>
-              <span>${totalLikes}</span>
+              ${totalLikes > 0 ? `<span>${totalLikes}</span>` : ''}
             </button>
             <button type="button" class="insta-icon-btn" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')" title="Personalizar / Nota de cocina">
               <span>💬</span>
@@ -4829,9 +4814,7 @@ ${mapsLink}
         <!-- Post Caption & Details -->
         <div class="insta-post-caption-area" onclick="MarketplaceApp.openCustomizerModalById('${prod.id}')">
           <div class="insta-likes-line" id="insta-likes-line-${prod.id}">
-            ${isLiked
-              ? `❤️ Te gusta a ti y a <strong>${baseLikes} personas más</strong>`
-              : `❤️ Le gusta a <strong>${totalLikes} clientes</strong> de la zona`}
+            ${totalLikes > 0 ? (isLiked ? (totalLikes === 1 ? "❤️ Te gusta este plato" : `❤️ Te gusta a ti y a ${totalLikes - 1} más`) : `❤️ ${totalLikes} me gusta`) : "🤍 Sé el primero en darle me gusta"}
           </div>
           <p class="insta-caption-text">
             <strong style="color: #F8FAFC;">@${estHandle}</strong>

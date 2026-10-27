@@ -12658,7 +12658,6 @@
       "location_lng": null,
       "open_time": "17:00",
       "close_time": "00:00",
-      "rating": 4.9,
       "deliveryTime": "35 - 50 min",
       "minOrder": 15000,
       "pizza_crusts": [
@@ -21035,7 +21034,6 @@
       "logoImage": "/images/cafe_plaza_logo.jpg",
       "banner": "/images/cafe_plaza_menu_1.jpg",
       "description": "Hamburguesas especiales, perros calientes, pepitos gigantes, salchipapas, club house, sandwiches y bebidas frías.",
-      "rating": 4.9,
       "delivery_fee": 5000,
       "prep_time": "25-35 min",
       "delivery_time": "30-45 min",
@@ -21586,8 +21584,6 @@
       "close_time": "23:59",
       "disabled": false,
       "location": "San Antonio del Táchira",
-      "adminRating": 4.9,
-      "reviewCount": 28,
       "created_at": "2026-10-08T12:00:00.000Z",
       "products": [
         {
