@@ -329,191 +329,34 @@
       </div>
 
       <!-- ====================================================================
-           PORTAL DE BIENVENIDA PARA USUARIOS INVITADOS / NO REGISTRADOS
-           Muestra exclusivamente la elección entre Restaurantes o Servicios
+           PANTALLA DE BIENVENIDA Y SELECCIÓN DE CATEGORÍA
+           Se muestra SIEMPRE a usuarios nuevos o sin cuentas registradas.
+           Contiene SOLO los botones de Restaurantes o Servicios (Bento Grid 2 columnas).
            ==================================================================== -->
-      <div id="guest-portal-landing" class="guest-portal-container" style="display: none;">
-        <!-- Hero Header -->
-        <div class="guest-portal-hero">
-          <div class="guest-brand-badge">
-            <img src="/images/logo-pedigochos.png" alt="PediGochos" class="guest-hero-logo">
-            <span class="guest-badge-pill">SUPER-APP FRONTERA ⚡</span>
+      <section id="welcome-category-selection-menu" class="px-margin pt-2 pb-6 flex flex-col gap-3">
+        <!-- Hero Welcome Header -->
+        <div class="text-center pt-1 pb-1" id="welcome-hero-header">
+          <div class="inline-flex items-center gap-2 bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-3.5 py-1 rounded-full mb-2">
+            <img src="/images/logo-pedigochos.png" alt="PediGochos" class="w-5 h-5 rounded-full object-cover">
+            <span class="text-[11px] font-black text-[#FF6B00] tracking-wider uppercase">Super-App Frontera ⚡</span>
           </div>
-          <h2 class="guest-portal-title">¿Qué deseas hoy?</h2>
-          <p class="guest-portal-subtitle">Elige una categoría para explorar los comercios y servicios disponibles</p>
+          <h2 class="text-[24px] font-black text-white leading-tight mb-1 tracking-tight">¿Qué deseas hoy?</h2>
+          <p class="text-[13px] text-slate-400 font-medium max-w-sm mx-auto">Elige una categoría para ver los comercios y servicios disponibles:</p>
         </div>
 
-        <!-- 2 Large Main Choice Cards -->
-        <div class="guest-portal-choices">
-          <!-- Card 1: Restaurantes -->
-          <div class="guest-choice-card guest-choice-food" onclick="MarketplaceApp.chooseGuestBranch('comidas')" role="button" tabindex="0">
-            <div class="guest-card-content">
-              <div class="guest-icon-badge food-icon">🍔</div>
-              <div class="guest-card-info">
-                <div class="guest-card-tag">🔥 DELIVERY EXPRESS</div>
-                <h3 class="guest-card-title">Restaurantes</h3>
-                <p class="guest-card-desc">Hamburguesas, pizzas, salchipapas, perros, bebidas y postres a tu puerta.</p>
-              </div>
-            </div>
-            <button type="button" class="guest-card-btn food-btn">
-              <span>Explorar Restaurantes</span>
-              <span class="guest-btn-arrow">➔</span>
-            </button>
-          </div>
-
-          <!-- Card 2: Servicios -->
-          <div class="guest-choice-card guest-choice-services" onclick="MarketplaceApp.chooseGuestBranch('servicios')" role="button" tabindex="0">
-            <div class="guest-card-content">
-              <div class="guest-icon-badge service-icon">🛠️</div>
-              <div class="guest-card-info">
-                <div class="guest-card-tag">🛵 CASCOS, VIAJES & AUXILIO</div>
-                <h3 class="guest-card-title">Servicios</h3>
-                <p class="guest-card-desc">PediGochos Rider (tienda de cascos & repuestos), mototaxis, encomiendas y servicios 24/7.</p>
-              </div>
-            </div>
-            <button type="button" class="guest-card-btn service-btn">
-              <span>Explorar Servicios</span>
-              <span class="guest-btn-arrow">➔</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Google Login Quick Card -->
-        <div class="guest-auth-card">
-          <div class="guest-auth-header">
-            <span class="guest-auth-icon">✨</span>
-            <div>
-              <h4 class="guest-auth-title">¿Ya tienes cuenta en PediGochos?</h4>
-              <p class="guest-auth-sub">Inicia sesión con Google para acceder directamente a tu perfil, pedidos y direcciones.</p>
-            </div>
-          </div>
-          <button type="button" onclick="MarketplaceApp.loginWithGoogle()" class="guest-google-btn">
-            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-            </svg>
-            <span>Iniciar Sesión con Google</span>
-          </button>
-        </div>
-      </div>
-
-      <script>
-        (function() {
-          try {
-            var isLogged = Boolean(localStorage.getItem('pedigochos_user_email') || localStorage.getItem('pedigochos_user_id'));
-            var choice = sessionStorage.getItem('pedigochos_guest_choice');
-            var landing = document.getElementById('guest-portal-landing');
-            var catalog = document.getElementById('home-catalog-content');
-            if (!isLogged && !choice) {
-              if (landing) landing.style.display = 'flex';
-              if (catalog) catalog.style.display = 'none';
-            } else {
-              if (landing) landing.style.display = 'none';
-              if (catalog) catalog.style.display = 'block';
-            }
-          } catch(e) {}
-        })();
-      </script>
-
-      <!-- MAIN CATALOG CONTENT: Full marketplace feed (Restaurantes / Servicios) -->
-      <div id="home-catalog-content">
-        <!-- Guest Active Branch Switcher (Shown ONLY to unregistered guests who chose a branch) -->
-        <div id="guest-branch-active-strip" class="guest-branch-active-strip" style="display: none;">
-          <div class="guest-strip-left">
-            <span class="guest-strip-tag">Viendo:</span>
-            <span class="guest-strip-indicator" id="guest-strip-current-label">🍔 Restaurantes</span>
-          </div>
-          <div class="guest-strip-actions">
-            <div class="guest-strip-pills">
-              <button type="button" id="guest-pill-comidas" class="guest-strip-pill active" onclick="MarketplaceApp.chooseGuestBranch('comidas')">🍔 Restaurantes</button>
-              <button type="button" id="guest-pill-servicios" class="guest-strip-pill" onclick="MarketplaceApp.chooseGuestBranch('servicios')">🛠️ Servicios</button>
-            </div>
-            <button type="button" class="guest-strip-change-btn" onclick="MarketplaceApp.resetGuestChoice()" title="Volver a la selección inicial">
-              <span>⇄ Cambiar</span>
-            </button>
-          </div>
-        </div>
-
-      <!-- Ride Service Promotion Banner (PediGochosDrive) -->
-      <div id="ride-promo-card" class="ride-promo-card" onclick="MarketplaceApp.openPediGochosDrive(event)" style="display: none; background: linear-gradient(135deg, #1E222D 0%, #252A38 100%); border: 1.5px solid rgba(255, 107, 0, 0.4); border-radius: 18px; padding: 14px 16px; margin: 16px 0 20px 0; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,0.3); position: relative; user-select: none; touch-action: pan-y;">
-        <div style="display: flex; align-items: center; gap: 12px; pointer-events: none; flex: 1; min-width: 0;">
-          <div style="width: 46px; height: 46px; border-radius: 14px; background: rgba(255, 107, 0, 0.15); border: 1.5px solid #FF6B00; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; box-shadow: 0 0 14px rgba(255, 107, 0, 0.35);">
-            🛵
-          </div>
-          <div style="flex: 1; min-width: 0;">
-            <h4 style="margin: 0; font-size: 14.5px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.2px;">
-              ¿Necesitas trasladarte?
-            </h4>
-          </div>
-        </div>
-        <button type="button" class="btn-pedir-ride" style="background: linear-gradient(135deg, #FF6B00 0%, #E05A00 100%); color: #FFF; border: none; padding: 9px 16px; border-radius: 12px; font-weight: 900; font-size: 12.5px; white-space: nowrap; cursor: pointer; box-shadow: 0 3px 12px rgba(255, 107, 0, 0.35); pointer-events: none; flex-shrink: 0;">
-          Pedir ➔
-        </button>
-      </div>
-
-      <!-- Search & Global Multi-Currency Switcher Bar -->
-      <section class="px-margin pt-space-sm pb-space-xs flex flex-col gap-space-xs sticky-search-glass">
-        <div class="flex items-center gap-space-xs">
-          <div class="relative flex-1">
-            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-            <input class="w-full h-11 pl-10 pr-9 bg-surface-container rounded-full font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:bg-surface-container-highest transition-all shadow-inner" placeholder="Buscar comida, cascos MT, locales o servicios..." type="text" id="global-search" oninput="MarketplaceApp.handleSearch(event)" autocomplete="off"/>
-            <button type="button" id="search-clear-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface text-[14px] font-bold hidden" onclick="MarketplaceApp.clearSearch()" title="Limpiar búsqueda">✕</button>
-          </div>
-          <!-- Global Tri-Currency Selector (Frontera) -->
-          <div class="flex items-center bg-surface-container rounded-full p-0.5 shrink-0 text-label-sm font-label-sm border border-outline-variant/40 shadow-sm" id="search-currency-toggles">
-            <button type="button" class="curr-pill px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-bold shadow-sm transition-all active" data-curr="COP" onclick="MarketplaceApp.setCurrency('COP')">🇨🇴 COP</button>
-            <button type="button" class="curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all" data-curr="USD" onclick="MarketplaceApp.setCurrency('USD')">💵 USD</button>
-            <button type="button" class="curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all" data-curr="VES" onclick="MarketplaceApp.setCurrency('VES')">🇻🇪 Bs.</button>
-          </div>
-        </div>
-
-        <!-- Live Exchange Rate & Active Currency Strip -->
-        <div id="global-exchange-rate-bar" class="global-rate-strip" onclick="MarketplaceApp.cycleCurrency()" title="Toca para alternar entre Pesos, Dólares y Bolívares">
+        <!-- Live Exchange Rate & Active Currency Strip (Exacto como en la captura) -->
+        <div id="welcome-exchange-rate-bar" class="global-rate-strip" onclick="MarketplaceApp.cycleCurrency()" title="Toca para alternar entre Pesos, Dólares y Bolívares">
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="rate-pulse-dot"></span>
-            <span class="rate-strip-label" id="global-rate-text">💱 Tasa Frontera Hoy: <strong>1 USD = $4.000 COP</strong> • Precios en <strong>COP</strong></span>
+            <span class="rate-strip-label" id="welcome-rate-text">💱 Tasa Frontera Hoy: <strong>1 USD = $4.000 COP</strong> • Precios en <strong>COP</strong></span>
           </div>
           <span class="rate-strip-action">Cambiar ⇄</span>
         </div>
 
-        <!-- Quick Food Craving Filter Chips -->
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-margin px-margin py-1" id="quick-food-craving-chips">
-          <button type="button" class="craving-chip active" data-food-type="all" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">
-            <span>🔥</span><span>Más Vendidos</span>
-          </button>
-          <button type="button" class="craving-chip" data-food-type="hamburguesas" onclick="MarketplaceApp.filterRestaurantsByFoodType('hamburguesas')">
-            <span>🍔</span><span>Hamburguesas</span>
-          </button>
-          <button type="button" class="craving-chip" data-food-type="pizzas" onclick="MarketplaceApp.filterRestaurantsByFoodType('pizzas')">
-            <span>🍕</span><span>Pizzas</span>
-          </button>
-          <button type="button" class="craving-chip" data-food-type="salchipapas" onclick="MarketplaceApp.filterRestaurantsByFoodType('salchipapas')">
-            <span>🍟</span><span>Salchipapas</span>
-          </button>
-          <button type="button" class="craving-chip" data-food-type="perros" onclick="MarketplaceApp.filterRestaurantsByFoodType('perros')">
-            <span>🌭</span><span>Perros</span>
-          </button>
-          <button type="button" class="craving-chip" data-food-type="tequenos" onclick="MarketplaceApp.filterRestaurantsByFoodType('tequenos')">
-            <span>🥟</span><span>Tequeños</span>
-          </button>
-          <button type="button" class="craving-chip" data-food-type="postres" onclick="MarketplaceApp.filterRestaurantsByFoodType('postres')">
-            <span>🍰</span><span>Postres</span>
-          </button>
-          <button type="button" class="craving-chip" style="background: rgba(225, 29, 72, 0.18); border: 1.5px solid rgba(225, 29, 72, 0.55); color: #FDA4AF;" onclick="CascosServiceApp.open()">
-            <span>🪖</span><span style="color: #FFF; font-weight: 800;">Cascos MT</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- ====================================================================
-           SUPER-APP BENTO HUB (Unificación Visual de Verticales PediGochos)
-           ==================================================================== -->
-      <section class="px-margin mt-2" id="superapp-bento-hub" aria-label="Ecosistema PediGochos Super-App">
+        <!-- Bento Hub Grid: SOLO con el botón de Restaurantes o Servicios -->
         <div class="bento-hub-grid">
-          <!-- Bento 1: Comida & Restaurantes (Main Spotlight) -->
-          <div class="bento-card bento-food active" data-bento-cat="comidas" onclick="MarketplaceApp.selectCategory('comidas')">
+          <!-- Bento 1: Comida & Restaurantes -->
+          <div class="bento-card bento-food active" data-bento-cat="comidas" onclick="MarketplaceApp.enterCategory('comidas')">
             <div class="bento-card-top">
               <span class="bento-icon-wrap food-glow">🍔</span>
               <span class="bento-live-pill food-pill">🔥 Delivery Express</span>
@@ -525,8 +368,8 @@
             <div class="bento-arrow">➔</div>
           </div>
 
-          <!-- Bento 2: PediGochos Rider (Cascos & Moto Store) -->
-          <div class="bento-card bento-rider" data-bento-cat="cascos" onclick="CascosServiceApp.open()">
+          <!-- Bento 2: Servicios & Rider -->
+          <div class="bento-card bento-rider" data-bento-cat="servicios" onclick="MarketplaceApp.enterCategory('servicios')">
             <div class="bento-card-top">
               <div class="bento-rider-logo">
                 <img src="/images/services/pedigochos_cascos_logo.svg" alt="PediGochos Rider">
@@ -539,41 +382,119 @@
             </div>
             <div class="bento-arrow">➔</div>
           </div>
+        </div>
 
-          <!-- Bento Row 2: 3 Compact Verticals -->
-          <div class="bento-subgrid">
-            <!-- Bento 3: PediGochos Móvil / Drive -->
-            <div class="bento-mini-card bento-drive" data-bento-cat="drive" onclick="MarketplaceApp.openRideModal()">
-              <div class="bento-mini-header">
-                <span class="bento-mini-icon">🛵</span>
-                <span class="bento-mini-badge drive-badge">GPS</span>
-              </div>
-              <h5 class="bento-mini-title">Moto & Viajes</h5>
-              <span class="bento-mini-desc">Desde $4.000</span>
-            </div>
-
-            <!-- Bento 4: Arte, Resina, 3D & Piñatas -->
-            <div class="bento-mini-card bento-art" data-bento-cat="personalizados" onclick="MarketplaceApp.selectCategory('personalizados')">
-              <div class="bento-mini-header">
-                <span class="bento-mini-icon">🎨</span>
-                <span class="bento-mini-badge art-badge">3D & Arte</span>
-              </div>
-              <h5 class="bento-mini-title">Personalizados</h5>
-              <span class="bento-mini-desc">Resina y Piñatas</span>
-            </div>
-
-            <!-- Bento 5: Auxilio Vial & Salud 24/7 -->
-            <div class="bento-mini-card bento-services" data-bento-cat="servicios" onclick="MarketplaceApp.selectCategory('servicios')">
-              <div class="bento-mini-header">
-                <span class="bento-mini-icon">🛞</span>
-                <span class="bento-mini-badge sos-badge">24/7</span>
-              </div>
-              <h5 class="bento-mini-title">Auxilio & Salud</h5>
-              <span class="bento-mini-desc">Cauchera y +</span>
+        <!-- Google Login Quick Card for Users without account -->
+        <div id="welcome-google-auth-card" class="mt-2 bg-[#1E293B]/60 border border-white/10 rounded-2xl p-3.5 backdrop-blur-md flex flex-col gap-2.5">
+          <div class="flex items-start gap-2.5">
+            <span class="text-xl shrink-0">✨</span>
+            <div class="min-w-0">
+              <h4 class="text-[13px] font-black text-white leading-tight">¿Tienes cuenta registrada?</h4>
+              <p class="text-[11.5px] text-slate-400 mt-0.5 leading-snug">Inicia sesión con Google para acceder directamente a tus pedidos y direcciones guardadas.</p>
             </div>
           </div>
+          <button type="button" onclick="MarketplaceApp.loginWithGoogle()" class="w-full h-10 bg-white hover:bg-slate-100 text-slate-800 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Iniciar Sesión con Google</span>
+          </button>
         </div>
       </section>
+
+      <script>
+        (function() {
+          try {
+            var isLogged = Boolean(localStorage.getItem('pedigochos_user_email') || localStorage.getItem('pedigochos_user_id'));
+            var menu = document.getElementById('welcome-category-selection-menu');
+            var catView = document.getElementById('home-category-view');
+            var googleCard = document.getElementById('welcome-google-auth-card');
+            if (!isLogged) {
+              if (menu) menu.style.display = 'flex';
+              if (catView) catView.style.display = 'none';
+              if (googleCard) googleCard.style.display = 'flex';
+            }
+          } catch(e) {}
+        })();
+      </script>
+
+      <!-- ====================================================================
+           CONTENIDO DE LA CATEGORÍA INGRESADA
+           EL MENÚ DE SELECCIÓN DE CATEGORÍAS DESAPARECE COMPLETAMENTE AQUÍ
+           ==================================================================== -->
+      <div id="home-category-view" style="display: none;">
+        <!-- Top Navigation Strip: Volver a Categorías + Switcher Rápido -->
+        <div class="px-margin pt-2 pb-1 flex items-center justify-between gap-2" id="category-navigation-strip">
+          <button type="button" onclick="MarketplaceApp.returnToCategorySelection()" class="h-9 px-3.5 rounded-full bg-slate-800/90 hover:bg-slate-700 text-white text-xs font-bold border border-white/15 flex items-center gap-1.5 backdrop-blur-md active:scale-95 transition-all shadow-sm" title="Volver a la selección de categorías">
+            <span>⬅</span>
+            <span>Volver a Categorías</span>
+          </button>
+          <div class="flex items-center gap-1 bg-slate-900/90 border border-white/10 p-1 rounded-full shadow-inner">
+            <button type="button" id="cat-toggle-food" onclick="MarketplaceApp.enterCategory('comidas')" class="px-3 py-1 rounded-full text-xs font-black bg-[#FF6B00] text-white transition-all">
+              🍔 Restaurantes
+            </button>
+            <button type="button" id="cat-toggle-services" onclick="MarketplaceApp.enterCategory('servicios')" class="px-3 py-1 rounded-full text-xs font-bold text-slate-400 hover:text-white transition-all">
+              🛠️ Servicios
+            </button>
+          </div>
+        </div>
+
+        <!-- Search & Global Multi-Currency Switcher Bar -->
+        <section class="px-margin pt-space-xs pb-space-xs flex flex-col gap-space-xs sticky-search-glass">
+          <div class="flex items-center gap-space-xs">
+            <div class="relative flex-1">
+              <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+              <input class="w-full h-11 pl-10 pr-9 bg-surface-container rounded-full font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:bg-surface-container-highest transition-all shadow-inner" placeholder="Buscar comida, cascos MT, locales o servicios..." type="text" id="global-search" oninput="MarketplaceApp.handleSearch(event)" autocomplete="off"/>
+              <button type="button" id="search-clear-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface text-[14px] font-bold hidden" onclick="MarketplaceApp.clearSearch()" title="Limpiar búsqueda">✕</button>
+            </div>
+            <!-- Global Tri-Currency Selector (Frontera) -->
+            <div class="flex items-center bg-surface-container rounded-full p-0.5 shrink-0 text-label-sm font-label-sm border border-outline-variant/40 shadow-sm" id="search-currency-toggles">
+              <button type="button" class="curr-pill px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-bold shadow-sm transition-all active" data-curr="COP" onclick="MarketplaceApp.setCurrency('COP')">🇨🇴 COP</button>
+              <button type="button" class="curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all" data-curr="USD" onclick="MarketplaceApp.setCurrency('USD')">💵 USD</button>
+              <button type="button" class="curr-pill px-2 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-all" data-curr="VES" onclick="MarketplaceApp.setCurrency('VES')">🇻🇪 Bs.</button>
+            </div>
+          </div>
+
+          <!-- Live Exchange Rate & Active Currency Strip inside category view -->
+          <div id="global-exchange-rate-bar" class="global-rate-strip" onclick="MarketplaceApp.cycleCurrency()" title="Toca para alternar entre Pesos, Dólares y Bolívares">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="rate-pulse-dot"></span>
+              <span class="rate-strip-label" id="global-rate-text">💱 Tasa Frontera Hoy: <strong>1 USD = $4.000 COP</strong> • Precios en <strong>COP</strong></span>
+            </div>
+            <span class="rate-strip-action">Cambiar ⇄</span>
+          </div>
+
+          <!-- Quick Food Craving Filter Chips -->
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-margin px-margin py-1" id="quick-food-craving-chips">
+            <button type="button" class="craving-chip active" data-food-type="all" onclick="MarketplaceApp.filterRestaurantsByFoodType('all')">
+              <span>🔥</span><span>Más Vendidos</span>
+            </button>
+            <button type="button" class="craving-chip" data-food-type="hamburguesas" onclick="MarketplaceApp.filterRestaurantsByFoodType('hamburguesas')">
+              <span>🍔</span><span>Hamburguesas</span>
+            </button>
+            <button type="button" class="craving-chip" data-food-type="pizzas" onclick="MarketplaceApp.filterRestaurantsByFoodType('pizzas')">
+              <span>🍕</span><span>Pizzas</span>
+            </button>
+            <button type="button" class="craving-chip" data-food-type="salchipapas" onclick="MarketplaceApp.filterRestaurantsByFoodType('salchipapas')">
+              <span>🍟</span><span>Salchipapas</span>
+            </button>
+            <button type="button" class="craving-chip" data-food-type="perros" onclick="MarketplaceApp.filterRestaurantsByFoodType('perros')">
+              <span>🌭</span><span>Perros</span>
+            </button>
+            <button type="button" class="craving-chip" data-food-type="tequenos" onclick="MarketplaceApp.filterRestaurantsByFoodType('tequenos')">
+              <span>🥟</span><span>Tequeños</span>
+            </button>
+            <button type="button" class="craving-chip" data-food-type="postres" onclick="MarketplaceApp.filterRestaurantsByFoodType('postres')">
+              <span>🍰</span><span>Postres</span>
+            </button>
+            <button type="button" class="craving-chip" style="background: rgba(225, 29, 72, 0.18); border: 1.5px solid rgba(225, 29, 72, 0.55); color: #FDA4AF;" onclick="CascosServiceApp.open()">
+              <span>🪖</span><span style="color: #FFF; font-weight: 800;">Cascos MT</span>
+            </button>
+          </div>
+        </section>
 
       <!-- Promociones del Día (Flash 24 Horas) - Carga Dinámica Real -->
       <section class="px-margin mt-space-sm" id="daily-promotions-section" style="display: none !important;">
@@ -875,7 +796,7 @@
           </a>
         </div>
       </aside>
-      </div><!-- End #home-catalog-content -->
+      </div><!-- End #home-category-view -->
       </div>
     </section>
 

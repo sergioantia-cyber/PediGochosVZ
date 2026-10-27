@@ -255,12 +255,10 @@ class MarketplaceController {
     this.initHorizontalScroll('marketplace-quick-filters');
     this.updateCartBadge();
     await this.checkSupabaseSession();
-    this.updateGuestPortalVisibility();
     if (!this.isUserLoggedIn()) {
-      const savedChoice = sessionStorage.getItem('pedigochos_guest_choice');
-      if (savedChoice) {
-        this.selectCategory(savedChoice);
-      }
+      this.returnToCategorySelection();
+    } else {
+      this.updateWelcomeSelectionVisibility();
     }
     this.checkActiveOrderTracking();
     this.updateGochoPointsDisplay();
@@ -523,83 +521,87 @@ class MarketplaceController {
     }
   }
 
-  updateGuestPortalVisibility() {
-    const landing = document.getElementById('guest-portal-landing');
-    const catalog = document.getElementById('home-catalog-content');
-    const strip = document.getElementById('guest-branch-active-strip');
-    const ridePromo = document.getElementById('ride-promo-card');
-    const floatingSos = document.getElementById('floating-sos-btn');
-    const floatingServices = document.getElementById('floating-services-btn');
+  enterCategory(category) {
+    const norm = (category === 'servicios' || category === 'cascos' || category === 'personalizados') ? 'servicios' : 'comidas';
+    this.currentEnteredCategory = norm;
 
-    if (!landing || !catalog) return;
+    const welcomeMenu = document.getElementById('welcome-category-selection-menu');
+    const catView = document.getElementById('home-category-view');
+    if (welcomeMenu) welcomeMenu.style.setProperty('display', 'none', 'important');
+    if (catView) catView.style.setProperty('display', 'block', 'important');
 
-    const isLoggedIn = this.isUserLoggedIn();
-    const guestChoice = sessionStorage.getItem('pedigochos_guest_choice');
-
-    if (isLoggedIn) {
-      landing.style.setProperty('display', 'none', 'important');
-      catalog.style.setProperty('display', 'block', 'important');
-      if (strip) strip.style.setProperty('display', 'none', 'important');
-      if (floatingSos) floatingSos.style.display = '';
-      if (floatingServices) floatingServices.style.display = '';
-      return;
-    }
-
-    // Guest / non-logged in user
-    if (!guestChoice) {
-      // User has not picked a branch yet: show ONLY the choice screen
-      landing.style.setProperty('display', 'flex', 'important');
-      catalog.style.setProperty('display', 'none', 'important');
-      if (strip) strip.style.setProperty('display', 'none', 'important');
-      if (ridePromo) ridePromo.style.setProperty('display', 'none', 'important');
-      if (floatingSos) floatingSos.style.setProperty('display', 'none', 'important');
-      if (floatingServices) floatingServices.style.setProperty('display', 'none', 'important');
-    } else {
-      // User made a choice: show catalog feed and display active switcher strip
-      landing.style.setProperty('display', 'none', 'important');
-      catalog.style.setProperty('display', 'block', 'important');
-      if (strip) {
-        strip.style.setProperty('display', 'flex', 'important');
-        this.updateGuestStripUI(guestChoice);
+    const toggleFood = document.getElementById('cat-toggle-food');
+    const toggleServices = document.getElementById('cat-toggle-services');
+    if (toggleFood && toggleServices) {
+      if (norm === 'comidas') {
+        toggleFood.className = 'px-3 py-1 rounded-full text-xs font-black bg-[#FF6B00] text-white shadow-sm transition-all';
+        toggleServices.className = 'px-3 py-1 rounded-full text-xs font-bold text-slate-400 hover:text-white transition-all';
+      } else {
+        toggleFood.className = 'px-3 py-1 rounded-full text-xs font-bold text-slate-400 hover:text-white transition-all';
+        toggleServices.className = 'px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white shadow-sm transition-all';
       }
-      if (floatingSos) floatingSos.style.display = '';
-      if (floatingServices) floatingServices.style.display = '';
     }
-  }
 
-  updateGuestStripUI(guestChoice) {
-    const isFood = (guestChoice === 'comidas' || guestChoice === 'restaurantes');
-    const pillFood = document.getElementById('guest-pill-comidas');
-    const pillServ = document.getElementById('guest-pill-servicios');
-    const label = document.getElementById('guest-strip-current-label');
-
-    if (pillFood) pillFood.classList.toggle('active', isFood);
-    if (pillServ) pillServ.classList.toggle('active', !isFood);
-    if (label) {
-      label.innerHTML = isFood ? '🍔 <strong>Restaurantes</strong>' : '🛠️ <strong>Servicios</strong>';
-    }
-  }
-
-  chooseGuestBranch(branch) {
-    const normBranch = (branch === 'servicios' || branch === 'personalizados') ? 'servicios' : 'comidas';
-    sessionStorage.setItem('pedigochos_guest_choice', normBranch);
-    this.updateGuestPortalVisibility();
-    this.selectCategory(normBranch);
+    this.selectCategory(norm);
     try {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch(e) {
       window.scrollTo(0, 0);
     }
+  }
+
+  returnToCategorySelection() {
+    this.currentEnteredCategory = null;
+
+    const welcomeMenu = document.getElementById('welcome-category-selection-menu');
+    const catView = document.getElementById('home-category-view');
+    const googleCard = document.getElementById('welcome-google-auth-card');
+
+    if (welcomeMenu) welcomeMenu.style.setProperty('display', 'flex', 'important');
+    if (catView) catView.style.setProperty('display', 'none', 'important');
+    if (googleCard) {
+      googleCard.style.display = this.isUserLoggedIn() ? 'none' : 'flex';
+    }
+
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch(e) {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  updateWelcomeSelectionVisibility() {
+    const welcomeMenu = document.getElementById('welcome-category-selection-menu');
+    const catView = document.getElementById('home-category-view');
+    const googleCard = document.getElementById('welcome-google-auth-card');
+
+    if (!welcomeMenu || !catView) return;
+
+    const isLogged = this.isUserLoggedIn();
+    if (googleCard) {
+      googleCard.style.display = isLogged ? 'none' : 'flex';
+    }
+
+    if (!this.currentEnteredCategory) {
+      welcomeMenu.style.setProperty('display', 'flex', 'important');
+      catView.style.setProperty('display', 'none', 'important');
+    } else {
+      welcomeMenu.style.setProperty('display', 'none', 'important');
+      catView.style.setProperty('display', 'block', 'important');
+    }
+  }
+
+  // Backwards compatibility aliases
+  chooseGuestBranch(branch) {
+    this.enterCategory(branch);
   }
 
   resetGuestChoice() {
-    sessionStorage.removeItem('pedigochos_guest_choice');
-    this.updateGuestPortalVisibility();
-    try {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch(e) {
-      window.scrollTo(0, 0);
-    }
+    this.returnToCategorySelection();
+  }
+
+  updateGuestPortalVisibility() {
+    this.updateWelcomeSelectionVisibility();
   }
 
   suggestGoogleLogin(action = 'pedir', onGuestContinue = null) {
@@ -9298,6 +9300,7 @@ ${mapsLink}
     const flagEl = document.getElementById('header-currency-flag');
     const codeEl = document.getElementById('header-currency-code');
     const rateTextEl = document.getElementById('global-rate-text');
+    const welcomeRateTextEl = document.getElementById('welcome-rate-text');
 
     const flagMap = { 'COP': '🇨🇴', 'USD': '💵', 'VES': '🇻🇪' };
     const codeMap = { 'COP': 'COP', 'USD': 'USD', 'VES': 'Bs.' };
@@ -9311,9 +9314,9 @@ ${mapsLink}
         rateTextEl.innerHTML = `💵 Moneda activa: <strong>Dólares (USD)</strong> • Tasa: <strong>$${usdRate.toLocaleString('de-DE')} COP</strong>`;
       } else if (curr === 'VES') {
         const copPerBs = Math.round(1 / vesRate);
-        rateTextEl.innerHTML = `🇻🇪 Moneda activa: <strong>Bolívares (Bs.)</strong> • Tasa: <strong>1 Bs. = $${copPerBs.toLocaleString('de-DE')} COP</strong>`;
+        const textVes = `🇻🇪 Moneda activa: <strong>Bolívares (Bs.)</strong> • Tasa: <strong>1 Bs. = ${copPerBs.toLocaleString('de-DE')} COP</strong>`; rateTextEl.innerHTML = textVes; if (welcomeRateTextEl) welcomeRateTextEl.innerHTML = textVes;
       } else {
-        rateTextEl.innerHTML = `💱 Tasa Frontera Hoy: <strong>1 USD = $${usdRate.toLocaleString('de-DE')} COP</strong> • Precios en <strong>COP</strong>`;
+        const textCop = `💱 Tasa Frontera Hoy: <strong>1 USD = ${usdRate.toLocaleString('de-DE')} COP</strong> • Precios en <strong>COP</strong>`; rateTextEl.innerHTML = textCop; if (welcomeRateTextEl) welcomeRateTextEl.innerHTML = textCop;
       }
     }
 
@@ -9409,11 +9412,7 @@ ${mapsLink}
       } else if (tabKey === 'servicios') {
         this.closeAllModals();
         if (this.selectedEstablishment) this.goHome(false);
-        if (!this.isUserLoggedIn()) {
-          sessionStorage.setItem('pedigochos_guest_choice', 'servicios');
-          this.updateGuestPortalVisibility();
-        }
-        this.selectCategory('servicios');
+        this.enterCategory('servicios');
         this.toggleServicesMenu(true);
       } else if (tabKey === 'pedidos') {
         this.openUserOrdersModal();
