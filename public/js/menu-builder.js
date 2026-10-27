@@ -63,9 +63,32 @@ class MenuBuilderService {
     });
   }
 
-  // Upload image to Supabase Storage bucket 'menu_images' (with Base64 fallback)
-  async uploadProductImage(file) {
+  getRestaurantSlug(explicitSlug = '') {
+    if (explicitSlug) {
+      return String(explicitSlug).toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    }
+    const fromSelect = document.getElementById('merchant-select')?.value ||
+                       document.getElementById('est-id-hidden')?.value ||
+                       document.getElementById('merchant-selector')?.value;
+    const fromGlobal = window.activeStoreSlug || window.activeEstablishmentId ||
+                       window.currentSelectedStore?.name || window.selectedEstablishment?.name;
+    const fromStorage = sessionStorage.getItem('pedigochos_active_admin_est') ||
+                        sessionStorage.getItem('pedigochos_current_store_slug') ||
+                        localStorage.getItem('pedigochos_last_est_id');
+    const raw = fromSelect || fromGlobal || fromStorage || 'general';
+    return String(raw).toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'general';
+  }
+
+  // Upload image to Supabase Storage bucket 'menu_images' organized by restaurant
+  async uploadProductImage(file, restaurantSlug = '') {
     if (!file) return '';
+    const cleanRestSlug = this.getRestaurantSlug(restaurantSlug);
     try {
       const hasClient = await this.init();
       if (hasClient && this.supabase && this.supabase.storage) {
@@ -75,7 +98,7 @@ class MenuBuilderService {
         // 2. Generate unique filename
         const fileExt = (file.name || 'image.jpg').split('.').pop() || 'jpg';
         const fileName = `prod_${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
-        const filePath = `uploads/${fileName}`;
+        const filePath = `uploads/restaurants/${cleanRestSlug}/${fileName}`;
 
         // 3. Upload to Supabase Storage Bucket
         const { data, error } = await this.supabase.storage
@@ -115,7 +138,7 @@ class MenuBuilderService {
           body: JSON.stringify({
             imageBase64: base64Data,
             fileName: file.name || 'product_photo.jpg',
-            folder: 'products'
+            folder: `restaurants/${cleanRestSlug}`
           })
         });
         if (res.ok) {

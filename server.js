@@ -2618,7 +2618,7 @@ app.post('/api/upload-image', async (req, res) => {
       } else {
         cleanPath = `establishments/${estIdClean}/products`;
       }
-    } else if (folderStr.startsWith('services/') || folderStr.startsWith('establishments/')) {
+    } else if (folderStr.startsWith('restaurants/') || folderStr.startsWith('services/') || folderStr.startsWith('establishments/')) {
       cleanPath = folderStr.replace(/[^a-zA-Z0-9_\/-]/g, '').replace(/\/+/g, '/').replace(/^\/+|\/+$/g, '');
     } else if (folderStr === 'pinatas' || folderStr.includes('pinata')) {
       cleanPath = 'services/pinatas';
