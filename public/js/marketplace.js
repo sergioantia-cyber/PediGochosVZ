@@ -502,6 +502,81 @@ class MarketplaceController {
     }
   }
 
+  isUserLoggedIn() {
+    if (this.currentUser && this.currentUser.id) return true;
+    try {
+      const email = localStorage.getItem('pedigochos_user_email');
+      const uid = localStorage.getItem('pedigochos_user_id');
+      return Boolean((email && email.trim() !== '') || (uid && uid.trim() !== ''));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  suggestGoogleLogin(action = 'pedir', onGuestContinue = null) {
+    if (this.isUserLoggedIn()) {
+      if (typeof onGuestContinue === 'function') onGuestContinue();
+      return true;
+    }
+
+    this._pendingAuthGuestCallback = onGuestContinue;
+
+    const modal = document.getElementById('google-auth-suggest-modal');
+    if (!modal) {
+      if (typeof onGuestContinue === 'function') onGuestContinue();
+      return false;
+    }
+
+    const iconEl = document.getElementById('google-auth-suggest-icon');
+    const titleEl = document.getElementById('google-auth-suggest-title');
+    const descEl = document.getElementById('google-auth-suggest-desc');
+    const guestBtn = document.getElementById('google-auth-suggest-guest-btn');
+
+    if (action === 'pedir') {
+      if (iconEl) iconEl.innerText = '🛍️';
+      if (titleEl) titleEl.innerText = 'Inicia sesión con Google para pedir';
+      if (descEl) descEl.innerText = 'Con tu cuenta de Google podrás rastrear a tu repartidor en tiempo real por GPS, guardar tu historial de compras y autocompletar tus datos.';
+      if (guestBtn) guestBtn.innerText = 'Continuar como invitado ➔';
+    } else if (action === 'comentar') {
+      if (iconEl) iconEl.innerText = '💬';
+      if (titleEl) titleEl.innerText = 'Inicia sesión con Google para comentar';
+      if (descEl) descEl.innerText = 'Inicia sesión con tu cuenta de Google para compartir tus opiniones y valoraciones verificadas con la comunidad.';
+      if (guestBtn) guestBtn.innerText = 'Continuar sin cuenta';
+    } else if (action === 'like') {
+      if (iconEl) iconEl.innerText = '❤️';
+      if (titleEl) titleEl.innerText = 'Inicia sesión con Google para dar Like';
+      if (descEl) descEl.innerText = 'Guarda tus platos preferidos en tu perfil, accede a tus favoritos en cualquier momento y apoya a tus restaurantes preferidos.';
+      if (guestBtn) guestBtn.innerText = 'Dar like sin cuenta';
+    }
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    return false;
+  }
+
+  closeGoogleAuthSuggestModal(proceedAsGuest = false) {
+    const modal = document.getElementById('google-auth-suggest-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
+    const cb = this._pendingAuthGuestCallback;
+    this._pendingAuthGuestCallback = null;
+    if (proceedAsGuest && typeof cb === 'function') {
+      cb();
+    }
+  }
+
+  handleCommentButtonClick(prodId) {
+    if (!this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('comentar', () => {
+        this.openCustomizerModalById(prodId);
+      });
+      return;
+    }
+    this.openCustomizerModalById(prodId);
+  }
+
   promptUserLogout(name) {
     const cleanName = (name && name !== 'null' && name !== 'undefined') ? name : 'Usuario';
     if (confirm(`Hola ${cleanName},\n¿Deseas cerrar tu sesión en PediGochos?`)) {
@@ -4475,8 +4550,16 @@ ${mapsLink}
     this.renderProducts(baseList, true);
   }
 
-  toggleInstaLike(productId, event, forceLike = false) {
+  toggleInstaLike(productId, event, forceLike = false, skipAuthPrompt = false) {
     if (event) event.stopPropagation();
+
+    if (!skipAuthPrompt && !this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('like', () => {
+        this.toggleInstaLike(productId, null, forceLike, true);
+      });
+      return;
+    }
+
     const likedMap = this.getInstaLikedMap();
     const isCurrentlyLiked = Boolean(likedMap[productId]);
     const nextLiked = forceLike ? true : !isCurrentlyLiked;
@@ -4515,8 +4598,16 @@ ${mapsLink}
     }
   }
 
-  toggleInstaSave(productId, event) {
+  toggleInstaSave(productId, event, skipAuthPrompt = false) {
     if (event) event.stopPropagation();
+
+    if (!skipAuthPrompt && !this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('like', () => {
+        this.toggleInstaSave(productId, null, true);
+      });
+      return;
+    }
+
     const savedMap = this.getInstaSavedMap();
     const nextSaved = !savedMap[productId];
     if (nextSaved) {
@@ -4795,7 +4886,7 @@ ${mapsLink}
               <span>${isLiked ? '❤️' : '🤍'}</span>
               ${totalLikes > 0 ? `<span>${totalLikes}</span>` : ''}
             </button>
-            <button type="button" class="insta-icon-btn" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')" title="Personalizar / Nota de cocina">
+            <button type="button" class="insta-icon-btn" onclick="event.stopPropagation(); MarketplaceApp.handleCommentButtonClick('${prod.id}')" title="Comentar / Personalizar">
               <span>💬</span>
             </button>
             <button type="button" class="insta-icon-btn" onclick="MarketplaceApp.shareInstaProduct('${prod.id}', event)" title="Compartir plato">
@@ -8424,7 +8515,14 @@ ${mapsLink}
     }
   }
 
-  async submitOrder(skipBeveragePrompt = false) {
+  async submitOrder(skipBeveragePrompt = false, skipAuthPrompt = false) {
+    if (!skipAuthPrompt && !this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('pedir', () => {
+        this.submitOrder(skipBeveragePrompt, true);
+      });
+      return;
+    }
+
     // 0. Verify that all restaurants in cart are currently OPEN
     for (const item of this.cart.items) {
       const store = (this.establishments || []).find(e => e.id === item.restaurant_id) || this.selectedEstablishment;
@@ -12202,7 +12300,14 @@ ${mapsLink}
     }
   }
 
-  async submitPostOrderReview() {
+  async submitPostOrderReview(skipAuthPrompt = false) {
+    if (!skipAuthPrompt && !this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('comentar', () => {
+        this.submitPostOrderReview(true);
+      });
+      return;
+    }
+
     const estId = this.ratingTargetEstId;
     const orderId = this.ratingTargetOrderId;
     const commentInput = document.getElementById('rating-modal-comment');
