@@ -98,7 +98,7 @@ class MenuBuilderService {
         // 2. Generate unique filename
         const fileExt = (file.name || 'image.jpg').split('.').pop() || 'jpg';
         const fileName = `prod_${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
-        const filePath = `uploads/restaurants/${cleanRestSlug}/${fileName}`;
+        const filePath = `restaurants/${cleanRestSlug}/${fileName}`;
 
         // 3. Upload to Supabase Storage Bucket
         const { data, error } = await this.supabase.storage

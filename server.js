@@ -75,6 +75,9 @@ app.use(express.static(path.join(__dirname, 'public'), {
   }
 }));
 
+// Static alias for restaurants images
+app.use('/restaurants', express.static(path.join(__dirname, 'public/uploads/restaurants')));
+
 // Helper functions for Database read/write
 const DISABLED_STORES_FILE = path.join(__dirname, 'disabled_stores.json');
 

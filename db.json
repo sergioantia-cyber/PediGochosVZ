@@ -11,7 +11,7 @@
       "linkKey": "PDXCJX",
       "delivery_fee": 0,
       "themeColor": null,
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1784412374029_352.jpg",
+      "logoImage": "/uploads/restaurants/shawarma_dunes/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -383,7 +383,7 @@
       "linkKey": "K8QAFC",
       "delivery_fee": 0,
       "themeColor": null,
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1786157840098_219.png",
+      "logoImage": "/uploads/restaurants/patacon_fire/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -1750,7 +1750,7 @@
       "linkKey": "BURGERGRILL",
       "delivery_fee": 5000,
       "themeColor": "#E53935",
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1784935633209_470.png",
+      "logoImage": "/uploads/restaurants/burger_grill_puente_sucre/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -1827,7 +1827,7 @@
       "linkKey": "C7IMI6",
       "delivery_fee": 0,
       "themeColor": null,
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1786162628843_106.png",
+      "logoImage": "/uploads/restaurants/latinos_burguer/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -3043,11 +3043,11 @@
       "description": "Batidos, malteadas, frappes, Detox, café, sándwiches , hamburguesas,hot dog",
       "logo": "🥤",
       "bannerType": "image",
-      "banner": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1786157701756_396.jpg",
+      "banner": "/uploads/restaurants/la_casa_de_los_batidos/banner.jpg",
       "linkKey": "2W3X0T",
       "delivery_fee": 0,
       "themeColor": null,
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1786157700816_847.jpg",
+      "logoImage": "/uploads/restaurants/la_casa_de_los_batidos/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -5750,7 +5750,7 @@
       "linkKey": "LUCHOS",
       "delivery_fee": 5000,
       "themeColor": "#D32F2F",
-      "logoImage": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500",
+      "logoImage": "/uploads/restaurants/luchos_burguer/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -5812,7 +5812,7 @@
       "linkKey": "KUTSKZ",
       "delivery_fee": 0,
       "themeColor": null,
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1784413920858_124.png",
+      "logoImage": "/uploads/restaurants/arepera_sabor_venezolano_la_ventana_del_tachira/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -8307,7 +8307,7 @@
       "linkKey": "KRS9S3",
       "delivery_fee": 0,
       "themeColor": "#ff5e3a",
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1785973082816_164.jpg",
+      "logoImage": "/uploads/restaurants/mister_cachapa/logo.jpg",
       "tables": [
         {
           "id": "t-1",
@@ -10250,11 +10250,11 @@
       "description": "Mariscos, pastas, especialidades de tierra",
       "logo": "🍔",
       "bannerType": "image",
-      "banner": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1786032538221_443.png",
+      "banner": "/uploads/restaurants/tanos_resto_bar/banner.jpg",
       "linkKey": "AXGTXW",
       "delivery_fee": 0,
       "themeColor": null,
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1786032537410_477.PNG",
+      "logoImage": "/uploads/restaurants/tanos_resto_bar/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -10768,7 +10768,7 @@
       "linkKey": "HP5JBC",
       "delivery_fee": 0,
       "themeColor": "#ff5e3a",
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1786152123042_219.jpg",
+      "logoImage": "/uploads/restaurants/mak_pizza/logo.jpg",
       "tables": [
         {
           "id": "t-1",
@@ -12430,11 +12430,11 @@
       "description": "Hamburguesas, perros calientes, salchipapas, pepitos y picadas",
       "logo": "🍔",
       "bannerType": "image",
-      "banner": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1784411688955_747.png",
+      "banner": "/uploads/restaurants/karritos_de_manuel/banner.jpg",
       "linkKey": "8R8I3J",
       "delivery_fee": 0,
       "themeColor": "#ff5e3a",
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1784411688116_222.jpg",
+      "logoImage": "/uploads/restaurants/karritos_de_manuel/logo.jpg",
       "tables": [
         {
           "id": "t-1",
@@ -14500,11 +14500,11 @@
       "description": "ESPECIALISTAS EN HAMBURGUESAS Y PERROS",
       "logo": "🍔",
       "bannerType": "image",
-      "banner": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1784410784432_393.jpg",
+      "banner": "/uploads/restaurants/boby_burgers/banner.jpg",
       "linkKey": "6MAP9F",
       "delivery_fee": 0,
       "themeColor": null,
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1784410783360_610.jpg",
+      "logoImage": "/uploads/restaurants/boby_burgers/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -15157,11 +15157,11 @@
       "description": "Sodas, frappés, cafes",
       "logo": "🥤",
       "bannerType": "gradient",
-      "banner": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1785969574265_905.png",
+      "banner": "/uploads/restaurants/gema_pop/banner.jpg",
       "linkKey": "I0NGPZ",
       "delivery_fee": 0,
       "themeColor": "#ff5e3a",
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1785968399106_758.png",
+      "logoImage": "/uploads/restaurants/gema_pop/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -15396,7 +15396,7 @@
       "linkKey": "FRUTYHELADOS",
       "delivery_fee": 0,
       "themeColor": "#ff5e3a",
-      "logoImage": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1786228630355_546.jpg",
+      "logoImage": "/uploads/restaurants/fruty_del_bosque_frutihelados_gourmet/logo.jpg",
       "tables": [],
       "layout": [],
       "products": [
@@ -21311,7 +21311,7 @@
       "linkKey": "PARRILLAGRIL",
       "delivery_fee": 4000,
       "themeColor": "#EA580C",
-      "logoImage": "https://images.unsplash.com/photo-1550547660-d9450f859349?w=300",
+      "logoImage": "/uploads/restaurants/la_parrilla_gocha_restaurante_de_prueba/logo.jpg",
       "tables": [],
       "layout": [],
       "open_time": "00:00",
