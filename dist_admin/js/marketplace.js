@@ -255,6 +255,13 @@ class MarketplaceController {
     this.initHorizontalScroll('marketplace-quick-filters');
     this.updateCartBadge();
     await this.checkSupabaseSession();
+    this.updateGuestPortalVisibility();
+    if (!this.isUserLoggedIn()) {
+      const savedChoice = sessionStorage.getItem('pedigochos_guest_choice');
+      if (savedChoice) {
+        this.selectCategory(savedChoice);
+      }
+    }
     this.checkActiveOrderTracking();
     this.updateGochoPointsDisplay();
     this.initPushNotifications();
@@ -460,6 +467,7 @@ class MarketplaceController {
     } catch(e) {}
 
     this.renderAuthButton(user);
+    this.updateGuestPortalVisibility();
 
     // Pre-fill checkout form name if empty
     const nameInput = document.getElementById('order-customer-name');
@@ -478,7 +486,9 @@ class MarketplaceController {
       localStorage.removeItem('pedigochos_user_name');
       localStorage.removeItem('pedigochos_user_id');
     } catch(e) {}
+    sessionStorage.removeItem('pedigochos_guest_choice');
     this.renderAuthButton(null);
+    this.updateGuestPortalVisibility();
   }
 
   renderAuthButton(user) {
@@ -500,6 +510,160 @@ class MarketplaceController {
         </button>
       `;
     }
+  }
+
+  isUserLoggedIn() {
+    if (this.currentUser && this.currentUser.id) return true;
+    try {
+      const email = localStorage.getItem('pedigochos_user_email');
+      const uid = localStorage.getItem('pedigochos_user_id');
+      return Boolean((email && email.trim() !== '') || (uid && uid.trim() !== ''));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  updateGuestPortalVisibility() {
+    const landing = document.getElementById('guest-portal-landing');
+    const catalog = document.getElementById('home-catalog-content');
+    const strip = document.getElementById('guest-branch-active-strip');
+    const ridePromo = document.getElementById('ride-promo-card');
+    const floatingSos = document.getElementById('floating-sos-btn');
+    const floatingServices = document.getElementById('floating-services-btn');
+
+    if (!landing || !catalog) return;
+
+    const isLoggedIn = this.isUserLoggedIn();
+    const guestChoice = sessionStorage.getItem('pedigochos_guest_choice');
+
+    if (isLoggedIn) {
+      landing.style.setProperty('display', 'none', 'important');
+      catalog.style.setProperty('display', 'block', 'important');
+      if (strip) strip.style.setProperty('display', 'none', 'important');
+      if (floatingSos) floatingSos.style.display = '';
+      if (floatingServices) floatingServices.style.display = '';
+      return;
+    }
+
+    // Guest / non-logged in user
+    if (!guestChoice) {
+      // User has not picked a branch yet: show ONLY the choice screen
+      landing.style.setProperty('display', 'flex', 'important');
+      catalog.style.setProperty('display', 'none', 'important');
+      if (strip) strip.style.setProperty('display', 'none', 'important');
+      if (ridePromo) ridePromo.style.setProperty('display', 'none', 'important');
+      if (floatingSos) floatingSos.style.setProperty('display', 'none', 'important');
+      if (floatingServices) floatingServices.style.setProperty('display', 'none', 'important');
+    } else {
+      // User made a choice: show catalog feed and display active switcher strip
+      landing.style.setProperty('display', 'none', 'important');
+      catalog.style.setProperty('display', 'block', 'important');
+      if (strip) {
+        strip.style.setProperty('display', 'flex', 'important');
+        this.updateGuestStripUI(guestChoice);
+      }
+      if (floatingSos) floatingSos.style.display = '';
+      if (floatingServices) floatingServices.style.display = '';
+    }
+  }
+
+  updateGuestStripUI(guestChoice) {
+    const isFood = (guestChoice === 'comidas' || guestChoice === 'restaurantes');
+    const pillFood = document.getElementById('guest-pill-comidas');
+    const pillServ = document.getElementById('guest-pill-servicios');
+    const label = document.getElementById('guest-strip-current-label');
+
+    if (pillFood) pillFood.classList.toggle('active', isFood);
+    if (pillServ) pillServ.classList.toggle('active', !isFood);
+    if (label) {
+      label.innerHTML = isFood ? '🍔 <strong>Restaurantes</strong>' : '🛠️ <strong>Servicios</strong>';
+    }
+  }
+
+  chooseGuestBranch(branch) {
+    const normBranch = (branch === 'servicios' || branch === 'personalizados') ? 'servicios' : 'comidas';
+    sessionStorage.setItem('pedigochos_guest_choice', normBranch);
+    this.updateGuestPortalVisibility();
+    this.selectCategory(normBranch);
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch(e) {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  resetGuestChoice() {
+    sessionStorage.removeItem('pedigochos_guest_choice');
+    this.updateGuestPortalVisibility();
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch(e) {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  suggestGoogleLogin(action = 'pedir', onGuestContinue = null) {
+    if (this.isUserLoggedIn()) {
+      if (typeof onGuestContinue === 'function') onGuestContinue();
+      return true;
+    }
+
+    this._pendingAuthGuestCallback = onGuestContinue;
+
+    const modal = document.getElementById('google-auth-suggest-modal');
+    if (!modal) {
+      if (typeof onGuestContinue === 'function') onGuestContinue();
+      return false;
+    }
+
+    const iconEl = document.getElementById('google-auth-suggest-icon');
+    const titleEl = document.getElementById('google-auth-suggest-title');
+    const descEl = document.getElementById('google-auth-suggest-desc');
+    const guestBtn = document.getElementById('google-auth-suggest-guest-btn');
+
+    if (action === 'pedir') {
+      if (iconEl) iconEl.innerText = '🛍️';
+      if (titleEl) titleEl.innerText = 'Inicia sesión con Google para pedir';
+      if (descEl) descEl.innerText = 'Con tu cuenta de Google podrás rastrear a tu repartidor en tiempo real por GPS, guardar tu historial de compras y autocompletar tus datos.';
+      if (guestBtn) guestBtn.innerText = 'Continuar como invitado ➔';
+    } else if (action === 'comentar') {
+      if (iconEl) iconEl.innerText = '💬';
+      if (titleEl) titleEl.innerText = 'Inicia sesión con Google para comentar';
+      if (descEl) descEl.innerText = 'Inicia sesión con tu cuenta de Google para compartir tus opiniones y valoraciones verificadas con la comunidad.';
+      if (guestBtn) guestBtn.innerText = 'Continuar sin cuenta';
+    } else if (action === 'like') {
+      if (iconEl) iconEl.innerText = '❤️';
+      if (titleEl) titleEl.innerText = 'Inicia sesión con Google para dar Like';
+      if (descEl) descEl.innerText = 'Guarda tus platos preferidos en tu perfil, accede a tus favoritos en cualquier momento y apoya a tus restaurantes preferidos.';
+      if (guestBtn) guestBtn.innerText = 'Dar like sin cuenta';
+    }
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    return false;
+  }
+
+  closeGoogleAuthSuggestModal(proceedAsGuest = false) {
+    const modal = document.getElementById('google-auth-suggest-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
+    const cb = this._pendingAuthGuestCallback;
+    this._pendingAuthGuestCallback = null;
+    if (proceedAsGuest && typeof cb === 'function') {
+      cb();
+    }
+  }
+
+  handleCommentButtonClick(prodId) {
+    if (!this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('comentar', () => {
+        this.openCustomizerModalById(prodId);
+      });
+      return;
+    }
+    this.openCustomizerModalById(prodId);
   }
 
   promptUserLogout(name) {
@@ -1541,6 +1705,12 @@ ${mapsLink}
     }
     window.activeFoodTypeFilter = null; // Always reset filter so Food Categories Grid shows first for comidas
     
+    if (!this.isUserLoggedIn()) {
+      const normGuest = (category === 'servicios' || category === 'personalizados') ? 'servicios' : 'comidas';
+      sessionStorage.setItem('pedigochos_guest_choice', normGuest);
+      this.updateGuestStripUI(normGuest);
+    }
+    
     // Update active state on Super-App Bento Hub cards
     document.querySelectorAll('#superapp-bento-hub [data-bento-cat]').forEach(bento => {
       const bCat = bento.getAttribute('data-bento-cat');
@@ -1865,6 +2035,7 @@ ${mapsLink}
       homeView.classList.add('active');
       homeView.style.setProperty('display', 'block', 'important');
     }
+    this.updateGuestPortalVisibility();
 
     // Restore active state to main Restaurantes category card
     document.querySelectorAll('.category-card-delivercity').forEach(card => {
@@ -4475,8 +4646,16 @@ ${mapsLink}
     this.renderProducts(baseList, true);
   }
 
-  toggleInstaLike(productId, event, forceLike = false) {
+  toggleInstaLike(productId, event, forceLike = false, skipAuthPrompt = false) {
     if (event) event.stopPropagation();
+
+    if (!skipAuthPrompt && !this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('like', () => {
+        this.toggleInstaLike(productId, null, forceLike, true);
+      });
+      return;
+    }
+
     const likedMap = this.getInstaLikedMap();
     const isCurrentlyLiked = Boolean(likedMap[productId]);
     const nextLiked = forceLike ? true : !isCurrentlyLiked;
@@ -4515,8 +4694,16 @@ ${mapsLink}
     }
   }
 
-  toggleInstaSave(productId, event) {
+  toggleInstaSave(productId, event, skipAuthPrompt = false) {
     if (event) event.stopPropagation();
+
+    if (!skipAuthPrompt && !this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('like', () => {
+        this.toggleInstaSave(productId, null, true);
+      });
+      return;
+    }
+
     const savedMap = this.getInstaSavedMap();
     const nextSaved = !savedMap[productId];
     if (nextSaved) {
@@ -4795,7 +4982,7 @@ ${mapsLink}
               <span>${isLiked ? '❤️' : '🤍'}</span>
               ${totalLikes > 0 ? `<span>${totalLikes}</span>` : ''}
             </button>
-            <button type="button" class="insta-icon-btn" onclick="event.stopPropagation(); MarketplaceApp.openCustomizerModalById('${prod.id}')" title="Personalizar / Nota de cocina">
+            <button type="button" class="insta-icon-btn" onclick="event.stopPropagation(); MarketplaceApp.handleCommentButtonClick('${prod.id}')" title="Comentar / Personalizar">
               <span>💬</span>
             </button>
             <button type="button" class="insta-icon-btn" onclick="MarketplaceApp.shareInstaProduct('${prod.id}', event)" title="Compartir plato">
@@ -8424,7 +8611,14 @@ ${mapsLink}
     }
   }
 
-  async submitOrder(skipBeveragePrompt = false) {
+  async submitOrder(skipBeveragePrompt = false, skipAuthPrompt = false) {
+    if (!skipAuthPrompt && !this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('pedir', () => {
+        this.submitOrder(skipBeveragePrompt, true);
+      });
+      return;
+    }
+
     // 0. Verify that all restaurants in cart are currently OPEN
     for (const item of this.cart.items) {
       const store = (this.establishments || []).find(e => e.id === item.restaurant_id) || this.selectedEstablishment;
@@ -9179,6 +9373,10 @@ ${mapsLink}
       if (tabKey === 'restaurantes') {
         this.closeAllModals();
         if (this.selectedEstablishment) this.goHome(false);
+        if (!this.isUserLoggedIn()) {
+          sessionStorage.setItem('pedigochos_guest_choice', 'comidas');
+          this.updateGuestPortalVisibility();
+        }
         this.selectCategory('comidas');
         setTimeout(() => {
           const header = document.getElementById('all-restaurants-header') || document.getElementById('establishments-grid');
@@ -9191,6 +9389,10 @@ ${mapsLink}
       } else if (tabKey === 'explorar') {
         this.closeAllModals();
         if (this.selectedEstablishment) this.goHome(false);
+        if (!this.isUserLoggedIn() && !sessionStorage.getItem('pedigochos_guest_choice')) {
+          sessionStorage.setItem('pedigochos_guest_choice', 'comidas');
+          this.updateGuestPortalVisibility();
+        }
         const searchInput = document.getElementById('global-search') || document.getElementById('marketplace-search-input');
         if (searchInput) {
           searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -9207,6 +9409,10 @@ ${mapsLink}
       } else if (tabKey === 'servicios') {
         this.closeAllModals();
         if (this.selectedEstablishment) this.goHome(false);
+        if (!this.isUserLoggedIn()) {
+          sessionStorage.setItem('pedigochos_guest_choice', 'servicios');
+          this.updateGuestPortalVisibility();
+        }
         this.selectCategory('servicios');
         this.toggleServicesMenu(true);
       } else if (tabKey === 'pedidos') {
@@ -12202,7 +12408,14 @@ ${mapsLink}
     }
   }
 
-  async submitPostOrderReview() {
+  async submitPostOrderReview(skipAuthPrompt = false) {
+    if (!skipAuthPrompt && !this.isUserLoggedIn()) {
+      this.suggestGoogleLogin('comentar', () => {
+        this.submitPostOrderReview(true);
+      });
+      return;
+    }
+
     const estId = this.ratingTargetEstId;
     const orderId = this.ratingTargetOrderId;
     const commentInput = document.getElementById('rating-modal-comment');
