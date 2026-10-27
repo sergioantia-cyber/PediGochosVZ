@@ -2459,44 +2459,6 @@ ${mapsLink}
     };
     if (isRealImg(est.logoImage)) return est.logoImage.trim();
     if (isRealImg(est.image)) return est.image.trim();
-    if (isRealImg(est.logo)) return est.logo.trim();
-    return null;
-  }
-
-  // Helper to reliably retrieve cover/banner image URL (never returns linear-gradient CSS)
-  getEstablishmentCoverUrl(est) {
-    if (!est) return '/images/burger_royale.jpg';
-    const isRealImg = (url) => {
-      if (!url || typeof url !== 'string') return false;
-      const t = url.trim();
-      return (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('/') || t.startsWith('data:')) && !t.startsWith('linear-gradient') && !t.startsWith('radial-gradient');
-    };
-
-    if (isRealImg(est.banner)) return est.banner.trim();
-    if (isRealImg(est.bannerImage)) return est.bannerImage.trim();
-
-    // Prefer product image with photo
-    if (Array.isArray(est.products)) {
-      const prodWithImg = est.products.find(p => isRealImg(p.image) && !p.image.includes('burger_royale.jpg'));
-      if (prodWithImg) return prodWithImg.image.trim();
-      const anyProd = est.products.find(p => isRealImg(p.image));
-      if (anyProd) return anyProd.image.trim();
-    }
-
-    if (isRealImg(est.logoImage)) return est.logoImage.trim();
-    if (isRealImg(est.image)) return est.image.trim();
-
-    // Contextual fallback by category / name
-    const cat = (est.category || '').toLowerCase();
-    const name = (est.name || '').toLowerCase();
-    if (name.includes('pizza') || cat.includes('pizza')) return '/images/mak_pizza/pizza_artesanal.jpg';
-    if (name.includes('cafe') || name.includes('café')) return '/images/cafe_plaza_menu_1.jpg';
-    if (name.includes('perro') || name.includes('hot dog')) return 'https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=600';
-    if (name.includes('arepa')) return 'https://images.unsplash.com/photo-1582234372722-50d7ccc30e5b?w=600';
-    if (name.includes('shawarma')) return 'https://images.unsplash.com/photo-1561651823-34fed0225408?w=600';
-    if (name.includes('patacon') || name.includes('patacón')) return 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=600';
-    if (name.includes('batido') || name.includes('jugo') || cat.includes('bebida')) return '/images/mak_pizza/frappes.jpg';
-    if (name.includes('helado') || name.includes('fruty') || cat.includes('postre')) return 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600';
 
     return '/images/burger_royale.jpg';
   }
@@ -2510,19 +2472,6 @@ ${mapsLink}
     };
     if (isRealImg(prod.image)) return prod.image.trim();
     if (isRealImg(prod.img)) return prod.img.trim();
-
-    const name = ((prod.name || '') + ' ' + (prod.category || '')).toLowerCase();
-    if (name.includes('pizza')) return '/images/mak_pizza/pizza_artesanal.jpg';
-    if (name.includes('hamburguesa') || name.includes('burger')) return '/images/burger_royale.jpg';
-    if (name.includes('perro') || name.includes('hot dog')) return 'https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=600';
-    if (name.includes('arepa')) return 'https://images.unsplash.com/photo-1582234372722-50d7ccc30e5b?w=600';
-    if (name.includes('cachapa')) return 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600';
-    if (name.includes('shawarma')) return 'https://images.unsplash.com/photo-1561651823-34fed0225408?w=600';
-    if (name.includes('patacon') || name.includes('patacón')) return 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=600';
-    if (name.includes('salchipapa') || name.includes('papas')) return 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=600';
-    if (name.includes('batido') || name.includes('jugo') || name.includes('frappe')) return '/images/mak_pizza/frappes.jpg';
-    if (name.includes('helado') || name.includes('postre') || name.includes('torta')) return 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600';
-    if (name.includes('cafe') || name.includes('café')) return '/images/cafe_plaza_menu_1.jpg';
 
     if (est) {
       const cov = this.getEstablishmentCoverUrl(est);
