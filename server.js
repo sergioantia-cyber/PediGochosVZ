@@ -251,9 +251,45 @@ async function uploadJsonToSupabaseStorage(fileName, jsonString) {
 async function syncFromSupabase() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.log('Supabase credentials missing. Skipping cloud DB sync.');
-    return;
+    return false;
   }
   try {
+    // 1. Always restore disabled_stores.json FIRST so cloud status takes precedence over local git file
+    let mergedDisabled = readDisabledStores();
+    try {
+      const disabledUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/disabled_stores.json`;
+      const disRes = await fetch(disabledUrl);
+      if (disRes.ok) {
+        const cloudDisabled = await disRes.json();
+        if (cloudDisabled && typeof cloudDisabled === 'object') {
+          // Cloud MUST take precedence over local static git repo values!
+          mergedDisabled = { ...mergedDisabled, ...cloudDisabled };
+          writeDisabledStores(mergedDisabled);
+          console.log('🎉 disabled_stores.json restored and merged from Supabase Storage (cloud authoritative)!');
+        }
+      }
+    } catch (disErr) {
+      console.warn('Could not sync disabled_stores.json from Supabase Storage:', disErr.message);
+    }
+
+    // 2. Restore store_gps.json FIRST
+    let mergedGps = readStoreGps();
+    try {
+      const gpsUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/store_gps.json`;
+      const gpsRes = await fetch(gpsUrl);
+      if (gpsRes.ok) {
+        const cloudGps = await gpsRes.json();
+        if (cloudGps && typeof cloudGps === 'object') {
+          mergedGps = { ...mergedGps, ...cloudGps };
+          writeStoreGps(mergedGps);
+          console.log('🎉 store_gps.json restored and merged from Supabase Storage!');
+        }
+      }
+    } catch (gpsErr) {
+      console.warn('Could not sync store_gps.json from Supabase Storage:', gpsErr.message);
+    }
+
+    // 3. Fetch db_backup.json from Supabase Storage
     const rootUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/db_backup.json`;
     const uploadsUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/uploads/db_backup.json`;
     console.log('Syncing database state from Supabase:', rootUrl);
@@ -262,67 +298,114 @@ async function syncFromSupabase() {
       console.log('Trying uploads path fallback:', uploadsUrl);
       res = await fetch(uploadsUrl);
     }
+
+    let storageSyncedSuccessfully = false;
+
     if (res.ok) {
       const text = await res.text();
       const cloudData = JSON.parse(text);
       if (cloudData && Array.isArray(cloudData.establishments) && cloudData.establishments.length > 0) {
         const localData = readDB();
         const localEsts = (localData && Array.isArray(localData.establishments)) ? localData.establishments : [];
+
         localEsts.forEach(localEst => {
           if (!localEst || !localEst.id) return;
           const cloudIndex = cloudData.establishments.findIndex(e => String(e.id).trim() === String(localEst.id).trim());
           if (cloudIndex === -1) {
+            // Local establishment not present in cloud -> preserve it
             cloudData.establishments.push(localEst);
           } else {
             const cloudEst = cloudData.establishments[cloudIndex];
-            if (String(localEst.id).trim() === 'zeus-burger-1786252888630' || !Array.isArray(cloudEst.products) || cloudEst.products.length === 0 || (Array.isArray(localEst.products) && localEst.products.length >= cloudEst.products.length)) {
-              cloudEst.products = localEst.products || [];
-              if (localEst.logoImage) cloudEst.logoImage = localEst.logoImage;
-              if (localEst.description) cloudEst.description = localEst.description;
-              if (localEst.phone) cloudEst.phone = localEst.phone;
-              if (localEst.address) cloudEst.address = localEst.address;
-              if (localEst.open_time) cloudEst.open_time = localEst.open_time;
-              if (localEst.close_time) cloudEst.close_time = localEst.close_time;
+
+            // A. Never overwrite valid cloud images with null/empty
+            if (!cloudEst.logoImage && localEst.logoImage) {
+              cloudEst.logoImage = localEst.logoImage;
             }
-            if (localEst.rating !== undefined) cloudEst.rating = localEst.rating;
-            if (localEst.adminRating !== undefined) cloudEst.adminRating = localEst.adminRating;
-            if (localEst.reviewCount !== undefined) cloudEst.reviewCount = localEst.reviewCount;
-            if (localEst.totalReviews !== undefined) cloudEst.totalReviews = localEst.totalReviews;
+            if (!cloudEst.banner && localEst.banner) {
+              cloudEst.banner = localEst.banner;
+            }
+            if (!cloudEst.image && localEst.image) {
+              cloudEst.image = localEst.image;
+            }
+
+            // B. Preserve essential metadata
+            if (!cloudEst.linkKey && localEst.linkKey) cloudEst.linkKey = localEst.linkKey;
+            if (!cloudEst.description && localEst.description) cloudEst.description = localEst.description;
+            if (!cloudEst.phone && localEst.phone) cloudEst.phone = localEst.phone;
+            if (!cloudEst.address && localEst.address) cloudEst.address = localEst.address;
+            if (!cloudEst.open_time && localEst.open_time) cloudEst.open_time = localEst.open_time;
+            if (!cloudEst.close_time && localEst.close_time) cloudEst.close_time = localEst.close_time;
+            if ((!cloudEst.working_days || cloudEst.working_days.length === 0) && localEst.working_days) {
+              cloudEst.working_days = localEst.working_days;
+            }
+            if (cloudEst.rating === undefined && localEst.rating !== undefined) cloudEst.rating = localEst.rating;
+            if (cloudEst.adminRating === undefined && localEst.adminRating !== undefined) cloudEst.adminRating = localEst.adminRating;
+            if (cloudEst.reviewCount === undefined && localEst.reviewCount !== undefined) cloudEst.reviewCount = localEst.reviewCount;
+            if (cloudEst.totalReviews === undefined && localEst.totalReviews !== undefined) cloudEst.totalReviews = localEst.totalReviews;
+
+            // C. Smart Product Merge: NEVER delete photos or modifiers from cloud products!
+            if (!Array.isArray(cloudEst.products) || cloudEst.products.length === 0) {
+              cloudEst.products = localEst.products || [];
+            } else if (Array.isArray(localEst.products) && localEst.products.length > 0) {
+              localEst.products.forEach(localProd => {
+                if (!localProd) return;
+                const cloudProd = cloudEst.products.find(cp =>
+                  (cp.id && localProd.id && String(cp.id).trim() === String(localProd.id).trim()) ||
+                  (cp.name && localProd.name && cp.name.trim().toLowerCase() === localProd.name.trim().toLowerCase())
+                );
+                if (cloudProd) {
+                  // Keep cloudProd's photo! Only borrow local image if cloud image is blank
+                  if (!cloudProd.image && localProd.image) {
+                    cloudProd.image = localProd.image;
+                  }
+                  // Keep cloudProd's modifiers! Only borrow local modifiers if cloud has none
+                  if ((!cloudProd.modifiers || cloudProd.modifiers.length === 0) && localProd.modifiers && localProd.modifiers.length > 0) {
+                    cloudProd.modifiers = localProd.modifiers;
+                  }
+                  // Keep exclusions
+                  if ((!cloudProd.exclusions || cloudProd.exclusions.length === 0) && localProd.exclusions && localProd.exclusions.length > 0) {
+                    cloudProd.exclusions = localProd.exclusions;
+                  }
+                  // Keep available days
+                  if (!cloudProd.available_days && localProd.available_days) {
+                    cloudProd.available_days = localProd.available_days;
+                  }
+                } else {
+                  // Product exists locally but was missing in cloud -> add it
+                  cloudEst.products.push(localProd);
+                }
+              });
+            }
           }
         });
+
+        // Apply authoritative disabledMap and storeGpsMap to every establishment
+        cloudData.establishments.forEach(est => {
+          if (!est || !est.id) return;
+          if (mergedDisabled && mergedDisabled[est.id] !== undefined) {
+            est.disabled = Boolean(mergedDisabled[est.id]);
+          } else {
+            est.disabled = Boolean(est.disabled);
+          }
+
+          if (mergedGps && mergedGps[est.id] && mergedGps[est.id].latitude && mergedGps[est.id].longitude) {
+            est.latitude = parseFloat(mergedGps[est.id].latitude);
+            est.longitude = parseFloat(mergedGps[est.id].longitude);
+            est.location_lat = est.latitude;
+            est.location_lng = est.longitude;
+          }
+        });
+
         cloudData.establishments = deduplicateEstablishments(cloudData.establishments);
         fs.writeFileSync(DB_FILE, JSON.stringify(cloudData, null, 2), 'utf8');
-        console.log(`🎉 Database synced & deduplicated (${cloudData.establishments.length} unique stores) from Supabase Storage!`);
+        console.log(`🎉 Database synced & deduplicated (${cloudData.establishments.length} unique stores) from Supabase Storage with photos & disabled states preserved!`);
+        storageSyncedSuccessfully = true;
       }
     } else {
       console.log('No backup db.json found in Supabase Storage or request failed. Status:', res.status);
     }
 
     try {
-      const disabledUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/disabled_stores.json`;
-      const disRes = await fetch(disabledUrl);
-      if (disRes.ok) {
-        try {
-          const cloudDisabled = await disRes.json();
-          const localDisabled = readDisabledStores();
-          const mergedDisabled = { ...cloudDisabled, ...localDisabled };
-          writeDisabledStores(mergedDisabled);
-          console.log('🎉 disabled_stores.json restored and merged from Supabase Storage!');
-        } catch(e) {}
-      }
-
-      const gpsUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/store_gps.json`;
-      const gpsRes = await fetch(gpsUrl);
-      if (gpsRes.ok) {
-        try {
-          const cloudGps = await gpsRes.json();
-          const localGps = readStoreGps();
-          const mergedGps = { ...localGps, ...cloudGps };
-          writeStoreGps(mergedGps);
-          console.log('🎉 store_gps.json restored and merged from Supabase Storage!');
-        } catch(e) {}
-      }
-
       const drvUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/drivers.json`;
       const drvRes = await fetch(drvUrl);
       if (drvRes.ok) {
@@ -347,10 +430,8 @@ async function syncFromSupabase() {
         try {
           const cloudGpsDel = await gpsDelRes.json();
           const localGpsDel = readGpsDeleted();
-          // Merge: cloud and local deletions both respected, cloud takes precedence
           const mergedGpsDel = { ...localGpsDel, ...cloudGpsDel };
           writeGpsDeleted(mergedGpsDel);
-          // Remove any entries in storeGpsMap that are in the deleted blacklist
           const storeGpsMap = readStoreGps();
           let gpsDirty = false;
           Object.keys(mergedGpsDel).forEach(delId => {
@@ -405,7 +486,6 @@ async function syncFromSupabase() {
           }
         } catch (_) {}
 
-        // Combine using Map so serv-cascos and all local services are safely preserved
         const estMap = new Map();
         (cloudServEsts || []).forEach(e => { if (e && e.id) estMap.set(e.id, e); });
         (localServEsts || []).forEach(e => { if (e && e.id) estMap.set(e.id, e); });
@@ -418,7 +498,6 @@ async function syncFromSupabase() {
         console.warn('Could not sync service_establishments:', e.message);
       }
 
-      // Also ensure cascos_catalog.json is loaded
       try {
         if (!fs.existsSync(CASCOS_CATALOG_FILE) || fs.statSync(CASCOS_CATALOG_FILE).size < 100) {
           const cascosUrl = `${SUPABASE_URL}/storage/v1/object/public/menu_images/cascos_catalog.json`;
@@ -434,8 +513,11 @@ async function syncFromSupabase() {
       } catch (e) {}
 
     } catch(e) {}
+
+    return storageSyncedSuccessfully;
   } catch (err) {
     console.error('Error syncing database from Supabase:', err);
+    return false;
   }
 }
 
@@ -517,6 +599,36 @@ async function saveChangesToCloud() {
 }
 
 // Sync database state from Supabase PostgreSQL tables
+async function syncOrdersFromPostgres() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) return false;
+  try {
+    const ordUrl = `${process.env.SUPABASE_URL}/rest/v1/orders`;
+    const headers = getSupabaseServerHeaders();
+    const ordRes = await fetch(ordUrl, { headers });
+    if (ordRes.ok) {
+      const orders = await ordRes.json();
+      if (Array.isArray(orders) && orders.length > 0) {
+        const localData = readDB();
+        const localOrders = (localData && Array.isArray(localData.orders)) ? localData.orders : [];
+        const mergedOrders = [...orders];
+        const pgOrderIds = new Set(mergedOrders.map(o => String(o.id).trim()));
+        localOrders.forEach(lo => {
+          if (lo && lo.id && !pgOrderIds.has(String(lo.id).trim())) {
+            mergedOrders.push(lo);
+          }
+        });
+        localData.orders = mergedOrders;
+        fs.writeFileSync(DB_FILE, JSON.stringify(localData, null, 2), 'utf8');
+        console.log(`🎉 Synced ${mergedOrders.length} orders from Supabase PostgreSQL tables!`);
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not sync orders from Postgres:', err.message);
+  }
+  return false;
+}
+
 async function syncFromPostgres() {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
     console.log('Supabase env vars missing. Skipping Postgres sync.');
@@ -974,10 +1086,13 @@ function writeDB(data) {
         const disabledMap = readDisabledStores();
         const storeGpsMap = readStoreGps();
         data.establishments.forEach(est => {
-          if (disabledMap[est.id] !== undefined) {
-            est.disabled = Boolean(disabledMap[est.id]);
-          } else if (est.disabled !== undefined) {
+          if (est.disabled !== undefined) {
             disabledMap[est.id] = Boolean(est.disabled);
+          } else if (disabledMap[est.id] !== undefined) {
+            est.disabled = Boolean(disabledMap[est.id]);
+          } else {
+            est.disabled = false;
+            disabledMap[est.id] = false;
           }
 
           // Preserve user-saved GPS
@@ -2169,7 +2284,7 @@ app.post('/api/table/init-session', (req, res) => {
 });
 
 // PUT to update establishment details (authorized by linkKey or isOwner flag)
-app.put('/api/establishments/:id', (req, res) => {
+app.put('/api/establishments/:id', async (req, res) => {
   const { id } = req.params;
   const { linkKey, products, name, description, logo, bannerType, banner, delivery_fee, themeColor, isOwner, logoImage, tables } = req.body;
   
@@ -2302,7 +2417,12 @@ app.put('/api/establishments/:id', (req, res) => {
   }
   
   writeDB(db);
-  saveChangesToCloud().catch(err => console.error('Cloud backup error on establishment update:', err));
+  try {
+    await uploadToSupabase();
+  } catch (syncErr) {
+    console.warn('Cloud sync error on establishment update:', syncErr);
+  }
+  saveToPostgres().catch(err => console.error('Postgres backup error on establishment update:', err));
 
   // Broadcast WebSocket update if connected clients exist
   const updatePayload = JSON.stringify({
@@ -5609,6 +5729,12 @@ app.get('*', (req, res, next) => {
 server.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
   // Always prioritize Supabase Storage (db_backup.json) as the authoritative master
-  await syncFromSupabase();
-  await syncFromPostgres();
+  const storageSynced = await syncFromSupabase();
+  if (storageSynced) {
+    console.log('☁️ Storage sync successful. Synchronizing Postgres orders...');
+    await syncOrdersFromPostgres();
+  } else {
+    console.log('⚠️ Storage sync unavailable. Falling back to Supabase PostgreSQL sync...');
+    await syncFromPostgres();
+  }
 });

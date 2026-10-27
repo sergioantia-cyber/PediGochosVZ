@@ -48,22 +48,7 @@
           "name": "Shawarma Pollo",
           "image": "https://images.unsplash.com/photo-1561651823-34fed0225408?w=500",
           "price": 20,
-          "modifiers": [
-            {
-              "options": [
-                {
-                  "id": "opt-17844124624520.48633440195105826",
-                  "name": "120 gramos",
-                  "option_id": "opt-17844124624520.05572598628562131",
-                  "extra_price": 0
-                }
-              ],
-              "group_id": "g-extras-1784412462452",
-              "required": false,
-              "group_name": "Adicionales",
-              "selection_type": "multiple"
-            }
-          ],
+          "modifiers": [],
           "exclusions": [
             {
               "name": "120 gramos"
@@ -104,22 +89,7 @@
           "name": "Shawarma Carne",
           "image": "https://images.unsplash.com/photo-1561651823-34fed0225408?w=500",
           "price": 20,
-          "modifiers": [
-            {
-              "options": [
-                {
-                  "id": "opt-17844124856030.45674664456096126",
-                  "name": "120 gramos",
-                  "option_id": "opt-17844124856030.11118192772782443",
-                  "extra_price": 0
-                }
-              ],
-              "group_id": "g-extras-1784412485603",
-              "required": false,
-              "group_name": "Adicionales",
-              "selection_type": "multiple"
-            }
-          ],
+          "modifiers": [],
           "exclusions": [
             {
               "name": "120 gramos"
@@ -160,22 +130,7 @@
           "name": "Shawarma Mixto",
           "image": "https://images.unsplash.com/photo-1561651823-34fed0225408?w=500",
           "price": 20,
-          "modifiers": [
-            {
-              "options": [
-                {
-                  "id": "opt-17844125150930.14503327394686194",
-                  "name": "120 gramos",
-                  "option_id": "opt-17844125150930.8511787174377438",
-                  "extra_price": 0
-                }
-              ],
-              "group_id": "g-extras-1784412515093",
-              "required": false,
-              "group_name": "Adicionales",
-              "selection_type": "multiple"
-            }
-          ],
+          "modifiers": [],
           "exclusions": [
             {
               "name": "120 gramos"
@@ -409,10 +364,10 @@
       "delivery_time": null,
       "created_at": "2026-07-18T22:06:16.169331+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.815638,
+      "longitude": -72.443027,
+      "location_lat": 7.815638,
+      "location_lng": -72.443027,
       "open_time": "17:00",
       "close_time": "00:00",
       "disabled": false
@@ -435,7 +390,7 @@
         {
           "id": "p-1786158242838-90",
           "name": "Patacón Criollo Clásico",
-          "image": "",
+          "image": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1793062861973_367.png",
           "price": 26,
           "category": "Patacon",
           "modifiers": [],
@@ -467,12 +422,19 @@
             }
           ],
           "category_id": "1e7b3eb1-529f-4cfe-b161-626531a73851",
-          "description": "carne desmechada, vibrante pico de gallo, culminado con queso amarillo rallado, huevo de codorniz y exquisita salsa de la casa."
+          "description": "carne desmechada, vibrante pico de gallo, culminado con queso amarillo rallado, huevo de codorniz y exquisita salsa de la casa.",
+          "available_days": [
+            "todos"
+          ],
+          "available": true,
+          "is_paused": false,
+          "agotado": false,
+          "out_of_stock": false
         },
         {
           "id": "p-1786158275027-44",
           "name": "Patacón Tentación Mixta",
-          "image": "",
+          "image": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1793062891726_334.jpg",
           "price": 26,
           "category": "Patacon",
           "modifiers": [],
@@ -504,47 +466,38 @@
             }
           ],
           "category_id": "1e7b3eb1-529f-4cfe-b161-626531a73851",
-          "description": "pechuga de pollo asada, jugosa carne de res y lomo de cerdo ahumado, culminado con queso amarillo rallado y exquisito chimichurri."
+          "description": "pechuga de pollo asada, jugosa carne de res y lomo de cerdo ahumado, culminado con queso amarillo rallado y exquisito chimichurri.",
+          "available_days": [
+            "todos"
+          ],
+          "available": true,
+          "is_paused": false,
+          "agotado": false,
+          "out_of_stock": false
         },
         {
           "id": "p-1786158332672-84",
           "name": "Patacón BBQ Ahumado",
-          "image": "",
+          "image": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1793062926172_491.jpg",
           "price": 26,
           "category": "Patacon",
           "modifiers": [
             {
               "options": [
                 {
-                  "id": "opt-17861583326720.13321444465328425",
-                  "name": "Cerdo desmenuzado en salsa BBQ",
-                  "option_id": "opt-17861583326720.6200470520893137",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861583326720.7307622996835182",
+                  "id": "opt-17861583326720.9721924488570316",
                   "name": "maíz tierno",
                   "price": 500,
                   "option_id": "opt-17861583326720.9721924488570316",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861583326720.6833156823295917",
-                  "name": "ensalada coleslaw",
-                  "option_id": "opt-17861583326720.09934419543768569",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861583326720.8131281637463046",
-                  "name": "culminado con queso amarillo rallado (salsa de la casa).",
-                  "option_id": "opt-17861583326720.20297172262064433",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786158332672",
               "required": false,
               "group_name": "Adicionales",
-              "selection_type": "multiple"
+              "selection_type": "multiple",
+              "id": "g-extras-1786158332672",
+              "is_required": false
             }
           ],
           "exclusions": [
@@ -570,41 +523,38 @@
             }
           ],
           "category_id": "1e7b3eb1-529f-4cfe-b161-626531a73851",
-          "description": "Cerdo desmenuzado en salsa BBQ, maíz tierno, ensalada coleslaw, culminado con queso amarillo rallado (salsa de la casa)."
+          "description": "Cerdo desmenuzado en salsa BBQ, maíz tierno, ensalada coleslaw, culminado con queso amarillo rallado (salsa de la casa).",
+          "available_days": [
+            "todos"
+          ],
+          "available": true,
+          "is_paused": false,
+          "agotado": false,
+          "out_of_stock": false
         },
         {
           "id": "p-1786158488257-83",
           "name": "Patacón El Gran Ranchero",
-          "image": "",
+          "image": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1793063098789_523.png",
           "price": 28,
           "category": "Patacon",
           "modifiers": [
             {
               "options": [
                 {
-                  "id": "opt-17861584882570.8566790938332411",
+                  "id": "opt-17861584882570.09160236395105337",
                   "name": "carne desmechada",
                   "price": 500,
                   "option_id": "opt-17861584882570.09160236395105337",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861584882570.3187052710192293",
-                  "name": "maíz tierno y chorizo argentino",
-                  "option_id": "opt-17861584882570.5583425970120249",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861584882570.887889076023552",
-                  "name": "con finas laminas de aguacate y queso amarillo rallado (salsa mayo-mostaza).",
-                  "option_id": "opt-17861584882570.38057845700497805",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786158488257",
               "required": false,
               "group_name": "Adicionales",
-              "selection_type": "multiple"
+              "selection_type": "multiple",
+              "id": "g-extras-1786158488257",
+              "is_required": false
             }
           ],
           "exclusions": [
@@ -635,7 +585,14 @@
             }
           ],
           "category_id": "1e7b3eb1-529f-4cfe-b161-626531a73851",
-          "description": "carne desmechada, maíz tierno y chorizo argentino, con finas laminas de aguacate y queso amarillo rallado (salsa mayo-mostaza)."
+          "description": "carne desmechada, maíz tierno y chorizo argentino, con finas laminas de aguacate y queso amarillo rallado (salsa mayo-mostaza).",
+          "available_days": [
+            "todos"
+          ],
+          "available": true,
+          "is_paused": false,
+          "agotado": false,
+          "out_of_stock": false
         },
         {
           "id": "p-1786158563594-57",
@@ -654,47 +611,11 @@
                   "extra_price": 500
                 },
                 {
-                  "id": "opt-17861585635940.9043775796524651",
-                  "name": "pechuga asada",
-                  "option_id": "opt-17861585635940.1976755759073464",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861585635940.2934587826859021",
-                  "name": "huevo cocido",
-                  "option_id": "opt-17861585635940.42730781882769797",
-                  "extra_price": 0
-                },
-                {
                   "id": "opt-17861585635940.31576406287717906",
                   "name": "tocineta",
                   "price": 500,
                   "option_id": "opt-17861585635940.7326357697604474",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861585635940.3493717522686727",
-                  "name": "jamón",
-                  "option_id": "opt-17861585635940.3882331028911703",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861585635940.21424069690630543",
-                  "name": "queso paisa rallado",
-                  "option_id": "opt-17861585635940.13848087221505057",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861585635940.14994662020131655",
-                  "name": "lechuga",
-                  "option_id": "opt-17861585635940.7638508892343575",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861585635940.016078672695262752",
-                  "name": "tomate.",
-                  "option_id": "opt-17861585635940.41476865945043173",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786158563594",
@@ -751,42 +672,26 @@
         {
           "id": "p-1786158628822-43",
           "name": "Canasta De Patacón Pollo Y Champiñón",
-          "image": "",
+          "image": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1793063249947_306.png",
           "price": 21,
           "category": "Patacon",
           "modifiers": [
             {
               "options": [
                 {
-                  "id": "opt-17861586288220.8395384911801309",
-                  "name": "Pollo Y Champiñón - Canasta rellena de pechuga de pollo",
-                  "option_id": "opt-17861586288220.3697402078436829",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861586288220.23828242922201937",
-                  "name": "champiñón",
-                  "option_id": "opt-17861586288220.2265488056985997",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861586288220.6432397959023113",
+                  "id": "opt-17861586288220.5389746556911105",
                   "name": "maíz tierno",
                   "price": 500,
                   "option_id": "opt-17861586288220.5389746556911105",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861586288220.3974935015171819",
-                  "name": "queso rallado.",
-                  "option_id": "opt-17861586288220.00005618492221393101",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786158628822",
               "required": false,
               "group_name": "Adicionales",
-              "selection_type": "multiple"
+              "selection_type": "multiple",
+              "id": "g-extras-1786158628822",
+              "is_required": false
             }
           ],
           "exclusions": [
@@ -817,7 +722,14 @@
             }
           ],
           "category_id": "1e7b3eb1-529f-4cfe-b161-626531a73851",
-          "description": "Pollo Y Champiñón - Canasta rellena de pechuga de pollo, champiñón, maíz tierno, queso rallado."
+          "description": "Pollo Y Champiñón - Canasta rellena de pechuga de pollo, champiñón, maíz tierno, queso rallado.",
+          "available_days": [
+            "todos"
+          ],
+          "available": true,
+          "is_paused": false,
+          "agotado": false,
+          "out_of_stock": false
         },
         {
           "id": "p-1786158676638-95",
@@ -848,12 +760,6 @@
                   "price": 500,
                   "option_id": "opt-17861586766380.7894850107461927",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861586766380.6511277226391026",
-                  "name": "aguacate y queso rallado.",
-                  "option_id": "opt-17861586766380.3258303239469752",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786158676638",
@@ -979,12 +885,6 @@
                   "price": 500,
                   "option_id": "opt-17861587916450.6368541494236906",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861587916450.5857792827892664",
-                  "name": "queso rallado y tocineta.",
-                  "option_id": "opt-17861587916450.7610025715479797",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786158791645",
@@ -1021,30 +921,26 @@
         {
           "id": "p-1786158849139-11",
           "name": "Cono Patacón Cono Fire",
-          "image": "",
+          "image": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1793063282591_70.png",
           "price": 23,
           "category": "Patacon",
           "modifiers": [
             {
               "options": [
                 {
-                  "id": "opt-17861588491380.9353678017921161",
+                  "id": "opt-17861588491380.45536829981456617",
                   "name": "carne desmechada",
                   "price": 500,
                   "option_id": "opt-17861588491380.45536829981456617",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861588491380.7540207813691636",
-                  "name": "chorizo y queso rallado.",
-                  "option_id": "opt-17861588491380.5894949795439112",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786158849138",
               "required": false,
               "group_name": "Adicionales",
-              "selection_type": "multiple"
+              "selection_type": "multiple",
+              "id": "g-extras-1786158849138",
+              "is_required": false
             }
           ],
           "exclusions": [
@@ -1065,12 +961,19 @@
             }
           ],
           "category_id": "1e7b3eb1-529f-4cfe-b161-626531a73851",
-          "description": "carne desmechada, chorizo y queso rallado."
+          "description": "carne desmechada, chorizo y queso rallado.",
+          "available_days": [
+            "todos"
+          ],
+          "available": true,
+          "is_paused": false,
+          "agotado": false,
+          "out_of_stock": false
         },
         {
           "id": "p-1786158883531-29",
           "name": "Cono Patacón Cono De Chicharrón",
-          "image": "",
+          "image": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1793063297317_161.png",
           "price": 21,
           "category": "Patacon",
           "modifiers": [
@@ -1113,7 +1016,14 @@
             }
           ],
           "category_id": "1e7b3eb1-529f-4cfe-b161-626531a73851",
-          "description": "chicharrones crocantes, aguacate y pico de gallo."
+          "description": "chicharrones crocantes, aguacate y pico de gallo.",
+          "available_days": [
+            "todos"
+          ],
+          "available": true,
+          "is_paused": false,
+          "agotado": false,
+          "out_of_stock": false
         },
         {
           "id": "p-1786158959788-87",
@@ -1125,18 +1035,6 @@
             {
               "options": [
                 {
-                  "id": "opt-17861589597880.8703298057586294",
-                  "name": "Croqueta de carne",
-                  "option_id": "opt-17861589597880.8571287696958333",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861589597880.4484115911655716",
-                  "name": "huevo",
-                  "option_id": "opt-17861589597880.3428545659800152",
-                  "extra_price": 0
-                },
-                {
                   "id": "opt-17861589597880.9564264845582942",
                   "name": "tocineta",
                   "price": 500,
@@ -1144,35 +1042,11 @@
                   "extra_price": 500
                 },
                 {
-                  "id": "opt-17861589597880.06933230150698999",
-                  "name": "jamón",
-                  "option_id": "opt-17861589597880.9909708658844524",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861589597880.41082425459149574",
-                  "name": "queso amarillo",
-                  "option_id": "opt-17861589597880.6781286676769618",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861589597880.49020819818374695",
-                  "name": "lechuga",
-                  "option_id": "opt-17861589597880.22192554406538278",
-                  "extra_price": 0
-                },
-                {
                   "id": "opt-17861589597880.3983534060773952",
                   "name": "tomate",
                   "price": 500,
                   "option_id": "opt-17861589597880.5948377743724468",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861589597880.500394775260899",
-                  "name": "cebolla caramelizada. Sale con papa fritas",
-                  "option_id": "opt-17861589597880.9923024811811115",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786158959788",
@@ -1229,60 +1103,26 @@
         {
           "id": "p-1786158991473-6",
           "name": "Hamburguesa Chicken Boom",
-          "image": "",
+          "image": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1793063500299_250.png",
           "price": 19000,
           "category": "Hamburguesas",
           "modifiers": [
             {
               "options": [
                 {
-                  "id": "opt-17861589914730.35250308295884014",
-                  "name": "Milanesa de pollo",
-                  "option_id": "opt-17861589914730.4460929659986336",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861589914730.7753887538814667",
-                  "name": "jamón ahumado",
-                  "option_id": "opt-17861589914730.24348126178670948",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861589914730.6479236564768969",
-                  "name": "huevo",
-                  "option_id": "opt-17861589914730.28127877336940077",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861589914730.19023901811142307",
-                  "name": "queso amarillo",
-                  "option_id": "opt-17861589914730.27747764456055224",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861589914730.03823853115153353",
-                  "name": "lechuga",
-                  "option_id": "opt-17861589914730.5737862914624849",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861589914730.3944240314005335",
+                  "id": "opt-17861589914730.5773041891505188",
                   "name": "tomate",
                   "price": 500,
                   "option_id": "opt-17861589914730.5773041891505188",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861589914730.7522067740713345",
-                  "name": "cebolla. Sale con papa fritas",
-                  "option_id": "opt-17861589914730.6515098074331457",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786158991473",
               "required": false,
               "group_name": "Adicionales",
-              "selection_type": "multiple"
+              "selection_type": "multiple",
+              "id": "g-extras-1786158991473",
+              "is_required": false
             }
           ],
           "exclusions": [
@@ -1323,7 +1163,14 @@
             }
           ],
           "category_id": "abe9179f-4695-4a00-be9c-aa357b7f11f1",
-          "description": "Milanesa de pollo, jamón ahumado, huevo, queso amarillo, lechuga, tomate, cebolla. Sale con papa fritas."
+          "description": "Milanesa de pollo, jamón ahumado, huevo, queso amarillo, lechuga, tomate, cebolla. Sale con papa fritas.",
+          "available_days": [
+            "todos"
+          ],
+          "available": true,
+          "is_paused": false,
+          "agotado": false,
+          "out_of_stock": false
         },
         {
           "id": "p-1786159006831-63",
@@ -1335,12 +1182,6 @@
             {
               "options": [
                 {
-                  "id": "opt-17861590068310.39186146059961047",
-                  "name": "Croqueta de carne rellena de queso amarillo",
-                  "option_id": "opt-17861590068310.9386613946600365",
-                  "extra_price": 0
-                },
-                {
                   "id": "opt-17861590068310.7369302392944477",
                   "name": "tocineta",
                   "price": 500,
@@ -1348,35 +1189,11 @@
                   "extra_price": 500
                 },
                 {
-                  "id": "opt-17861590068310.9762608817472233",
-                  "name": "jamón",
-                  "option_id": "opt-17861590068310.9782373454118553",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861590068310.09676365242634188",
-                  "name": "huevo",
-                  "option_id": "opt-17861590068310.7480756045122329",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861590068310.8141149619463848",
-                  "name": "lechuga",
-                  "option_id": "opt-17861590068310.06615743407503327",
-                  "extra_price": 0
-                },
-                {
                   "id": "opt-17861590068310.9693361754761965",
                   "name": "tomate",
                   "price": 500,
                   "option_id": "opt-17861590068310.18294505570773",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861590068310.6423240201387309",
-                  "name": "cebolla caramelizada. Sale con papa fritas",
-                  "option_id": "opt-17861590068310.8149155376960773",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786159006831",
@@ -1435,12 +1252,6 @@
             {
               "options": [
                 {
-                  "id": "opt-17861590479360.8181476214666036",
-                  "name": "Carne de res",
-                  "option_id": "opt-17861590479360.48000930503974926",
-                  "extra_price": 0
-                },
-                {
                   "id": "opt-17861590479360.9538514462685446",
                   "name": "pollo",
                   "price": 500,
@@ -1448,47 +1259,11 @@
                   "extra_price": 500
                 },
                 {
-                  "id": "opt-17861590479360.5287563260899466",
-                  "name": "lomo cerdo",
-                  "option_id": "opt-17861590479360.37546496120631",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861590479360.5505970379903248",
-                  "name": "jamón ahumado",
-                  "option_id": "opt-17861590479360.80662886094783",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861590479360.1611961919089987",
-                  "name": "huevo",
-                  "option_id": "opt-17861590479360.15589709899663884",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861590479360.6431029270787045",
-                  "name": "queso amarillo",
-                  "option_id": "opt-17861590479360.13628504340313918",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861590479360.3481292942896296",
-                  "name": "lechuga",
-                  "option_id": "opt-17861590479360.1408560716402717",
-                  "extra_price": 0
-                },
-                {
                   "id": "opt-17861590479360.5783739101164695",
                   "name": "tomate",
                   "price": 500,
                   "option_id": "opt-17861590479360.03735006518737016",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861590479360.4651998740425344",
-                  "name": "cebolla caramelizada. Sale con papa fritas",
-                  "option_id": "opt-17861590479360.4366799960584724",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786159047936",
@@ -1604,46 +1379,28 @@
         {
           "id": "p-1786159092629-8",
           "name": "Pepito Mixto",
-          "image": "",
+          "image": "https://bvdwxgfixirisqaavskj.supabase.co/storage/v1/object/public/menu_images/uploads/prod_1793063530254_737.png",
           "price": 20000,
           "category": "Pepitos",
           "modifiers": [
             {
               "options": [
                 {
-                  "id": "opt-17861590926290.35923718396963167",
-                  "name": "Carne de res",
-                  "option_id": "opt-17861590926290.6643596379895795",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861590926290.6543031588839395",
+                  "id": "opt-17861590926290.5408270630784897",
                   "name": "pollo",
                   "price": 500,
                   "option_id": "opt-17861590926290.5408270630784897",
                   "extra_price": 500
                 },
                 {
-                  "id": "opt-17861590926290.09951506737648863",
+                  "id": "opt-17861590926290.7837318098667148",
                   "name": "chorizo",
                   "price": 500,
                   "option_id": "opt-17861590926290.7837318098667148",
                   "extra_price": 500
                 },
                 {
-                  "id": "opt-17861590926290.5696488550619229",
-                  "name": "queso amarillo rallado",
-                  "option_id": "opt-17861590926290.7473028631316726",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861590926290.12334790587786848",
-                  "name": "ripio de papa",
-                  "option_id": "opt-17861590926290.6512286425087899",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861590926290.32425061963830204",
+                  "id": "opt-17861590926290.7554546281394173",
                   "name": "vegetales",
                   "price": 500,
                   "option_id": "opt-17861590926290.7554546281394173",
@@ -1653,7 +1410,9 @@
               "group_id": "g-extras-1786159092629",
               "required": false,
               "group_name": "Adicionales",
-              "selection_type": "multiple"
+              "selection_type": "multiple",
+              "id": "g-extras-1786159092629",
+              "is_required": false
             }
           ],
           "exclusions": [
@@ -1689,7 +1448,14 @@
             }
           ],
           "category_id": "5c3677a2-4042-40ec-b02b-90e1eac52fca",
-          "description": "Carne de res, pollo, chorizo, queso amarillo rallado, ripio de papa, vegetales."
+          "description": "Carne de res, pollo, chorizo, queso amarillo rallado, ripio de papa, vegetales.",
+          "available_days": [
+            "todos"
+          ],
+          "available": true,
+          "is_paused": false,
+          "agotado": false,
+          "out_of_stock": false
         },
         {
           "id": "p-1786159105837-48",
@@ -1713,12 +1479,6 @@
                   "price": 500,
                   "option_id": "opt-17861591058360.8106424317556907",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861591058360.21233669414275702",
-                  "name": "salchicha",
-                  "option_id": "opt-17861591058360.9888877946014678",
-                  "extra_price": 0
                 },
                 {
                   "id": "opt-17861591058360.505966567903735",
@@ -1793,41 +1553,11 @@
             {
               "options": [
                 {
-                  "id": "opt-17861591940760.08529412533655834",
-                  "name": "Pollo desmechado",
-                  "option_id": "opt-17861591940760.7944357745190286",
-                  "extra_price": 0
-                },
-                {
                   "id": "opt-17861591940760.6986707691603103",
                   "name": "tocineta",
                   "price": 500,
                   "option_id": "opt-17861591940760.08852654403445248",
                   "extra_price": 500
-                },
-                {
-                  "id": "opt-17861591940760.09352163674813008",
-                  "name": "jamón",
-                  "option_id": "opt-17861591940760.48073051582436777",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861591940760.9902192713653681",
-                  "name": "queso",
-                  "option_id": "opt-17861591940760.6118462402941773",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861591940760.2966894461757714",
-                  "name": "huevo",
-                  "option_id": "opt-17861591940760.9509417493080949",
-                  "extra_price": 0
-                },
-                {
-                  "id": "opt-17861591940760.11589774978957457",
-                  "name": "vegetales y papas a la francesa",
-                  "option_id": "opt-17861591940760.7287135137189631",
-                  "extra_price": 0
                 }
               ],
               "group_id": "g-extras-1786159194076",
@@ -2001,10 +1731,10 @@
       "delivery_time": null,
       "created_at": "2026-08-08T02:57:21.371766+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.814842,
+      "longitude": -72.446576,
+      "location_lat": 7.814842,
+      "location_lng": -72.446576,
       "open_time": "17:00",
       "close_time": "00:00",
       "disabled": false
@@ -2078,13 +1808,13 @@
       "delivery_time": null,
       "created_at": "2026-08-15T02:41:52.53169+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.80553,
+      "longitude": -72.447731,
+      "location_lat": 7.80553,
+      "location_lng": -72.447731,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "latinos-burguer-1786162629597",
@@ -3298,13 +3028,13 @@
       "delivery_time": null,
       "created_at": "2026-08-08T04:17:10.13214+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.81269,
+      "longitude": -72.444197,
+      "location_lat": 7.81269,
+      "location_lng": -72.444197,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "la-casa-de-los-batidos-1786157702318",
@@ -6001,13 +5731,13 @@
       "delivery_time": null,
       "created_at": "2026-08-08T02:55:02.94129+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.820301,
+      "longitude": -72.443204,
+      "location_lat": 7.820301,
+      "location_lng": -72.443204,
       "open_time": "10:00",
       "close_time": "23:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "luchos-burguer-1784912818841",
@@ -6063,13 +5793,13 @@
       "delivery_time": null,
       "created_at": "2026-08-17T01:32:19.623139+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.818537,
+      "longitude": -72.441745,
+      "location_lat": 7.818537,
+      "location_lng": -72.441745,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "sabor-venezolano-arepas-1784413922154",
@@ -8557,13 +8287,13 @@
       "delivery_time": null,
       "created_at": "2026-08-05T15:22:37.769444+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.814025,
+      "longitude": -72.441775,
+      "location_lat": 7.814025,
+      "location_lng": -72.441775,
       "open_time": "07:00",
       "close_time": "23:00",
-      "disabled": false,
+      "disabled": true,
       "address": "Frente al CICPC San Antonio del Táchira"
     },
     {
@@ -10505,13 +10235,13 @@
       "delivery_time": null,
       "created_at": "2026-08-05T23:38:04.323128+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.813747,
+      "longitude": -72.441289,
+      "location_lat": 7.813747,
+      "location_lng": -72.441289,
       "open_time": "11:30",
       "close_time": "23:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "tanos-resto-bar-1786032587502",
@@ -11019,13 +10749,13 @@
       "delivery_time": null,
       "created_at": "2026-08-06T16:09:48.023367+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.805822,
+      "longitude": -72.44911,
+      "location_lat": 7.805822,
+      "location_lng": -72.44911,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "mak-pizza-1784350135697",
@@ -12652,10 +12382,10 @@
       "delivery_time": null,
       "created_at": "2026-07-18T04:48:55.94933+00:00",
       "location": "San Antonio",
-      "latitude": 7.8138,
-      "longitude": -72.442,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.810979,
+      "longitude": -72.447098,
+      "location_lat": 7.810979,
+      "location_lng": -72.447098,
       "open_time": "17:00",
       "close_time": "00:00",
       "deliveryTime": "35 - 50 min",
@@ -12691,7 +12421,7 @@
         }
       ],
       "image": "/images/mak_pizza_logo.png",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "carritos-de-manuel-1784411690116",
@@ -14755,13 +14485,13 @@
       "delivery_time": null,
       "created_at": "2026-07-18T21:54:50.715682+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.806223,
+      "longitude": -72.445984,
+      "location_lat": 7.806223,
+      "location_lng": -72.445984,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "boby-burgers-1784410785941",
@@ -15412,13 +15142,13 @@
       "delivery_time": null,
       "created_at": "2026-07-18T21:39:46.549824+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.809336,
+      "longitude": -72.443646,
+      "location_lat": 7.809336,
+      "location_lng": -72.443646,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "gema-pop-1785968399832",
@@ -15647,13 +15377,13 @@
       "delivery_time": null,
       "created_at": "2026-08-05T22:20:00.497524+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.811472,
+      "longitude": -72.445875,
+      "location_lat": 7.811472,
+      "location_lng": -72.445875,
       "open_time": "17:00",
       "close_time": "00:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "frutyheladosgourmet-1786228530112",
@@ -20130,13 +19860,13 @@
       "delivery_time": null,
       "created_at": "2026-08-08T22:35:30.297368+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.811236,
+      "longitude": -72.445586,
+      "location_lat": 7.811236,
+      "location_lng": -72.445586,
       "open_time": "11:00",
       "close_time": "23:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "boki-arepas-1784927442087",
@@ -20205,13 +19935,13 @@
       "delivery_time": null,
       "created_at": "2026-08-15T02:41:52.53169+00:00",
       "location": "San Antonio",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.810803,
+      "longitude": -72.442685,
+      "location_lat": 7.810803,
+      "location_lng": -72.442685,
       "open_time": "08:00",
       "close_time": "23:00",
-      "disabled": false
+      "disabled": true
     },
     {
       "id": "zeus-burger-1786252888630",
@@ -21012,13 +20742,13 @@
       "delivery_time": null,
       "created_at": "2026-08-09T05:21:28.927042+00:00",
       "location": "Barrio Ricaurte, San Antonio del Táchira",
-      "latitude": null,
-      "longitude": null,
-      "location_lat": null,
-      "location_lng": null,
+      "latitude": 7.815445,
+      "longitude": -72.43914,
+      "location_lat": 7.815445,
+      "location_lng": -72.43914,
       "open_time": "18:00",
       "close_time": "00:00",
-      "disabled": false,
+      "disabled": true,
       "phone": "(58) 424-766-6025 / (58) 424-710-4131",
       "whatsapp": "584247666025",
       "instagram": "@zeusburger30",
@@ -21564,7 +21294,11 @@
           "image": "/images/burger_royale.jpg"
         }
       ],
-      "disabled": false
+      "disabled": true,
+      "latitude": 7.8145,
+      "longitude": -72.443,
+      "location_lat": 7.8145,
+      "location_lng": -72.443
     },
     {
       "id": "parrilla-gocha-test-1788220000000",
@@ -21776,7 +21510,11 @@
           "image": "https://images.unsplash.com/photo-1559839914-17aae19cec71?w=600",
           "description": "Botella de agua mineral pura bien fría."
         }
-      ]
+      ],
+      "latitude": null,
+      "longitude": null,
+      "location_lat": null,
+      "location_lng": null
     }
   ],
   "orders": [
@@ -22027,9 +21765,21 @@
       "latitude": 7.8131,
       "longitude": -72.4439,
       "lastActive": "2026-08-15T01:49:05.606Z"
+    },
+    {
+      "id": "drv-yoxman",
+      "username": "yoxman",
+      "name": "Yoxman",
+      "phone": "yoxman",
+      "linkKey": "12345@",
+      "vehicleType": "Moto 🛵",
+      "status": "Disponible",
+      "isLockedName": true,
+      "totalDeliveries": 0,
+      "lastActive": "2026-10-27T00:38:30.523Z"
     }
   ],
   "reviews": [],
   "promotions": [],
-  "lastUpdated": "2026-08-17T03:48:40.484Z"
+  "lastUpdated": "2026-10-27T01:12:11.491Z"
 }

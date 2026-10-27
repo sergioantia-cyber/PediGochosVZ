@@ -99,7 +99,38 @@ class MenuBuilderService {
       console.warn('Supabase storage upload failed, converting to local Base64:', err);
     }
 
-    // Fallback: Convert file to Base64 data URL so product save NEVER fails!
+    // Fallback 1: Upload via server endpoint /api/upload-image (authoritative cloud storage)
+    try {
+      const base64Data = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result || '');
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+
+      if (base64Data && base64Data.startsWith('data:image')) {
+        const res = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageBase64: base64Data,
+            fileName: file.name || 'product_photo.jpg',
+            folder: 'products'
+          })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.url) {
+            return json.url;
+          }
+        }
+      }
+      if (base64Data) return base64Data;
+    } catch (serverErr) {
+      console.warn('Server upload fallback failed, using raw base64:', serverErr);
+    }
+
+    // Fallback 2: Convert file to Base64 data URL so product save NEVER fails!
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result || '');
