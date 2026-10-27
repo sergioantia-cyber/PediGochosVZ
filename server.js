@@ -305,7 +305,7 @@ async function syncFromSupabase() {
         try {
           const cloudDisabled = await disRes.json();
           const localDisabled = readDisabledStores();
-          const mergedDisabled = { ...localDisabled, ...cloudDisabled };
+          const mergedDisabled = { ...cloudDisabled, ...localDisabled };
           writeDisabledStores(mergedDisabled);
           console.log('🎉 disabled_stores.json restored and merged from Supabase Storage!');
         } catch(e) {}

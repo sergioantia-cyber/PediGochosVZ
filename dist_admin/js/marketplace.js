@@ -1962,9 +1962,10 @@ ${mapsLink}
       // Set header details
       const bannerDiv = document.getElementById('est-banner');
       if (bannerDiv) {
-        const isImageBanner = est.banner && (est.banner.startsWith('http') || est.banner.startsWith('/') || est.bannerType === 'image');
+        const coverImg = this.getEstablishmentCoverUrl(est);
+        const isImageBanner = Boolean(coverImg || (est.banner && (est.banner.startsWith('http') || est.banner.startsWith('/') || est.bannerType === 'image')));
         if (isImageBanner) {
-          bannerDiv.style.background = `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${est.banner}')`;
+          bannerDiv.style.background = `linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.75)), url('${coverImg || est.banner}')`;
           bannerDiv.style.backgroundSize = 'cover';
           bannerDiv.style.backgroundPosition = 'center';
         } else {
@@ -2331,6 +2332,36 @@ ${mapsLink}
     if (name.includes('batido') || name.includes('jugo') || cat.includes('bebida')) return '/images/mak_pizza/frappes.jpg';
     if (name.includes('helado') || name.includes('fruty') || cat.includes('postre')) return 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600';
 
+    return '/images/burger_royale.jpg';
+  }
+
+  getProductCoverUrl(prod, est) {
+    if (!prod) return '/images/burger_royale.jpg';
+    const isRealImg = (url) => {
+      if (!url || typeof url !== 'string') return false;
+      const t = url.trim();
+      return (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('/') || t.startsWith('data:')) && !t.startsWith('linear-gradient');
+    };
+    if (isRealImg(prod.image)) return prod.image.trim();
+    if (isRealImg(prod.img)) return prod.img.trim();
+
+    const name = ((prod.name || '') + ' ' + (prod.category || '')).toLowerCase();
+    if (name.includes('pizza')) return '/images/mak_pizza/pizza_artesanal.jpg';
+    if (name.includes('hamburguesa') || name.includes('burger')) return '/images/burger_royale.jpg';
+    if (name.includes('perro') || name.includes('hot dog')) return 'https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=600';
+    if (name.includes('arepa')) return 'https://images.unsplash.com/photo-1582234372722-50d7ccc30e5b?w=600';
+    if (name.includes('cachapa')) return 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600';
+    if (name.includes('shawarma')) return 'https://images.unsplash.com/photo-1561651823-34fed0225408?w=600';
+    if (name.includes('patacon') || name.includes('patacón')) return 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=600';
+    if (name.includes('salchipapa') || name.includes('papas')) return 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=600';
+    if (name.includes('batido') || name.includes('jugo') || name.includes('frappe')) return '/images/mak_pizza/frappes.jpg';
+    if (name.includes('helado') || name.includes('postre') || name.includes('torta')) return 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600';
+    if (name.includes('cafe') || name.includes('café')) return '/images/cafe_plaza_menu_1.jpg';
+
+    if (est) {
+      const cov = this.getEstablishmentCoverUrl(est);
+      if (cov) return cov;
+    }
     return '/images/burger_royale.jpg';
   }
 
@@ -4691,29 +4722,20 @@ ${mapsLink}
         : `<span>${est.logo || '🍽️'}</span>`;
 
       // Media HTML (Supports Video or Photo)
+      const dishPhoto = this.getProductCoverUrl(prod, est);
       const videoUrl = prod.video || prod.videoUrl || (prod.image && /\.(mp4|webm|mov)(\?|$)/i.test(prod.image) ? prod.image : null);
       let mediaContentHTML = '';
       if (videoUrl) {
-        const posterAttr = (prod.image && prod.image !== videoUrl) ? `poster="${prod.image}"` : '';
+        const posterAttr = dishPhoto ? `poster="${dishPhoto}"` : '';
         mediaContentHTML = `
           <video src="${videoUrl}" ${posterAttr} autoplay loop muted playsinline preload="metadata"></video>
           <span class="insta-reel-badge">🎬 Video del Plato</span>
           <button type="button" class="insta-video-sound-btn" onclick="MarketplaceApp.toggleInstaVideoMute(this, event)" title="Activar/Desactivar audio">🔇</button>
         `;
-      } else if (prod.image) {
-        mediaContentHTML = `
-          <img src="${prod.image}" alt="${prod.name}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="insta-media-placeholder" style="display: none;">
-            <span>${est.logo || '🍽️'}</span>
-            <span style="font-size: 13px; color: #94A3B8; font-weight: 700;">${prod.name}</span>
-          </div>
-        `;
       } else {
+        const fallbackCover = this.getEstablishmentCoverUrl(est);
         mediaContentHTML = `
-          <div class="insta-media-placeholder">
-            <span>${est.logo || '🍽️'}</span>
-            <span style="font-size: 13px; color: #94A3B8; font-weight: 700;">${prod.name}</span>
-          </div>
+          <img src="${dishPhoto}" alt="${prod.name}" loading="lazy" onerror="this.onerror=null; this.src='${fallbackCover}';">
         `;
       }
 
